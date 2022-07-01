@@ -1,14 +1,19 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg, WasmMsg, ReplyOn};
+use cosmwasm_std::{
+    to_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, ReplyOn, Response,
+    StdResult, SubMsg, WasmMsg,
+};
 use cw2::set_contract_version;
+use token::state::Locks;
 use url::Url;
 
 use crate::error::ContractError;
-use crate::msg::{InstantiateMsg, QueryMsg, ExecuteMsg};
-use crate::state::{CollectionInfo, COLLECTION_INFO, Config, CONFIG};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{CollectionInfo, Config, COLLECTION_INFO, CONFIG, TOKEN_ADDR};
 
 use cw721_base::InstantiateMsg as TokenInstantiateMsg;
+use token::msg::ExecuteMsg as TokenExecuteMsg;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:minter";
@@ -29,7 +34,7 @@ pub fn instantiate(
     let config = Config {
         admin: info.sender.clone(),
         // TODO: Implement royalty
-        royalty_info: None
+        royalty_info: None,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -74,8 +79,7 @@ pub fn instantiate(
         .add_attribute("action", "instantiate")
         .add_attribute("minter", msg.minter)
         .add_attribute("collection_name", msg.collection_info.name)
-        .add_submessages(msgs)
-    )
+        .add_submessages(msgs))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -85,11 +89,41 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
-    // match msg {
-    //     ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
-    //     _ => Cw721Contract::default().execute(deps, env, info, msg),
-    // }
+    match msg {
+        ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
+        ExecuteMsg::Mint {} => unimplemented!(),
+    }
+}
+
+pub fn execute_update_locks(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    locks: Locks,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let token_address = TOKEN_ADDR.load(deps.storage)?;
+
+    let update_lock_msg: TokenExecuteMsg<Empty> = TokenExecuteMsg::UpdateLocks {
+        locks: locks.clone(),
+    };
+    let msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: token_address.to_string(),
+        msg: to_binary(&update_lock_msg)?,
+        funds: vec![],
+    });
+
+    Ok(Response::new()
+        .add_message(msg)
+        .add_attribute("action", "update_locks")
+        .add_attribute("mint_lock", &locks.mint_lock.to_string())
+        .add_attribute("burn_lock", &locks.burn_lock.to_string())
+        .add_attribute("transfer_lock", &locks.transfer_lock.to_string())
+        .add_attribute("send_lock", &locks.send_lock.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

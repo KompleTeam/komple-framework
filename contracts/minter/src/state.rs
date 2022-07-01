@@ -28,3 +28,5 @@ pub const CONFIG: Item<Config> = Item::new("config");
 pub const TOKEN_ID: Item<u32> = Item::new("token_id");
 
 pub const MINTERS: Map<Addr, u32> = Map::new("minters");
+
+pub const TOKEN_ADDR: Item<Addr> = Item::new("token_addr");
