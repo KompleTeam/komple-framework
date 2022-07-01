@@ -1,14 +1,14 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Empty};
+use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{QueryMsg, ExecuteMsg};
-use crate::state::{CONFIG, Locks};
+use crate::msg::{ExecuteMsg, QueryMsg};
+use crate::state::{Config, Locks, CONFIG};
 
 use cw721::{ContractInfoResponse, Cw721Execute};
-use cw721_base::{ContractError as Cw721ContractError, MintMsg, InstantiateMsg};
+use cw721_base::{ContractError as Cw721ContractError, InstantiateMsg, MintMsg};
 
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
@@ -20,19 +20,34 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+    let config = Config {
+        admin: info.sender,
+        locks: Locks {
+            burn_lock: false,
+            mint_lock: false,
+            transfer_lock: false,
+            send_lock: false,
+        },
+    };
+    CONFIG.save(deps.storage, &config)?;
+
     let contract_info = ContractInfoResponse {
         name: msg.name.clone(),
-        symbol: msg.symbol
+        symbol: msg.symbol,
     };
-    Cw721Contract::default().contract_info.save(deps.storage, &contract_info)?;
+    Cw721Contract::default()
+        .contract_info
+        .save(deps.storage, &contract_info)?;
 
     let minter = deps.api.addr_validate(&msg.minter)?;
-    Cw721Contract::default().minter.save(deps.storage, &minter)?;
+    Cw721Contract::default()
+        .minter
+        .save(deps.storage, &minter)?;
 
     Ok(Response::new()
         .add_attribute("action", "instantiate")
@@ -48,12 +63,18 @@ pub fn execute(
     msg: ExecuteMsg<Empty>,
 ) -> Result<Response, Cw721ContractError> {
     match msg {
-        ExecuteMsg::UpdateLocks { locks }
-            => execute_update_locks(deps, env, info, locks),
+        ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
         ExecuteMsg::Mint(mint_msg) => execute_mint(deps, env, info, mint_msg),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
-        ExecuteMsg::TransferNft { token_id, recipient } => execute_transfer(deps, env, info, token_id, recipient),
-        ExecuteMsg::SendNft { token_id, contract, msg } => execute_send(deps, env, info, token_id, contract, msg),
+        ExecuteMsg::TransferNft {
+            token_id,
+            recipient,
+        } => execute_transfer(deps, env, info, token_id, recipient),
+        ExecuteMsg::SendNft {
+            token_id,
+            contract,
+            msg,
+        } => execute_send(deps, env, info, token_id, contract, msg),
         _ => Cw721Contract::default().execute(deps, env, info, msg.into()),
     }
 }
@@ -62,9 +83,9 @@ pub fn execute_update_locks(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    locks: Locks
+    locks: Locks,
 ) -> Result<Response, Cw721ContractError> {
-    let mut config  = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {}.into());
     }
@@ -72,22 +93,22 @@ pub fn execute_update_locks(
     config.locks = locks.clone();
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_attribute("action", "update_locks")
+    Ok(Response::new()
+        .add_attribute("action", "update_locks")
         .add_attribute("mint_lock", locks.mint_lock.to_string())
         .add_attribute("burn_lock", locks.burn_lock.to_string())
         .add_attribute("transfer_lock", locks.transfer_lock.to_string())
-        .add_attribute("send_lock", locks.send_lock.to_string())
-    )
+        .add_attribute("send_lock", locks.send_lock.to_string()))
 }
 
 pub fn execute_mint(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    mint_msg: MintMsg<Empty>
+    mint_msg: MintMsg<Empty>,
 ) -> Result<Response, Cw721ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    if !config.locks.burn_lock {
+    if config.locks.mint_lock {
         return Err(ContractError::MintLocked {}.into());
     }
     Cw721Contract::default().mint(deps, env, info, mint_msg)
@@ -100,7 +121,7 @@ pub fn execute_burn(
     token_id: String,
 ) -> Result<Response, Cw721ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    if !config.locks.burn_lock {
+    if config.locks.burn_lock {
         return Err(ContractError::BurnedLocked {}.into());
     }
     Cw721Contract::default().burn(deps, env, info, token_id)
@@ -114,7 +135,7 @@ pub fn execute_transfer(
     recipient: String,
 ) -> Result<Response, Cw721ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    if !config.locks.transfer_lock {
+    if config.locks.transfer_lock {
         return Err(ContractError::TransferLocked {}.into());
     }
     Cw721Contract::default().transfer_nft(deps, env, info, recipient, token_id)
@@ -126,10 +147,10 @@ pub fn execute_send(
     info: MessageInfo,
     token_id: String,
     contract: String,
-    msg: Binary
+    msg: Binary,
 ) -> Result<Response, Cw721ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    if !config.locks.send_lock {
+    if config.locks.send_lock {
         return Err(ContractError::SendLocked {}.into());
     }
     Cw721Contract::default().send_nft(deps, env, info, contract, token_id, msg)
