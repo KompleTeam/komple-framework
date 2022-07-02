@@ -106,7 +106,7 @@ pub fn execute(
             recipient,
             token_id,
         } => unimplemented!(),
-        ExecuteMsg::SetWhitelist { whitelist } => unimplemented!(),
+        ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
         ExecuteMsg::UpdateStartTime(time) => unimplemented!(),
         ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => unimplemented!(),
     }
@@ -141,6 +141,25 @@ pub fn execute_update_locks(
         .add_attribute("burn_lock", &locks.burn_lock.to_string())
         .add_attribute("transfer_lock", &locks.transfer_lock.to_string())
         .add_attribute("send_lock", &locks.send_lock.to_string()))
+}
+
+fn execute_set_whitelist(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    whitelist: String,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    config.whitelist = Some(deps.api.addr_validate(&whitelist)?);
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "set_whitelist")
+        .add_attribute("whitelist", &whitelist))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
