@@ -1,10 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, LocksReponse, QueryMsg};
 use crate::state::{Config, Locks, CONFIG};
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -185,6 +187,14 @@ pub fn execute_send(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::Locks {} => to_binary(&query_locks(deps)?),
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
+}
+
+fn query_locks(deps: Deps) -> StdResult<LocksReponse> {
+    let config = CONFIG.load(deps.storage)?;
+    Ok(LocksReponse {
+        locks: config.locks,
+    })
 }
