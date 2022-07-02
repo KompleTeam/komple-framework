@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, ReplyOn, Response,
-    StdResult, SubMsg, WasmMsg,
+    StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
 use token::state::Locks;
@@ -107,7 +107,9 @@ pub fn execute(
             token_id,
         } => unimplemented!(),
         ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
-        ExecuteMsg::UpdateStartTime(time) => unimplemented!(),
+        ExecuteMsg::UpdateStartTime(start_time) => {
+            execute_update_start_time(deps, env, info, start_time)
+        }
         ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => unimplemented!(),
     }
 }
@@ -147,19 +149,49 @@ fn execute_set_whitelist(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    whitelist: String,
+    whitelist: Option<String>,
 ) -> Result<Response, ContractError> {
     let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    config.whitelist = Some(deps.api.addr_validate(&whitelist)?);
+    config.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "set_whitelist")
-        .add_attribute("whitelist", &whitelist))
+    Ok(Response::new().add_attribute("action", "set_whitelist"))
+}
+
+fn execute_update_start_time(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    start_time: Option<Timestamp>,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    if config.start_time.is_some() && env.block.time >= config.start_time.unwrap() {
+        return Err(ContractError::AlreadyStarted {});
+    }
+
+    match start_time {
+        Some(time) => {
+            if env.block.time > time {
+                return Err(ContractError::InvalidStartTime {});
+            }
+            config.start_time = start_time;
+        }
+        None => {
+            config.start_time = None;
+        }
+    }
+
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new().add_attribute("action", "update_start_time"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

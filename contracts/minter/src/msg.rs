@@ -21,8 +21,8 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     UpdateLocks { locks: Locks },
     Mint { recipient: String, token_id: u32 },
-    SetWhitelist { whitelist: String },
-    UpdateStartTime(Timestamp),
+    SetWhitelist { whitelist: Option<String> },
+    UpdateStartTime(Option<Timestamp>),
     UpdatePerAddressLimit { per_address_limit: u32 },
 }
 

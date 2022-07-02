@@ -16,6 +16,9 @@ pub enum ContractError {
     #[error("Invalid start time")]
     InvalidStartTime {},
 
+    #[error("Minting is already started")]
+    AlreadyStarted {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 
