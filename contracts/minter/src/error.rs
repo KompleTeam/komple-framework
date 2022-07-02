@@ -13,6 +13,9 @@ pub enum ContractError {
     #[error("Description too long")]
     DescriptionTooLong {},
 
+    #[error("Invalid start time")]
+    InvalidStartTime {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 
