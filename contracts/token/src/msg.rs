@@ -1,38 +1,46 @@
-use cosmwasm_std::{Empty, Binary};
+use cosmwasm_std::{Binary, Empty};
 use cw721::Expiration;
-use cw721_base::{QueryMsg as Cw721QueryMsg, MintMsg, ExecuteMsg as Cw721ExecuteMsg};
+use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, MintMsg, QueryMsg as Cw721QueryMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::state::Locks;
 
-// pub type ExecuteMsg = cw721_base::ExecuteMsg<Empty>;
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg<T> {
-        TransferNft { recipient: String, token_id: String },
-        SendNft {
-            contract: String,
-            token_id: String,
-            msg: Binary,
-        },
-        Approve {
-            spender: String,
-            token_id: String,
-            expires: Option<Expiration>,
-        },
-        Revoke { spender: String, token_id: String },
-        ApproveAll {
-            operator: String,
-            expires: Option<Expiration>,
-        },
-        RevokeAll { operator: String },
-        Mint(MintMsg<T>),
-        Burn { token_id: String },
-        UpdateLocks {
-            locks: Locks,
-        },
+    TransferNft {
+        recipient: String,
+        token_id: String,
+    },
+    SendNft {
+        contract: String,
+        token_id: String,
+        msg: Binary,
+    },
+    Approve {
+        spender: String,
+        token_id: String,
+        expires: Option<Expiration>,
+    },
+    Revoke {
+        spender: String,
+        token_id: String,
+    },
+    ApproveAll {
+        operator: String,
+        expires: Option<Expiration>,
+    },
+    RevokeAll {
+        operator: String,
+    },
+    Mint(MintMsg<T>),
+    Burn {
+        token_id: String,
+    },
+    UpdateLocks {
+        locks: Locks,
+    },
 }
 
 impl From<ExecuteMsg<Empty>> for Cw721ExecuteMsg<Empty> {
@@ -40,26 +48,35 @@ impl From<ExecuteMsg<Empty>> for Cw721ExecuteMsg<Empty> {
         match msg {
             ExecuteMsg::TransferNft {
                 recipient,
-                token_id
-            } => Cw721ExecuteMsg::TransferNft { recipient, token_id },
+                token_id,
+            } => Cw721ExecuteMsg::TransferNft {
+                recipient,
+                token_id,
+            },
             ExecuteMsg::SendNft {
                 contract,
                 token_id,
-                msg
-            } => Cw721ExecuteMsg::SendNft { contract, token_id, msg },
+                msg,
+            } => Cw721ExecuteMsg::SendNft {
+                contract,
+                token_id,
+                msg,
+            },
             ExecuteMsg::Approve {
                 spender,
                 token_id,
-                expires
-            } => Cw721ExecuteMsg::Approve { spender, token_id, expires },
-            ExecuteMsg::Revoke {
+                expires,
+            } => Cw721ExecuteMsg::Approve {
                 spender,
-                token_id
-            } => Cw721ExecuteMsg::Revoke { spender, token_id },
-            ExecuteMsg::ApproveAll {
-                operator,
-                expires
-            } => Cw721ExecuteMsg::ApproveAll { operator, expires },
+                token_id,
+                expires,
+            },
+            ExecuteMsg::Revoke { spender, token_id } => {
+                Cw721ExecuteMsg::Revoke { spender, token_id }
+            }
+            ExecuteMsg::ApproveAll { operator, expires } => {
+                Cw721ExecuteMsg::ApproveAll { operator, expires }
+            }
             ExecuteMsg::RevokeAll { operator } => Cw721ExecuteMsg::RevokeAll { operator },
             ExecuteMsg::Mint(mint_msg) => Cw721ExecuteMsg::Mint(mint_msg.into()),
             ExecuteMsg::Burn { token_id } => Cw721ExecuteMsg::Burn { token_id },
@@ -109,6 +126,7 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     Minter {},
+    Locks {},
 }
 
 impl From<QueryMsg> for Cw721QueryMsg {
