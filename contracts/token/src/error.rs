@@ -3,7 +3,7 @@ use thiserror::Error;
 
 use cw721_base::ContractError as Cw721ContractError;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
@@ -15,7 +15,7 @@ pub enum ContractError {
     MintLocked {},
 
     #[error("Burning is locked")]
-    BurnedLocked {},
+    BurnLocked {},
 
     #[error("Transferring is locked")]
     TransferLocked {},
@@ -33,12 +33,12 @@ pub enum ContractError {
     Expired {},
 }
 
-impl From<ContractError> for Cw721ContractError {
-    fn from(err: ContractError) -> Cw721ContractError {
+impl From<Cw721ContractError> for ContractError {
+    fn from(err: Cw721ContractError) -> ContractError {
         match err {
-            ContractError::Unauthorized {} => Cw721ContractError::Unauthorized {},
-            ContractError::Claimed {} => Cw721ContractError::Claimed {},
-            ContractError::Expired {} => Cw721ContractError::Expired {},
+            Cw721ContractError::Unauthorized {} => ContractError::Unauthorized {},
+            Cw721ContractError::Claimed {} => ContractError::Claimed {},
+            Cw721ContractError::Expired {} => ContractError::Expired {},
             _ => unreachable!("cannot convert {:?} to Cw721ContractError", err),
         }
     }
