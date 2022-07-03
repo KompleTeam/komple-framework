@@ -22,7 +22,7 @@ pub struct RoyaltyInfo {
 pub struct Config {
     pub admin: Addr,
     pub royalty_info: Option<RoyaltyInfo>,
-    pub per_address_limit: u32,
+    pub per_address_limit: Option<u32>,
     pub whitelist: Option<Addr>,
     pub start_time: Option<Timestamp>,
 }

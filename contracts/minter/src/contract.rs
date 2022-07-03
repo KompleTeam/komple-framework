@@ -10,7 +10,7 @@ use url::Url;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{CollectionInfo, Config, COLLECTION_INFO, CONFIG, TOKEN_ADDR};
+use crate::state::{CollectionInfo, Config, COLLECTION_INFO, CONFIG, TOKEN_ADDR, TOKEN_ID};
 
 use cw721_base::InstantiateMsg as TokenInstantiateMsg;
 use token::msg::ExecuteMsg as TokenExecuteMsg;
@@ -66,6 +66,8 @@ pub fn instantiate(
         external_link: msg.collection_info.external_link,
     };
     COLLECTION_INFO.save(deps.storage, &collection_info)?;
+
+    TOKEN_ID.save(deps.storage, &0)?;
 
     // Instantiate token contract
     let msgs: Vec<SubMsg> = vec![SubMsg {
@@ -200,23 +202,21 @@ fn execute_update_per_address_limit(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    per_address_limit: u32,
+    per_address_limit: Option<u32>,
 ) -> Result<Response, ContractError> {
     let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    if per_address_limit == 0 {
+    if per_address_limit.is_some() && per_address_limit.unwrap() == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
     config.per_address_limit = per_address_limit;
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "update_per_address_limit")
-        .add_attribute("per_address_limit", per_address_limit.to_string()))
+    Ok(Response::new().add_attribute("action", "update_per_address_limit"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
