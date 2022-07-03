@@ -25,6 +25,7 @@ pub struct Config {
     pub per_address_limit: Option<u32>,
     pub whitelist: Option<Addr>,
     pub start_time: Option<Timestamp>,
+    pub mint_lock: bool,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 

@@ -12,7 +12,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{CollectionInfo, Config, COLLECTION_INFO, CONFIG, TOKEN_ADDR, TOKEN_ID};
 
-use cw721_base::InstantiateMsg as TokenInstantiateMsg;
+use cw721_base::{InstantiateMsg as TokenInstantiateMsg, MintMsg};
 use token::msg::ExecuteMsg as TokenExecuteMsg;
 
 // version info for migration info
@@ -46,6 +46,7 @@ pub fn instantiate(
         per_address_limit: msg.per_address_limit,
         whitelist,
         start_time: msg.start_time,
+        mint_lock: false,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -104,10 +105,7 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
-        ExecuteMsg::Mint {
-            recipient,
-            token_id,
-        } => unimplemented!(),
+        ExecuteMsg::Mint { recipient } => execute_mint(deps, env, info, recipient),
         ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
         ExecuteMsg::UpdateStartTime(start_time) => {
             execute_update_start_time(deps, env, info, start_time)
@@ -217,6 +215,47 @@ fn execute_update_per_address_limit(
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_attribute("action", "update_per_address_limit"))
+}
+
+fn execute_mint(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    recipient: Option<String>,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.mint_lock && info.sender != config.admin {
+        return Err(ContractError::LockedMint {});
+    }
+
+    let token_address = TOKEN_ADDR.load(deps.storage)?;
+    let token_id = (TOKEN_ID.load(deps.storage)?) + 1;
+
+    let owner = match recipient {
+        Some(addr) => deps.api.addr_validate(&addr)?,
+        None => info.sender,
+    };
+
+    let mint_msg = MintMsg {
+        token_id: token_id.to_string(),
+        owner: owner.to_string(),
+        // TODO: Add token_uri in here
+        // We need to pull from ipfs
+        token_uri: None,
+        // TODO: Maybe even utilize on chain metadata support
+        extension: Empty {},
+    };
+    let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: token_address.to_string(),
+        msg: to_binary(&mint_msg)?,
+        funds: vec![],
+    });
+
+    TOKEN_ID.save(deps.storage, &token_id)?;
+
+    Ok(Response::new()
+        .add_message(msg)
+        .add_attribute("action", "mint"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

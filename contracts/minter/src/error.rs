@@ -19,6 +19,9 @@ pub enum ContractError {
     #[error("Minting has already started")]
     AlreadyStarted {},
 
+    #[error("Minting locked")]
+    LockedMint {},
+
     #[error("Per address limit must be greater than 0")]
     InvalidPerAddressLimit {},
 
