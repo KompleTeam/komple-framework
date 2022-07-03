@@ -1,10 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::{
-        msg::{ExecuteMsg, InstantiateMsg},
-        state::CollectionInfo,
-    };
-    use cosmwasm_std::{to_binary, Addr, Coin, CosmosMsg, Empty, StdResult, Uint128, WasmMsg};
+    use crate::{msg::InstantiateMsg, state::CollectionInfo};
+    use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
     pub fn minter_contract() -> Box<dyn Contract<Empty>> {
@@ -46,16 +43,6 @@ mod tests {
         })
     }
 
-    pub fn get_cosmos_msg<T: Into<ExecuteMsg>>(addr: String, msg: T) -> StdResult<CosmosMsg> {
-        let msg = to_binary(&msg.into())?;
-        Ok(WasmMsg::Execute {
-            contract_addr: addr,
-            msg,
-            funds: vec![],
-        }
-        .into())
-    }
-
     fn proper_instantiate() -> (App, Addr) {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_contract());
@@ -91,7 +78,9 @@ mod tests {
 
     mod mint {
         use super::*;
-        use crate::msg::ExecuteMsg;
+        use crate::msg::{ExecuteMsg, QueryMsg, TokenAddressResponse};
+        use cw721::OwnerOfResponse;
+        use token::msg::QueryMsg as TokenQueryMsg;
 
         #[test]
         fn test_happy_path() {
@@ -100,9 +89,22 @@ mod tests {
             let msg = ExecuteMsg::Mint {
                 recipient: Some(USER.to_string()),
             };
-            let res = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr, &msg, &vec![])
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
                 .unwrap();
+
+            let msg = QueryMsg::GetTokenAddress {};
+            let response: TokenAddressResponse =
+                app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+            let token_address = response.token_address;
+
+            let msg = TokenQueryMsg::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            };
+            let response: OwnerOfResponse =
+                app.wrap().query_wasm_smart(token_address, &msg).unwrap();
+            assert_eq!(response.owner, USER.to_string());
         }
     }
 }
