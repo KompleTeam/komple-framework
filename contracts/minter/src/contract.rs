@@ -10,7 +10,7 @@ use token::state::Locks;
 use url::Url;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenAddressResponse};
 use crate::state::{CollectionInfo, Config, COLLECTION_INFO, CONFIG, TOKEN_ADDR, TOKEN_ID};
 
 use cw721_base::{InstantiateMsg as TokenInstantiateMsg, MintMsg};
@@ -260,11 +260,17 @@ fn execute_mint(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
-    // match msg {
-    //     QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
-    // }
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetTokenAddress {} => to_binary(&query_token_address(deps)?),
+    }
+}
+
+fn query_token_address(deps: Deps) -> StdResult<TokenAddressResponse> {
+    let addr = TOKEN_ADDR.load(deps.storage)?;
+    Ok(TokenAddressResponse {
+        token_address: addr.to_string(),
+    })
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
