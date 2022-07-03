@@ -25,6 +25,12 @@ pub enum ContractError {
     #[error("Per address limit must be greater than 0")]
     InvalidPerAddressLimit {},
 
+    #[error("Invalid reply ID")]
+    InvalidReplyID {},
+
+    #[error("Error while instantiating token contract")]
+    TokenInstantiateError {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 

@@ -1,10 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, ReplyOn, Response,
-    StdResult, SubMsg, Timestamp, WasmMsg,
+    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
+    Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw_utils::parse_reply_instantiate_data;
 use token::state::Locks;
 use url::Url;
 
@@ -264,4 +265,21 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     // match msg {
     //     QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
     // }
+}
+
+// Reply callback triggered from cw721 contract instantiation
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    if msg.id != TOKEN_INSTANTIATE_REPLY_ID {
+        return Err(ContractError::InvalidReplyID {});
+    }
+
+    let reply = parse_reply_instantiate_data(msg);
+    match reply {
+        Ok(res) => {
+            TOKEN_ADDR.save(deps.storage, &Addr::unchecked(res.contract_address))?;
+            Ok(Response::default().add_attribute("action", "instantiate_sg721_reply"))
+        }
+        Err(_) => Err(ContractError::TokenInstantiateError {}),
+    }
 }
