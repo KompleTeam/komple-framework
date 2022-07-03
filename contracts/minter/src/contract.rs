@@ -262,8 +262,14 @@ fn execute_mint(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
         QueryMsg::GetTokenAddress {} => to_binary(&query_token_address(deps)?),
     }
+}
+
+fn query_config(deps: Deps) -> StdResult<Config> {
+    let config = CONFIG.load(deps.storage)?;
+    Ok(config)
 }
 
 fn query_token_address(deps: Deps) -> StdResult<TokenAddressResponse> {
