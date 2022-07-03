@@ -72,7 +72,7 @@ pub fn instantiate(
     TOKEN_ID.save(deps.storage, &0)?;
 
     // Instantiate token contract
-    let msgs: Vec<SubMsg> = vec![SubMsg {
+    let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id: msg.token_code_id,
             msg: to_binary(&TokenInstantiateMsg {
@@ -88,13 +88,13 @@ pub fn instantiate(
         id: TOKEN_INSTANTIATE_REPLY_ID,
         gas_limit: None,
         reply_on: ReplyOn::Success,
-    }];
+    };
 
     Ok(Response::new()
         .add_attribute("action", "instantiate")
-        .add_attribute("minter", msg.minter)
+        .add_attribute("minter", env.contract.address)
         .add_attribute("collection_name", msg.collection_info.name)
-        .add_submessages(msgs))
+        .add_submessage(sub_msg))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -248,7 +248,7 @@ fn execute_mint(
     };
     let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: token_address.to_string(),
-        msg: to_binary(&mint_msg)?,
+        msg: to_binary(&TokenExecuteMsg::Mint(mint_msg))?,
         funds: vec![],
     });
 
@@ -260,14 +260,13 @@ fn execute_mint(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     unimplemented!()
     // match msg {
     //     QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
     // }
 }
 
-// Reply callback triggered from cw721 contract instantiation
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     if msg.id != TOKEN_INSTANTIATE_REPLY_ID {
