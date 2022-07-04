@@ -6,8 +6,8 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, LocksReponse, QueryMsg};
-use crate::state::{Config, Locks, CONFIG};
+use crate::msg::{ExecuteMsg, LocksReponse, QueryMsg, TokenLocksReponse};
+use crate::state::{Config, Locks, CONFIG, TOKEN_LOCKS};
 
 use cw721::{ContractInfoResponse, Cw721Execute};
 use cw721_base::{InstantiateMsg, MintMsg};
@@ -66,6 +66,9 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
+        ExecuteMsg::UpdateTokenLock { token_id, locks } => {
+            execute_update_token_locks(deps, env, info, token_id, locks)
+        }
         ExecuteMsg::Mint(mint_msg) => execute_mint(deps, env, info, mint_msg),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
         ExecuteMsg::TransferNft {
@@ -109,6 +112,29 @@ pub fn execute_update_locks(
         .add_attribute("send_lock", locks.send_lock.to_string()))
 }
 
+pub fn execute_update_token_locks(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    token_id: String,
+    locks: Locks,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_token_locks")
+        .add_attribute("token_id", token_id)
+        .add_attribute("mint_lock", locks.mint_lock.to_string())
+        .add_attribute("burn_lock", locks.burn_lock.to_string())
+        .add_attribute("transfer_lock", locks.transfer_lock.to_string())
+        .add_attribute("send_lock", locks.send_lock.to_string()))
+}
+
 pub fn execute_mint(
     deps: DepsMut,
     env: Env,
@@ -117,6 +143,11 @@ pub fn execute_mint(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     if config.locks.mint_lock {
+        return Err(ContractError::MintLocked {});
+    }
+
+    let token_lock = TOKEN_LOCKS.may_load(deps.storage, &mint_msg.token_id)?;
+    if token_lock.is_some() && token_lock.unwrap().mint_lock {
         return Err(ContractError::MintLocked {});
     }
 
@@ -138,6 +169,11 @@ pub fn execute_burn(
         return Err(ContractError::BurnLocked {});
     }
 
+    let token_lock = TOKEN_LOCKS.may_load(deps.storage, &token_id)?;
+    if token_lock.is_some() && token_lock.unwrap().burn_lock {
+        return Err(ContractError::BurnLocked {});
+    }
+
     let res = Cw721Contract::default().burn(deps, env, info, token_id);
     match res {
         Ok(res) => Ok(res),
@@ -154,6 +190,11 @@ pub fn execute_transfer(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     if config.locks.transfer_lock {
+        return Err(ContractError::TransferLocked {});
+    }
+
+    let token_lock = TOKEN_LOCKS.may_load(deps.storage, &token_id)?;
+    if token_lock.is_some() && token_lock.unwrap().transfer_lock {
         return Err(ContractError::TransferLocked {});
     }
 
@@ -177,6 +218,11 @@ pub fn execute_send(
         return Err(ContractError::SendLocked {});
     }
 
+    let token_lock = TOKEN_LOCKS.may_load(deps.storage, &token_id)?;
+    if token_lock.is_some() && token_lock.unwrap().send_lock {
+        return Err(ContractError::SendLocked {});
+    }
+
     let res = Cw721Contract::default().send_nft(deps, env, info, contract, token_id, msg);
     match res {
         Ok(res) => Ok(res),
@@ -188,6 +234,7 @@ pub fn execute_send(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Locks {} => to_binary(&query_locks(deps)?),
+        QueryMsg::TokenLocks { token_id } => to_binary(&query_token_locks(deps, token_id)?),
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
 }
@@ -197,4 +244,9 @@ fn query_locks(deps: Deps) -> StdResult<LocksReponse> {
     Ok(LocksReponse {
         locks: config.locks,
     })
+}
+
+fn query_token_locks(deps: Deps, token_id: String) -> StdResult<TokenLocksReponse> {
+    let locks = TOKEN_LOCKS.load(deps.storage, &token_id)?;
+    Ok(TokenLocksReponse { locks })
 }
