@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, GetCollectionResponse, InstantiateMsg, QueryMsg};
 use crate::state::{Config, ControllerInfo, COLLECTIONS, COLLECTION_ID, CONFIG, CONTROLLER_INFO};
 
 use mint::msg::InstantiateMsg as MintInstantiateMsg;
@@ -141,7 +141,9 @@ fn execute_add_collection(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
-        QueryMsg::GetCollection { collection_id } => unimplemented!(),
+        QueryMsg::GetCollection { collection_id } => {
+            to_binary(&query_get_collection(deps, collection_id)?)
+        }
         QueryMsg::GetContollerInfo {} => unimplemented!(),
     }
 }
@@ -149,6 +151,13 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 fn query_config(deps: Deps) -> StdResult<Config> {
     let config = CONFIG.load(deps.storage)?;
     Ok(config)
+}
+
+fn query_get_collection(deps: Deps, collection_id: u32) -> StdResult<GetCollectionResponse> {
+    let address = COLLECTIONS.load(deps.storage, collection_id)?;
+    Ok(GetCollectionResponse {
+        address: address.to_string(),
+    })
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

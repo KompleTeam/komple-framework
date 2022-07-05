@@ -26,3 +26,9 @@ pub enum QueryMsg {
     GetCollection { collection_id: u32 },
     GetContollerInfo {},
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct GetCollectionResponse {
+    pub address: String,
+}
