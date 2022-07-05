@@ -348,7 +348,7 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
     match reply {
         Ok(res) => {
             TOKEN_ADDR.save(deps.storage, &Addr::unchecked(res.contract_address))?;
-            Ok(Response::default().add_attribute("action", "instantiate_sg721_reply"))
+            Ok(Response::default().add_attribute("action", "instantiate_token_reply"))
         }
         Err(_) => Err(ContractError::TokenInstantiateError {}),
     }
