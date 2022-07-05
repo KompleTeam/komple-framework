@@ -1,5 +1,5 @@
 [workspace]
-members = ["contracts/*"]
+members = ["contracts/*", "modules/*"]
 
 [profile.release.package.minter]
 codegen-units = 1
