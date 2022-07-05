@@ -82,11 +82,14 @@ mod tests {
     mod test_collection {
         use super::*;
 
-        use crate::msg::{ExecuteMsg, GetCollectionResponse, QueryMsg};
+        use crate::{
+            msg::{ExecuteMsg, GetCollectionResponse, QueryMsg},
+            ContractError,
+        };
 
         use mint::{
             msg::{InstantiateMsg as MintInstantiateMsg, QueryMsg as MintQueryMsg},
-            state::CollectionInfo,
+            state::{CollectionInfo, Config},
         };
 
         #[test]
@@ -131,6 +134,77 @@ mod tests {
                 .query_wasm_smart(collection_address, &msg)
                 .unwrap();
             assert_eq!(response, collection_info);
+        }
+
+        #[test]
+        fn test_mint_lock_happy_path() {
+            let (mut app, controller_contract_addr) = proper_instantiate();
+            let token_code_id = app.store_code(token_contract());
+
+            let collection_info = CollectionInfo {
+                name: "Test Collection".to_string(),
+                description: "Test Collection".to_string(),
+                image: "https://image.com".to_string(),
+                external_link: None,
+            };
+            let instantiate_msg = MintInstantiateMsg {
+                symbol: "TEST".to_string(),
+                token_code_id,
+                collection_info: collection_info.clone(),
+                per_address_limit: None,
+                whitelist: None,
+                start_time: None,
+            };
+            let msg = ExecuteMsg::AddCollection { instantiate_msg };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    controller_contract_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap();
+
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    controller_contract_addr.clone(),
+                    &ExecuteMsg::UpdateMintLock {
+                        collection_id: 1,
+                        lock: true,
+                    },
+                    &vec![],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+
+            let _ = app.execute_contract(
+                Addr::unchecked(ADMIN),
+                controller_contract_addr.clone(),
+                &ExecuteMsg::UpdateMintLock {
+                    collection_id: 1,
+                    lock: true,
+                },
+                &vec![],
+            );
+
+            // TODO: Use mint message here to test this
+            let msg = QueryMsg::GetCollection { collection_id: 1 };
+            let response: GetCollectionResponse = app
+                .wrap()
+                .query_wasm_smart(controller_contract_addr, &msg)
+                .unwrap();
+            let collection_address = response.address;
+
+            let msg = MintQueryMsg::GetConfig {};
+            let response: Config = app
+                .wrap()
+                .query_wasm_smart(collection_address, &msg)
+                .unwrap();
+            assert_eq!(response.mint_lock, true);
         }
     }
 
