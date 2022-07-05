@@ -112,7 +112,8 @@ pub fn execute(
         ExecuteMsg::UpdateTokenLocks { token_id, locks } => {
             execute_update_token_locks(deps, env, info, token_id, locks)
         }
-        ExecuteMsg::Mint { recipient } => execute_mint(deps, env, info, recipient),
+        ExecuteMsg::Mint {} => execute_mint(deps, env, info),
+        ExecuteMsg::MintTo { recipient } => execute_mint_to(deps, env, info, recipient),
         ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
         ExecuteMsg::UpdateStartTime(start_time) => {
             execute_update_start_time(deps, env, info, start_time)
@@ -277,32 +278,39 @@ fn execute_update_per_address_limit(
     Ok(Response::new().add_attribute("action", "update_per_address_limit"))
 }
 
-fn execute_mint(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    recipient: Option<String>,
-) -> Result<Response, ContractError> {
+fn execute_mint(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    if config.mint_lock && info.sender != config.admin {
+    if config.mint_lock {
         return Err(ContractError::LockedMint {});
     }
 
+    _execute_mint(deps, "mint_to", info.sender.to_string())
+}
+
+fn execute_mint_to(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    recipient: String,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let owner = deps.api.addr_validate(&recipient)?;
+
+    _execute_mint(deps, "mint_to", owner.to_string())
+}
+
+fn _execute_mint(deps: DepsMut, action: &str, owner: String) -> Result<Response, ContractError> {
     let token_address = TOKEN_ADDR.load(deps.storage)?;
     let token_id = (TOKEN_ID.load(deps.storage)?) + 1;
 
-    let owner = match recipient {
-        Some(addr) => deps.api.addr_validate(&addr)?,
-        None => info.sender,
-    };
-
     let mint_msg = MintMsg {
         token_id: token_id.to_string(),
-        owner: owner.to_string(),
-        // TODO: Add token_uri in here
-        // We need to pull from ipfs
+        owner,
         token_uri: None,
-        // TODO: Maybe even utilize on chain metadata support
         extension: Empty {},
     };
     let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
@@ -315,7 +323,7 @@ fn execute_mint(
 
     Ok(Response::new()
         .add_message(msg)
-        .add_attribute("action", "mint"))
+        .add_attribute("action", action))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
