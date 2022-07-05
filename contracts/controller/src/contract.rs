@@ -14,7 +14,7 @@ use crate::state::{Config, ControllerInfo, COLLECTIONS, COLLECTION_ID, CONFIG, C
 use mint::msg::InstantiateMsg as MintInstantiateMsg;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:minter";
+const CONTRACT_NAME: &str = "crates.io:controller";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MINT_INSTANTIATE_REPLY_ID: u64 = 1;

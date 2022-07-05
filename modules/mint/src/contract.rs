@@ -17,7 +17,7 @@ use cw721_base::{InstantiateMsg as TokenInstantiateMsg, MintMsg};
 use token::msg::ExecuteMsg as TokenExecuteMsg;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:minter";
+const CONTRACT_NAME: &str = "crates.io:mint";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TOKEN_INSTANTIATE_REPLY_ID: u64 = 1;
