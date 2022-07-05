@@ -32,6 +32,7 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     GetConfig {},
     GetTokenAddress {},
+    GetCollectionInfo {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
