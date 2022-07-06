@@ -20,7 +20,7 @@ pub struct PasscardInfo {
     pub external_link: Option<String>,
     pub total_num: Option<u16>,
 }
-pub const PASSCARD_INFO: Item<PasscardInfo> = Item::new("passcard_info");
+pub const PASSCARD_INFO: Map<u32, PasscardInfo> = Map::new("passcard_info");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Passcard {
@@ -29,8 +29,8 @@ pub struct Passcard {
     pub on_sale: bool,
     pub owner: Addr,
 }
-pub const PASSCARDS: Item<Passcard> = Item::new("passcards");
+pub const PASSCARDS: Map<(u32, u16), Passcard> = Map::new("passcards");
 
-pub const MINTABLE_PASSCARDS: Map<(u32, u16), bool> = Map::new("available_passcards");
+pub const MINTABLE_PASSCARDS: Map<(u32, u16), bool> = Map::new("mintable_passcards");
 
 pub const PASSCARD_IDS: Map<u32, u16> = Map::new("passcard_ids");
