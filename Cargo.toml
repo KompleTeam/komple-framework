@@ -1,5 +1,9 @@
 [workspace]
-members = ["contracts/*", "modules/*"]
+members = [
+    "contracts/*",
+    "modules/*",
+    "permissions/*"
+]
 
 [profile.release.package.token]
 codegen-units = 1
