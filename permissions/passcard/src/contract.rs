@@ -1,13 +1,16 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, ListPasscardsResponse, QueryMsg};
-use crate::state::{Config, Passcard, CONFIG, PASSCARDS, PASSCARD_INFO};
+use crate::state::{
+    Config, Passcard, PasscardInfo, CONFIG, MINTABLE_PASSCARDS, PASSCARDS, PASSCARD_AMOUNT,
+    PASSCARD_INFO,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:passcard";
@@ -42,9 +45,51 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
-    // match msg {
-    // }
+    match msg {
+        ExecuteMsg::AddPasscard {
+            collection_id,
+            base_price,
+            passcard_info,
+        } => execute_add_passcard(deps, _env, info, collection_id, base_price, passcard_info),
+    }
+}
+
+pub fn execute_add_passcard(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    collection_id: u32,
+    base_price: Uint128,
+    passcard_info: PasscardInfo,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    let passcard_amount = (PASSCARD_AMOUNT.may_load(deps.storage, collection_id)?).unwrap_or(0);
+
+    for passcard_id in (passcard_amount + 1)..=(passcard_amount + passcard_info.total_num) {
+        let passcard = Passcard {
+            id: passcard_id,
+            price: base_price,
+            on_sale: true,
+            owner: config.admin.clone(),
+        };
+        PASSCARDS.save(deps.storage, (collection_id, passcard_id), &passcard)?;
+        MINTABLE_PASSCARDS.save(deps.storage, (collection_id, passcard_id), &true)?;
+    }
+    PASSCARD_INFO.save(deps.storage, collection_id, &passcard_info)?;
+    PASSCARD_AMOUNT.save(
+        deps.storage,
+        collection_id,
+        &(passcard_amount + passcard_info.total_num),
+    )?;
+
+    Ok(Response::default()
+        .add_attribute("action", "add_sub_collection")
+        .add_attribute("id", collection_id.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
