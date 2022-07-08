@@ -7,7 +7,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, LocksReponse, QueryMsg};
-use crate::state::{Config, Locks, CONFIG, TOKEN_LOCKS};
+use crate::state::{Config, Locks, CONFIG, LOCKS, TOKEN_LOCKS};
 
 use cw721::{ContractInfoResponse, Cw721Execute};
 use cw721_base::{InstantiateMsg, MintMsg};
@@ -27,16 +27,17 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let config = Config {
-        admin: info.sender,
-        locks: Locks {
-            burn_lock: false,
-            mint_lock: false,
-            transfer_lock: false,
-            send_lock: false,
-        },
+    let locks = Locks {
+        burn_lock: false,
+        mint_lock: false,
+        transfer_lock: false,
+        send_lock: false,
     };
+
+    let config = Config { admin: info.sender };
     CONFIG.save(deps.storage, &config)?;
+
+    LOCKS.save(deps.storage, &locks)?;
 
     let contract_info = ContractInfoResponse {
         name: msg.name.clone(),
@@ -96,13 +97,12 @@ pub fn execute_update_locks(
     info: MessageInfo,
     locks: Locks,
 ) -> Result<Response, ContractError> {
-    let mut config = CONFIG.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    config.locks = locks.clone();
-    CONFIG.save(deps.storage, &config)?;
+    LOCKS.save(deps.storage, &locks)?;
 
     Ok(Response::new()
         .add_attribute("action", "update_locks")
@@ -141,8 +141,8 @@ pub fn execute_mint(
     info: MessageInfo,
     mint_msg: MintMsg<Empty>,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    if config.locks.mint_lock {
+    let locks = LOCKS.load(deps.storage)?;
+    if locks.mint_lock {
         return Err(ContractError::MintLocked {});
     }
 
@@ -164,8 +164,8 @@ pub fn execute_burn(
     info: MessageInfo,
     token_id: String,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    if config.locks.burn_lock {
+    let locks = LOCKS.load(deps.storage)?;
+    if locks.burn_lock {
         return Err(ContractError::BurnLocked {});
     }
 
@@ -188,8 +188,8 @@ pub fn execute_transfer(
     token_id: String,
     recipient: String,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    if config.locks.transfer_lock {
+    let locks = LOCKS.load(deps.storage)?;
+    if locks.transfer_lock {
         return Err(ContractError::TransferLocked {});
     }
 
@@ -213,8 +213,8 @@ pub fn execute_send(
     contract: String,
     msg: Binary,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    if config.locks.send_lock {
+    let locks = LOCKS.load(deps.storage)?;
+    if locks.send_lock {
         return Err(ContractError::SendLocked {});
     }
 
@@ -240,10 +240,8 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 fn query_locks(deps: Deps) -> StdResult<LocksReponse> {
-    let config = CONFIG.load(deps.storage)?;
-    Ok(LocksReponse {
-        locks: config.locks,
-    })
+    let locks = LOCKS.load(deps.storage)?;
+    Ok(LocksReponse { locks })
 }
 
 fn query_token_locks(deps: Deps, token_id: String) -> StdResult<LocksReponse> {
