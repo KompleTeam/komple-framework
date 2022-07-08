@@ -1,10 +1,26 @@
-use cosmwasm_std::{Binary, Empty};
+use cosmwasm_std::{Binary, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, MintMsg, QueryMsg as Cw721QueryMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::state::Locks;
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct TokenInfo {
+    pub name: String,
+    pub symbol: String,
+    pub minter: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct InstantiateMsg {
+    pub token_info: TokenInfo,
+    pub per_address_limit: Option<u32>,
+    pub start_time: Option<Timestamp>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -134,6 +150,9 @@ pub enum QueryMsg {
     TokenLocks {
         token_id: String,
     },
+    GetMintedTokenAmount {
+        address: String,
+    },
 }
 
 impl From<QueryMsg> for Cw721QueryMsg {
@@ -205,4 +224,10 @@ impl From<QueryMsg> for Cw721QueryMsg {
 #[serde(rename_all = "snake_case")]
 pub struct LocksReponse {
     pub locks: Locks,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct MintedTokenAmountResponse {
+    pub amount: u32,
 }

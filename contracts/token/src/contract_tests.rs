@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
-    use cw721_base::msg::InstantiateMsg;
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+
+    use crate::msg::{InstantiateMsg, TokenInfo};
 
     pub fn token_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
@@ -37,10 +38,15 @@ mod tests {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_contract());
 
-        let msg = InstantiateMsg {
-            name: "token".to_string(),
-            symbol: "TOKEN".to_string(),
+        let token_info = TokenInfo {
+            name: "Test Token".to_string(),
+            symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
+        };
+        let msg = InstantiateMsg {
+            token_info,
+            per_address_limit: None,
+            start_time: None,
         };
         let token_contract_addr = app
             .instantiate_contract(
@@ -59,7 +65,11 @@ mod tests {
     mod mint {
         use super::*;
 
-        use crate::msg::{ExecuteMsg, QueryMsg};
+        use crate::{
+            msg::{ExecuteMsg, MintedTokenAmountResponse, QueryMsg},
+            state::Locks,
+            ContractError,
+        };
         use cw721::OwnerOfResponse;
         use cw721_base::MintMsg;
 
@@ -69,7 +79,7 @@ mod tests {
 
             let msg = ExecuteMsg::Mint(MintMsg {
                 token_id: "1".to_string(),
-                owner: ADMIN.to_string(),
+                owner: USER.to_string(),
                 token_uri: None,
                 extension: Empty {},
             });
@@ -81,8 +91,104 @@ mod tests {
                 token_id: "1".to_string(),
                 include_expired: None,
             };
-            let response: OwnerOfResponse = app.wrap().query_wasm_smart(token_addr, &msg).unwrap();
-            assert_eq!(response.owner, ADMIN);
+            let response: OwnerOfResponse = app
+                .wrap()
+                .query_wasm_smart(token_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(response.owner, USER);
+
+            let msg = QueryMsg::GetMintedTokenAmount {
+                address: USER.to_string(),
+            };
+            let res: MintedTokenAmountResponse =
+                app.wrap().query_wasm_smart(token_addr, &msg).unwrap();
+            assert_eq!(res.amount, 1);
+        }
+
+        #[test]
+        fn test_unhappy_path() {
+            let (mut app, token_addr) = proper_instantiate();
+
+            let mint_msg = ExecuteMsg::Mint(MintMsg {
+                token_id: "1".to_string(),
+                owner: USER.to_string(),
+                token_uri: None,
+                extension: Empty {},
+            });
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    token_addr.clone(),
+                    &mint_msg,
+                    &vec![],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+
+            let locks = Locks {
+                mint_lock: true,
+                burn_lock: false,
+                send_lock: false,
+                transfer_lock: false,
+            };
+            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateLocks {
+                locks: locks.clone(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    token_addr.clone(),
+                    &mint_msg,
+                    &vec![],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::MintLocked {}.to_string()
+            );
+
+            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateTokenLock {
+                token_id: "1".to_string(),
+                locks: locks.clone(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let locks = Locks {
+                mint_lock: false,
+                burn_lock: false,
+                send_lock: false,
+                transfer_lock: false,
+            };
+            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateLocks {
+                locks: locks.clone(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    token_addr.clone(),
+                    &mint_msg,
+                    &vec![],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::MintLocked {}.to_string()
+            );
+
+            // TODO: Add token per address limit test
         }
     }
 

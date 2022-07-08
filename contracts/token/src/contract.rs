@@ -6,11 +6,11 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, LocksReponse, QueryMsg};
-use crate::state::{Config, Locks, CONFIG, LOCKS, TOKEN_LOCKS};
+use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
+use crate::state::{Config, Locks, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS, TOKEN_IDS, TOKEN_LOCKS};
 
 use cw721::{ContractInfoResponse, Cw721Execute};
-use cw721_base::{InstantiateMsg, MintMsg};
+use cw721_base::MintMsg;
 
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
@@ -34,28 +34,34 @@ pub fn instantiate(
         send_lock: false,
     };
 
-    let config = Config { admin: info.sender };
+    let config = Config {
+        admin: info.sender,
+        per_address_limit: msg.per_address_limit,
+        start_time: msg.start_time,
+    };
     CONFIG.save(deps.storage, &config)?;
 
     LOCKS.save(deps.storage, &locks)?;
 
+    TOKEN_IDS.save(deps.storage, &0)?;
+
     let contract_info = ContractInfoResponse {
-        name: msg.name.clone(),
-        symbol: msg.symbol,
+        name: msg.token_info.name.clone(),
+        symbol: msg.token_info.symbol,
     };
     Cw721Contract::default()
         .contract_info
         .save(deps.storage, &contract_info)?;
 
-    let minter = deps.api.addr_validate(&msg.minter)?;
+    let minter = deps.api.addr_validate(&msg.token_info.minter)?;
     Cw721Contract::default()
         .minter
         .save(deps.storage, &minter)?;
 
     Ok(Response::new()
         .add_attribute("action", "instantiate")
-        .add_attribute("minter", msg.minter)
-        .add_attribute("collection_name", msg.name))
+        .add_attribute("minter", msg.token_info.minter)
+        .add_attribute("collection_name", msg.token_info.name))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -141,6 +147,8 @@ pub fn execute_mint(
     info: MessageInfo,
     mint_msg: MintMsg<Empty>,
 ) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
     let locks = LOCKS.load(deps.storage)?;
     if locks.mint_lock {
         return Err(ContractError::MintLocked {});
@@ -150,6 +158,16 @@ pub fn execute_mint(
     if token_lock.is_some() && token_lock.unwrap().mint_lock {
         return Err(ContractError::MintLocked {});
     }
+
+    let total_minted = MINTED_TOKEN_AMOUNTS
+        .may_load(deps.storage, &mint_msg.owner)?
+        .unwrap_or(0);
+
+    if config.per_address_limit.is_some() && total_minted + 1 > config.per_address_limit.unwrap() {
+        return Err(ContractError::TokenLimitReached {});
+    }
+
+    MINTED_TOKEN_AMOUNTS.save(deps.storage, &mint_msg.owner, &(total_minted + 1))?;
 
     let res = Cw721Contract::default().mint(deps, env, info, mint_msg);
     match res {
@@ -235,6 +253,9 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Locks {} => to_binary(&query_locks(deps)?),
         QueryMsg::TokenLocks { token_id } => to_binary(&query_token_locks(deps, token_id)?),
+        QueryMsg::GetMintedTokenAmount { address } => {
+            to_binary(&query_get_minted_token_amount(deps, address)?)
+        }
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
 }
@@ -247,4 +268,14 @@ fn query_locks(deps: Deps) -> StdResult<LocksReponse> {
 fn query_token_locks(deps: Deps, token_id: String) -> StdResult<LocksReponse> {
     let locks = TOKEN_LOCKS.load(deps.storage, &token_id)?;
     Ok(LocksReponse { locks })
+}
+
+fn query_get_minted_token_amount(
+    deps: Deps,
+    address: String,
+) -> StdResult<MintedTokenAmountResponse> {
+    let amount = MINTED_TOKEN_AMOUNTS
+        .may_load(deps.storage, &address)?
+        .unwrap_or(0);
+    Ok(MintedTokenAmountResponse { amount })
 }
