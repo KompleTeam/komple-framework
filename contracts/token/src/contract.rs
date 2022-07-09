@@ -4,10 +4,14 @@ use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Timestamp,
 };
 use cw2::set_contract_version;
+use url::Url;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
-use crate::state::{Config, Locks, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS, TOKEN_IDS, TOKEN_LOCKS};
+use crate::state::{
+    CollectionInfo, Config, Locks, COLLECTION_INFO, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS, TOKEN_IDS,
+    TOKEN_LOCKS,
+};
 
 use cw721::{ContractInfoResponse, Cw721Execute};
 use cw721_base::MintMsg;
@@ -18,10 +22,12 @@ pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 const CONTRACT_NAME: &str = "crates.io:token";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+const MAX_DESCRIPTION_LENGTH: u32 = 512;
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
@@ -34,16 +40,43 @@ pub fn instantiate(
         send_lock: false,
     };
 
+    let whitelist = msg
+        .whitelist
+        .and_then(|w| deps.api.addr_validate(w.as_str()).ok());
+
+    if msg.start_time.is_some() && env.block.time > msg.start_time.unwrap() {
+        return Err(ContractError::InvalidStartTime {});
+    }
+
     let config = Config {
         admin: info.sender,
         per_address_limit: msg.per_address_limit,
         start_time: msg.start_time,
+        whitelist,
     };
     CONFIG.save(deps.storage, &config)?;
 
     LOCKS.save(deps.storage, &locks)?;
 
     TOKEN_IDS.save(deps.storage, &0)?;
+
+    if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
+        return Err(ContractError::DescriptionTooLong {});
+    }
+
+    Url::parse(&msg.collection_info.image)?;
+
+    if let Some(ref external_link) = msg.collection_info.external_link {
+        Url::parse(external_link)?;
+    }
+
+    let collection_info = CollectionInfo {
+        name: msg.collection_info.name.clone(),
+        description: msg.collection_info.description,
+        image: msg.collection_info.image,
+        external_link: msg.collection_info.external_link,
+    };
+    COLLECTION_INFO.save(deps.storage, &collection_info)?;
 
     let contract_info = ContractInfoResponse {
         name: msg.token_info.name.clone(),
@@ -93,6 +126,7 @@ pub fn execute(
         ExecuteMsg::UpdateStartTime { start_time } => {
             execute_update_start_time(deps, env, info, start_time)
         }
+        ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
             match res {
@@ -307,14 +341,32 @@ fn execute_update_start_time(
     Ok(Response::new().add_attribute("action", "update_start_time"))
 }
 
+fn execute_set_whitelist(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    whitelist: Option<String>,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    config.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new().add_attribute("action", "set_whitelist"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Locks {} => to_binary(&query_locks(deps)?),
         QueryMsg::TokenLocks { token_id } => to_binary(&query_token_locks(deps, token_id)?),
-        QueryMsg::GetMintedTokenAmount { address } => {
-            to_binary(&query_get_minted_token_amount(deps, address)?)
+        QueryMsg::MintedTokenAmount { address } => {
+            to_binary(&query_minted_token_amount(deps, address)?)
         }
+        QueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
 }
@@ -329,12 +381,14 @@ fn query_token_locks(deps: Deps, token_id: String) -> StdResult<LocksReponse> {
     Ok(LocksReponse { locks })
 }
 
-fn query_get_minted_token_amount(
-    deps: Deps,
-    address: String,
-) -> StdResult<MintedTokenAmountResponse> {
+fn query_minted_token_amount(deps: Deps, address: String) -> StdResult<MintedTokenAmountResponse> {
     let amount = MINTED_TOKEN_AMOUNTS
         .may_load(deps.storage, &address)?
         .unwrap_or(0);
     Ok(MintedTokenAmountResponse { amount })
+}
+
+fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
+    let collection_info = COLLECTION_INFO.load(deps.storage)?;
+    Ok(collection_info)
 }

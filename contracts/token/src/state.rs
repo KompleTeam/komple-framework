@@ -5,10 +5,20 @@ use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct CollectionInfo {
+    pub name: String,
+    pub description: String,
+    pub image: String,
+    pub external_link: Option<String>,
+}
+pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new("collection_info");
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
+    pub whitelist: Option<Addr>,
     // TODO: Add royalty and whitelist contracts here
 }
 pub const CONFIG: Item<Config> = Item::new("config");

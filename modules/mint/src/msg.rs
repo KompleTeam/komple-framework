@@ -1,15 +1,11 @@
 use cosmwasm_std::Timestamp;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use token::state::Locks;
-
-use crate::state::CollectionInfo;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub symbol: String,
     pub token_code_id: u64,
-    pub collection_info: CollectionInfo,
     pub per_address_limit: Option<u32>,
     pub whitelist: Option<String>,
     pub start_time: Option<Timestamp>,
@@ -19,13 +15,8 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     UpdateMintLock { mint_lock: bool },
-    UpdateLocks { locks: Locks },
-    UpdateTokenLocks { token_id: u32, locks: Locks },
     Mint {},
     MintTo { recipient: String },
-    SetWhitelist { whitelist: Option<String> },
-    UpdateStartTime(Option<Timestamp>),
-    UpdatePerAddressLimit { per_address_limit: Option<u32> },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -33,7 +24,6 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     GetConfig {},
     GetTokenAddress {},
-    GetCollectionInfo {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

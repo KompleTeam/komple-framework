@@ -1,6 +1,5 @@
 use cosmwasm_std::StdError;
 use thiserror::Error;
-use url::ParseError;
 
 #[derive(Error, Debug)]
 pub enum ContractError {
@@ -33,7 +32,4 @@ pub enum ContractError {
 
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
-
-    #[error("{0}")]
-    Parse(#[from] ParseError),
 }

@@ -4,7 +4,7 @@ use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, MintMsg, QueryMsg as Cw721QueryM
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::Locks;
+use crate::state::{CollectionInfo, Locks};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -20,6 +20,8 @@ pub struct InstantiateMsg {
     pub token_info: TokenInfo,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
+    pub whitelist: Option<String>,
+    pub collection_info: CollectionInfo,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -66,6 +68,9 @@ pub enum ExecuteMsg<T> {
     },
     UpdateStartTime {
         start_time: Option<Timestamp>,
+    },
+    SetWhitelist {
+        whitelist: Option<String>,
     },
 }
 
@@ -156,9 +161,10 @@ pub enum QueryMsg {
     TokenLocks {
         token_id: String,
     },
-    GetMintedTokenAmount {
+    MintedTokenAmount {
         address: String,
     },
+    CollectionInfo {},
 }
 
 impl From<QueryMsg> for Cw721QueryMsg {

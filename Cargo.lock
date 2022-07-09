@@ -507,7 +507,6 @@ dependencies = [
  "serde",
  "thiserror",
  "token",
- "url",
 ]
 
 [[package]]
@@ -818,6 +817,7 @@ dependencies = [
  "schemars",
  "serde",
  "thiserror",
+ "url",
 ]
 
 [[package]]
