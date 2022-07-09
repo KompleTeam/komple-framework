@@ -9,6 +9,7 @@ pub struct Config {
     pub admin: Addr,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
+    // TODO: Add royalty and whitelist contracts here
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
