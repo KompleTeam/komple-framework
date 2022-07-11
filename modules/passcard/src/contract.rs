@@ -1,12 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult,
-    SubMsg, Timestamp, WasmMsg,
+    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
+    Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
-use token_contract::msg::{InstantiateMsg as TokenInstantiateMsg, TokenInfo};
+
+use token_contract::msg::{
+    ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
+};
 use token_contract::state::CollectionInfo;
 
 use crate::error::ContractError;
@@ -43,7 +46,7 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
@@ -57,8 +60,10 @@ pub fn execute(
             whitelist,
             royalty,
             main_collections,
+            max_token_limit,
         } => execute_create_passcard(
             deps,
+            env,
             info,
             code_id,
             collection_info,
@@ -68,12 +73,15 @@ pub fn execute(
             whitelist,
             royalty,
             main_collections,
+            max_token_limit,
         ),
+        ExecuteMsg::Mint { passcard_id } => execute_mint(deps, env, info, passcard_id),
     }
 }
 
 fn execute_create_passcard(
     deps: DepsMut,
+    _env: Env,
     info: MessageInfo,
     code_id: u64,
     collection_info: CollectionInfo,
@@ -83,6 +91,7 @@ fn execute_create_passcard(
     whitelist: Option<String>,
     royalty: Option<String>,
     main_collections: Vec<u32>,
+    max_token_limit: Option<u32>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
@@ -98,6 +107,7 @@ fn execute_create_passcard(
                 start_time,
                 whitelist,
                 royalty,
+                max_token_limit,
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
@@ -117,7 +127,34 @@ fn execute_create_passcard(
 
     Ok(Response::new()
         .add_submessage(sub_msg)
-        .add_attribute("action", "execute"))
+        .add_attribute("action", "execute_create_passcard"))
+}
+
+fn execute_mint(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    passcard_id: u32,
+) -> Result<Response, ContractError> {
+    // let config = CONFIG.load(deps.storage)?;
+    // if config.mint_lock {
+    //     return Err(ContractError::LockedMint {});
+    // }
+
+    let passcard_addr = PASSCARD_ADDR.load(deps.storage, passcard_id)?;
+
+    let mint_msg = TokenExecuteMsg::Mint {
+        owner: info.sender.to_string(),
+    };
+    let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: passcard_addr.to_string(),
+        msg: to_binary(&mint_msg)?,
+        funds: info.funds,
+    });
+
+    Ok(Response::new()
+        .add_message(msg)
+        .add_attribute("action", "execute_mint"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

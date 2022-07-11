@@ -60,6 +60,7 @@ pub fn instantiate(
         start_time: msg.start_time,
         whitelist,
         royalty,
+        max_token_limit: msg.max_token_limit,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -205,6 +206,10 @@ pub fn execute_mint(
     let token_lock = TOKEN_LOCKS.may_load(deps.storage, &token_id.to_string())?;
     if token_lock.is_some() && token_lock.unwrap().mint_lock {
         return Err(ContractError::MintLocked {});
+    }
+
+    if config.max_token_limit.is_some() && token_id > config.max_token_limit.unwrap() {
+        return Err(ContractError::TokenLimitReached {});
     }
 
     let total_minted = MINTED_TOKEN_AMOUNTS
