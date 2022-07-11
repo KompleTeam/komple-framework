@@ -18,6 +18,7 @@ pub enum ExecuteMsg {
         per_address_limit: Option<u32>,
         start_time: Option<Timestamp>,
         whitelist: Option<String>,
+        royalty: Option<String>,
     },
     UpdateMintLock {
         lock: bool,

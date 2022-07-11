@@ -19,7 +19,7 @@ pub struct Config {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub whitelist: Option<Addr>,
-    // TODO: Add royalty and whitelist contracts here
+    pub royalty: Option<Addr>,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 

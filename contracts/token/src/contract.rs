@@ -44,9 +44,13 @@ pub fn instantiate(
         .whitelist
         .and_then(|w| deps.api.addr_validate(w.as_str()).ok());
 
+    let royalty = msg
+        .royalty
+        .and_then(|r| deps.api.addr_validate(r.as_str()).ok());
+
     if msg.start_time.is_some() && env.block.time > msg.start_time.unwrap() {
         return Err(ContractError::InvalidStartTime {});
-    }
+    };
 
     let admin = deps.api.addr_validate(&msg.admin)?;
 
@@ -55,6 +59,7 @@ pub fn instantiate(
         per_address_limit: msg.per_address_limit,
         start_time: msg.start_time,
         whitelist,
+        royalty,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -130,7 +135,10 @@ pub fn execute(
         ExecuteMsg::UpdateStartTime { start_time } => {
             execute_update_start_time(deps, env, info, start_time)
         }
-        ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
+        ExecuteMsg::UpdateWhitelist { whitelist } => {
+            execute_update_whitelist(deps, env, info, whitelist)
+        }
+        ExecuteMsg::UpdateRoyalty { royalty } => execute_update_royalty(deps, env, info, royalty),
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
             match res {
@@ -347,7 +355,7 @@ fn execute_update_start_time(
     Ok(Response::new().add_attribute("action", "update_start_time"))
 }
 
-fn execute_set_whitelist(
+fn execute_update_whitelist(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
@@ -360,7 +368,23 @@ fn execute_set_whitelist(
     config.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_attribute("action", "set_whitelist"))
+    Ok(Response::new().add_attribute("action", "update_whitelist"))
+}
+
+fn execute_update_royalty(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    royalty: Option<String>,
+) -> Result<Response, ContractError> {
+    can_execute(&deps, &info)?;
+
+    let mut config = CONFIG.load(deps.storage)?;
+
+    config.royalty = royalty.and_then(|r| deps.api.addr_validate(r.as_str()).ok());
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new().add_attribute("action", "update_royalty"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

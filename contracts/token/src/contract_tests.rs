@@ -57,6 +57,7 @@ mod tests {
             per_address_limit: None,
             start_time: None,
             whitelist: None,
+            royalty: None,
             collection_info,
         };
         let token_contract_addr = app
