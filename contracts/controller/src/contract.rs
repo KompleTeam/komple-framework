@@ -71,10 +71,9 @@ fn execute_init_mint_module(
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
+    can_execute(&deps, &info)?;
+
     let config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    };
 
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
@@ -138,4 +137,14 @@ fn handle_mint_module_instantiate_reply(
         }
         Err(_) => Err(ContractError::MintInstantiateError {}),
     }
+}
+
+fn can_execute(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    Ok(true)
 }

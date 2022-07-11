@@ -147,10 +147,7 @@ pub fn execute_update_locks(
     info: MessageInfo,
     locks: Locks,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
+    can_execute(&deps, &info)?;
 
     LOCKS.save(deps.storage, &locks)?;
 
@@ -169,10 +166,7 @@ pub fn execute_update_token_locks(
     token_id: String,
     locks: Locks,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
+    can_execute(&deps, &info)?;
 
     TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
 
@@ -310,10 +304,9 @@ pub fn execute_update_per_address_limit(
     info: MessageInfo,
     per_address_limit: Option<u32>,
 ) -> Result<Response, ContractError> {
+    can_execute(&deps, &info)?;
+
     let mut config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
 
     if per_address_limit.is_some() && per_address_limit.unwrap() == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
@@ -331,10 +324,9 @@ fn execute_update_start_time(
     info: MessageInfo,
     start_time: Option<Timestamp>,
 ) -> Result<Response, ContractError> {
+    can_execute(&deps, &info)?;
+
     let mut config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
 
     if config.start_time.is_some() && env.block.time >= config.start_time.unwrap() {
         return Err(ContractError::AlreadyStarted {});
@@ -361,10 +353,9 @@ fn execute_set_whitelist(
     info: MessageInfo,
     whitelist: Option<String>,
 ) -> Result<Response, ContractError> {
+    can_execute(&deps, &info)?;
+
     let mut config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
 
     config.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
     CONFIG.save(deps.storage, &config)?;
@@ -405,4 +396,15 @@ fn query_minted_token_amount(deps: Deps, address: String) -> StdResult<MintedTok
 fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
     let collection_info = COLLECTION_INFO.load(deps.storage)?;
     Ok(collection_info)
+}
+
+fn can_execute(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    let module_addr = MODULE_ADDR.load(deps.storage)?;
+
+    if config.admin != info.sender && module_addr != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    Ok(true)
 }
