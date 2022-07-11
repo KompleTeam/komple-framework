@@ -1,6 +1,6 @@
 use cosmwasm_std::{Binary, Empty, Timestamp};
 use cw721::Expiration;
-use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, MintMsg, QueryMsg as Cw721QueryMsg};
+use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +16,7 @@ pub struct TokenInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InstantiateMsg {
+    pub admin: String,
     pub token_info: TokenInfo,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
@@ -25,7 +26,7 @@ pub struct InstantiateMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum ExecuteMsg<T> {
+pub enum ExecuteMsg {
     TransferNft {
         recipient: String,
         token_id: String,
@@ -51,7 +52,9 @@ pub enum ExecuteMsg<T> {
     RevokeAll {
         operator: String,
     },
-    Mint(MintMsg<T>),
+    Mint {
+        owner: String,
+    },
     Burn {
         token_id: String,
     },
@@ -73,8 +76,8 @@ pub enum ExecuteMsg<T> {
     },
 }
 
-impl From<ExecuteMsg<Empty>> for Cw721ExecuteMsg<Empty> {
-    fn from(msg: ExecuteMsg<Empty>) -> Cw721ExecuteMsg<Empty> {
+impl From<ExecuteMsg> for Cw721ExecuteMsg<Empty> {
+    fn from(msg: ExecuteMsg) -> Cw721ExecuteMsg<Empty> {
         match msg {
             ExecuteMsg::TransferNft {
                 recipient,
@@ -108,7 +111,6 @@ impl From<ExecuteMsg<Empty>> for Cw721ExecuteMsg<Empty> {
                 Cw721ExecuteMsg::ApproveAll { operator, expires }
             }
             ExecuteMsg::RevokeAll { operator } => Cw721ExecuteMsg::RevokeAll { operator },
-            ExecuteMsg::Mint(mint_msg) => Cw721ExecuteMsg::Mint(mint_msg.into()),
             ExecuteMsg::Burn { token_id } => Cw721ExecuteMsg::Burn { token_id },
             _ => unreachable!("cannot convert {:?} to Cw721ExecuteMsg", msg),
         }

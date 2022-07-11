@@ -9,8 +9,8 @@ use url::Url;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
 use crate::state::{
-    CollectionInfo, Config, Locks, COLLECTION_INFO, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS, TOKEN_IDS,
-    TOKEN_LOCKS,
+    CollectionInfo, Config, Locks, COLLECTION_INFO, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS,
+    MODULE_ADDR, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -48,8 +48,10 @@ pub fn instantiate(
         return Err(ContractError::InvalidStartTime {});
     }
 
+    let admin = deps.api.addr_validate(&msg.admin)?;
+
     let config = Config {
-        admin: info.sender,
+        admin,
         per_address_limit: msg.per_address_limit,
         start_time: msg.start_time,
         whitelist,
@@ -59,6 +61,8 @@ pub fn instantiate(
     LOCKS.save(deps.storage, &locks)?;
 
     TOKEN_IDS.save(deps.storage, &0)?;
+
+    MODULE_ADDR.save(deps.storage, &info.sender)?;
 
     if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
@@ -102,14 +106,14 @@ pub fn execute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: ExecuteMsg<Empty>,
+    msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
         ExecuteMsg::UpdateTokenLock { token_id, locks } => {
             execute_update_token_locks(deps, env, info, token_id, locks)
         }
-        ExecuteMsg::Mint(mint_msg) => execute_mint(deps, env, info, mint_msg),
+        ExecuteMsg::Mint { owner } => execute_mint(deps, env, info, owner),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
         ExecuteMsg::TransferNft {
             token_id,
@@ -185,7 +189,7 @@ pub fn execute_mint(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    mint_msg: MintMsg<Empty>,
+    owner: String,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
@@ -194,13 +198,15 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
-    let token_lock = TOKEN_LOCKS.may_load(deps.storage, &mint_msg.token_id)?;
+    let token_id = (TOKEN_IDS.load(deps.storage)?) + 1;
+
+    let token_lock = TOKEN_LOCKS.may_load(deps.storage, &token_id.to_string())?;
     if token_lock.is_some() && token_lock.unwrap().mint_lock {
         return Err(ContractError::MintLocked {});
     }
 
     let total_minted = MINTED_TOKEN_AMOUNTS
-        .may_load(deps.storage, &mint_msg.owner)?
+        .may_load(deps.storage, &owner)?
         .unwrap_or(0);
 
     if config.per_address_limit.is_some() && total_minted + 1 > config.per_address_limit.unwrap() {
@@ -209,7 +215,15 @@ pub fn execute_mint(
 
     // TODO: Check for start time here
 
-    MINTED_TOKEN_AMOUNTS.save(deps.storage, &mint_msg.owner, &(total_minted + 1))?;
+    let mint_msg = MintMsg {
+        token_id: token_id.to_string(),
+        owner: owner.clone(),
+        token_uri: None,
+        extension: Empty {},
+    };
+
+    MINTED_TOKEN_AMOUNTS.save(deps.storage, &owner, &(total_minted + 1))?;
+    TOKEN_IDS.save(deps.storage, &token_id)?;
 
     let res = Cw721Contract::default().mint(deps, env, info, mint_msg);
     match res {
