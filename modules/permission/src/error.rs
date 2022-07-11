@@ -9,6 +9,12 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Invalid reply ID")]
+    InvalidReplyID {},
+
+    #[error("Error while instantiating token contract")]
+    TokenInstantiateError {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 }

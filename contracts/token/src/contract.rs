@@ -19,7 +19,7 @@ use cw721_base::MintMsg;
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:token";
+const CONTRACT_NAME: &str = "crates.io:token-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;

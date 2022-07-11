@@ -13,11 +13,11 @@ use token_contract::msg::{
 use token_contract::state::CollectionInfo;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenAddressResponse};
+use crate::msg::{AddressResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, COLLECTION_ID, CONFIG, CONTROLLER_ADDR, TOKEN_ADDRS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:mint";
+const CONTRACT_NAME: &str = "crates.io:mint-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TOKEN_INSTANTIATE_REPLY_ID: u64 = 1;
@@ -218,10 +218,10 @@ fn query_config(deps: Deps) -> StdResult<Config> {
     Ok(config)
 }
 
-fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<TokenAddressResponse> {
+fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<AddressResponse> {
     let addr = TOKEN_ADDRS.load(deps.storage, collection_id)?;
-    Ok(TokenAddressResponse {
-        token_address: addr.to_string(),
+    Ok(AddressResponse {
+        address: addr.to_string(),
     })
 }
 

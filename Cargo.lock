@@ -502,7 +502,6 @@ dependencies = [
  "cw-utils",
  "cw2",
  "cw721",
- "cw721-base",
  "schemars",
  "serde",
  "thiserror",
@@ -530,10 +529,13 @@ dependencies = [
  "cosmwasm-storage",
  "cw-multi-test",
  "cw-storage-plus",
+ "cw-utils",
  "cw2",
+ "cw721",
  "schemars",
  "serde",
  "thiserror",
+ "token-contract",
 ]
 
 [[package]]
