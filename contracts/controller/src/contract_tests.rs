@@ -14,13 +14,13 @@ mod tests {
         Box::new(contract)
     }
 
-    pub fn mint_contract() -> Box<dyn Contract<Empty>> {
+    pub fn mint_module_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
-            mint::contract::execute,
-            mint::contract::instantiate,
-            mint::contract::query,
+            mint_module::contract::execute,
+            mint_module::contract::instantiate,
+            mint_module::contract::query,
         )
-        .with_reply(mint::contract::reply);
+        .with_reply(mint_module::contract::reply);
         Box::new(contract)
     }
 
@@ -90,7 +90,7 @@ mod tests {
             fn test_init_module() {
                 let mut app = mock_app();
                 let controller_contract_addr = proper_instantiate(&mut app);
-                let mint_module_code_id = app.store_code(mint_contract());
+                let mint_module_code_id = app.store_code(mint_module_contract());
 
                 let msg = ExecuteMsg::InitMintModule {
                     code_id: mint_module_code_id,

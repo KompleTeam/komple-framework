@@ -2,20 +2,7 @@
 members = [
     "contracts/*",
     "modules/*",
-    "permissions/*"
 ]
-
-[profile.release.package.token]
-codegen-units = 1
-incremental = false
-
-[profile.release.package.controller]
-codegen-units = 1
-incremental = false
-
-[profile.release.package.mint]
-codegen-units = 1
-incremental = false
 
 [profile.release]
 rpath = false
