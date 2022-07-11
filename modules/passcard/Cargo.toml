@@ -1,5 +1,5 @@
 [package]
-name = "permission-module"
+name = "passcard-module"
 version = "0.1.0"
 authors = ["AnalogGhost <analoghost@proton.me>"]
 edition = "2018"
