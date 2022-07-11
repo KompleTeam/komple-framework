@@ -1,7 +1,7 @@
 use cosmwasm_std::Timestamp;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use token::{msg::TokenInfo, state::CollectionInfo};
+use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {

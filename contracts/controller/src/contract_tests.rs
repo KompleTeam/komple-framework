@@ -26,9 +26,9 @@ mod tests {
 
     pub fn token_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
-            token::contract::execute,
-            token::contract::instantiate,
-            token::contract::query,
+            token_contract::contract::execute,
+            token_contract::contract::instantiate,
+            token_contract::contract::query,
         );
         Box::new(contract)
     }
