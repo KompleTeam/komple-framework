@@ -67,14 +67,14 @@ fn execute_update_module_permissions(
     module: Modules,
     permissions: Vec<Permissions>,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &config.admin,
-        Some(&controller_addr),
+        controller_addr,
         whitelist_addrs,
     )?;
 
@@ -96,10 +96,10 @@ fn execute_update_whitelist_addresses(
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
+    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
 
     let whitelist_addrs = addrs
         .iter()

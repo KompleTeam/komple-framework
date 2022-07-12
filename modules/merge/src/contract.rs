@@ -71,16 +71,11 @@ fn execute_update_merge_lock(
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(
-        &info.sender,
-        &config.admin,
-        Some(&controller_addr),
-        whitelist_addr,
-    )?;
+    check_admin_privileges(&info.sender, &config.admin, controller_addr, whitelist_addr)?;
 
     config.merge_lock = lock;
 
@@ -98,14 +93,14 @@ fn execute_merge(
     msg: Binary,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
-    let mint_module_addr = get_module_address(&deps, &controller_addr, Modules::MintModule)?;
-    let passcard_module_addr =
-        get_module_address(&deps, &controller_addr, Modules::PasscardModule)?;
 
     let merge_msgs: Vec<MergeMsg> = from_binary(&msg)?;
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     for merge_msg in merge_msgs {
+        // TODO: Use map to save unnecessary lookups
+        let mint_module_addr = get_module_address(&deps, &controller_addr, Modules::MintModule)?;
+
         match merge_msg.action {
             MergeAction::Mint => match merge_msg.collection_type {
                 Collections::Normal => {
@@ -133,6 +128,10 @@ fn execute_merge(
                         )?;
                     }
                     Collections::Passcard => {
+                        // TODO: Use map to save unnecessary lookups
+                        let passcard_module_addr =
+                            get_module_address(&deps, &controller_addr, Modules::PasscardModule)?;
+
                         address = get_collection_address(
                             &deps,
                             &passcard_module_addr,
@@ -164,10 +163,10 @@ fn execute_update_whitelist_addresses(
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
+    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
 
     let whitelist_addrs = addrs
         .iter()

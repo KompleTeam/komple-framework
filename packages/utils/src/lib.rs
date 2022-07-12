@@ -8,16 +8,16 @@ use thiserror::Error;
 pub fn check_admin_privileges(
     sender: &Addr,
     admin: &Addr,
-    parent_addr: Option<&Addr>,
+    parent_addr: Option<Addr>,
     whitelist_addrs: Option<Vec<Addr>>,
 ) -> Result<(), UtilError> {
     let mut has_privileges = sender == admin;
 
-    if parent_addr.is_some() {
-        has_privileges = sender == parent_addr.unwrap();
+    if !has_privileges && parent_addr.is_some() {
+        has_privileges = sender == &parent_addr.unwrap();
     }
 
-    if whitelist_addrs.is_some() {
+    if !has_privileges && whitelist_addrs.is_some() {
         has_privileges = whitelist_addrs.unwrap().contains(sender);
     }
 
