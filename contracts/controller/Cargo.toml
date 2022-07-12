@@ -49,7 +49,10 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 mint-module = { path = "../../modules/mint" }
 token-contract = { path = "../token" }
+permission-module = { path = "../../modules/permission" }
 cw-utils = "0.13.2"
+rift-types = { path = "../../packages/types" }
+rift-utils = { path = "../../packages/utils" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
