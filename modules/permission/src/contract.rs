@@ -9,7 +9,7 @@ use cw721::OwnerOfResponse;
 use rift_types::collection::Collections;
 use rift_types::module::Modules;
 use rift_types::permission::Permissions;
-use rift_utils::{get_collection_address, get_module_address};
+use rift_utils::{check_admin_privilages, get_collection_address, get_module_address};
 
 use token_contract::msg::QueryMsg as TokenQueryMsg;
 
@@ -48,8 +48,36 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::UpdateModulePermissions {
+            module,
+            permissions,
+        } => execute_update_module_permissions(deps, env, info, module, permissions),
         ExecuteMsg::Check { module, msg } => execute_check(deps, env, info, module, msg),
     }
+}
+
+fn execute_update_module_permissions(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    module: Modules,
+    permissions: Vec<Permissions>,
+) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privilages(&info.sender, &config.admin, Some(&controller_addr), None)?;
+
+    MODULE_PERMISSIONS.save(deps.storage, module.to_string(), &permissions)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "execute_check_permission")
+        .add_attributes(
+            permissions
+                .iter()
+                .map(|p| ("permission", p.to_string()))
+                .collect::<Vec<(&str, &str)>>(),
+        ))
 }
 
 fn execute_check(
