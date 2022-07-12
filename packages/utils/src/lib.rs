@@ -5,22 +5,26 @@ use rift_types::{
 };
 use thiserror::Error;
 
-pub fn check_admin_privilages(
+pub fn check_admin_privileges(
     sender: &Addr,
     admin: &Addr,
-    parent_contract: Option<&Addr>,
-    enabled_modules: Option<&Vec<Addr>>,
+    parent_addr: Option<&Addr>,
+    whitelist_addrs: Option<Vec<Addr>>,
 ) -> Result<(), UtilError> {
-    if admin != sender {
-        return Err(UtilError::Unauthorized {});
+    let mut has_privileges = sender == admin;
+
+    if parent_addr.is_some() {
+        has_privileges = sender == parent_addr.unwrap();
     }
-    if parent_contract.is_some() && parent_contract.unwrap() != sender {
-        return Err(UtilError::Unauthorized {});
+
+    if whitelist_addrs.is_some() {
+        has_privileges = whitelist_addrs.unwrap().contains(sender);
     }
-    if enabled_modules.is_some() && !enabled_modules.unwrap().contains(&sender) {
-        return Err(UtilError::Unauthorized {});
+
+    match has_privileges {
+        true => Ok(()),
+        false => Err(UtilError::Unauthorized {}),
     }
-    Ok(())
 }
 
 pub fn get_module_address(
