@@ -24,6 +24,15 @@ mod tests {
         Box::new(contract)
     }
 
+    pub fn permission_module_contract() -> Box<dyn Contract<Empty>> {
+        let contract = ContractWrapper::new(
+            permission_module::contract::execute,
+            permission_module::contract::instantiate,
+            permission_module::contract::query,
+        );
+        Box::new(contract)
+    }
+
     pub fn token_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
             token_contract::contract::execute,
@@ -81,10 +90,12 @@ mod tests {
     mod modules {
         use super::*;
 
-        mod mint_module {
+        mod mint_module_tests {
             use super::*;
 
-            use crate::msg::{ExecuteMsg, ModuleAddrResponse, QueryMsg};
+            use crate::msg::{ExecuteMsg, QueryMsg};
+
+            use rift_types::{module::Modules, query::AddressResponse};
 
             #[test]
             fn test_init_module() {
@@ -104,205 +115,47 @@ mod tests {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::MintModuleAddr {};
-                let res: ModuleAddrResponse = app
+                let msg = QueryMsg::ModuleAddress(Modules::MintModule);
+                let res: AddressResponse = app
                     .wrap()
                     .query_wasm_smart(controller_contract_addr, &msg)
                     .unwrap();
-                assert_eq!(res.addr, "contract1")
+                assert_eq!(res.address, "contract1")
+            }
+        }
+
+        mod permission_module_tests {
+            use super::*;
+
+            use crate::msg::{ExecuteMsg, QueryMsg};
+
+            use rift_types::{module::Modules, query::AddressResponse};
+
+            #[test]
+            fn test_init_module() {
+                let mut app = mock_app();
+                let controller_contract_addr = proper_instantiate(&mut app);
+                let permission_module_code_id = app.store_code(permission_module_contract());
+
+                let msg = ExecuteMsg::InitPermissionModule {
+                    code_id: permission_module_code_id,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        controller_contract_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                let msg = QueryMsg::ModuleAddress(Modules::PermissionModule);
+                let res: AddressResponse = app
+                    .wrap()
+                    .query_wasm_smart(controller_contract_addr, &msg)
+                    .unwrap();
+                assert_eq!(res.address, "contract1")
             }
         }
     }
-
-    // mod test_collection {
-    //     use super::*;
-
-    //     use crate::{
-    //         msg::{ExecuteMsg, GetCollectionResponse, QueryMsg},
-    //         ContractError,
-    //     };
-
-    //     use mint::{
-    //         msg::{InstantiateMsg as MintInstantiateMsg, QueryMsg as MintQueryMsg},
-    //         state::Config,
-    //     };
-
-    //     #[test]
-    //     fn test_happy_path() {
-    //         let (mut app, controller_contract_addr) = proper_instantiate();
-    //         let token_code_id = app.store_code(token_contract());
-
-    //         let collection_info = CollectionInfo {
-    //             name: "Test Collection".to_string(),
-    //             description: "Test Collection".to_string(),
-    //             image: "https://image.com".to_string(),
-    //             external_link: None,
-    //         };
-    //         let instantiate_msg = MintInstantiateMsg {
-    //             symbol: "TEST".to_string(),
-    //             token_code_id,
-    //             collection_info: collection_info.clone(),
-    //             per_address_limit: None,
-    //             whitelist: None,
-    //             start_time: None,
-    //         };
-    //         let msg = ExecuteMsg::AddCollection { instantiate_msg };
-    //         let _ = app
-    //             .execute_contract(
-    //                 Addr::unchecked(ADMIN),
-    //                 controller_contract_addr.clone(),
-    //                 &msg,
-    //                 &vec![],
-    //             )
-    //             .unwrap();
-
-    //         let msg = QueryMsg::GetCollection { collection_id: 1 };
-    //         let response: GetCollectionResponse = app
-    //             .wrap()
-    //             .query_wasm_smart(controller_contract_addr, &msg)
-    //             .unwrap();
-    //         let collection_address = response.address;
-
-    //         let msg = MintQueryMsg::GetCollectionInfo {};
-    //         let response: CollectionInfo = app
-    //             .wrap()
-    //             .query_wasm_smart(collection_address, &msg)
-    //             .unwrap();
-    //         assert_eq!(response, collection_info);
-    //     }
-
-    //     #[test]
-    //     fn test_mint_lock_happy_path() {
-    //         let (mut app, controller_contract_addr) = proper_instantiate();
-    //         let token_code_id = app.store_code(token_contract());
-
-    //         let collection_info = CollectionInfo {
-    //             name: "Test Collection".to_string(),
-    //             description: "Test Collection".to_string(),
-    //             image: "https://image.com".to_string(),
-    //             external_link: None,
-    //         };
-    //         let instantiate_msg = MintInstantiateMsg {
-    //             symbol: "TEST".to_string(),
-    //             token_code_id,
-    //             collection_info: collection_info.clone(),
-    //             per_address_limit: None,
-    //             whitelist: None,
-    //             start_time: None,
-    //         };
-    //         let msg = ExecuteMsg::AddCollection { instantiate_msg };
-    //         let _ = app
-    //             .execute_contract(
-    //                 Addr::unchecked(ADMIN),
-    //                 controller_contract_addr.clone(),
-    //                 &msg,
-    //                 &vec![],
-    //             )
-    //             .unwrap();
-
-    //         let err = app
-    //             .execute_contract(
-    //                 Addr::unchecked(USER),
-    //                 controller_contract_addr.clone(),
-    //                 &ExecuteMsg::UpdateMintLock {
-    //                     collection_id: 1,
-    //                     lock: true,
-    //                 },
-    //                 &vec![],
-    //             )
-    //             .unwrap_err();
-    //         assert_eq!(
-    //             err.source().unwrap().to_string(),
-    //             ContractError::Unauthorized {}.to_string()
-    //         );
-
-    //         let _ = app.execute_contract(
-    //             Addr::unchecked(ADMIN),
-    //             controller_contract_addr.clone(),
-    //             &ExecuteMsg::UpdateMintLock {
-    //                 collection_id: 1,
-    //                 lock: true,
-    //             },
-    //             &vec![],
-    //         );
-
-    //         // TODO: Use mint message here to test this
-    //         let msg = QueryMsg::GetCollection { collection_id: 1 };
-    //         let response: GetCollectionResponse = app
-    //             .wrap()
-    //             .query_wasm_smart(controller_contract_addr, &msg)
-    //             .unwrap();
-    //         let collection_address = response.address;
-
-    //         let msg = MintQueryMsg::GetConfig {};
-    //         let response: Config = app
-    //             .wrap()
-    //             .query_wasm_smart(collection_address, &msg)
-    //             .unwrap();
-    //         assert_eq!(response.mint_lock, true);
-    //     }
-    // }
-
-    // mod test_code_id {
-    //     use super::*;
-
-    //     use crate::{
-    //         msg::{ExecuteMsg, QueryMsg},
-    //         state::Config,
-    //         ContractError,
-    //     };
-
-    //     #[test]
-    //     fn test_happy_path() {
-    //         let (mut app, controller_contract_addr) = proper_instantiate();
-
-    //         let msg = ExecuteMsg::UpdateMintCodeId { code_id: 100 };
-    //         let _ = app.execute_contract(
-    //             Addr::unchecked(ADMIN),
-    //             controller_contract_addr.clone(),
-    //             &msg,
-    //             &vec![],
-    //         );
-
-    //         let msg = QueryMsg::GetConfig {};
-    //         let response: Config = app
-    //             .wrap()
-    //             .query_wasm_smart(controller_contract_addr, &msg)
-    //             .unwrap();
-    //         assert_eq!(response.mint_code_id, 100);
-    //     }
-
-    //     #[test]
-    //     fn test_unhappy_path() {
-    //         let (mut app, controller_contract_addr) = proper_instantiate();
-
-    //         let msg = ExecuteMsg::UpdateMintCodeId { code_id: 0 };
-    //         let err = app
-    //             .execute_contract(
-    //                 Addr::unchecked(USER),
-    //                 controller_contract_addr.clone(),
-    //                 &msg,
-    //                 &vec![],
-    //             )
-    //             .unwrap_err();
-    //         assert_eq!(
-    //             err.source().unwrap().to_string(),
-    //             ContractError::Unauthorized {}.to_string()
-    //         );
-
-    //         let msg = ExecuteMsg::UpdateMintCodeId { code_id: 0 };
-    //         let err = app
-    //             .execute_contract(
-    //                 Addr::unchecked(ADMIN),
-    //                 controller_contract_addr.clone(),
-    //                 &msg,
-    //                 &vec![],
-    //             )
-    //             .unwrap_err();
-    //         assert_eq!(
-    //             err.source().unwrap().to_string(),
-    //             ContractError::InvalidCodeId {}.to_string()
-    //         );
-    //     }
-    // }
 }
