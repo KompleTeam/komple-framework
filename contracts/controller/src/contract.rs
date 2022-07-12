@@ -8,14 +8,15 @@ use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
 use rift_types::module::{
-    Modules, MINT_MODULE_INSTANTIATE_REPLY_ID, PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
+    Modules, MERGE_MODULE_INSTANTIATE_REPLY_ID, MINT_MODULE_INSTANTIATE_REPLY_ID,
+    PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
 };
 use rift_types::query::AddressResponse;
-
-use mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
-
-use permission_module::msg::InstantiateMsg as PermissionModuleInstantiateMsg;
 use rift_utils::check_admin_privileges;
+
+use merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
+use mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
+use permission_module::msg::InstantiateMsg as PermissionModuleInstantiateMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -72,6 +73,9 @@ pub fn execute(
         ExecuteMsg::InitPermissionModule { code_id } => {
             execute_init_permission_module(deps, env, info, code_id)
         }
+        ExecuteMsg::InitMergeModule { code_id } => {
+            execute_init_merge_module(deps, env, info, code_id)
+        }
     }
 }
 
@@ -93,7 +97,7 @@ fn execute_init_mint_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Framework mint module"),
+            label: String::from("Rift Framework mint module"),
         }
         .into(),
         id: MINT_MODULE_INSTANTIATE_REPLY_ID,
@@ -124,7 +128,7 @@ fn execute_init_permission_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Framework permission module"),
+            label: String::from("Rift Framework permission module"),
         }
         .into(),
         id: PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
@@ -135,6 +139,37 @@ fn execute_init_permission_module(
     Ok(Response::new()
         .add_submessage(msg)
         .add_attribute("action", "execute_init_permission_module"))
+}
+
+fn execute_init_merge_module(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    code_id: u64,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(&info.sender, &config.admin, None, None)?;
+
+    let msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id,
+            msg: to_binary(&MergeModuleInstantiateMsg {
+                admin: config.admin.to_string(),
+            })?,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: String::from("Rift Framework merge module"),
+        }
+        .into(),
+        id: MERGE_MODULE_INSTANTIATE_REPLY_ID,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
+    Ok(Response::new()
+        .add_submessage(msg)
+        .add_attribute("action", "execute_init_merge_module"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -166,6 +201,9 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         }
         PERMISSION_MODULE_INSTANTIATE_REPLY_ID => {
             handle_module_instantiate_reply(deps, msg, Modules::PermissionModule)
+        }
+        MERGE_MODULE_INSTANTIATE_REPLY_ID => {
+            handle_module_instantiate_reply(deps, msg, Modules::MergeModule)
         }
         _ => return Err(ContractError::InvalidReplyID {}),
     }
