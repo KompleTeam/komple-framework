@@ -133,4 +133,61 @@ mod tests {
             );
         }
     }
+
+    mod permission_check {
+        use super::*;
+
+        mod ownership_check {
+            use super::*;
+
+            use cosmwasm_std::to_binary;
+            use rift_types::{collection::Collections, module::Modules, permission::Permissions};
+
+            use crate::msg::{ExecuteMsg, OwnershipMsg, PermissionCheckMsg};
+
+            // TODO: This is not possible to test here
+            // Can only be done in controller?
+            // #[test]
+            // fn test_happy_path() {
+            //     let mut app = mock_app();
+            //     let permission_module_addr = proper_instantiate(&mut app);
+
+            //     let msg = ExecuteMsg::UpdateModulePermissions {
+            //         module: Modules::MintModule,
+            //         permissions: vec![Permissions::Ownership],
+            //     };
+            //     let _ = app
+            //         .execute_contract(
+            //             Addr::unchecked(ADMIN),
+            //             permission_module_addr.clone(),
+            //             &msg,
+            //             &vec![],
+            //         )
+            //         .unwrap();
+
+            //     let permission_msg = to_binary(&vec![PermissionCheckMsg {
+            //         permission_type: Permissions::Ownership,
+            //         data: to_binary(&vec![OwnershipMsg {
+            //             collection_type: Collections::Normal,
+            //             collection_id: 1,
+            //             token_id: 1,
+            //             owner: USER.to_string(),
+            //         }])
+            //         .unwrap(),
+            //     }])
+            //     .unwrap();
+            //     let _ = app
+            //         .execute_contract(
+            //             Addr::unchecked(ADMIN),
+            //             permission_module_addr.clone(),
+            //             &ExecuteMsg::Check {
+            //                 module: Modules::MintModule,
+            //                 msg: permission_msg,
+            //             },
+            //             &vec![],
+            //         )
+            //         .unwrap();
+            // }
+        }
+    }
 }
