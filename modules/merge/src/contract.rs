@@ -5,6 +5,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{Config, CONFIG, CONTROLLER_ADDR};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:minter";
@@ -18,6 +19,13 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    let admin = deps.api.addr_validate(&msg.admin)?;
+
+    let config = Config { admin };
+    CONFIG.save(deps.storage, &config)?;
+
+    CONTROLLER_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
