@@ -95,10 +95,11 @@ mod tests {
     mod mint {
         use super::*;
         use crate::{
-            msg::{AddressResponse, ExecuteMsg, QueryMsg},
+            msg::{ExecuteMsg, QueryMsg},
             ContractError,
         };
         use cw721::OwnerOfResponse;
+        use rift_types::query::AddressResponse;
         use token_contract::msg::QueryMsg as TokenQueryMsg;
 
         #[test]
@@ -112,7 +113,7 @@ mod tests {
                 .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
                 .unwrap();
 
-            let msg = QueryMsg::CollectionAddress { collection_id: 1 };
+            let msg = QueryMsg::CollectionAddress(1);
             let response: AddressResponse = app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
             let token_address = response.address;
 
@@ -150,9 +151,10 @@ mod tests {
     mod locks {
         use super::*;
         use crate::{
-            msg::{AddressResponse, ExecuteMsg, QueryMsg},
+            msg::{ExecuteMsg, QueryMsg},
             state::Config,
         };
+        use rift_types::query::AddressResponse;
         use token_contract::{
             msg::{LocksReponse, QueryMsg as TokenQueryMsg},
             state::Locks,
