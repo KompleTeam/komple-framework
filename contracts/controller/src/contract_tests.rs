@@ -93,12 +93,15 @@ mod tests {
         mod mint_module_tests {
             use super::*;
 
-            use crate::msg::{ExecuteMsg, QueryMsg};
+            use crate::{
+                msg::{ExecuteMsg, QueryMsg},
+                ContractError,
+            };
 
             use rift_types::{module::Modules, query::AddressResponse};
 
             #[test]
-            fn test_init_module() {
+            fn test_init_happy_path() {
                 let mut app = mock_app();
                 let controller_contract_addr = proper_instantiate(&mut app);
                 let mint_module_code_id = app.store_code(mint_module_contract());
@@ -122,12 +125,38 @@ mod tests {
                     .unwrap();
                 assert_eq!(res.address, "contract1")
             }
+
+            #[test]
+            fn test_init_unhappy_path() {
+                let mut app = mock_app();
+                let controller_contract_addr = proper_instantiate(&mut app);
+                let mint_module_code_id = app.store_code(mint_module_contract());
+
+                let msg = ExecuteMsg::InitMintModule {
+                    code_id: mint_module_code_id,
+                };
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        controller_contract_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::Unauthorized {}.to_string()
+                )
+            }
         }
 
         mod permission_module_tests {
             use super::*;
 
-            use crate::msg::{ExecuteMsg, QueryMsg};
+            use crate::{
+                msg::{ExecuteMsg, QueryMsg},
+                ContractError,
+            };
 
             use rift_types::{module::Modules, query::AddressResponse};
 
@@ -155,6 +184,29 @@ mod tests {
                     .query_wasm_smart(controller_contract_addr, &msg)
                     .unwrap();
                 assert_eq!(res.address, "contract1")
+            }
+
+            #[test]
+            fn test_init_unhappy_path() {
+                let mut app = mock_app();
+                let controller_contract_addr = proper_instantiate(&mut app);
+                let permission_module_code_id = app.store_code(permission_module_contract());
+
+                let msg = ExecuteMsg::InitPermissionModule {
+                    code_id: permission_module_code_id,
+                };
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        controller_contract_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::Unauthorized {}.to_string()
+                )
             }
         }
     }

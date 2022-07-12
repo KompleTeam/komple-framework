@@ -15,7 +15,7 @@ use rift_types::query::AddressResponse;
 use mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
 
 use permission_module::msg::InstantiateMsg as PermissionModuleInstantiateMsg;
-use rift_utils::have_admin_privilages;
+use rift_utils::check_admin_privilages;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -82,9 +82,8 @@ fn execute_init_mint_module(
     code_id: u64,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    if !have_admin_privilages(&info.sender, &config.admin, None, None) {
-        return Err(ContractError::Unauthorized {});
-    }
+
+    check_admin_privilages(&info.sender, &config.admin, None, None)?;
 
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
@@ -114,9 +113,8 @@ fn execute_init_permission_module(
     code_id: u64,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    if !have_admin_privilages(&info.sender, &config.admin, None, None) {
-        return Err(ContractError::Unauthorized {});
-    }
+
+    check_admin_privilages(&info.sender, &config.admin, None, None)?;
 
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
