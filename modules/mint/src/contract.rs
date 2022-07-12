@@ -147,11 +147,9 @@ pub fn execute_update_mint_lock(
     lock: bool,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
-
-    let mut config = CONFIG.load(deps.storage)?;
 
     config.mint_lock = lock;
 

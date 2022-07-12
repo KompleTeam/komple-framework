@@ -1,4 +1,5 @@
 use cosmwasm_std::StdError;
+use rift_utils::UtilError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -8,4 +9,10 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
+
+    #[error("Merge failed")]
+    MergeFailed {},
+
+    #[error("{0}")]
+    Util(#[from] UtilError),
 }
