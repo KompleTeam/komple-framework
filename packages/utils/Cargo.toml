@@ -1,0 +1,8 @@
+[package]
+name = "rift-utils"
+version = "0.1.0"
+authors = ["AnalogGhost <analoghost@proton.me>"]
+edition = "2018"
+
+[dependencies]
+cosmwasm-std = { version = "1.0.0" }
