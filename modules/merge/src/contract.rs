@@ -97,6 +97,8 @@ fn execute_merge(
     let merge_msgs: Vec<MergeMsg> = from_binary(&msg)?;
     let mut msgs: Vec<CosmosMsg> = vec![];
 
+    check_burn_message_exists(merge_msgs.clone())?;
+
     for merge_msg in merge_msgs {
         // TODO: Use map to save unnecessary lookups
         let mint_module_addr = get_module_address(&deps, &controller_addr, Modules::MintModule)?;
@@ -106,7 +108,7 @@ fn execute_merge(
                 Collections::Normal => {
                     let msg = MintModuleExecuteMsg::MintTo {
                         collection_id: merge_msg.collection_id,
-                        recipient: merge_msg.owner.unwrap(),
+                        recipient: info.sender.to_string(),
                     };
                     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
                         contract_addr: mint_module_addr.to_string(),
@@ -114,7 +116,7 @@ fn execute_merge(
                         funds: info.funds.clone(),
                     }));
                 }
-                Collections::Passcard => Err(ContractError::MergeFailed {})?,
+                Collections::Passcard => Err(ContractError::InvalidPasscard {})?,
             },
             MergeAction::Burn => {
                 let address: Addr;
@@ -179,6 +181,18 @@ fn execute_update_whitelist_addresses(
     WHITELIST_ADDRS.save(deps.storage, &whitelist_addrs)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
+}
+
+fn check_burn_message_exists(merge_msgs: Vec<MergeMsg>) -> Result<(), ContractError> {
+    let msgs: Vec<MergeMsg> = merge_msgs
+        .iter()
+        .filter(|m| m.action == MergeAction::Burn)
+        .map(|m| m.clone())
+        .collect::<Vec<MergeMsg>>();
+    if msgs.is_empty() {
+        return Err(ContractError::BurnNotFound {});
+    };
+    Ok(())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

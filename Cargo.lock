@@ -70,6 +70,7 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
+ "cw721",
  "merge-module",
  "mint-module",
  "permission-module",
