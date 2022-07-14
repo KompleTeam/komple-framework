@@ -7,6 +7,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
+use rift_types::collection::Collections;
 use rift_types::module::Modules;
 use rift_types::query::{AddressResponse, MultipleAddressResponse};
 use rift_utils::{check_admin_privileges, get_module_address};
@@ -19,7 +20,10 @@ use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, QueryMsg};
-use crate::state::{Config, COLLECTION_ID, CONFIG, CONTROLLER_ADDR, TOKEN_ADDRS, WHITELIST_ADDRS};
+use crate::state::{
+    Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, CONTROLLER_ADDR,
+    WHITELIST_ADDRS,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:mint-module";
@@ -108,6 +112,7 @@ pub fn execute_create_collection(
     royalty: Option<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -115,7 +120,7 @@ pub fn execute_create_collection(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        None,
+        whitelist_addr,
     )?;
 
     // Instantiate token contract
@@ -125,7 +130,7 @@ pub fn execute_create_collection(
             msg: to_binary(&TokenInstantiateMsg {
                 admin: config.admin.to_string(),
                 token_info,
-                collection_info,
+                collection_info: collection_info.clone(),
                 per_address_limit,
                 start_time,
                 whitelist,
@@ -142,7 +147,22 @@ pub fn execute_create_collection(
         reply_on: ReplyOn::Success,
     };
 
-    COLLECTION_ID.update(deps.storage, |value| -> StdResult<u32> { Ok(value + 1) })?;
+    let collection_id = (COLLECTION_ID.load(deps.storage)?) + 1;
+
+    COLLECTION_TYPES.update(
+        deps.storage,
+        collection_info.collection_type.as_str(),
+        |value| -> StdResult<Vec<u32>> {
+            match value {
+                Some(mut id_list) => {
+                    id_list.push(collection_id);
+                    Ok(id_list)
+                }
+                None => Ok(vec![collection_id]),
+            }
+        },
+    )?;
+    COLLECTION_ID.save(deps.storage, &collection_id)?;
 
     Ok(Response::new()
         .add_submessage(sub_msg)
@@ -271,13 +291,13 @@ fn _execute_mint(
     let mut mint_msgs: Vec<CosmosMsg> = vec![];
 
     for msg in msgs {
-        let token_address = TOKEN_ADDRS.load(deps.storage, msg.collection_id)?;
+        let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
 
         let mint_msg = TokenExecuteMsg::Mint {
             owner: msg.owner.clone(),
         };
         let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: token_address.to_string(),
+            contract_addr: collection_addr.to_string(),
             msg: to_binary(&mint_msg)?,
             funds: info.funds.clone(),
         });
@@ -327,6 +347,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_binary(&query_collection_address(deps, collection_id)?)
         }
         QueryMsg::WhitelistAddresses {} => to_binary(&query_whitelist_addresses(deps)?),
+        QueryMsg::CollectionTypes(collection_type) => {
+            to_binary(&query_collection_types(deps, collection_type)?)
+        }
     }
 }
 
@@ -336,7 +359,7 @@ fn query_config(deps: Deps) -> StdResult<Config> {
 }
 
 fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<AddressResponse> {
-    let addr = TOKEN_ADDRS.load(deps.storage, collection_id)?;
+    let addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
     Ok(AddressResponse {
         address: addr.to_string(),
     })
@@ -349,6 +372,11 @@ fn query_whitelist_addresses(deps: Deps) -> StdResult<MultipleAddressResponse> {
     })
 }
 
+fn query_collection_types(deps: Deps, collection_type: Collections) -> StdResult<Vec<u32>> {
+    let collection_ids = COLLECTION_TYPES.load(deps.storage, collection_type.as_str())?;
+    Ok(collection_ids)
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     if msg.id != TOKEN_INSTANTIATE_REPLY_ID {
@@ -359,7 +387,7 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
     match reply {
         Ok(res) => {
             let collection_id = COLLECTION_ID.load(deps.storage)?;
-            TOKEN_ADDRS.save(
+            COLLECTION_ADDRS.save(
                 deps.storage,
                 collection_id,
                 &Addr::unchecked(res.contract_address),
