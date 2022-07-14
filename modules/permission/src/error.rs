@@ -16,6 +16,9 @@ pub enum ContractError {
     #[error("Invalid ownership")]
     InvalidOwnership {},
 
+    #[error("No permissions found for module")]
+    NoPermissionsInModule {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 

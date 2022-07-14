@@ -7,11 +7,16 @@ use thiserror::Error;
 
 pub fn check_admin_privileges(
     sender: &Addr,
+    contract_addr: &Addr,
     admin: &Addr,
     parent_addr: Option<Addr>,
     whitelist_addrs: Option<Vec<Addr>>,
 ) -> Result<(), UtilError> {
-    let mut has_privileges = sender == admin;
+    let mut has_privileges = sender == contract_addr;
+
+    if !has_privileges && sender == admin {
+        has_privileges = true;
+    }
 
     if !has_privileges && parent_addr.is_some() {
         has_privileges = sender == &parent_addr.unwrap();
@@ -32,6 +37,8 @@ pub fn get_module_address(
     controller_addr: &Addr,
     module: Modules,
 ) -> Result<Addr, UtilError> {
+    println!("controller_addr: {:?}", controller_addr);
+    println!("module: {:?}", module);
     let res: AddressResponse = deps
         .querier
         .query_wasm_smart(controller_addr, &ControllerQueryMsg::ModuleAddress(module))

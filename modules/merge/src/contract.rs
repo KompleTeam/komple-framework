@@ -67,7 +67,7 @@ pub fn execute(
 
 fn execute_update_merge_lock(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
@@ -75,7 +75,13 @@ fn execute_update_merge_lock(
     let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, controller_addr, whitelist_addr)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        whitelist_addr,
+    )?;
 
     config.merge_lock = lock;
 
@@ -161,14 +167,20 @@ fn execute_merge(
 
 fn execute_update_whitelist_addresses(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        None,
+    )?;
 
     let whitelist_addrs = addrs
         .iter()

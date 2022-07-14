@@ -34,7 +34,7 @@ pub enum ExecuteMsg {
     },
     PermissionMint {
         permission_msg: Binary,
-        mint_msg: Binary,
+        collection_ids: Vec<u32>,
     },
     UpdateWhitelistAddresses {
         addrs: Vec<String>,
@@ -57,4 +57,11 @@ impl From<MintModuleQueryMsg> for QueryMsg {
             }
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct MintMsg {
+    pub collection_id: u32,
+    pub owner: String,
 }

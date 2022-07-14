@@ -62,7 +62,7 @@ pub fn execute(
 
 fn execute_update_module_permissions(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     module: Modules,
     permissions: Vec<Permissions>,
@@ -73,6 +73,7 @@ fn execute_update_module_permissions(
 
     check_admin_privileges(
         &info.sender,
+        &env.contract.address,
         &config.admin,
         controller_addr,
         whitelist_addrs,
@@ -92,14 +93,20 @@ fn execute_update_module_permissions(
 
 fn execute_update_whitelist_addresses(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        None,
+    )?;
 
     let whitelist_addrs = addrs
         .iter()
@@ -128,7 +135,11 @@ fn execute_check(
         return Err(ContractError::InvalidPermissions {});
     }
 
-    let expected_permissions = MODULE_PERMISSIONS.load(deps.storage, module.to_string())?;
+    let permissions = MODULE_PERMISSIONS.may_load(deps.storage, module.to_string())?;
+    let expected_permissions = match permissions {
+        Some(permissions) => permissions,
+        None => return Err(ContractError::NoPermissionsInModule {}),
+    };
 
     for permission in data {
         if !expected_permissions.contains(&permission.permission_type) {
@@ -157,10 +168,6 @@ fn check_ownership_permission(
     controller_addr: &Addr,
     data: Binary,
 ) -> Result<bool, ContractError> {
-    let mint_module_address = get_module_address(deps, controller_addr, Modules::MintModule)?;
-    let passcard_module_address =
-        get_module_address(deps, controller_addr, Modules::PasscardModule)?;
-
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
     for ownership_msg in msgs {
@@ -168,6 +175,9 @@ fn check_ownership_permission(
         match ownership_msg.collection_type {
             // TODO: Could implement a map for easy lookup of collection address
             Collections::Normal => {
+                // TODO: Could implement a map for easy lookup of module address
+                let mint_module_address =
+                    get_module_address(deps, controller_addr, Modules::MintModule)?;
                 address = get_collection_address(
                     &deps,
                     &mint_module_address,
@@ -175,6 +185,9 @@ fn check_ownership_permission(
                 )?;
             }
             Collections::Passcard => {
+                // TODO: Could implement a map for easy lookup of module address
+                let passcard_module_address =
+                    get_module_address(deps, controller_addr, Modules::PasscardModule)?;
                 address = get_collection_address(
                     &deps,
                     &passcard_module_address,

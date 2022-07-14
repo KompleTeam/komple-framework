@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
-    Response, StdResult, SubMsg, Timestamp, WasmMsg,
+    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
+    ReplyOn, Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
@@ -18,7 +18,7 @@ use token_contract::state::CollectionInfo;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, QueryMsg};
 use crate::state::{Config, COLLECTION_ID, CONFIG, CONTROLLER_ADDR, TOKEN_ADDRS, WHITELIST_ADDRS};
 
 // version info for migration info
@@ -87,8 +87,8 @@ pub fn execute(
         } => execute_mint_to(deps, env, info, collection_id, recipient),
         ExecuteMsg::PermissionMint {
             permission_msg,
-            mint_msg,
-        } => execute_permission_mint(deps, env, info, permission_msg, mint_msg),
+            collection_ids,
+        } => execute_permission_mint(deps, env, info, permission_msg, collection_ids),
         ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
             execute_update_whitelist_addresses(deps, env, info, addrs)
         }
@@ -97,7 +97,7 @@ pub fn execute(
 
 pub fn execute_create_collection(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     code_id: u64,
     collection_info: CollectionInfo,
@@ -110,7 +110,13 @@ pub fn execute_create_collection(
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        None,
+    )?;
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
@@ -145,14 +151,20 @@ pub fn execute_create_collection(
 
 pub fn execute_update_mint_lock(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        None,
+    )?;
 
     config.mint_lock = lock;
 
@@ -174,18 +186,17 @@ fn execute_mint(
         return Err(ContractError::LockedMint {});
     }
 
-    _execute_mint(
-        deps,
-        info.clone(),
-        "mint",
+    let mint_msg = vec![MintMsg {
         collection_id,
-        info.sender.to_string(),
-    )
+        owner: info.sender.to_string(),
+    }];
+
+    _execute_mint(deps, info.clone(), "execute_mint", mint_msg)
 }
 
 fn execute_mint_to(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     collection_id: u32,
     recipient: String,
@@ -196,6 +207,7 @@ fn execute_mint_to(
 
     check_admin_privileges(
         &info.sender,
+        &env.contract.address,
         &config.admin,
         controller_addr,
         whitelist_addrs,
@@ -203,15 +215,20 @@ fn execute_mint_to(
 
     let owner = deps.api.addr_validate(&recipient)?;
 
-    _execute_mint(deps, info, "mint_to", collection_id, owner.to_string())
+    let mint_msg = vec![MintMsg {
+        collection_id,
+        owner: owner.to_string(),
+    }];
+
+    _execute_mint(deps, info, "execute_mint_to", mint_msg)
 }
 
 fn execute_permission_mint(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     permission_msg: Binary,
-    _mint_msg: Binary,
+    collection_ids: Vec<u32>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let permission_module_addr =
@@ -226,10 +243,19 @@ fn execute_permission_mint(
     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: permission_module_addr.to_string(),
         msg: to_binary(&permission_msg)?,
-        funds: info.funds,
+        funds: info.funds.clone(),
     }));
 
-    // TODO: Construct mint msg and send
+    for collection_id in collection_ids {
+        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: env.contract.address.to_string(),
+            msg: to_binary(&ExecuteMsg::MintTo {
+                collection_id,
+                recipient: info.sender.to_string(),
+            })?,
+            funds: info.funds.clone(),
+        }))
+    }
 
     Ok(Response::new()
         .add_messages(msgs)
@@ -240,33 +266,45 @@ fn _execute_mint(
     deps: DepsMut,
     info: MessageInfo,
     action: &str,
-    collection_id: u32,
-    owner: String,
+    msgs: Vec<MintMsg>,
 ) -> Result<Response, ContractError> {
-    let token_address = TOKEN_ADDRS.load(deps.storage, collection_id)?;
+    let mut mint_msgs: Vec<CosmosMsg> = vec![];
 
-    let mint_msg = TokenExecuteMsg::Mint { owner };
-    let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: token_address.to_string(),
-        msg: to_binary(&mint_msg)?,
-        funds: info.funds,
-    });
+    for msg in msgs {
+        let token_address = TOKEN_ADDRS.load(deps.storage, msg.collection_id)?;
+
+        let mint_msg = TokenExecuteMsg::Mint {
+            owner: msg.owner.clone(),
+        };
+        let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: token_address.to_string(),
+            msg: to_binary(&mint_msg)?,
+            funds: info.funds.clone(),
+        });
+        mint_msgs.push(msg);
+    }
 
     Ok(Response::new()
-        .add_message(msg)
+        .add_messages(mint_msgs)
         .add_attribute("action", action))
 }
 
 fn execute_update_whitelist_addresses(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        None,
+    )?;
 
     let whitelist_addrs = addrs
         .iter()
