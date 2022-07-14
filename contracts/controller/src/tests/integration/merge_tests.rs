@@ -191,7 +191,7 @@ mod normal_merge {
         let merge_msg = vec![MergeMsg {
             collection_id: 2,
             token_id: None,
-            collection_type: Collections::Passcard,
+            collection_type: Collections::Linked,
             action: MergeAction::Mint,
         }];
         let msg = MergeExecuteMsg::Merge {
@@ -232,7 +232,7 @@ mod normal_merge {
             MergeMsg {
                 collection_id: 2,
                 token_id: None,
-                collection_type: Collections::Passcard,
+                collection_type: Collections::Linked,
                 action: MergeAction::Mint,
             },
         ];

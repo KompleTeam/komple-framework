@@ -122,7 +122,7 @@ fn execute_merge(
                         funds: info.funds.clone(),
                     }));
                 }
-                Collections::Passcard => Err(ContractError::InvalidPasscard {})?,
+                Collections::Linked => Err(ContractError::InvalidPasscard {})?,
             },
             MergeAction::Burn => {
                 let address: Addr;
@@ -135,7 +135,7 @@ fn execute_merge(
                             merge_msg.collection_id,
                         )?;
                     }
-                    Collections::Passcard => {
+                    Collections::Linked => {
                         // TODO: Use map to save unnecessary lookups
                         let passcard_module_addr =
                             get_module_address(&deps, &controller_addr, Modules::PasscardModule)?;

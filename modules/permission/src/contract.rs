@@ -184,7 +184,7 @@ fn check_ownership_permission(
                     ownership_msg.collection_id,
                 )?;
             }
-            Collections::Passcard => {
+            Collections::Linked => {
                 // TODO: Could implement a map for easy lookup of module address
                 let passcard_module_address =
                     get_module_address(deps, controller_addr, Modules::PasscardModule)?;
