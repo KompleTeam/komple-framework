@@ -205,7 +205,7 @@ fn query_config(deps: Deps) -> StdResult<Config> {
 }
 
 fn query_module_address(deps: Deps, module: Modules) -> StdResult<AddressResponse> {
-    let addr = MODULE_ADDR.load(deps.storage, module.to_string())?;
+    let addr = MODULE_ADDR.load(deps.storage, module.as_str())?;
     Ok(AddressResponse {
         address: addr.to_string(),
     })
@@ -237,16 +237,16 @@ fn handle_module_instantiate_reply(
         Ok(res) => {
             MODULE_ADDR.save(
                 deps.storage,
-                module.to_string(),
+                module.as_str(),
                 &Addr::unchecked(res.contract_address),
             )?;
             Ok(Response::default().add_attribute(
                 "action",
-                format!("instantiate_{}_module_reply", module.to_string()),
+                format!("instantiate_{}_module_reply", module.as_str()),
             ))
         }
         Err(_) => Err(ContractError::ModuleInstantiateError {
-            module: module.to_string().to_string(),
+            module: module.as_str().to_string(),
         }),
     }
 }

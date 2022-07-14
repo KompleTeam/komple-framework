@@ -9,7 +9,7 @@ pub enum Permissions {
 }
 
 impl Permissions {
-    pub fn to_string(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Permissions::Ownership => "ownership",
             Permissions::Attribute => "attribute",

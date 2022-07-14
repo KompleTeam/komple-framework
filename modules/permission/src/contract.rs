@@ -79,14 +79,14 @@ fn execute_update_module_permissions(
         whitelist_addrs,
     )?;
 
-    MODULE_PERMISSIONS.save(deps.storage, module.to_string(), &permissions)?;
+    MODULE_PERMISSIONS.save(deps.storage, module.as_str(), &permissions)?;
 
     Ok(Response::new()
         .add_attribute("action", "execute_update_module_permissions")
         .add_attributes(
             permissions
                 .iter()
-                .map(|p| ("permission", p.to_string()))
+                .map(|p| ("permission", p.as_str()))
                 .collect::<Vec<(&str, &str)>>(),
         ))
 }
@@ -135,7 +135,7 @@ fn execute_check(
         return Err(ContractError::InvalidPermissions {});
     }
 
-    let permissions = MODULE_PERMISSIONS.may_load(deps.storage, module.to_string())?;
+    let permissions = MODULE_PERMISSIONS.may_load(deps.storage, module.as_str())?;
     let expected_permissions = match permissions {
         Some(permissions) => permissions,
         None => return Err(ContractError::NoPermissionsInModule {}),
@@ -158,7 +158,7 @@ fn execute_check(
         .add_attributes(
             expected_permissions
                 .iter()
-                .map(|p| ("permission", p.to_string()))
+                .map(|p| ("permission", p.as_str()))
                 .collect::<Vec<(&str, &str)>>(),
         ))
 }
@@ -216,7 +216,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 fn query_module_permissions(deps: Deps, module: Modules) -> StdResult<Vec<Permissions>> {
-    let permissions = MODULE_PERMISSIONS.load(deps.storage, module.to_string())?;
+    let permissions = MODULE_PERMISSIONS.load(deps.storage, module.as_str())?;
     Ok(permissions)
 }
 

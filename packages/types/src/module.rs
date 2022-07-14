@@ -18,7 +18,7 @@ pub enum Modules {
 }
 
 impl Modules {
-    pub fn to_string(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Modules::MintModule => "mint",
             Modules::PasscardModule => "passcard",
