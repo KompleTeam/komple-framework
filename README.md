@@ -4,4 +4,4 @@ Rift Framework is a smart contract framework that provides the tools for creatin
 
 # Maintainers
 
-- Analog Ghost @AnalogGhost
+- Analog Ghost [@AnalogGhost](https://github.com/AnalogGhost)
