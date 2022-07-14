@@ -1,3 +1,4 @@
+use rift_types::collection::Collections;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -6,6 +7,7 @@ use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CollectionInfo {
+    pub collection_type: Collections,
     pub name: String,
     pub description: String,
     pub image: String,

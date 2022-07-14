@@ -91,6 +91,7 @@ mod normal_merge {
             None,
             None,
             None,
+            Collections::Normal,
         );
         create_collection(
             &mut app,
@@ -100,6 +101,7 @@ mod normal_merge {
             None,
             None,
             None,
+            Collections::Normal,
         );
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -217,6 +219,7 @@ mod normal_merge {
             None,
             None,
             None,
+            Collections::Normal,
         );
 
         let merge_msg = vec![

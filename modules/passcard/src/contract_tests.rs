@@ -3,6 +3,7 @@ mod tests {
     use crate::msg::{ExecuteMsg, InstantiateMsg};
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+    use rift_types::collection::Collections;
     use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
     pub fn passcard_module() -> Box<dyn Contract<Empty>> {
@@ -69,6 +70,7 @@ mod tests {
         let token_code_id = app.store_code(token_contract());
 
         let collection_info = CollectionInfo {
+            collection_type: Collections::Normal,
             name: "Test Passcard".to_string(),
             description: "Test Description".to_string(),
             image: "ipfs://xyz".to_string(),
