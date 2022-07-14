@@ -10,7 +10,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
 use crate::state::{
     CollectionInfo, Config, Locks, COLLECTION_INFO, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS,
-    MODULE_ADDR, TOKEN_IDS, TOKEN_LOCKS,
+    MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -69,6 +69,8 @@ pub fn instantiate(
     TOKEN_IDS.save(deps.storage, &0)?;
 
     MODULE_ADDR.save(deps.storage, &info.sender)?;
+
+    OPERATION_LOCK.save(deps.storage, &false)?;
 
     if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
@@ -194,6 +196,11 @@ pub fn execute_mint(
     info: MessageInfo,
     owner: String,
 ) -> Result<Response, ContractError> {
+    let lock = OPERATION_LOCK.load(deps.storage)?;
+    if lock {
+        return Err(ContractError::MintLocked {});
+    }
+
     let config = CONFIG.load(deps.storage)?;
 
     let locks = LOCKS.load(deps.storage)?;
@@ -245,6 +252,11 @@ pub fn execute_burn(
     info: MessageInfo,
     token_id: String,
 ) -> Result<Response, ContractError> {
+    let lock = OPERATION_LOCK.load(deps.storage)?;
+    if lock {
+        return Err(ContractError::BurnLocked {});
+    }
+
     let locks = LOCKS.load(deps.storage)?;
     if locks.burn_lock {
         return Err(ContractError::BurnLocked {});
@@ -269,6 +281,11 @@ pub fn execute_transfer(
     token_id: String,
     recipient: String,
 ) -> Result<Response, ContractError> {
+    let lock = OPERATION_LOCK.load(deps.storage)?;
+    if lock {
+        return Err(ContractError::TransferLocked {});
+    }
+
     let locks = LOCKS.load(deps.storage)?;
     if locks.transfer_lock {
         return Err(ContractError::TransferLocked {});
@@ -294,6 +311,11 @@ pub fn execute_send(
     contract: String,
     msg: Binary,
 ) -> Result<Response, ContractError> {
+    let lock = OPERATION_LOCK.load(deps.storage)?;
+    if lock {
+        return Err(ContractError::SendLocked {});
+    }
+
     let locks = LOCKS.load(deps.storage)?;
     if locks.send_lock {
         return Err(ContractError::SendLocked {});
