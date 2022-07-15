@@ -157,68 +157,6 @@ mod tests {
             msg::{ExecuteMsg, QueryMsg},
             state::Config,
         };
-        use rift_types::query::AddressResponse;
-        use token_contract::{
-            msg::{LocksReponse, QueryMsg as TokenQueryMsg},
-            state::Locks,
-        };
-
-        // #[test]
-        // fn test_app_level_happy_path() {
-        //     let (mut app, minter_addr) = proper_instantiate();
-
-        //     let locks = Locks {
-        //         burn_lock: false,
-        //         mint_lock: true,
-        //         transfer_lock: true,
-        //         send_lock: false,
-        //     };
-        //     let msg = ExecuteMsg::UpdateLocks {
-        //         locks: locks.clone(),
-        //     };
-        //     let _ = app
-        //         .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
-        //         .unwrap();
-
-        //     let msg = QueryMsg::CollectionAddress { collection_id: 1 };
-        //     let response: TokenAddressResponse =
-        //         app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-        //     let token_address = response.token_address;
-
-        //     let msg = TokenQueryMsg::Locks {};
-        //     let response: LocksReponse = app.wrap().query_wasm_smart(token_address, &msg).unwrap();
-        //     assert_eq!(response.locks, locks);
-        // }
-
-        // #[test]
-        // fn test_token_level_happy_path() {
-        //     let (mut app, minter_addr) = proper_instantiate();
-
-        //     let locks = Locks {
-        //         burn_lock: false,
-        //         mint_lock: true,
-        //         transfer_lock: true,
-        //         send_lock: false,
-        //     };
-        //     let msg = ExecuteMsg::UpdateTokenLocks {
-        //         token_id: 1,
-        //         locks: locks.clone(),
-        //     };
-        //     let _ = app
-        //         .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
-        //         .unwrap();
-
-        //     let msg = QueryMsg::GetTokenAddress {};
-        //     let response: TokenAddressResponse =
-        //         app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-        //     let token_address = response.token_address;
-
-        //     let msg = TokenQueryMsg::TokenLocks {
-        //         token_id: "1".to_string(),
-        //     };
-        //     let response: LocksReponse = app.wrap().query_wasm_smart(token_address, &msg).unwrap();
-        //     assert_eq!(response.locks, locks);
-        // }
 
         #[test]
         fn test_mint_lock_happy_path() {

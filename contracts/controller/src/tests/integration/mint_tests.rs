@@ -4,7 +4,7 @@ use cw_multi_test::Executor;
 
 use crate::tests::integration::helpers::{
     create_collection, get_collection_address, get_modules_addresses, mint_module, mint_token,
-    mock_app, proper_instantiate, setup_all_modules, token_contract, ADMIN, RANDOM, USER,
+    mock_app, proper_instantiate, setup_all_modules, token_contract, ADMIN, USER,
 };
 
 mod initialization {

@@ -31,15 +31,6 @@ pub fn permission_module_contract() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn token_contract() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        token_contract::contract::execute,
-        token_contract::contract::instantiate,
-        token_contract::contract::query,
-    );
-    Box::new(contract)
-}
-
 const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
 const ADMIN: &str = "juno1qamfln8u5w8d3vlhp5t9mhmylfkgad4jz6t7cv";
 const NATIVE_DENOM: &str = "denom";
@@ -82,8 +73,6 @@ fn proper_instantiate(app: &mut App) -> Addr {
 
     controller_contract_addr
 }
-
-fn setup_mint_module() {}
 
 mod modules {
     use super::*;

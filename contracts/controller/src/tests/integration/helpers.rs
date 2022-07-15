@@ -13,7 +13,7 @@ use token_contract::{
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 pub const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
-pub const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
+// pub const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
 pub const ADMIN: &str = "juno1qamfln8u5w8d3vlhp5t9mhmylfkgad4jz6t7cv";
 pub const NATIVE_DENOM: &str = "denom";
 

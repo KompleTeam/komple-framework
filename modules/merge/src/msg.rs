@@ -1,5 +1,4 @@
 use cosmwasm_std::Binary;
-use rift_types::collection::Collections;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
