@@ -83,6 +83,7 @@ pub fn instantiate(
     }
 
     let collection_info = CollectionInfo {
+        collection_type: msg.collection_info.collection_type,
         name: msg.collection_info.name.clone(),
         description: msg.collection_info.description,
         image: msg.collection_info.image,

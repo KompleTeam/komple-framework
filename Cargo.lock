@@ -542,25 +542,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
-name = "passcard-module"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus",
- "cw-utils",
- "cw2",
- "cw721",
- "rift-types",
- "schemars",
- "serde",
- "thiserror",
- "token-contract",
-]
-
-[[package]]
 name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -880,6 +861,7 @@ dependencies = [
  "cw2",
  "cw721",
  "cw721-base",
+ "rift-types",
  "schemars",
  "serde",
  "thiserror",

@@ -2,6 +2,7 @@
 mod tests {
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+    use rift_types::collection::Collections;
 
     use crate::{
         msg::{InstantiateMsg, TokenInfo},
@@ -42,6 +43,7 @@ mod tests {
         let token_code_id = app.store_code(token_contract());
 
         let collection_info = CollectionInfo {
+            collection_type: Collections::Normal,
             name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
