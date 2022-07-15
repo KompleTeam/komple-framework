@@ -8,7 +8,6 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 
-use rift_types::collection::Collections;
 use rift_types::module::Modules;
 use rift_types::query::MultipleAddressResponse;
 use rift_utils::{
@@ -16,6 +15,7 @@ use rift_utils::{
 };
 
 use mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
+use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
 use crate::error::ContractError;
@@ -61,8 +61,7 @@ pub fn execute(
         ExecuteMsg::PermissionMerge {
             permission_msg,
             merge_msg,
-            // } => execute_permission_merge(deps, env, info, permission_msg, merge_msg),
-        } => unimplemented!(),
+        } => execute_permission_merge(deps, env, info, permission_msg, merge_msg),
         ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
             execute_update_whitelist_addresses(deps, env, info, addrs)
         }
@@ -102,10 +101,54 @@ fn execute_merge(
     info: MessageInfo,
     msg: Binary,
 ) -> Result<Response, ContractError> {
+    let mut msgs: Vec<CosmosMsg> = vec![];
+
+    make_merge_msg(&deps, &info, msg, &mut msgs)?;
+
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("action", "execute_merge"))
+}
+
+fn execute_permission_merge(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    permission_msg: Binary,
+    merge_msg: Binary,
+) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let permission_module_addr =
+        get_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
+
+    let mut msgs: Vec<CosmosMsg> = vec![];
+
+    let permission_msg = PermissionExecuteMsg::Check {
+        module: Modules::MergeModule,
+        msg: permission_msg,
+    };
+    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: permission_module_addr.to_string(),
+        msg: to_binary(&permission_msg)?,
+        funds: info.funds.clone(),
+    }));
+
+    make_merge_msg(&deps, &info, merge_msg, &mut msgs)?;
+
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("action", "execute_permission_merge"))
+}
+
+fn make_merge_msg(
+    deps: &DepsMut,
+    info: &MessageInfo,
+    msg: Binary,
+    msgs: &mut Vec<CosmosMsg>,
+) -> Result<(), ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let mint_module_addr = get_module_address(&deps, &controller_addr, Modules::MintModule)?;
 
-    let mut msgs: Vec<CosmosMsg> = vec![];
     let merge_msg: MergeMsg = from_binary(&msg)?;
 
     if merge_msg.burn.len() == 0 {
@@ -161,9 +204,7 @@ fn execute_merge(
         }));
     }
 
-    Ok(Response::new()
-        .add_messages(msgs)
-        .add_attribute("action", "execute_merge"))
+    Ok(())
 }
 
 fn execute_update_whitelist_addresses(

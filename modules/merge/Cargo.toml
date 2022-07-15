@@ -48,6 +48,7 @@ schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 token-contract = { path = "../../contracts/token" }
+permission-module = { path = "../../modules/permission" }
 mint-module = { path = "../mint" }
 rift-utils = { path = "../../packages/utils" }
 rift-types = { path = "../../packages/types" }

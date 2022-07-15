@@ -506,6 +506,7 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "mint-module",
+ "permission-module",
  "rift-types",
  "rift-utils",
  "schemars",
