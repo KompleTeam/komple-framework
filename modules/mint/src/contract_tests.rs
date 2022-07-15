@@ -66,7 +66,7 @@ mod tests {
         minter_contract_addr
     }
 
-    fn setup_collection(app: &mut App, minter_addr: &Addr) {
+    fn setup_collection(app: &mut App, minter_addr: &Addr, linked_collections: Option<Vec<u32>>) {
         let token_code_id = app.store_code(token_contract());
 
         let collection_info = CollectionInfo {
@@ -88,6 +88,7 @@ mod tests {
             start_time: None,
             whitelist: None,
             royalty: None,
+            linked_collections,
         };
         let _ = app
             .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
@@ -108,7 +109,7 @@ mod tests {
         fn test_happy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr, None);
 
             let msg = ExecuteMsg::Mint { collection_id: 1 };
             let _ = app
@@ -132,7 +133,7 @@ mod tests {
         fn test_locked_minting() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr, None);
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
             let _ = app
@@ -248,18 +249,25 @@ mod tests {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr);
-            setup_collection(&mut app, &minter_addr);
-            setup_collection(&mut app, &minter_addr);
-            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr, None);
+            setup_collection(&mut app, &minter_addr, Some(vec![1]));
+            setup_collection(&mut app, &minter_addr, None);
+            setup_collection(&mut app, &minter_addr, None);
 
             let msg = ExecuteMsg::UpdateLinkedCollections {
                 collection_id: 4,
-                linked_collection_ids: vec![1, 3],
+                linked_collections: vec![1, 3],
             };
             let _ = app
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
                 .unwrap();
+
+            let msg = QueryMsg::LinkedCollections { collection_id: 2 };
+            let res: Vec<u32> = app
+                .wrap()
+                .query_wasm_smart(minter_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res, vec![1]);
 
             let msg = QueryMsg::LinkedCollections { collection_id: 4 };
             let res: Vec<u32> = app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
@@ -271,14 +279,14 @@ mod tests {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr);
-            setup_collection(&mut app, &minter_addr);
-            setup_collection(&mut app, &minter_addr);
-            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr, None);
+            setup_collection(&mut app, &minter_addr, None);
+            setup_collection(&mut app, &minter_addr, None);
+            setup_collection(&mut app, &minter_addr, None);
 
             let msg = ExecuteMsg::UpdateLinkedCollections {
                 collection_id: 5,
-                linked_collection_ids: vec![10],
+                linked_collections: vec![10],
             };
             let err = app
                 .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
@@ -298,7 +306,19 @@ mod tests {
 
             let msg = ExecuteMsg::UpdateLinkedCollections {
                 collection_id: 2,
-                linked_collection_ids: vec![10],
+                linked_collections: vec![2],
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::SelfLinkedCollection {}.to_string()
+            );
+
+            let msg = ExecuteMsg::UpdateLinkedCollections {
+                collection_id: 2,
+                linked_collections: vec![10],
             };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr, &msg, &vec![])

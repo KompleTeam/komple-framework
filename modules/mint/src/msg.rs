@@ -21,6 +21,7 @@ pub enum ExecuteMsg {
         start_time: Option<Timestamp>,
         whitelist: Option<String>,
         royalty: Option<String>,
+        linked_collections: Option<Vec<u32>>,
     },
     UpdateMintLock {
         lock: bool,
@@ -41,7 +42,7 @@ pub enum ExecuteMsg {
     },
     UpdateLinkedCollections {
         collection_id: u32,
-        linked_collection_ids: Vec<u32>,
+        linked_collections: Vec<u32>,
     },
 }
 

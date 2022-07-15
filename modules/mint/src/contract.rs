@@ -71,6 +71,7 @@ pub fn execute(
             start_time,
             whitelist,
             royalty,
+            linked_collections,
         } => execute_create_collection(
             deps,
             env,
@@ -82,6 +83,7 @@ pub fn execute(
             start_time,
             whitelist,
             royalty,
+            linked_collections,
         ),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
         ExecuteMsg::Mint { collection_id } => execute_mint(deps, env, info, collection_id),
@@ -98,10 +100,8 @@ pub fn execute(
         }
         ExecuteMsg::UpdateLinkedCollections {
             collection_id,
-            linked_collection_ids,
-        } => {
-            execute_update_linked_collections(deps, env, info, collection_id, linked_collection_ids)
-        }
+            linked_collections,
+        } => execute_update_linked_collections(deps, env, info, collection_id, linked_collections),
     }
 }
 
@@ -116,6 +116,7 @@ pub fn execute_create_collection(
     start_time: Option<Timestamp>,
     whitelist: Option<String>,
     royalty: Option<String>,
+    linked_collections: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
@@ -154,6 +155,12 @@ pub fn execute_create_collection(
     };
 
     let collection_id = (COLLECTION_ID.load(deps.storage)?) + 1;
+
+    if linked_collections.is_some() {
+        check_collection_ids_exists(&deps, &linked_collections.clone().unwrap())?;
+
+        LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collections.unwrap())?;
+    }
 
     COLLECTION_TYPES.update(
         deps.storage,
@@ -352,7 +359,7 @@ fn execute_update_linked_collections(
     env: Env,
     info: MessageInfo,
     collection_id: u32,
-    linked_collection_ids: Vec<u32>,
+    linked_collections: Vec<u32>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
@@ -366,23 +373,35 @@ fn execute_update_linked_collections(
         whitelist_addrs,
     )?;
 
-    let collection_ids = COLLECTION_ADDRS
+    if linked_collections.contains(&collection_id) {
+        return Err(ContractError::SelfLinkedCollection {});
+    };
+
+    let mut ids_to_check = vec![collection_id];
+    ids_to_check.extend(&linked_collections);
+    check_collection_ids_exists(&deps, &ids_to_check)?;
+
+    LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collections)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_linked_collections"))
+}
+
+fn check_collection_ids_exists(
+    deps: &DepsMut,
+    collection_ids: &Vec<u32>,
+) -> Result<(), ContractError> {
+    let existing_ids = COLLECTION_ADDRS
         .keys(deps.storage, None, None, Order::Ascending)
         .map(|id| id.unwrap())
         .collect::<Vec<u32>>();
 
-    if !collection_ids.contains(&collection_id) {
-        return Err(ContractError::InvalidCollectionId {});
-    }
-    for linked_collection_id in &linked_collection_ids {
-        if !collection_ids.contains(linked_collection_id) {
+    for collection_id in collection_ids {
+        if !existing_ids.contains(collection_id) {
             return Err(ContractError::InvalidCollectionId {});
         }
     }
 
-    LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collection_ids)?;
-
-    Ok(Response::new().add_attribute("action", "execute_update_linked_collections"))
+    Ok(())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
