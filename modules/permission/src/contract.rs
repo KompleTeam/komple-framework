@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -6,7 +8,6 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use cw721::OwnerOfResponse;
-use rift_types::collection::Collections;
 use rift_types::module::Modules;
 use rift_types::permission::Permissions;
 use rift_types::query::MultipleAddressResponse;
@@ -168,38 +169,31 @@ fn check_ownership_permission(
     controller_addr: &Addr,
     data: Binary,
 ) -> Result<bool, ContractError> {
+    let mint_module_addr = get_module_address(deps, controller_addr, Modules::MintModule)?;
+
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
+    let mut collection_map: HashMap<u32, Addr> = HashMap::new();
+
     for ownership_msg in msgs {
-        let address: Addr;
-        match ownership_msg.collection_type {
-            // TODO: Could implement a map for easy lookup of collection address
-            Collections::Normal => {
-                // TODO: Could implement a map for easy lookup of module address
-                let mint_module_address =
-                    get_module_address(deps, controller_addr, Modules::MintModule)?;
-                address = get_collection_address(
-                    &deps,
-                    &mint_module_address,
-                    ownership_msg.collection_id,
-                )?;
+        let collection_addr = match collection_map.contains_key(&ownership_msg.collection_id) {
+            true => collection_map
+                .get(&ownership_msg.collection_id)
+                .unwrap()
+                .clone(),
+            false => {
+                let collection_addr =
+                    get_collection_address(&deps, &mint_module_addr, ownership_msg.collection_id)?;
+                collection_map.insert(ownership_msg.collection_id, collection_addr.clone());
+                collection_addr
             }
-            Collections::Linked => {
-                // TODO: Could implement a map for easy lookup of module address
-                let passcard_module_address =
-                    get_module_address(deps, controller_addr, Modules::PasscardModule)?;
-                address = get_collection_address(
-                    &deps,
-                    &passcard_module_address,
-                    ownership_msg.collection_id,
-                )?;
-            }
-        }
+        };
+
         let msg = TokenQueryMsg::OwnerOf {
             token_id: ownership_msg.token_id.to_string(),
             include_expired: None,
         };
-        let res: OwnerOfResponse = deps.querier.query_wasm_smart(address, &msg)?;
+        let res: OwnerOfResponse = deps.querier.query_wasm_smart(collection_addr, &msg)?;
         if res.owner != ownership_msg.owner {
             return Err(ContractError::InvalidOwnership {});
         }

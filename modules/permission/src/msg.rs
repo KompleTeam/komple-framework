@@ -2,7 +2,7 @@ use cosmwasm_std::Binary;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use rift_types::{collection::Collections, module::Modules, permission::Permissions};
+use rift_types::{module::Modules, permission::Permissions};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -35,7 +35,6 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct OwnershipMsg {
-    pub collection_type: Collections,
     pub collection_id: u32,
     pub token_id: u32,
     pub owner: String,
