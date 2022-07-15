@@ -48,3 +48,9 @@ pub struct MetadataResponse {
     pub metadata: Metadata,
     pub attributes: Vec<Trait>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct LockResponse {
+    pub locked: bool,
+}
