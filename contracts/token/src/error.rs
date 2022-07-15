@@ -1,4 +1,5 @@
 use cosmwasm_std::StdError;
+use rift_utils::UtilError;
 use thiserror::Error;
 use url::ParseError;
 
@@ -53,6 +54,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     Parse(#[from] ParseError),
+
+    #[error("{0}")]
+    Util(#[from] UtilError),
 }
 
 impl From<Cw721ContractError> for ContractError {
