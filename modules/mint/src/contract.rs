@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
+    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
     ReplyOn, Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -22,7 +22,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, QueryMsg};
 use crate::state::{
     Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, CONTROLLER_ADDR,
-    WHITELIST_ADDRS,
+    LINKED_COLLECTIONS, WHITELIST_ADDRS,
 };
 
 // version info for migration info
@@ -95,6 +95,12 @@ pub fn execute(
         } => execute_permission_mint(deps, env, info, permission_msg, collection_ids),
         ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
             execute_update_whitelist_addresses(deps, env, info, addrs)
+        }
+        ExecuteMsg::UpdateLinkedCollections {
+            collection_id,
+            linked_collection_ids,
+        } => {
+            execute_update_linked_collections(deps, env, info, collection_id, linked_collection_ids)
         }
     }
 }
@@ -176,6 +182,7 @@ pub fn execute_update_mint_lock(
     lock: bool,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -183,7 +190,7 @@ pub fn execute_update_mint_lock(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        None,
+        whitelist_addrs,
     )?;
 
     config.mint_lock = lock;
@@ -316,6 +323,7 @@ fn execute_update_whitelist_addresses(
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -323,7 +331,7 @@ fn execute_update_whitelist_addresses(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        None,
+        whitelist_addrs,
     )?;
 
     let whitelist_addrs = addrs
@@ -339,6 +347,44 @@ fn execute_update_whitelist_addresses(
     Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
 }
 
+fn execute_update_linked_collections(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    collection_id: u32,
+    linked_collection_ids: Vec<u32>,
+) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        whitelist_addrs,
+    )?;
+
+    let collection_ids = COLLECTION_ADDRS
+        .keys(deps.storage, None, None, Order::Ascending)
+        .map(|id| id.unwrap())
+        .collect::<Vec<u32>>();
+
+    if !collection_ids.contains(&collection_id) {
+        return Err(ContractError::InvalidCollectionId {});
+    }
+    for linked_collection_id in &linked_collection_ids {
+        if !collection_ids.contains(linked_collection_id) {
+            return Err(ContractError::InvalidCollectionId {});
+        }
+    }
+
+    LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collection_ids)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_linked_collections"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -349,6 +395,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::WhitelistAddresses {} => to_binary(&query_whitelist_addresses(deps)?),
         QueryMsg::CollectionTypes(collection_type) => {
             to_binary(&query_collection_types(deps, collection_type)?)
+        }
+        QueryMsg::LinkedCollections { collection_id } => {
+            to_binary(&query_linked_collections(deps, collection_id)?)
         }
     }
 }
@@ -375,6 +424,11 @@ fn query_whitelist_addresses(deps: Deps) -> StdResult<MultipleAddressResponse> {
 fn query_collection_types(deps: Deps, collection_type: Collections) -> StdResult<Vec<u32>> {
     let collection_ids = COLLECTION_TYPES.load(deps.storage, collection_type.as_str())?;
     Ok(collection_ids)
+}
+
+fn query_linked_collections(deps: Deps, collection_id: u32) -> StdResult<Vec<u32>> {
+    let linked_collection_ids = LINKED_COLLECTIONS.load(deps.storage, collection_id)?;
+    Ok(linked_collection_ids)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

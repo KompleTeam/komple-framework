@@ -20,3 +20,5 @@ pub const CONTROLLER_ADDR: Item<Addr> = Item::new("controller_addr");
 pub const WHITELIST_ADDRS: Item<Vec<Addr>> = Item::new("whitelist_addrs");
 
 pub const COLLECTION_TYPES: Map<&str, Vec<u32>> = Map::new("collection_types");
+
+pub const LINKED_COLLECTIONS: Map<u32, Vec<u32>> = Map::new("linked_collections");

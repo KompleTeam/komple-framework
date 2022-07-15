@@ -234,4 +234,79 @@ mod tests {
             assert_eq!(response.mint_lock, true);
         }
     }
+
+    mod collections {
+        use super::*;
+
+        use crate::{
+            msg::{ExecuteMsg, QueryMsg},
+            ContractError,
+        };
+
+        #[test]
+        fn test_linked_collections_happy_path() {
+            let mut app = mock_app();
+            let minter_addr = proper_instantiate(&mut app);
+
+            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr);
+
+            let msg = ExecuteMsg::UpdateLinkedCollections {
+                collection_id: 4,
+                linked_collection_ids: vec![1, 3],
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let msg = QueryMsg::LinkedCollections { collection_id: 4 };
+            let res: Vec<u32> = app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+            assert_eq!(res, vec![1, 3]);
+        }
+
+        #[test]
+        fn test_linked_collections_unhappy_path() {
+            let mut app = mock_app();
+            let minter_addr = proper_instantiate(&mut app);
+
+            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr);
+            setup_collection(&mut app, &minter_addr);
+
+            let msg = ExecuteMsg::UpdateLinkedCollections {
+                collection_id: 5,
+                linked_collection_ids: vec![10],
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::InvalidCollectionId {}.to_string()
+            );
+
+            let msg = ExecuteMsg::UpdateLinkedCollections {
+                collection_id: 2,
+                linked_collection_ids: vec![10],
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr, &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::InvalidCollectionId {}.to_string()
+            );
+        }
+    }
 }

@@ -67,3 +67,8 @@ pub enum UtilError {
     #[error("Unauthorized")]
     Unauthorized {},
 }
+
+#[cfg(test)]
+mod tests {
+    fn test_check_admin_privileges() {}
+}

@@ -39,6 +39,10 @@ pub enum ExecuteMsg {
     UpdateWhitelistAddresses {
         addrs: Vec<String>,
     },
+    UpdateLinkedCollections {
+        collection_id: u32,
+        linked_collection_ids: Vec<u32>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -48,6 +52,7 @@ pub enum QueryMsg {
     CollectionAddress(u32),
     WhitelistAddresses {},
     CollectionTypes(Collections),
+    LinkedCollections { collection_id: u32 },
 }
 
 impl From<MintModuleQueryMsg> for QueryMsg {
