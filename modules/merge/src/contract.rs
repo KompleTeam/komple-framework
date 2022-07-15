@@ -214,6 +214,7 @@ fn execute_update_whitelist_addresses(
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -221,7 +222,7 @@ fn execute_update_whitelist_addresses(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        None,
+        whitelist_addr,
     )?;
 
     let whitelist_addrs = addrs
