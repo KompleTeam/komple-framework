@@ -151,6 +151,7 @@ pub fn create_collection(
     whitelist: Option<String>,
     royalty: Option<String>,
     collection_type: Collections,
+    linked_collections: Option<Vec<u32>>,
 ) {
     let collection_info = CollectionInfo {
         collection_type,
@@ -171,6 +172,7 @@ pub fn create_collection(
         start_time,
         whitelist,
         royalty,
+        linked_collections,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
@@ -223,6 +225,21 @@ pub fn add_permission_for_module(
             &msg,
             &vec![],
         )
+        .unwrap();
+}
+
+pub fn link_collection_to_collections(
+    app: &mut App,
+    mint_module_addr: Addr,
+    collection_id: u32,
+    linked_collections: Vec<u32>,
+) {
+    let msg = MintExecuteMsg::UpdateLinkedCollections {
+        collection_id,
+        linked_collections,
+    };
+    let _ = app
+        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
         .unwrap();
 }
 

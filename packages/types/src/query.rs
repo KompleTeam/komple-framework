@@ -13,6 +13,7 @@ pub enum ControllerQueryMsg {
 #[serde(rename_all = "snake_case")]
 pub enum MintModuleQueryMsg {
     CollectionAddress(u32),
+    LinkedCollections { collection_id: u32 },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

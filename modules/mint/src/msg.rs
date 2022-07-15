@@ -62,6 +62,9 @@ impl From<MintModuleQueryMsg> for QueryMsg {
             MintModuleQueryMsg::CollectionAddress(collection_id) => {
                 QueryMsg::CollectionAddress(collection_id)
             }
+            MintModuleQueryMsg::LinkedCollections { collection_id } => {
+                QueryMsg::LinkedCollections { collection_id }
+            }
         }
     }
 }

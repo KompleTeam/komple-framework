@@ -434,20 +434,29 @@ fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<Address
 }
 
 fn query_whitelist_addresses(deps: Deps) -> StdResult<MultipleAddressResponse> {
-    let addrs = WHITELIST_ADDRS.load(deps.storage)?;
-    Ok(MultipleAddressResponse {
-        addresses: addrs.iter().map(|a| a.to_string()).collect(),
-    })
+    let addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    match addrs {
+        Some(addrs) => Ok(MultipleAddressResponse {
+            addresses: addrs.iter().map(|a| a.to_string()).collect(),
+        }),
+        None => Ok(MultipleAddressResponse { addresses: vec![] }),
+    }
 }
 
 fn query_collection_types(deps: Deps, collection_type: Collections) -> StdResult<Vec<u32>> {
-    let collection_ids = COLLECTION_TYPES.load(deps.storage, collection_type.as_str())?;
-    Ok(collection_ids)
+    let collection_ids = COLLECTION_TYPES.may_load(deps.storage, collection_type.as_str())?;
+    match collection_ids {
+        Some(ids) => Ok(ids),
+        None => Ok(vec![]),
+    }
 }
 
 fn query_linked_collections(deps: Deps, collection_id: u32) -> StdResult<Vec<u32>> {
-    let linked_collection_ids = LINKED_COLLECTIONS.load(deps.storage, collection_id)?;
-    Ok(linked_collection_ids)
+    let linked_collection_ids = LINKED_COLLECTIONS.may_load(deps.storage, collection_id)?;
+    match linked_collection_ids {
+        Some(linked_collection_ids) => Ok(linked_collection_ids),
+        None => Ok(vec![]),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

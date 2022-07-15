@@ -59,6 +59,21 @@ pub fn get_collection_address(
     Ok(Addr::unchecked(res.address))
 }
 
+pub fn get_linked_collections(
+    deps: &DepsMut,
+    module_address: &Addr,
+    collection_id: u32,
+) -> Result<Vec<u32>, UtilError> {
+    let res: Vec<u32> = deps
+        .querier
+        .query_wasm_smart(
+            module_address,
+            &MintModuleQueryMsg::LinkedCollections { collection_id },
+        )
+        .unwrap();
+    Ok(res)
+}
+
 #[derive(Error, Debug, PartialEq)]
 pub enum UtilError {
     #[error("{0}")]

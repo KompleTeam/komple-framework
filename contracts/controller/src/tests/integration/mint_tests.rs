@@ -91,6 +91,7 @@ mod permission_mint {
             None,
             None,
             Collections::Normal,
+            None,
         );
         create_collection(
             &mut app,
@@ -101,6 +102,7 @@ mod permission_mint {
             None,
             None,
             Collections::Normal,
+            None,
         );
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
