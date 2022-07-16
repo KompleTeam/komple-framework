@@ -1,6 +1,7 @@
 use cosmwasm_std::{Binary, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
+use rift_types::metadata::Metadata as MetadataType;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -84,6 +85,7 @@ pub enum ExecuteMsg {
     },
     InitMetadataContract {
         code_id: u64,
+        metadata_type: MetadataType,
     },
 }
 

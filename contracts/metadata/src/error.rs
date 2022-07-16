@@ -19,6 +19,9 @@ pub enum ContractError {
     #[error("Attribute not found")]
     AttributeNotFound {},
 
+    #[error("Metadata not found")]
+    MissingMetadata {},
+
     #[error("{0}")]
     Util(#[from] UtilError),
 }
