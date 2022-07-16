@@ -112,7 +112,7 @@ mod tests {
                 .unwrap();
             assert_eq!(response.owner, USER);
 
-            let msg = QueryMsg::MintedTokenAmount {
+            let msg = QueryMsg::MintedTokensPerAddress {
                 address: USER.to_string(),
             };
             let res: MintedTokenAmountResponse =

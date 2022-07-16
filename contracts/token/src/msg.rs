@@ -171,7 +171,7 @@ pub enum QueryMsg {
     TokenLocks {
         token_id: String,
     },
-    MintedTokenAmount {
+    MintedTokensPerAddress {
         address: String,
     },
     CollectionInfo {},
