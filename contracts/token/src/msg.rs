@@ -82,6 +82,9 @@ pub enum ExecuteMsg {
     UpdateMetadata {
         metadata: Option<String>,
     },
+    InitMetadataContract {
+        code_id: u64,
+    },
 }
 
 impl From<ExecuteMsg> for Cw721ExecuteMsg<Empty> {

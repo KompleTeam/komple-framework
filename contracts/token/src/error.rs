@@ -49,6 +49,12 @@ pub enum ContractError {
     #[error("Approval not found for: {spender}")]
     ApprovalNotFound { spender: String },
 
+    #[error("Invalid reply ID")]
+    InvalidReplyID {},
+
+    #[error("Error while instantiating metadata contract")]
+    MetadataInstantiateError {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 
