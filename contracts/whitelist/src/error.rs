@@ -8,4 +8,25 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
+
+    #[error("Invalid member limit")]
+    InvalidMemberLimit {},
+
+    #[error("Invalid per address limit")]
+    InvalidPerAddressLimit {},
+
+    #[error("Minting has already started")]
+    AlreadyStarted {},
+
+    #[error("Invalid start time")]
+    InvalidStartTime {},
+
+    #[error("Invalid end time")]
+    InvalidEndTime {},
+
+    #[error("Member already exists")]
+    MemberExists {},
+
+    #[error("Member not found")]
+    MemberNotFound {},
 }
