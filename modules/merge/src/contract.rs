@@ -23,7 +23,7 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, QueryMsg};
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, WHITELIST_ADDRS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:minter";
+const CONTRACT_NAME: &str = "crates.io:rift-merge-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

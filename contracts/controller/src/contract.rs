@@ -23,7 +23,7 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, ControllerInfo, CONFIG, CONTROLLER_INFO, MODULE_ADDR};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:controller-contract";
+const CONTRACT_NAME: &str = "crates.io:rift-controller-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
