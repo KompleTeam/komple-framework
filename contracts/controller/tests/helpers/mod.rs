@@ -10,7 +10,7 @@ use token_contract::{
     state::{CollectionInfo, Contracts},
 };
 
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use controller_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 pub const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
 // pub const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
@@ -19,11 +19,11 @@ pub const NATIVE_DENOM: &str = "denom";
 
 pub fn controller_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        crate::contract::execute,
-        crate::contract::instantiate,
-        crate::contract::query,
+        controller_contract::contract::execute,
+        controller_contract::contract::instantiate,
+        controller_contract::contract::query,
     )
-    .with_reply(crate::contract::reply);
+    .with_reply(controller_contract::contract::reply);
     Box::new(contract)
 }
 

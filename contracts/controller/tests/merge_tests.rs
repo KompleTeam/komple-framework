@@ -1,8 +1,9 @@
-use crate::msg::ExecuteMsg;
+use controller_contract::msg::ExecuteMsg;
 use cosmwasm_std::Addr;
 use cw_multi_test::Executor;
 
-use crate::tests::integration::helpers::{
+pub mod helpers;
+use helpers::{
     create_collection, get_collection_address, get_modules_addresses, give_approval_to_module,
     merge_module, mint_token, mock_app, proper_instantiate, setup_all_modules,
     setup_mint_module_whitelist, token_contract, ADMIN, USER,
@@ -13,7 +14,7 @@ mod initialization {
 
     use rift_types::{module::Modules, query::AddressResponse};
 
-    use crate::{msg::QueryMsg, ContractError};
+    use controller_contract::{msg::QueryMsg, ContractError};
 
     #[test]
     fn test_happy_path() {
@@ -63,9 +64,9 @@ mod initialization {
 mod normal_merge {
     use super::*;
 
-    use crate::tests::integration::helpers::link_collection_to_collections;
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
+    use helpers::link_collection_to_collections;
     use merge_module::{
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
@@ -376,11 +377,9 @@ mod normal_merge {
 mod permission_merge {
     use super::*;
 
-    use crate::tests::integration::helpers::{
-        add_permission_for_module, link_collection_to_collections,
-    };
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
+    use helpers::{add_permission_for_module, link_collection_to_collections};
     use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
     use permission_module::msg::PermissionCheckMsg;
     use rift_types::collection::Collections;
