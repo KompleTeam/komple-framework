@@ -92,6 +92,9 @@ fn execute_update_owner_royalty_address(
     info: MessageInfo,
     address: String,
 ) -> Result<Response, ContractError> {
+    // TODO: Need to lock updating the owner royalty address after first time??
+    // How will this work think about it
+
     let addr = deps.api.addr_validate(&address)?;
     OWNER_ROYALTY_ADDR.save(deps.storage, info.sender, &addr)?;
 
@@ -108,6 +111,9 @@ fn execute_update_token_royalty_address(
     token_id: u32,
     address: String,
 ) -> Result<Response, ContractError> {
+    // TODO: Need to lock updating the owner royalty address after first time??
+    // How will this work think about it
+
     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
     let owner = query_token_owner(&deps.querier, &collection_addr, token_id.to_string())?;
 
