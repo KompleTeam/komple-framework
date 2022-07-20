@@ -10,7 +10,7 @@ use cw_utils::parse_reply_instantiate_data;
 use rift_types::collection::Collections;
 use rift_types::module::Modules;
 use rift_types::query::{AddressResponse, MultipleAddressResponse};
-use rift_utils::{check_admin_privileges, get_module_address};
+use rift_utils::{check_admin_privileges, query_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
 };
@@ -264,7 +264,7 @@ fn execute_permission_mint(
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        get_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
+        query_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 

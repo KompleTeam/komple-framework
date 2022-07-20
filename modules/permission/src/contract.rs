@@ -11,7 +11,7 @@ use cw721::OwnerOfResponse;
 use rift_types::module::Modules;
 use rift_types::permission::Permissions;
 use rift_types::query::MultipleAddressResponse;
-use rift_utils::{check_admin_privileges, get_collection_address, get_module_address};
+use rift_utils::{check_admin_privileges, query_collection_address, query_module_address};
 
 use token_contract::msg::QueryMsg as TokenQueryMsg;
 
@@ -170,7 +170,7 @@ fn check_ownership_permission(
     controller_addr: &Addr,
     data: Binary,
 ) -> Result<bool, ContractError> {
-    let mint_module_addr = get_module_address(deps, controller_addr, Modules::MintModule)?;
+    let mint_module_addr = query_module_address(deps, controller_addr, Modules::MintModule)?;
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
@@ -183,8 +183,11 @@ fn check_ownership_permission(
                 .unwrap()
                 .clone(),
             false => {
-                let collection_addr =
-                    get_collection_address(&deps, &mint_module_addr, ownership_msg.collection_id)?;
+                let collection_addr = query_collection_address(
+                    &deps,
+                    &mint_module_addr,
+                    ownership_msg.collection_id,
+                )?;
                 collection_map.insert(ownership_msg.collection_id, collection_addr.clone());
                 collection_addr
             }

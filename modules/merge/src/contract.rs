@@ -11,7 +11,8 @@ use cw2::set_contract_version;
 use rift_types::module::Modules;
 use rift_types::query::MultipleAddressResponse;
 use rift_utils::{
-    check_admin_privileges, get_collection_address, get_linked_collections, get_module_address,
+    check_admin_privileges, query_collection_address, query_linked_collections,
+    query_module_address,
 };
 
 use mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
@@ -119,7 +120,7 @@ fn execute_permission_merge(
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        get_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
+        query_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
@@ -147,7 +148,7 @@ fn make_merge_msg(
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
-    let mint_module_addr = get_module_address(&deps, &controller_addr, Modules::MintModule)?;
+    let mint_module_addr = query_module_address(&deps, &controller_addr, Modules::MintModule)?;
 
     let merge_msg: MergeMsg = from_binary(&msg)?;
 
@@ -161,7 +162,7 @@ fn make_merge_msg(
         burn_collection_ids.push(burn_msg.collection_id);
 
         let collection_addr =
-            get_collection_address(&deps, &mint_module_addr, burn_msg.collection_id)?;
+            query_collection_address(&deps, &mint_module_addr, burn_msg.collection_id)?;
 
         let msg = TokenExecuteMsg::Burn {
             token_id: burn_msg.token_id.to_string(),
@@ -179,7 +180,8 @@ fn make_merge_msg(
         let linked_collections = match linked_collection_map.contains_key(&collection_id) {
             true => linked_collection_map.get(&collection_id).unwrap().clone(),
             false => {
-                let collections = get_linked_collections(&deps, &mint_module_addr, collection_id)?;
+                let collections =
+                    query_linked_collections(&deps, &mint_module_addr, collection_id)?;
                 linked_collection_map.insert(collection_id, collections.clone());
                 collections
             }
