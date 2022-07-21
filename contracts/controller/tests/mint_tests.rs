@@ -155,7 +155,7 @@ mod permission_mint {
             .unwrap();
 
         let collection_2_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, 2).unwrap();
+            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
         let msg = TokenQueryMsg::OwnerOf {
             token_id: "1".to_string(),

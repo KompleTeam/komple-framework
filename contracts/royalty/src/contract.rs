@@ -115,7 +115,7 @@ fn execute_update_token_royalty_address(
     // How will this work think about it
 
     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
-    let owner = query_token_owner(&deps.querier, &collection_addr, token_id.to_string())?;
+    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
@@ -193,8 +193,7 @@ fn query_royalty_address(
                 Some(addr) => addr.to_string(),
                 None => {
                     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
-                    let owner =
-                        query_token_owner(&deps.querier, &collection_addr, token_id.to_string())?;
+                    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
                     owner.to_string()
                 }
             }
@@ -205,8 +204,7 @@ fn query_royalty_address(
                 Some(addr) => addr.to_string(),
                 None => {
                     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
-                    let owner =
-                        query_token_owner(&deps.querier, &collection_addr, token_id.to_string())?;
+                    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
                     owner.to_string()
                 }
             }

@@ -60,7 +60,7 @@ pub fn query_module_address(
 pub fn query_collection_address(
     querier: &QuerierWrapper,
     mint_module_address: &Addr,
-    collection_id: u32,
+    collection_id: &u32,
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(COLLECTION_ADDRS_NAMESPACE, &collection_id.to_be_bytes())?;
     let res = query_storage::<Addr>(&querier, &mint_module_address, &key)?;
@@ -88,9 +88,9 @@ pub fn query_linked_collections(
 pub fn query_token_owner(
     querier: &QuerierWrapper,
     collection_addr: &Addr,
-    token_id: String,
+    token_id: &u32,
 ) -> StdResult<Addr> {
-    let key = get_map_storage_key(TOKENS_NAMESPACE, token_id.as_bytes())?;
+    let key = get_map_storage_key(TOKENS_NAMESPACE, token_id.to_string().as_bytes())?;
     let res = query_storage::<OwnerOfResponse>(&querier, &collection_addr, &key)?;
     match res {
         Some(res) => Ok(Addr::unchecked(res.owner)),

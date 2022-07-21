@@ -185,19 +185,15 @@ fn check_ownership_permission(
                 let collection_addr = query_collection_address(
                     &deps.querier,
                     &mint_module_addr,
-                    ownership_msg.collection_id,
+                    &ownership_msg.collection_id,
                 )?;
                 collection_map.insert(ownership_msg.collection_id, collection_addr.clone());
                 collection_addr
             }
         };
 
-        let owner = query_token_owner(
-            &deps.querier,
-            &collection_addr,
-            ownership_msg.token_id.to_string(),
-        )
-        .unwrap();
+        let owner =
+            query_token_owner(&deps.querier, &collection_addr, &ownership_msg.token_id).unwrap();
         if owner != ownership_msg.owner {
             return Err(ContractError::InvalidOwnership {});
         }

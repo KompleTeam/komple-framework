@@ -163,7 +163,7 @@ fn make_merge_msg(
         burn_collection_ids.push(burn_msg.collection_id);
 
         let collection_addr =
-            query_collection_address(&deps.querier, &mint_module_addr, burn_msg.collection_id)?;
+            query_collection_address(&deps.querier, &mint_module_addr, &burn_msg.collection_id)?;
 
         let msg = TokenExecuteMsg::Burn {
             token_id: burn_msg.token_id.to_string(),
