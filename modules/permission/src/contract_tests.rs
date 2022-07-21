@@ -175,7 +175,7 @@ mod tests {
     mod whitelist_addresses {
         use super::*;
 
-        use rift_types::query::{MultipleAddressResponse, ResponseWrapper};
+        use rift_types::query::ResponseWrapper;
 
         use crate::{
             msg::{ExecuteMsg, QueryMsg},

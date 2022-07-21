@@ -85,7 +85,7 @@ mod tests {
         use super::*;
 
         use crate::{
-            msg::{ExecuteMsg, MintedTokenAmountResponse, QueryMsg},
+            msg::{ExecuteMsg, QueryMsg},
             state::Locks,
             ContractError,
         };
@@ -235,7 +235,7 @@ mod tests {
 
         use crate::{
             error::ContractError,
-            msg::{ExecuteMsg, LocksReponse, QueryMsg},
+            msg::{ExecuteMsg, QueryMsg},
             state::Locks,
         };
 

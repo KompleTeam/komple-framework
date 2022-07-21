@@ -4,7 +4,7 @@ use cosmwasm_std::{
     to_binary, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use rift_types::query::AddressResponse;
+use rift_types::query::ResponseWrapper;
 use rift_types::royalty::Royalty;
 use rift_utils::query_token_owner;
 
@@ -158,63 +158,59 @@ fn execute_update_share(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::RoyaltyAddr {
+        QueryMsg::RoyaltyAddress {
             owner,
             collection_id,
             token_id,
-        } => to_binary(&query_royalty_addr(deps, owner, collection_id, token_id)?),
+        } => to_binary(&query_royalty_address(
+            deps,
+            owner,
+            collection_id,
+            token_id,
+        )?),
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<Config> {
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     let config = CONFIG.load(deps.storage)?;
-    Ok(config)
+    Ok(ResponseWrapper::new("config", config))
 }
 
-fn query_royalty_addr(
+fn query_royalty_address(
     deps: Deps,
     owner: String,
     collection_id: u32,
     token_id: u32,
-) -> StdResult<AddressResponse> {
+) -> StdResult<ResponseWrapper<String>> {
     let config = CONFIG.load(deps.storage)?;
 
-    match config.royalty_type {
-        Royalty::Admin => Ok(AddressResponse {
-            address: config.admin.to_string(),
-        }),
+    let addr = match config.royalty_type {
+        Royalty::Admin => config.admin.to_string(),
         Royalty::Owners => {
             let addr =
                 OWNER_ROYALTY_ADDR.may_load(deps.storage, deps.api.addr_validate(&owner)?)?;
             match addr {
-                Some(addr) => Ok(AddressResponse {
-                    address: addr.to_string(),
-                }),
+                Some(addr) => addr.to_string(),
                 None => {
                     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
                     let owner =
                         query_token_owner(&deps.querier, &collection_addr, token_id.to_string())?;
-                    Ok(AddressResponse {
-                        address: owner.to_string(),
-                    })
+                    owner.to_string()
                 }
             }
         }
         Royalty::Tokens => {
             let addr = TOKEN_ROYALTY_ADDR.may_load(deps.storage, (collection_id, token_id))?;
             match addr {
-                Some(addr) => Ok(AddressResponse {
-                    address: addr.to_string(),
-                }),
+                Some(addr) => addr.to_string(),
                 None => {
                     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
                     let owner =
                         query_token_owner(&deps.querier, &collection_addr, token_id.to_string())?;
-                    Ok(AddressResponse {
-                        address: owner.to_string(),
-                    })
+                    owner.to_string()
                 }
             }
         }
-    }
+    };
+    Ok(ResponseWrapper::new("royalty_address", addr))
 }

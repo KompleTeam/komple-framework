@@ -12,7 +12,7 @@ use rift_utils::check_admin_privileges;
 use url::Url;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
     CollectionConfig, CollectionInfo, Config, Contracts, Locks, COLLECTION_CONFIG, COLLECTION_INFO,
     CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS,

@@ -11,7 +11,7 @@ use rift_types::module::{
     Modules, MERGE_MODULE_INSTANTIATE_REPLY_ID, MINT_MODULE_INSTANTIATE_REPLY_ID,
     PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
 };
-use rift_types::query::{AddressResponse, ResponseWrapper};
+use rift_types::query::ResponseWrapper;
 use rift_utils::check_admin_privileges;
 
 use merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;

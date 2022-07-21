@@ -1,17 +1,15 @@
 use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use mint_module::msg::{ExecuteMsg as MintExecuteMsg, QueryMsg as MintQueryMsg};
+use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use rift_types::{
-    collection::Collections, module::Modules, permission::Permissions, query::AddressResponse,
-};
+use rift_types::{collection::Collections, module::Modules, permission::Permissions};
 use rift_utils::query_module_address;
 use token_contract::{
     msg::{ExecuteMsg as TokenExecuteMsg, TokenInfo},
     state::{CollectionInfo, Contracts},
 };
 
-use controller_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use controller_contract::msg::{ExecuteMsg, InstantiateMsg};
 
 pub const USER: &str = "juno..user";
 // const RANDOM: &str = "juno..random";

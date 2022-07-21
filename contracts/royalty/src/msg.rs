@@ -33,7 +33,7 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    RoyaltyAddr {
+    RoyaltyAddress {
         owner: String,
         collection_id: u32,
         token_id: u32,

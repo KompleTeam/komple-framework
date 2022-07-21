@@ -109,7 +109,7 @@ mod tests {
             ContractError,
         };
         use cw721::OwnerOfResponse;
-        use rift_types::query::{AddressResponse, ResponseWrapper};
+        use rift_types::query::ResponseWrapper;
         use token_contract::msg::QueryMsg as TokenQueryMsg;
 
         #[test]

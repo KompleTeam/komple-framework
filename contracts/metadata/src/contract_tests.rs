@@ -60,41 +60,41 @@ mod tests {
         metadata_contract_addr
     }
 
-    fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
-        let attributes = vec![
-            Trait {
-                trait_type: "type_1".to_string(),
-                value: "10".to_string(),
-            },
-            Trait {
-                trait_type: "type_2".to_string(),
-                value: "60".to_string(),
-            },
-            Trait {
-                trait_type: "type_3".to_string(),
-                value: "Banana".to_string(),
-            },
-        ];
-        let meta_info = MetaInfo {
-            image: None,
-            external_url: None,
-            description: None,
-            animation_url: None,
-            youtube_url: None,
-        };
-        let msg = ExecuteMsg::AddMetadata {
-            meta_info,
-            attributes,
-        };
-        let _ = app
-            .execute_contract(
-                Addr::unchecked(ADMIN),
-                metadata_contract_addr.clone(),
-                &msg,
-                &vec![],
-            )
-            .unwrap();
-    }
+    // fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
+    //     let attributes = vec![
+    //         Trait {
+    //             trait_type: "type_1".to_string(),
+    //             value: "10".to_string(),
+    //         },
+    //         Trait {
+    //             trait_type: "type_2".to_string(),
+    //             value: "60".to_string(),
+    //         },
+    //         Trait {
+    //             trait_type: "type_3".to_string(),
+    //             value: "Banana".to_string(),
+    //         },
+    //     ];
+    //     let meta_info = MetaInfo {
+    //         image: None,
+    //         external_url: None,
+    //         description: None,
+    //         animation_url: None,
+    //         youtube_url: None,
+    //     };
+    //     let msg = ExecuteMsg::AddMetadata {
+    //         meta_info,
+    //         attributes,
+    //     };
+    //     let _ = app
+    //         .execute_contract(
+    //             Addr::unchecked(ADMIN),
+    //             metadata_contract_addr.clone(),
+    //             &msg,
+    //             &vec![],
+    //         )
+    //         .unwrap();
+    // }
 
     #[test]
     fn test_add_metadata() {

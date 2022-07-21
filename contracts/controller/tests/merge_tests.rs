@@ -12,9 +12,9 @@ use helpers::{
 mod initialization {
     use super::*;
 
-    use rift_types::{module::Modules, query::AddressResponse};
+    use rift_types::module::Modules;
 
-    use controller_contract::{msg::QueryMsg, ContractError};
+    use controller_contract::ContractError;
     use rift_utils::query_module_address;
 
     #[test]
