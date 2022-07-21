@@ -168,7 +168,8 @@ fn check_ownership_permission(
     controller_addr: &Addr,
     data: Binary,
 ) -> Result<bool, ContractError> {
-    let mint_module_addr = query_module_address(deps, controller_addr, Modules::MintModule)?;
+    let mint_module_addr =
+        query_module_address(&deps.querier, controller_addr, Modules::MintModule)?;
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
@@ -182,7 +183,7 @@ fn check_ownership_permission(
                 .clone(),
             false => {
                 let collection_addr = query_collection_address(
-                    &deps,
+                    &deps.querier,
                     &mint_module_addr,
                     ownership_msg.collection_id,
                 )?;
