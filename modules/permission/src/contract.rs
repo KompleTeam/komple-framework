@@ -6,14 +6,12 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-
-use cw721::OwnerOfResponse;
 use rift_types::module::Modules;
 use rift_types::permission::Permissions;
 use rift_types::query::MultipleAddressResponse;
-use rift_utils::{check_admin_privileges, query_collection_address, query_module_address};
-
-use token_contract::msg::QueryMsg as TokenQueryMsg;
+use rift_utils::{
+    check_admin_privileges, query_collection_address, query_module_address, query_token_owner,
+};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg};
@@ -193,12 +191,13 @@ fn check_ownership_permission(
             }
         };
 
-        let msg = TokenQueryMsg::OwnerOf {
-            token_id: ownership_msg.token_id.to_string(),
-            include_expired: None,
-        };
-        let res: OwnerOfResponse = deps.querier.query_wasm_smart(collection_addr, &msg)?;
-        if res.owner != ownership_msg.owner {
+        let owner = query_token_owner(
+            &deps.querier,
+            &collection_addr,
+            ownership_msg.token_id.to_string(),
+        )
+        .unwrap();
+        if owner != ownership_msg.owner {
             return Err(ContractError::InvalidOwnership {});
         }
     }
