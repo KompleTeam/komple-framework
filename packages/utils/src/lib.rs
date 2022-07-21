@@ -7,8 +7,10 @@ use cosmwasm_std::{Addr, DepsMut, QuerierWrapper, StdError, StdResult};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
 use rift_types::{
-    module::Modules,
+    collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
+    module::{Modules, MODULE_ADDRS_NAMESPACE},
     query::{AddressResponse, ControllerQueryMsg, MintModuleQueryMsg, TokenContractQueryMsg},
+    tokens::TOKENS_NAMESPACE,
 };
 use schemars::_serde_json::from_str;
 use serde::de::DeserializeOwned;
@@ -46,7 +48,7 @@ pub fn query_module_address(
     controller_addr: &Addr,
     module: Modules,
 ) -> StdResult<Addr> {
-    let key = get_map_storage_key("module_address", module.as_str().as_bytes())?;
+    let key = get_map_storage_key(MODULE_ADDRS_NAMESPACE, module.as_str().as_bytes())?;
     let res = query_storage::<Addr>(&querier, &controller_addr, &key)?;
     // TODO: Handle none value?
     Ok(res.unwrap())
@@ -57,7 +59,7 @@ pub fn query_collection_address(
     mint_module_address: &Addr,
     collection_id: u32,
 ) -> StdResult<Addr> {
-    let key = get_map_storage_key("collection_addrs", &collection_id.to_be_bytes())?;
+    let key = get_map_storage_key(COLLECTION_ADDRS_NAMESPACE, &collection_id.to_be_bytes())?;
     let res = query_storage::<Addr>(&querier, &mint_module_address, &key)?;
     // TODO: Handle none value?
     Ok(res.unwrap())
@@ -68,7 +70,7 @@ pub fn query_linked_collections(
     mint_module_address: &Addr,
     collection_id: u32,
 ) -> StdResult<Vec<u32>> {
-    let key = get_map_storage_key("linked_collections", &collection_id.to_be_bytes())?;
+    let key = get_map_storage_key(LINKED_COLLECTIONS_NAMESPACE, &collection_id.to_be_bytes())?;
     let res = query_storage::<Vec<u32>>(&querier, &mint_module_address, &key)?;
     match res {
         Some(v) => Ok(v),
@@ -81,7 +83,7 @@ pub fn query_token_owner(
     collection_addr: &Addr,
     token_id: String,
 ) -> StdResult<Addr> {
-    let key = get_map_storage_key("tokens", token_id.as_bytes())?;
+    let key = get_map_storage_key(TOKENS_NAMESPACE, token_id.as_bytes())?;
     let res = query_storage::<OwnerOfResponse>(&querier, &collection_addr, &key)?;
     // TODO: Handle none value?
     Ok(Addr::unchecked(res.unwrap().owner))

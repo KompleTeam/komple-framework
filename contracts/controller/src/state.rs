@@ -1,3 +1,4 @@
+use rift_types::module::MODULE_ADDRS_NAMESPACE;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -19,4 +20,4 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
-pub const MODULE_ADDR: Map<&str, Addr> = Map::new("module_address");
+pub const MODULE_ADDR: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);
