@@ -87,6 +87,8 @@ pub fn query_token_owner(
     Ok(Addr::unchecked(res.unwrap().owner))
 }
 
+// namespace -> storage key
+// key_name -> item key
 pub fn get_map_storage_key(namepspace: &str, key_bytes: &[u8]) -> StdResult<String> {
     let namespace_bytes = namepspace.as_bytes();
     let path: Path<Vec<u32>> = Path::new(namespace_bytes, &[key_bytes]);
@@ -94,6 +96,9 @@ pub fn get_map_storage_key(namepspace: &str, key_bytes: &[u8]) -> StdResult<Stri
     Ok(path_str.to_string())
 }
 
+// To find the key value in storage, we need to construct a path to the key
+// For Map storage this key is generated with get_map_storage_key
+// For Item storage this key is the namespace value
 pub fn query_storage<T>(querier: &QuerierWrapper, addr: &Addr, key: &str) -> StdResult<Option<T>>
 where
     T: DeserializeOwned,
