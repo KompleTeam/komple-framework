@@ -5,6 +5,7 @@ use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use rift_types::{
     collection::Collections, module::Modules, permission::Permissions, query::AddressResponse,
 };
+use rift_utils::query_module_address;
 use token_contract::{
     msg::{ExecuteMsg as TokenExecuteMsg, TokenInfo},
     state::{CollectionInfo, Contracts},
@@ -241,25 +242,19 @@ pub fn link_collection_to_collections(
         .unwrap();
 }
 
-pub fn get_modules_addresses(app: &mut App, controller_addr: &str) -> (Addr, Addr, Addr) {
+pub fn get_modules_addresses(app: &mut App, controller_addr: &Addr) -> (Addr, Addr, Addr) {
     let mint_module_addr: Addr;
     let merge_module_addr: Addr;
     let permission_module_addr: Addr;
 
-    let msg = QueryMsg::ModuleAddress(Modules::MintModule);
-    let res = app.wrap().query_wasm_smart(controller_addr, &msg);
-    let res: AddressResponse = res.unwrap();
-    mint_module_addr = Addr::unchecked(res.address);
+    let res = query_module_address(&app.wrap(), controller_addr, Modules::MintModule);
+    mint_module_addr = res.unwrap();
 
-    let msg = QueryMsg::ModuleAddress(Modules::MergeModule);
-    let res = app.wrap().query_wasm_smart(controller_addr, &msg);
-    let res: AddressResponse = res.unwrap();
-    merge_module_addr = Addr::unchecked(res.address);
+    let res = query_module_address(&app.wrap(), controller_addr, Modules::MergeModule);
+    merge_module_addr = res.unwrap();
 
-    let msg = QueryMsg::ModuleAddress(Modules::PermissionModule);
-    let res = app.wrap().query_wasm_smart(controller_addr, &msg);
-    let res: AddressResponse = res.unwrap();
-    permission_module_addr = Addr::unchecked(res.address);
+    let res = query_module_address(&app.wrap(), controller_addr, Modules::PermissionModule);
+    permission_module_addr = res.unwrap();
 
     // println!("");
     // println!("mint_module_addr: {}", mint_module_addr);
@@ -268,10 +263,4 @@ pub fn get_modules_addresses(app: &mut App, controller_addr: &str) -> (Addr, Add
     // println!("");
 
     (mint_module_addr, merge_module_addr, permission_module_addr)
-}
-
-pub fn get_collection_address(app: &mut App, mint_module_addr: &str, collection_id: u32) -> Addr {
-    let msg = MintQueryMsg::CollectionAddress(collection_id);
-    let res: AddressResponse = app.wrap().query_wasm_smart(mint_module_addr, &msg).unwrap();
-    Addr::unchecked(res.address)
 }

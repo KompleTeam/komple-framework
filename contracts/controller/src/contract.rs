@@ -11,7 +11,7 @@ use rift_types::module::{
     Modules, MERGE_MODULE_INSTANTIATE_REPLY_ID, MINT_MODULE_INSTANTIATE_REPLY_ID,
     PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
 };
-use rift_types::query::AddressResponse;
+use rift_types::query::{AddressResponse, ResponseWrapper};
 use rift_utils::check_admin_privileges;
 
 use merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
@@ -199,16 +199,14 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<Config> {
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     let config = CONFIG.load(deps.storage)?;
-    Ok(config)
+    Ok(ResponseWrapper::new("config", config))
 }
 
-fn query_module_address(deps: Deps, module: Modules) -> StdResult<AddressResponse> {
+fn query_module_address(deps: Deps, module: Modules) -> StdResult<ResponseWrapper<String>> {
     let addr = MODULE_ADDR.load(deps.storage, module.as_str())?;
-    Ok(AddressResponse {
-        address: addr.to_string(),
-    })
+    Ok(ResponseWrapper::new("module_address", addr.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -90,6 +90,7 @@ mod tests {
             ContractError,
         };
         use cw721::OwnerOfResponse;
+        use rift_types::query::ResponseWrapper;
 
         #[test]
         fn test_happy_path() {
@@ -115,9 +116,8 @@ mod tests {
             let msg = QueryMsg::MintedTokensPerAddress {
                 address: USER.to_string(),
             };
-            let res: MintedTokenAmountResponse =
-                app.wrap().query_wasm_smart(token_addr, &msg).unwrap();
-            assert_eq!(res.amount, 1);
+            let res: ResponseWrapper<u32> = app.wrap().query_wasm_smart(token_addr, &msg).unwrap();
+            assert_eq!(res.data, 1);
         }
 
         #[test]
@@ -229,6 +229,8 @@ mod tests {
     }
 
     mod locks {
+        use rift_types::query::ResponseWrapper;
+
         use super::*;
 
         use crate::{
@@ -255,11 +257,11 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::Locks {};
-            let response: LocksReponse = app
+            let response: ResponseWrapper<Locks> = app
                 .wrap()
                 .query_wasm_smart(token_addr.clone(), &msg)
                 .unwrap();
-            assert_eq!(response.locks, locks);
+            assert_eq!(response.data, locks);
 
             let msg = ExecuteMsg::Mint {
                 owner: "random".to_string(),
@@ -306,11 +308,11 @@ mod tests {
             let msg = QueryMsg::TokenLocks {
                 token_id: "1".to_string(),
             };
-            let response: LocksReponse = app
+            let response: ResponseWrapper<Locks> = app
                 .wrap()
                 .query_wasm_smart(token_addr.clone(), &msg)
                 .unwrap();
-            assert_eq!(response.locks, locks);
+            assert_eq!(response.data, locks);
 
             let msg = ExecuteMsg::Mint {
                 owner: "random".to_string(),

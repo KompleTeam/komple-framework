@@ -1006,6 +1006,7 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
+ "rift-types",
  "schemars",
  "serde",
  "thiserror",
