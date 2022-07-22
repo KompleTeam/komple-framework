@@ -8,6 +8,7 @@ use cw_storage_plus::{Item, Map};
 pub struct Config {
     pub admin: Addr,
     pub fee_percentage: Decimal,
+    pub native_denom: String,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 

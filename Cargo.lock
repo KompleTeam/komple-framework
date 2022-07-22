@@ -504,6 +504,7 @@ dependencies = [
  "schemars",
  "serde",
  "thiserror",
+ "token-contract",
 ]
 
 [[package]]
