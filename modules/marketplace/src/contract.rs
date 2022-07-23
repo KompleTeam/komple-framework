@@ -101,6 +101,8 @@ fn execute_list_fixed_token(
         return Err(ContractError::Unauthorized {});
     }
 
+    // TODO: Check for token permissions
+
     let fixed_listing = FixedListing {
         collection_id,
         token_id,
@@ -205,6 +207,7 @@ fn _execute_buy_fixed_listing(
             amount: fee,
         }],
     };
+    // TODO: Construct a royalty payout message here if needed
     let transfer_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::TransferNft {
