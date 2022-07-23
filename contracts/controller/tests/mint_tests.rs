@@ -80,7 +80,7 @@ mod permission_mint {
 
         setup_all_modules(&mut app, controller_addr.clone());
 
-        let (mint_module_addr, _, permission_module_addr) =
+        let (mint_module_addr, _, permission_module_addr, _) =
             get_modules_addresses(&mut app, &controller_addr);
 
         let token_contract_code_id = app.store_code(token_contract());

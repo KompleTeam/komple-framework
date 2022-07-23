@@ -83,7 +83,7 @@ mod normal_merge {
 
         setup_all_modules(&mut app, controller_addr.clone());
 
-        let (mint_module_addr, merge_module_addr, _) =
+        let (mint_module_addr, merge_module_addr, _, _) =
             get_modules_addresses(&mut app, &controller_addr);
 
         let token_contract_code_id = app.store_code(token_contract());
@@ -221,7 +221,7 @@ mod normal_merge {
 
         setup_all_modules(&mut app, controller_addr.clone());
 
-        let (mint_module_addr, merge_module_addr, _) =
+        let (mint_module_addr, merge_module_addr, _, _) =
             get_modules_addresses(&mut app, &controller_addr);
 
         let token_contract_code_id = app.store_code(token_contract());
@@ -407,7 +407,7 @@ mod permission_merge {
 
             setup_all_modules(&mut app, controller_addr.clone());
 
-            let (mint_module_addr, merge_module_addr, permission_module_addr) =
+            let (mint_module_addr, merge_module_addr, permission_module_addr, _) =
                 get_modules_addresses(&mut app, &controller_addr);
 
             let token_contract_code_id = app.store_code(token_contract());
