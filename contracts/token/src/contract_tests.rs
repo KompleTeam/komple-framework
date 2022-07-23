@@ -86,11 +86,11 @@ mod tests {
 
         use crate::{
             msg::{ExecuteMsg, QueryMsg},
-            state::Locks,
             ContractError,
         };
         use cw721::OwnerOfResponse;
         use rift_types::query::ResponseWrapper;
+        use rift_types::tokens::Locks;
 
         #[test]
         fn test_happy_path() {
@@ -230,13 +230,13 @@ mod tests {
 
     mod locks {
         use rift_types::query::ResponseWrapper;
+        use rift_types::tokens::Locks;
 
         use super::*;
 
         use crate::{
             error::ContractError,
             msg::{ExecuteMsg, QueryMsg},
-            state::Locks,
         };
 
         #[test]

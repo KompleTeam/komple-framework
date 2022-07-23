@@ -1,11 +1,11 @@
 use cosmwasm_std::{Binary, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use rift_types::{metadata::Metadata as MetadataType, query::TokenContractQueryMsg};
+use rift_types::{metadata::Metadata as MetadataType, query::TokenContractQueryMsg, tokens::Locks};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::{CollectionInfo, Contracts, Locks};
+use crate::state::{CollectionInfo, Contracts};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]

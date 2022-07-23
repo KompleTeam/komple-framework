@@ -9,7 +9,9 @@ use cw_storage_plus::Path;
 use rift_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
-    tokens::TOKENS_NAMESPACE,
+    tokens::{
+        Locks, LOCKS_NAMESPACE, OPERATION_LOCK_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
+    },
 };
 use schemars::_serde_json::from_str;
 use serde::de::DeserializeOwned;
@@ -96,6 +98,50 @@ pub fn query_token_owner(
         Some(res) => Ok(Addr::unchecked(res.owner)),
         None => Err(StdError::NotFound {
             kind: "token".to_string(),
+        }),
+    }
+}
+
+pub fn query_token_operation_lock(
+    querier: &QuerierWrapper,
+    collection_addr: &Addr,
+) -> StdResult<bool> {
+    let res = query_storage::<bool>(&querier, &collection_addr, OPERATION_LOCK_NAMESPACE)?;
+    match res {
+        Some(res) => Ok(res),
+        None => Err(StdError::NotFound {
+            kind: "operation lock".to_string(),
+        }),
+    }
+}
+
+pub fn query_collection_locks(
+    querier: &QuerierWrapper,
+    collection_addr: &Addr,
+) -> StdResult<Locks> {
+    let res = query_storage::<Locks>(&querier, &collection_addr, LOCKS_NAMESPACE)?;
+    match res {
+        Some(res) => Ok(res),
+        None => Err(StdError::NotFound {
+            kind: "locks".to_string(),
+        }),
+    }
+}
+
+pub fn query_token_locks(
+    querier: &QuerierWrapper,
+    collection_addr: &Addr,
+    token_id: &u32,
+) -> StdResult<Locks> {
+    let key = get_map_storage_key(TOKEN_LOCKS_NAMESPACE, token_id.to_string().as_bytes())?;
+    let res = query_storage::<Locks>(&querier, &collection_addr, &key)?;
+    match res {
+        Some(res) => Ok(res),
+        None => Ok(Locks {
+            mint_lock: false,
+            burn_lock: false,
+            transfer_lock: false,
+            send_lock: false,
         }),
     }
 }
