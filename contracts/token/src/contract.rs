@@ -15,8 +15,8 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
     CollectionConfig, CollectionInfo, Config, Contracts, Locks, COLLECTION_CONFIG, COLLECTION_INFO,
-    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS,
-    TOKEN_LOCKS,
+    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATION_LOCK, OPERATORS,
+    TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -138,6 +138,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        // LOCK MESSAGES
         ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
         ExecuteMsg::UpdateTokenLock { token_id, locks } => {
             execute_update_token_locks(deps, env, info, token_id, locks)
@@ -145,6 +146,7 @@ pub fn execute(
         ExecuteMsg::UpdateOperationLock { lock } => {
             execute_update_operation_lock(deps, env, info, lock)
         }
+        // OPERATION MESSAGES
         ExecuteMsg::Mint { owner } => execute_mint(deps, env, info, owner),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
         ExecuteMsg::TransferNft {
@@ -156,6 +158,7 @@ pub fn execute(
             contract,
             msg,
         } => execute_send(deps, env, info, token_id, contract, msg),
+        // CONFIG MESSAGES
         ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
             execute_update_per_address_limit(deps, env, info, per_address_limit)
         }
@@ -169,10 +172,17 @@ pub fn execute(
         ExecuteMsg::UpdateMetadata { metadata } => {
             execute_update_metadata(deps, env, info, metadata)
         }
+        // ADMIN MESSAGES
+        ExecuteMsg::AdminTransferNft {
+            recipient,
+            token_id,
+        } => execute_admin_transfer(deps, env, info, recipient, token_id),
+        // CONTRACT MESSAGES
         ExecuteMsg::InitMetadataContract {
             code_id,
             metadata_type,
         } => execute_init_metadata_contract(deps, env, info, code_id, metadata_type),
+        // CW721 MESSAGES
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
             match res {
@@ -372,6 +382,31 @@ pub fn execute_transfer(
     if token_lock.is_some() && token_lock.unwrap().transfer_lock {
         return Err(ContractError::TransferLocked {});
     }
+
+    let res = Cw721Contract::default().transfer_nft(deps, env, info, recipient, token_id);
+    match res {
+        Ok(res) => Ok(res),
+        Err(e) => Err(e.into()),
+    }
+}
+
+pub fn execute_admin_transfer(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_id: String,
+    recipient: String,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    check_admin_privileges(
+        &info.sender,
+        &&env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        operators,
+    )?;
 
     let res = Cw721Contract::default().transfer_nft(deps, env, info, recipient, token_id);
     match res {

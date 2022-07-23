@@ -20,7 +20,7 @@ pub fn check_admin_privileges(
     contract_addr: &Addr,
     admin: &Addr,
     parent_addr: Option<Addr>,
-    whitelist_addrs: Option<Vec<Addr>>,
+    operators: Option<Vec<Addr>>,
 ) -> Result<(), UtilError> {
     let mut has_privileges = sender == contract_addr;
 
@@ -32,8 +32,8 @@ pub fn check_admin_privileges(
         has_privileges = sender == &parent_addr.unwrap();
     }
 
-    if !has_privileges && whitelist_addrs.is_some() {
-        has_privileges = whitelist_addrs.unwrap().contains(sender);
+    if !has_privileges && operators.is_some() {
+        has_privileges = operators.unwrap().contains(sender);
     }
 
     match has_privileges {

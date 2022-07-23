@@ -13,6 +13,7 @@ pub enum Modules {
     PermissionModule,
     SwapModule,
     MergeModule,
+    MarketplaceModule,
 }
 
 impl Modules {
@@ -22,6 +23,7 @@ impl Modules {
             Modules::PermissionModule => "permission",
             Modules::SwapModule => "swap",
             Modules::MergeModule => "merge",
+            Modules::MarketplaceModule => "marketplace",
         }
     }
 }
