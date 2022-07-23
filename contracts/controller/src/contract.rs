@@ -8,12 +8,13 @@ use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
 use rift_types::module::{
-    Modules, MERGE_MODULE_INSTANTIATE_REPLY_ID, MINT_MODULE_INSTANTIATE_REPLY_ID,
-    PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
+    Modules, MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID, MERGE_MODULE_INSTANTIATE_REPLY_ID,
+    MINT_MODULE_INSTANTIATE_REPLY_ID, PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
 };
 use rift_types::query::ResponseWrapper;
 use rift_utils::check_admin_privileges;
 
+use marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
 use merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
 use mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
 use permission_module::msg::InstantiateMsg as PermissionModuleInstantiateMsg;
@@ -76,6 +77,10 @@ pub fn execute(
         ExecuteMsg::InitMergeModule { code_id } => {
             execute_init_merge_module(deps, env, info, code_id)
         }
+        ExecuteMsg::InitMarketplaceModule {
+            code_id,
+            native_denom,
+        } => execute_init_marketplace_module(deps, env, info, code_id, native_denom),
     }
 }
 
@@ -190,6 +195,45 @@ fn execute_init_merge_module(
         .add_attribute("action", "execute_init_merge_module"))
 }
 
+fn execute_init_marketplace_module(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    code_id: u64,
+    native_denom: String,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        None,
+    )?;
+
+    let msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id,
+            msg: to_binary(&MarketplaceModuleInstantiateMsg {
+                admin: config.admin.to_string(),
+                native_denom,
+            })?,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: String::from("Rift Framework Marketplace Module"),
+        }
+        .into(),
+        id: MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
+    Ok(Response::new()
+        .add_submessage(msg)
+        .add_attribute("action", "execute_init_marketplace_module"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -220,6 +264,9 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         }
         MERGE_MODULE_INSTANTIATE_REPLY_ID => {
             handle_module_instantiate_reply(deps, msg, Modules::MergeModule)
+        }
+        MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID => {
+            handle_module_instantiate_reply(deps, msg, Modules::MarketplaceModule)
         }
         _ => return Err(ContractError::InvalidReplyID {}),
     }
