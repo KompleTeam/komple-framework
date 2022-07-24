@@ -347,7 +347,7 @@ fn execute_update_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
 fn execute_update_linked_collections(
