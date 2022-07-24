@@ -13,9 +13,6 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    UpdateRoyaltyType {
-        royalty_type: Royalty,
-    },
     UpdateOwnerRoyaltyAddress {
         address: String,
     },
@@ -23,9 +20,6 @@ pub enum ExecuteMsg {
         collection_id: u32,
         token_id: u32,
         address: String,
-    },
-    UpdateShare {
-        share: Decimal,
     },
 }
 

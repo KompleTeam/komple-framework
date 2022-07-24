@@ -50,9 +50,6 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdateRoyaltyType { royalty_type } => {
-            execute_update_royalty_type(deps, env, info, royalty_type)
-        }
         ExecuteMsg::UpdateOwnerRoyaltyAddress { address } => {
             execute_update_owner_royalty_address(deps, env, info, address)
         }
@@ -63,27 +60,7 @@ pub fn execute(
         } => {
             execute_update_token_royalty_address(deps, env, info, collection_id, token_id, address)
         }
-        ExecuteMsg::UpdateShare { share } => execute_update_share(deps, env, info, share),
     }
-}
-
-fn execute_update_royalty_type(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    royalty_type: Royalty,
-) -> Result<Response, ContractError> {
-    let mut config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    config.royalty_type = royalty_type.clone();
-    CONFIG.save(deps.storage, &config)?;
-
-    Ok(Response::new()
-        .add_attribute("action", "execute_update_royalty_type")
-        .add_attribute("royalty_type", royalty_type.as_str()))
 }
 
 fn execute_update_owner_royalty_address(
@@ -129,29 +106,6 @@ fn execute_update_token_royalty_address(
         .add_attribute("collection_id", collection_id.to_string())
         .add_attribute("token_id", token_id.to_string())
         .add_attribute("address", address.to_string()))
-}
-
-fn execute_update_share(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    share: Decimal,
-) -> Result<Response, ContractError> {
-    let mut config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    if share > Decimal::one() {
-        return Err(ContractError::InvalidShare {});
-    };
-
-    config.share = share;
-    CONFIG.save(deps.storage, &config)?;
-
-    Ok(Response::new()
-        .add_attribute("action", "execute_update_share")
-        .add_attribute("share", share.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
