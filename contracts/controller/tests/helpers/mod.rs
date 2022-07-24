@@ -1,9 +1,10 @@
 use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use rift_types::{collection::Collections, module::Modules, permission::Permissions};
-use rift_utils::query_module_address;
+use rift_utils::{query_collection_address, query_module_address};
 use token_contract::{
     msg::{ExecuteMsg as TokenExecuteMsg, TokenInfo},
     state::{CollectionInfo, Contracts},
@@ -14,7 +15,9 @@ use controller_contract::msg::{ExecuteMsg, InstantiateMsg};
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
 pub const ADMIN: &str = "juno..admin";
+pub const RANDOM_2: &str = "juno..random2";
 pub const NATIVE_DENOM: &str = "denom";
+pub const TEST_DENOM: &str = "test_denom";
 
 pub fn controller_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -81,7 +84,29 @@ pub fn mock_app() -> App {
                 &Addr::unchecked(USER),
                 vec![Coin {
                     denom: NATIVE_DENOM.to_string(),
-                    amount: Uint128::new(1),
+                    amount: Uint128::new(1_000_000),
+                }],
+            )
+            .unwrap();
+        router
+            .bank
+            .init_balance(
+                storage,
+                &Addr::unchecked(RANDOM),
+                vec![Coin {
+                    denom: NATIVE_DENOM.to_string(),
+                    amount: Uint128::new(1_000_000),
+                }],
+            )
+            .unwrap();
+        router
+            .bank
+            .init_balance(
+                storage,
+                &Addr::unchecked(RANDOM_2),
+                vec![Coin {
+                    denom: TEST_DENOM.to_string(),
+                    amount: Uint128::new(1_000_000),
                 }],
             )
             .unwrap();
@@ -303,4 +328,38 @@ pub fn get_modules_addresses(app: &mut App, controller_addr: &Addr) -> (Addr, Ad
         permission_module_addr,
         marketplace_module_addr,
     )
+}
+
+pub fn setup_marketplace_listing(
+    app: &mut App,
+    controller_addr: &Addr,
+    collection_id: u32,
+    token_id: u32,
+    price: Uint128,
+) {
+    let (mint_module_addr, _, _, marketplace_module_addr) =
+        get_modules_addresses(app, &controller_addr);
+
+    let collection_addr =
+        query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
+
+    setup_token_contract_operators(
+        app,
+        collection_addr.clone(),
+        vec![marketplace_module_addr.to_string()],
+    );
+
+    let msg = MarketplaceExecuteMsg::ListFixedToken {
+        collection_id,
+        token_id,
+        price,
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(USER),
+            marketplace_module_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap();
 }

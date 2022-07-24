@@ -54,7 +54,7 @@ pub fn query_module_address(
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {
-            kind: "module".to_string(),
+            kind: "Module".to_string(),
         }),
     }
 }
@@ -69,7 +69,7 @@ pub fn query_collection_address(
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {
-            kind: "collection".to_string(),
+            kind: "Collection".to_string(),
         }),
     }
 }
@@ -97,7 +97,7 @@ pub fn query_token_owner(
     match res {
         Some(res) => Ok(Addr::unchecked(res.owner)),
         None => Err(StdError::NotFound {
-            kind: "token".to_string(),
+            kind: "Token".to_string(),
         }),
     }
 }
@@ -110,7 +110,7 @@ pub fn query_token_operation_lock(
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {
-            kind: "operation lock".to_string(),
+            kind: "Operation lock".to_string(),
         }),
     }
 }
@@ -123,7 +123,7 @@ pub fn query_collection_locks(
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {
-            kind: "locks".to_string(),
+            kind: "Locks".to_string(),
         }),
     }
 }

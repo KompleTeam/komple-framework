@@ -98,7 +98,7 @@ fn execute_list_fixed_token(
     token_id: u32,
     price: Uint128,
 ) -> Result<Response, ContractError> {
-    let collection_addr = get_collection_address(&deps, &collection_id, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id)?;
     let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     if owner != info.sender {
@@ -146,7 +146,7 @@ fn execute_delist_fixed_token(
     collection_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
-    let collection_addr = get_collection_address(&deps, &collection_id, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id)?;
     let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     if owner != info.sender {
@@ -175,7 +175,7 @@ fn execute_update_price(
     token_id: u32,
     price: Uint128,
 ) -> Result<Response, ContractError> {
-    let collection_addr = get_collection_address(&deps, &collection_id, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id)?;
     let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     if owner != info.sender {
@@ -214,12 +214,12 @@ fn _execute_buy_fixed_listing(
     collection_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
     let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
 
     check_funds(&info, &config, fixed_listing.price)?;
 
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let mint_module_addr =
         query_module_address(&deps.querier, &controller_addr, Modules::MintModule)?;
     let collection_addr =
@@ -273,11 +273,7 @@ fn check_funds(info: &MessageInfo, config: &Config, price: Uint128) -> Result<()
     Ok(())
 }
 
-fn get_collection_address(
-    deps: &DepsMut,
-    collection_id: &u32,
-    token_id: &u32,
-) -> Result<Addr, ContractError> {
+fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let mint_module_addr =
         query_module_address(&deps.querier, &controller_addr, Modules::MintModule)?;
