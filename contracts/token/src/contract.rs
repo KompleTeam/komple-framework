@@ -174,15 +174,18 @@ pub fn execute(
             execute_update_metadata(deps, env, info, metadata)
         }
         // ADMIN MESSAGES
+        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::AdminTransferNft {
             recipient,
             token_id,
         } => execute_admin_transfer(deps, env, info, recipient, token_id),
+
         // CONTRACT MESSAGES
         ExecuteMsg::InitMetadataContract {
             code_id,
             metadata_type,
         } => execute_init_metadata_contract(deps, env, info, code_id, metadata_type),
+
         // CW721 MESSAGES
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
@@ -192,6 +195,37 @@ pub fn execute(
             }
         }
     }
+}
+
+pub fn execute_update_operators(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    addrs: Vec<String>,
+) -> Result<Response, ContractError> {
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        operators,
+    )?;
+
+    let addrs = addrs
+        .iter()
+        .map(|addr| -> StdResult<Addr> {
+            let addr = deps.api.addr_validate(addr)?;
+            Ok(addr)
+        })
+        .collect::<StdResult<Vec<Addr>>>()?;
+
+    OPERATORS.save(deps.storage, &addrs)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
 pub fn execute_update_locks(
@@ -257,6 +291,7 @@ pub fn execute_update_operation_lock(
     lock: bool,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -264,7 +299,7 @@ pub fn execute_update_operation_lock(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     OPERATION_LOCK.save(deps.storage, &lock)?;
