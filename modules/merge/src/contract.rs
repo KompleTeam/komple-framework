@@ -21,7 +21,7 @@ use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, QueryMsg};
-use crate::state::{Config, CONFIG, CONTROLLER_ADDR, WHITELIST_ADDRS};
+use crate::state::{Config, CONFIG, CONTROLLER_ADDR, OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rift-merge-module";
@@ -63,9 +63,7 @@ pub fn execute(
             permission_msg,
             merge_msg,
         } => execute_permission_merge(deps, env, info, permission_msg, merge_msg),
-        ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
-            execute_update_whitelist_addresses(deps, env, info, addrs)
-        }
+        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
     }
 }
 
@@ -76,7 +74,7 @@ fn execute_update_merge_lock(
     lock: bool,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -84,7 +82,7 @@ fn execute_update_merge_lock(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addr,
+        operators,
     )?;
 
     config.merge_lock = lock;
@@ -210,14 +208,14 @@ fn make_merge_msg(
     Ok(())
 }
 
-fn execute_update_whitelist_addresses(
+fn execute_update_operators(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -225,10 +223,10 @@ fn execute_update_whitelist_addresses(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addr,
+        operators,
     )?;
 
-    let whitelist_addrs = addrs
+    let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
@@ -236,16 +234,16 @@ fn execute_update_whitelist_addresses(
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
-    WHITELIST_ADDRS.save(deps.storage, &whitelist_addrs)?;
+    OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::WhitelistAddresses {} => to_binary(&query_whitelist_addresses(deps)?),
+        QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
 
@@ -254,10 +252,10 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     Ok(ResponseWrapper::new("config", config))
 }
 
-fn query_whitelist_addresses(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
-    let addrs = WHITELIST_ADDRS.load(deps.storage)?;
+fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = OPERATORS.load(deps.storage)?;
     Ok(ResponseWrapper::new(
-        "whitelist_addresses",
+        "operators",
         addrs.iter().map(|addr| addr.to_string()).collect(),
     ))
 }

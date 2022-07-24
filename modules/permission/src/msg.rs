@@ -16,7 +16,7 @@ pub enum ExecuteMsg {
         module: Modules,
         permissions: Vec<Permissions>,
     },
-    UpdateWhitelistAddresses {
+    UpdateOperators {
         addrs: Vec<String>,
     },
     Check {
@@ -29,7 +29,7 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     ModulePermissions(Modules),
-    WhitelistAddresses {},
+    Operators {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -115,7 +115,7 @@ mod tests {
                 ]
             );
 
-            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+            let msg = ExecuteMsg::UpdateOperators {
                 addrs: vec![USER.to_string()],
             };
             let _ = app
@@ -187,7 +187,7 @@ mod tests {
             let mut app = mock_app();
             let permission_module_addr = proper_instantiate(&mut app);
 
-            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+            let msg = ExecuteMsg::UpdateOperators {
                 addrs: vec![RANDOM.to_string()],
             };
             let _ = app
@@ -199,7 +199,7 @@ mod tests {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::WhitelistAddresses {};
+            let msg = QueryMsg::Operators {};
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr, &msg)
@@ -212,7 +212,7 @@ mod tests {
             let mut app = mock_app();
             let permission_module_addr = proper_instantiate(&mut app);
 
-            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+            let msg = ExecuteMsg::UpdateOperators {
                 addrs: vec![RANDOM.to_string()],
             };
             let err = app

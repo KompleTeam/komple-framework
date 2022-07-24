@@ -20,7 +20,7 @@ pub enum ExecuteMsg {
         permission_msg: Binary,
         merge_msg: Binary,
     },
-    UpdateWhitelistAddresses {
+    UpdateOperators {
         addrs: Vec<String>,
     },
 }
@@ -29,7 +29,7 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    WhitelistAddresses {},
+    Operators {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

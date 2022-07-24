@@ -5,7 +5,7 @@ use cw_multi_test::Executor;
 pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
-    mock_app, proper_instantiate, setup_all_modules, setup_mint_module_whitelist, token_contract,
+    mock_app, proper_instantiate, setup_all_modules, setup_mint_module_operators, token_contract,
     ADMIN, USER,
 };
 
@@ -137,7 +137,7 @@ mod normal_merge {
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 3, USER);
 
-        setup_mint_module_whitelist(
+        setup_mint_module_operators(
             &mut app,
             mint_module_addr.clone(),
             vec![merge_module_addr.to_string()],
@@ -336,7 +336,7 @@ mod normal_merge {
             MergeContractError::Unauthorized {}.to_string()
         );
 
-        setup_mint_module_whitelist(
+        setup_mint_module_operators(
             &mut app,
             mint_module_addr.clone(),
             vec![merge_module_addr.to_string()],
@@ -355,7 +355,7 @@ mod normal_merge {
             MergeContractError::Unauthorized {}.to_string()
         );
 
-        setup_mint_module_whitelist(&mut app, mint_module_addr.clone(), vec![]);
+        setup_mint_module_operators(&mut app, mint_module_addr.clone(), vec![]);
         let collection_1_addr =
             query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         give_approval_to_module(
@@ -461,7 +461,7 @@ mod permission_merge {
             mint_token(&mut app, mint_module_addr.clone(), 1, USER);
             mint_token(&mut app, mint_module_addr.clone(), 3, USER);
 
-            setup_mint_module_whitelist(
+            setup_mint_module_operators(
                 &mut app,
                 mint_module_addr.clone(),
                 vec![merge_module_addr.to_string()],

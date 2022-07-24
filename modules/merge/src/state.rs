@@ -13,4 +13,4 @@ pub const CONFIG: Item<Config> = Item::new("config");
 
 pub const CONTROLLER_ADDR: Item<Addr> = Item::new("controller_addr");
 
-pub const WHITELIST_ADDRS: Item<Vec<Addr>> = Item::new("whitelist_addrs");
+pub const OPERATORS: Item<Vec<Addr>> = Item::new("operators");
