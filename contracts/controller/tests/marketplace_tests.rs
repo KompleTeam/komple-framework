@@ -409,223 +409,227 @@ mod actions {
         use cosmwasm_std::Empty;
         use rift_utils::{query_collection_address, query_token_operation_lock};
 
-        #[test]
-        fn test_happy_path() {
-            let mut app = mock_app();
-            let controller_addr = proper_instantiate(&mut app);
+        mod fixed_tokens {
+            use super::*;
 
-            setup_all_modules(&mut app, controller_addr.clone());
+            #[test]
+            fn test_happy_path() {
+                let mut app = mock_app();
+                let controller_addr = proper_instantiate(&mut app);
 
-            let (mint_module_addr, _, _, marketplace_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr);
+                setup_all_modules(&mut app, controller_addr.clone());
 
-            let token_contract_code_id = app.store_code(token_contract());
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
-                None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
-            );
+                let (mint_module_addr, _, _, marketplace_module_addr) =
+                    get_modules_addresses(&mut app, &controller_addr);
 
-            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    Contracts {
+                        whitelist: None,
+                        royalty: None,
+                        metadata: None,
+                    },
+                );
 
-            let collection_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-            setup_token_contract_operators(
-                &mut app,
-                collection_addr.clone(),
-                vec![marketplace_module_addr.to_string()],
-            );
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
-            let msg = MarketplaceExecuteMsg::ListFixedToken {
-                collection_id: 1,
-                token_id: 1,
-                price: Uint128::new(1_000_000),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
+                setup_token_contract_operators(
+                    &mut app,
+                    collection_addr.clone(),
+                    vec![marketplace_module_addr.to_string()],
+                );
+
+                let msg = MarketplaceExecuteMsg::ListFixedToken {
+                    collection_id: 1,
+                    token_id: 1,
+                    price: Uint128::new(1_000_000),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                let lock = query_token_operation_lock(&app.wrap(), &collection_addr).unwrap();
+                assert_eq!(lock, true);
+
+                let msg = MarketplaceExecuteMsg::DelistFixedToken {
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                let msg = MarketplaceQueryMsg::FixedListing {
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let res: Result<Empty, cosmwasm_std::StdError> =
+                    app.wrap().query_wasm_smart(marketplace_module_addr, &msg);
+                assert!(res.is_err());
+
+                let lock = query_token_operation_lock(&app.wrap(), &collection_addr).unwrap();
+                assert_eq!(lock, false);
+            }
+
+            #[test]
+            fn test_invalid_owner() {
+                let mut app = mock_app();
+                let controller_addr = proper_instantiate(&mut app);
+
+                setup_all_modules(&mut app, controller_addr.clone());
+
+                let (mint_module_addr, _, _, marketplace_module_addr) =
+                    get_modules_addresses(&mut app, &controller_addr);
+
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    Contracts {
+                        whitelist: None,
+                        royalty: None,
+                        metadata: None,
+                    },
+                );
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                setup_token_contract_operators(
+                    &mut app,
+                    collection_addr.clone(),
+                    vec![marketplace_module_addr.to_string()],
+                );
+
+                let msg = MarketplaceExecuteMsg::ListFixedToken {
+                    collection_id: 1,
+                    token_id: 1,
+                    price: Uint128::new(1_000_000),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                let msg = MarketplaceExecuteMsg::DelistFixedToken {
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    MarketplaceContractError::Unauthorized {}.to_string()
                 )
-                .unwrap();
+            }
 
-            let lock = query_token_operation_lock(&app.wrap(), &collection_addr).unwrap();
-            assert_eq!(lock, true);
+            #[test]
+            fn test_invalid_operator() {
+                let mut app = mock_app();
+                let controller_addr = proper_instantiate(&mut app);
 
-            let msg = MarketplaceExecuteMsg::DelistFixedToken {
-                collection_id: 1,
-                token_id: 1,
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
+                setup_all_modules(&mut app, controller_addr.clone());
+
+                let (mint_module_addr, _, _, marketplace_module_addr) =
+                    get_modules_addresses(&mut app, &controller_addr);
+
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    Contracts {
+                        whitelist: None,
+                        royalty: None,
+                        metadata: None,
+                    },
+                );
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                setup_token_contract_operators(
+                    &mut app,
+                    collection_addr.clone(),
+                    vec![marketplace_module_addr.to_string()],
+                );
+
+                let msg = MarketplaceExecuteMsg::ListFixedToken {
+                    collection_id: 1,
+                    token_id: 1,
+                    price: Uint128::new(1_000_000),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                setup_token_contract_operators(&mut app, collection_addr.clone(), vec![]);
+
+                let msg = MarketplaceExecuteMsg::DelistFixedToken {
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().source().unwrap().to_string(),
+                    TokenContractError::Unauthorized {}.to_string()
                 )
-                .unwrap();
-
-            let msg = MarketplaceQueryMsg::FixedListing {
-                collection_id: 1,
-                token_id: 1,
-            };
-            let res: Result<Empty, cosmwasm_std::StdError> =
-                app.wrap().query_wasm_smart(marketplace_module_addr, &msg);
-            assert!(res.is_err());
-
-            let lock = query_token_operation_lock(&app.wrap(), &collection_addr).unwrap();
-            assert_eq!(lock, false);
-        }
-
-        #[test]
-        fn test_invalid_owner() {
-            let mut app = mock_app();
-            let controller_addr = proper_instantiate(&mut app);
-
-            setup_all_modules(&mut app, controller_addr.clone());
-
-            let (mint_module_addr, _, _, marketplace_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr);
-
-            let token_contract_code_id = app.store_code(token_contract());
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
-                None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
-            );
-
-            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
-            let collection_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-
-            setup_token_contract_operators(
-                &mut app,
-                collection_addr.clone(),
-                vec![marketplace_module_addr.to_string()],
-            );
-
-            let msg = MarketplaceExecuteMsg::ListFixedToken {
-                collection_id: 1,
-                token_id: 1,
-                price: Uint128::new(1_000_000),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap();
-
-            let msg = MarketplaceExecuteMsg::DelistFixedToken {
-                collection_id: 1,
-                token_id: 1,
-            };
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(RANDOM),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                MarketplaceContractError::Unauthorized {}.to_string()
-            )
-        }
-
-        #[test]
-        fn test_invalid_operator() {
-            let mut app = mock_app();
-            let controller_addr = proper_instantiate(&mut app);
-
-            setup_all_modules(&mut app, controller_addr.clone());
-
-            let (mint_module_addr, _, _, marketplace_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr);
-
-            let token_contract_code_id = app.store_code(token_contract());
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
-                None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
-            );
-
-            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
-            let collection_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-
-            setup_token_contract_operators(
-                &mut app,
-                collection_addr.clone(),
-                vec![marketplace_module_addr.to_string()],
-            );
-
-            let msg = MarketplaceExecuteMsg::ListFixedToken {
-                collection_id: 1,
-                token_id: 1,
-                price: Uint128::new(1_000_000),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap();
-
-            setup_token_contract_operators(&mut app, collection_addr.clone(), vec![]);
-
-            let msg = MarketplaceExecuteMsg::DelistFixedToken {
-                collection_id: 1,
-                token_id: 1,
-            };
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().source().unwrap().to_string(),
-                TokenContractError::Unauthorized {}.to_string()
-            )
+            }
         }
     }
 
@@ -635,264 +639,294 @@ mod actions {
 
         use super::*;
 
-        #[test]
-        fn test_happy_path() {
-            let mut app = mock_app();
-            let controller_addr = proper_instantiate(&mut app);
+        mod fixed_tokens {
+            use super::*;
 
-            setup_all_modules(&mut app, controller_addr.clone());
+            #[test]
+            fn test_happy_path() {
+                let mut app = mock_app();
+                let controller_addr = proper_instantiate(&mut app);
 
-            let (mint_module_addr, _, _, marketplace_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr);
+                setup_all_modules(&mut app, controller_addr.clone());
 
-            let token_contract_code_id = app.store_code(token_contract());
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
-                None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
-            );
+                let (mint_module_addr, _, _, marketplace_module_addr) =
+                    get_modules_addresses(&mut app, &controller_addr);
 
-            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    Contracts {
+                        whitelist: None,
+                        royalty: None,
+                        metadata: None,
+                    },
+                );
 
-            setup_marketplace_listing(&mut app, &controller_addr, 1, 1, Uint128::new(1_000_000));
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-            let msg = MarketplaceExecuteMsg::UpdatePrice {
-                listing_type: Listing::Fixed,
-                collection_id: 1,
-                token_id: 1,
-                price: Uint128::new(200_000_000),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
+                setup_marketplace_listing(
+                    &mut app,
+                    &controller_addr,
+                    1,
+                    1,
+                    Uint128::new(1_000_000),
+                );
+
+                let msg = MarketplaceExecuteMsg::UpdatePrice {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 1,
+                    price: Uint128::new(200_000_000),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                let msg = MarketplaceQueryMsg::FixedListing {
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let res: ResponseWrapper<FixedListing> = app
+                    .wrap()
+                    .query_wasm_smart(marketplace_module_addr, &msg)
+                    .unwrap();
+                assert_eq!(res.data.owner, USER.to_string());
+                assert_eq!(res.data.price, Uint128::new(200_000_000));
+            }
+
+            #[test]
+            fn test_invalid_owner() {
+                let mut app = mock_app();
+                let controller_addr = proper_instantiate(&mut app);
+
+                setup_all_modules(&mut app, controller_addr.clone());
+
+                let (mint_module_addr, _, _, marketplace_module_addr) =
+                    get_modules_addresses(&mut app, &controller_addr);
+
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    Contracts {
+                        whitelist: None,
+                        royalty: None,
+                        metadata: None,
+                    },
+                );
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+
+                setup_marketplace_listing(
+                    &mut app,
+                    &controller_addr,
+                    1,
+                    1,
+                    Uint128::new(1_000_000),
+                );
+
+                let msg = MarketplaceExecuteMsg::UpdatePrice {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 1,
+                    price: Uint128::new(200_000_000),
+                };
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    MarketplaceContractError::Unauthorized {}.to_string()
                 )
-                .unwrap();
-
-            let msg = MarketplaceQueryMsg::FixedListing {
-                collection_id: 1,
-                token_id: 1,
-            };
-            let res: ResponseWrapper<FixedListing> = app
-                .wrap()
-                .query_wasm_smart(marketplace_module_addr, &msg)
-                .unwrap();
-            assert_eq!(res.data.owner, USER.to_string());
-            assert_eq!(res.data.price, Uint128::new(200_000_000));
-        }
-
-        #[test]
-        fn test_invalid_owner() {
-            let mut app = mock_app();
-            let controller_addr = proper_instantiate(&mut app);
-
-            setup_all_modules(&mut app, controller_addr.clone());
-
-            let (mint_module_addr, _, _, marketplace_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr);
-
-            let token_contract_code_id = app.store_code(token_contract());
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
-                None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
-            );
-
-            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
-            setup_marketplace_listing(&mut app, &controller_addr, 1, 1, Uint128::new(1_000_000));
-
-            let msg = MarketplaceExecuteMsg::UpdatePrice {
-                listing_type: Listing::Fixed,
-                collection_id: 1,
-                token_id: 1,
-                price: Uint128::new(200_000_000),
-            };
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(RANDOM),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                MarketplaceContractError::Unauthorized {}.to_string()
-            )
+            }
         }
     }
 
     mod buying {
-        use std::ops::Add;
+        use super::*;
 
         use cosmwasm_std::coin;
         use rift_types::marketplace::Listing;
         use rift_utils::{query_collection_address, query_token_owner};
 
-        use super::*;
+        mod fixed_tokens {
+            use super::*;
 
-        #[test]
-        fn test_happy_path() {
-            let mut app = mock_app();
-            let controller_addr = proper_instantiate(&mut app);
+            #[test]
+            fn test_happy_path() {
+                let mut app = mock_app();
+                let controller_addr = proper_instantiate(&mut app);
 
-            setup_all_modules(&mut app, controller_addr.clone());
+                setup_all_modules(&mut app, controller_addr.clone());
 
-            let (mint_module_addr, _, _, marketplace_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr);
+                let (mint_module_addr, _, _, marketplace_module_addr) =
+                    get_modules_addresses(&mut app, &controller_addr);
 
-            let token_contract_code_id = app.store_code(token_contract());
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
-                None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
-            );
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    Contracts {
+                        whitelist: None,
+                        royalty: None,
+                        metadata: None,
+                    },
+                );
 
-            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-            setup_marketplace_listing(&mut app, &controller_addr, 1, 1, Uint128::new(1_000_000));
+                setup_marketplace_listing(
+                    &mut app,
+                    &controller_addr,
+                    1,
+                    1,
+                    Uint128::new(1_000_000),
+                );
 
-            let collection_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
-            give_approval_to_module(
-                &mut app,
-                collection_addr.clone(),
-                USER,
-                &marketplace_module_addr,
-            );
+                give_approval_to_module(
+                    &mut app,
+                    collection_addr.clone(),
+                    USER,
+                    &marketplace_module_addr,
+                );
 
-            let msg = MarketplaceExecuteMsg::Buy {
-                listing_type: Listing::Fixed,
-                collection_id: 1,
-                token_id: 1,
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(RANDOM),
-                    marketplace_module_addr.clone(),
-                    &msg,
-                    &vec![coin(1_000_000, NATIVE_DENOM)],
-                )
-                .unwrap();
+                let msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![coin(1_000_000, NATIVE_DENOM)],
+                    )
+                    .unwrap();
 
-            let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
-            assert_eq!(owner, Addr::unchecked(RANDOM));
+                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                assert_eq!(owner, Addr::unchecked(RANDOM));
 
-            let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
-            assert_eq!(balance.amount, Uint128::new(0));
+                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(0));
 
-            let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-            assert_eq!(balance.amount, Uint128::new(1_950_000));
+                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(1_950_000));
 
-            let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
-            assert_eq!(balance.amount, Uint128::new(50_000));
-        }
+                let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(50_000));
+            }
 
-        #[test]
-        fn test_invalid_funds() {
-            let mut app = mock_app();
-            let controller_addr = proper_instantiate(&mut app);
+            #[test]
+            fn test_invalid_funds() {
+                let mut app = mock_app();
+                let controller_addr = proper_instantiate(&mut app);
 
-            setup_all_modules(&mut app, controller_addr.clone());
+                setup_all_modules(&mut app, controller_addr.clone());
 
-            let (mint_module_addr, _, _, marketplace_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr);
+                let (mint_module_addr, _, _, marketplace_module_addr) =
+                    get_modules_addresses(&mut app, &controller_addr);
 
-            let token_contract_code_id = app.store_code(token_contract());
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
-                None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
-            );
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    Contracts {
+                        whitelist: None,
+                        royalty: None,
+                        metadata: None,
+                    },
+                );
 
-            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-            setup_marketplace_listing(&mut app, &controller_addr, 1, 1, Uint128::new(1_000_000));
+                setup_marketplace_listing(
+                    &mut app,
+                    &controller_addr,
+                    1,
+                    1,
+                    Uint128::new(1_000_000),
+                );
 
-            let buy_msg = MarketplaceExecuteMsg::Buy {
-                listing_type: Listing::Fixed,
-                collection_id: 1,
-                token_id: 1,
-            };
+                let buy_msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 1,
+                };
 
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(RANDOM),
-                    marketplace_module_addr.clone(),
-                    &buy_msg,
-                    &vec![],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                MarketplaceContractError::InvalidFunds {}.to_string()
-            );
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &buy_msg,
+                        &vec![],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    MarketplaceContractError::InvalidFunds {}.to_string()
+                );
 
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(RANDOM_2),
-                    marketplace_module_addr.clone(),
-                    &buy_msg,
-                    &vec![coin(1_000_000, TEST_DENOM)],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                MarketplaceContractError::InvalidDenom {}.to_string()
-            );
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM_2),
+                        marketplace_module_addr.clone(),
+                        &buy_msg,
+                        &vec![coin(1_000_000, TEST_DENOM)],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    MarketplaceContractError::InvalidDenom {}.to_string()
+                );
 
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(RANDOM),
-                    marketplace_module_addr.clone(),
-                    &buy_msg,
-                    &vec![coin(100, NATIVE_DENOM)],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                MarketplaceContractError::InvalidFunds {}.to_string()
-            );
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &buy_msg,
+                        &vec![coin(100, NATIVE_DENOM)],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    MarketplaceContractError::InvalidFunds {}.to_string()
+                );
+            }
         }
     }
 }
