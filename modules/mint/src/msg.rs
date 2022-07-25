@@ -1,10 +1,7 @@
 use cosmwasm_std::{Binary, Timestamp};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use token_contract::{
-    msg::TokenInfo,
-    state::{CollectionInfo, Contracts},
-};
+use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
 use rift_types::{collection::Collections, query::MintModuleQueryMsg};
 
@@ -23,7 +20,6 @@ pub enum ExecuteMsg {
         per_address_limit: Option<u32>,
         start_time: Option<Timestamp>,
         linked_collections: Option<Vec<u32>>,
-        contracts: Contracts,
     },
     UpdateMintLock {
         lock: bool,
