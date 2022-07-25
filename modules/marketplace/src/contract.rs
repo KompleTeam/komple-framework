@@ -10,15 +10,18 @@ use cw2::set_contract_version;
 use rift_types::marketplace::Listing;
 use rift_types::module::Modules;
 use rift_types::query::ResponseWrapper;
+use rift_types::tokens::CONTRACTS_NAMESPACE;
 use rift_utils::{
-    query_collection_address, query_collection_locks, query_module_address, query_token_locks,
-    query_token_operation_lock, query_token_owner,
+    query_collection_address, query_collection_locks, query_module_address, query_storage,
+    query_token_locks, query_token_operation_lock, query_token_owner,
 };
+use token_contract::state::Contracts;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, CONTROLLER_ADDR, FIXED_LISTING};
 
+use royalty_contract::msg::{QueryMsg as RoyaltyQueryMsg, RoyaltyResponse};
 use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError};
 
 // version info for migration info
@@ -218,6 +221,7 @@ fn _execute_buy_fixed_listing(
     let config = CONFIG.load(deps.storage)?;
     let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
 
+    // Check for the sent funds
     check_funds(&info, &config, fixed_listing.price)?;
 
     let mint_module_addr =
@@ -225,16 +229,45 @@ fn _execute_buy_fixed_listing(
     let collection_addr =
         query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
 
+    // This is the fee for marketplace
     let fee = config.fee_percentage.mul(fixed_listing.price);
-    let payout = fixed_listing.price.checked_sub(fee)?;
 
-    let owner_payout = BankMsg::Send {
-        to_address: fixed_listing.owner.to_string(),
-        amount: vec![Coin {
-            denom: config.native_denom.to_string(),
-            amount: payout,
-        }],
-    };
+    // This is the fee for royalty owner
+    // Zero at first because it royalty might not exist
+    let mut royalty_fee = Uint128::new(0);
+
+    let mut sub_msgs: Vec<SubMsg> = vec![];
+
+    // Get royalty message if it exists
+    let res = query_storage::<Contracts>(&deps.querier, &collection_addr, CONTRACTS_NAMESPACE)?;
+    if let Some(contracts) = res {
+        if let Some(royalty_contract) = contracts.royalty {
+            let msg = RoyaltyQueryMsg::Royalty {
+                owner: fixed_listing.owner.to_string(),
+                collection_id: fixed_listing.collection_id,
+                token_id: fixed_listing.token_id,
+            };
+            let res: ResponseWrapper<RoyaltyResponse> = deps
+                .querier
+                .query_wasm_smart(royalty_contract, &msg)
+                .unwrap();
+
+            royalty_fee = res.data.share.mul(fixed_listing.price);
+
+            let royalty_payout = BankMsg::Send {
+                to_address: res.data.address,
+                amount: vec![Coin {
+                    denom: config.native_denom.to_string(),
+                    amount: royalty_fee,
+                }],
+            };
+            sub_msgs.push(SubMsg::new(royalty_payout))
+        }
+    }
+
+    // Add marketplace and royalty fee and subtract from the price
+    let payout = fixed_listing.price.checked_sub(fee + royalty_fee)?;
+
     let fee_payout = BankMsg::Send {
         to_address: MARKETPLACE_PAYOUT_ADDR.to_string(),
         amount: vec![Coin {
@@ -242,7 +275,17 @@ fn _execute_buy_fixed_listing(
             amount: fee,
         }],
     };
-    // TODO: Construct a royalty payout message here if needed
+    let owner_payout = BankMsg::Send {
+        to_address: fixed_listing.owner.to_string(),
+        amount: vec![Coin {
+            denom: config.native_denom.to_string(),
+            amount: payout,
+        }],
+    };
+    sub_msgs.push(SubMsg::new(owner_payout));
+    sub_msgs.push(SubMsg::new(fee_payout));
+
+    // Transfer token ownership to the new address
     let transfer_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::AdminTransferNft {
@@ -252,9 +295,16 @@ fn _execute_buy_fixed_listing(
         funds: vec![],
     });
 
+    // Lift up the token locks
+    let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: collection_addr.to_string(),
+        msg: to_binary(&TokenExecuteMsg::UpdateOperationLock { lock: false })?,
+        funds: vec![],
+    });
+
     Ok(Response::new()
-        .add_submessages(vec![SubMsg::new(owner_payout), SubMsg::new(fee_payout)])
-        .add_message(transfer_msg)
+        .add_submessages(sub_msgs)
+        .add_messages(vec![transfer_msg, unlock_msg])
         .add_attribute("action", "execute_buy"))
 }
 

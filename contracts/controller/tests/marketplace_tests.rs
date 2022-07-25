@@ -6,8 +6,8 @@ pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, give_approval_to_module, marketplace_module,
     mint_token, mock_app, proper_instantiate, setup_all_modules, setup_marketplace_listing,
-    setup_token_contract_operators, token_contract, ADMIN, NATIVE_DENOM, RANDOM, RANDOM_2,
-    TEST_DENOM, USER,
+    setup_royalty_contract, setup_token_contract_operators, token_contract, ADMIN, NATIVE_DENOM,
+    RANDOM, RANDOM_2, TEST_DENOM, USER,
 };
 
 mod initialization {
@@ -74,13 +74,11 @@ mod actions {
         ContractError as MarketplaceContractError,
     };
     use rift_types::collection::Collections;
-    use token_contract::state::Contracts;
+    use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
     use token_contract::ContractError as TokenContractError;
 
     mod listing {
         use super::*;
-
-        use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
         mod fixed_tokens {
             use super::*;
@@ -108,11 +106,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -177,11 +170,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -224,11 +212,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -373,11 +356,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -431,11 +409,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -510,11 +483,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -579,11 +547,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -661,11 +624,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -724,11 +682,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -771,6 +724,11 @@ mod actions {
         use rift_utils::{query_collection_address, query_token_owner};
 
         mod fixed_tokens {
+            use std::str::FromStr;
+
+            use cosmwasm_std::Decimal;
+            use rift_types::royalty::Royalty;
+
             use super::*;
 
             #[test]
@@ -792,25 +750,14 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
-                );
-
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
-                setup_marketplace_listing(
-                    &mut app,
-                    &controller_addr,
-                    1,
-                    1,
-                    Uint128::new(1_000_000),
                 );
 
                 let collection_addr =
                     query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 give_approval_to_module(
                     &mut app,
@@ -818,6 +765,8 @@ mod actions {
                     USER,
                     &marketplace_module_addr,
                 );
+
+                setup_marketplace_listing(&mut app, &controller_addr, 1, 1, Uint128::new(1_000));
 
                 let msg = MarketplaceExecuteMsg::Buy {
                     listing_type: Listing::Fixed,
@@ -829,21 +778,110 @@ mod actions {
                         Addr::unchecked(RANDOM),
                         marketplace_module_addr.clone(),
                         &msg,
-                        &vec![coin(1_000_000, NATIVE_DENOM)],
+                        &vec![coin(1_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
                 let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(owner, Addr::unchecked(RANDOM));
 
+                // Buyer balance
+                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(999_000));
+
+                // Owner balance
+                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(1_000_950));
+
+                // Marketplace fee
+                let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(50));
+
+                // Admin royalty fee
+                let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(0));
+
+                // Setup admin royalty for 10 percent
+                setup_royalty_contract(
+                    &mut app,
+                    collection_addr.clone(),
+                    Decimal::from_str("0.1").unwrap(),
+                    Royalty::Admin,
+                );
+
+                setup_marketplace_listing(&mut app, &controller_addr, 1, 2, Uint128::new(1_000));
+
+                let msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 2,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![coin(1_000, NATIVE_DENOM)],
+                    )
+                    .unwrap();
+
+                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                assert_eq!(owner, Addr::unchecked(RANDOM));
+
+                // Buyer balance
+                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(998_000));
+
+                // Owner balance
+                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(1_001_800));
+
+                // Marketplace fee
+                let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(100));
+
+                // Admin royalty fee
+                let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(100));
+
+                setup_royalty_contract(
+                    &mut app,
+                    collection_addr.clone(),
+                    Decimal::from_str("0.05").unwrap(),
+                    Royalty::Owners,
+                );
+
+                setup_marketplace_listing(&mut app, &controller_addr, 1, 3, Uint128::new(998_000));
+
+                let msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 3,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![coin(998_000, NATIVE_DENOM)],
+                    )
+                    .unwrap();
+
+                // Buyer balance
                 let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
                 assert_eq!(balance.amount, Uint128::new(0));
 
+                // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_950_000));
+                assert_eq!(balance.amount, Uint128::new(1_949_900));
 
+                // Marketplace fee
                 let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
                 assert_eq!(balance.amount, Uint128::new(50_000));
+
+                // Admin royalty fee
+                let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(100));
             }
 
             #[test]
@@ -865,11 +903,6 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
-                    Contracts {
-                        whitelist: None,
-                        royalty: None,
-                        metadata: None,
-                    },
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
