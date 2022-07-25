@@ -1,7 +1,10 @@
-use cosmwasm_std::{Binary, Empty, Timestamp};
+use cosmwasm_std::{Binary, Decimal, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use rift_types::{metadata::Metadata as MetadataType, query::TokenContractQueryMsg, tokens::Locks};
+use rift_types::{
+    metadata::Metadata as MetadataType, query::TokenContractQueryMsg, royalty::Royalty,
+    tokens::Locks,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -104,6 +107,11 @@ pub enum ExecuteMsg {
     InitMetadataContract {
         code_id: u64,
         metadata_type: MetadataType,
+    },
+    InitRoyaltyContract {
+        code_id: u64,
+        share: Decimal,
+        royalty_type: Royalty,
     },
 }
 
