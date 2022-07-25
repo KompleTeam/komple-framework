@@ -95,14 +95,6 @@ mod normal_merge {
             None,
             Collections::Normal,
             None,
-        );
-        create_collection(
-            &mut app,
-            mint_module_addr.clone(),
-            token_contract_code_id,
-            None,
-            None,
-            Collections::Normal,
             None,
         );
         create_collection(
@@ -112,6 +104,17 @@ mod normal_merge {
             None,
             None,
             Collections::Normal,
+            None,
+            None,
+        );
+        create_collection(
+            &mut app,
+            mint_module_addr.clone(),
+            token_contract_code_id,
+            None,
+            None,
+            Collections::Normal,
+            None,
             None,
         );
 
@@ -218,6 +221,7 @@ mod normal_merge {
             None,
             Collections::Normal,
             None,
+            None,
         );
         create_collection(
             &mut app,
@@ -226,6 +230,7 @@ mod normal_merge {
             None,
             None,
             Collections::Normal,
+            None,
             None,
         );
         create_collection(
@@ -236,6 +241,7 @@ mod normal_merge {
             None,
             Collections::Normal,
             Some(vec![2]),
+            None,
         );
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -366,6 +372,7 @@ mod permission_merge {
     mod ownership_permission {
         use super::*;
 
+        use cosmwasm_std::coin;
         use permission_module::msg::OwnershipMsg;
         use rift_utils::query_collection_address;
 
@@ -388,14 +395,6 @@ mod permission_merge {
                 None,
                 Collections::Normal,
                 None,
-            );
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
                 None,
             );
             create_collection(
@@ -405,6 +404,17 @@ mod permission_merge {
                 None,
                 None,
                 Collections::Normal,
+                None,
+                None,
+            );
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_contract_code_id,
+                None,
+                None,
+                Collections::Normal,
+                None,
                 None,
             );
 

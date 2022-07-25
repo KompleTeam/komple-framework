@@ -87,6 +87,8 @@ mod tests {
             per_address_limit: None,
             start_time: None,
             linked_collections,
+            unit_price: None,
+            native_denom: NATIVE_DENOM.to_string(),
         };
         let _ = app
             .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])

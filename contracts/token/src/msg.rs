@@ -1,4 +1,4 @@
-use cosmwasm_std::{Binary, Decimal, Empty, Timestamp};
+use cosmwasm_std::{Binary, Coin, Decimal, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use rift_types::{
@@ -8,7 +8,7 @@ use rift_types::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::{CollectionInfo, Contracts};
+use crate::state::CollectionInfo;
 
 use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -27,7 +27,8 @@ pub struct InstantiateMsg {
     pub start_time: Option<Timestamp>,
     pub collection_info: CollectionInfo,
     pub max_token_limit: Option<u32>,
-    pub contracts: Contracts,
+    pub unit_price: Option<Coin>,
+    pub native_denom: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

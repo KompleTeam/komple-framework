@@ -106,6 +106,7 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
+                    None,
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -170,6 +171,7 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
+                    None,
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -211,6 +213,7 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
                     None,
                 );
 
@@ -356,6 +359,7 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
+                    None,
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -408,6 +412,7 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
                     None,
                 );
 
@@ -483,6 +488,7 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
+                    None,
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -546,6 +552,7 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
                     None,
                 );
 
@@ -624,6 +631,7 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
+                    None,
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -682,6 +690,7 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
+                    None,
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -728,6 +737,7 @@ mod actions {
 
             use cosmwasm_std::Decimal;
             use rift_types::royalty::Royalty;
+            use rift_utils::FundsError;
 
             use super::*;
 
@@ -749,6 +759,7 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
                     None,
                 );
 
@@ -903,6 +914,7 @@ mod actions {
                     None,
                     Collections::Normal,
                     None,
+                    None,
                 );
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -931,7 +943,7 @@ mod actions {
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
-                    MarketplaceContractError::InvalidFunds {}.to_string()
+                    FundsError::MissingFunds {}.to_string()
                 );
 
                 let err = app
@@ -944,7 +956,11 @@ mod actions {
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
-                    MarketplaceContractError::InvalidDenom {}.to_string()
+                    FundsError::InvalidDenom {
+                        got: TEST_DENOM.to_string(),
+                        expected: NATIVE_DENOM.to_string()
+                    }
+                    .to_string()
                 );
 
                 let err = app
@@ -957,7 +973,11 @@ mod actions {
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
-                    MarketplaceContractError::InvalidFunds {}.to_string()
+                    FundsError::InvalidFunds {
+                        got: "100".to_string(),
+                        expected: "1000000".to_string()
+                    }
+                    .to_string()
                 );
             }
         }

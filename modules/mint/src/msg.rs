@@ -1,4 +1,4 @@
-use cosmwasm_std::{Binary, Timestamp};
+use cosmwasm_std::{Binary, Coin, Timestamp};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use token_contract::{msg::TokenInfo, state::CollectionInfo};
@@ -19,6 +19,8 @@ pub enum ExecuteMsg {
         token_info: TokenInfo,
         per_address_limit: Option<u32>,
         start_time: Option<Timestamp>,
+        unit_price: Option<Coin>,
+        native_denom: String,
         linked_collections: Option<Vec<u32>>,
     },
     UpdateMintLock {

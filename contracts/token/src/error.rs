@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use rift_utils::UtilError;
+use rift_utils::{FundsError, UtilError};
 use thiserror::Error;
 use url::ParseError;
 
@@ -40,6 +40,9 @@ pub enum ContractError {
     #[error("Description too long")]
     DescriptionTooLong {},
 
+    #[error("Address is not whitelisted")]
+    NotWhitelisted {},
+
     #[error("token_id already claimed")]
     Claimed {},
 
@@ -63,6 +66,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     Util(#[from] UtilError),
+
+    #[error("{0}")]
+    Funds(#[from] FundsError),
 }
 
 impl From<Cw721ContractError> for ContractError {

@@ -10,7 +10,7 @@ use rift_types::metadata::Metadata as MetadataType;
 use rift_types::query::ResponseWrapper;
 use rift_types::royalty::Royalty;
 use rift_types::tokens::Locks;
-use rift_utils::check_admin_privileges;
+use rift_utils::{check_admin_privileges, check_funds};
 use url::Url;
 
 use crate::error::ContractError;
@@ -26,7 +26,10 @@ use cw721_base::MintMsg;
 
 use metadata_contract::msg::InstantiateMsg as MetadataInstantiateMsg;
 use royalty_contract::msg::InstantiateMsg as RoyaltyInstantiateMsg;
-use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use whitelist_contract::msg::{
+    ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
+    QueryMsg as WhitelistQueryMsg,
+};
 
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
@@ -56,22 +59,10 @@ pub fn instantiate(
         send_lock: false,
     };
 
-    let whitelist = msg
-        .contracts
-        .whitelist
-        .and_then(|w| deps.api.addr_validate(w.as_str()).ok());
-    let royalty = msg
-        .contracts
-        .royalty
-        .and_then(|r| deps.api.addr_validate(r.as_str()).ok());
-    let metadata = msg
-        .contracts
-        .metadata
-        .and_then(|m| deps.api.addr_validate(m.as_str()).ok());
     let contracts = Contracts {
-        whitelist,
-        royalty,
-        metadata,
+        whitelist: None,
+        royalty: None,
+        metadata: None,
     };
     CONTRACTS.save(deps.storage, &contracts)?;
 
@@ -83,11 +74,15 @@ pub fn instantiate(
         per_address_limit: msg.per_address_limit,
         start_time: msg.start_time,
         max_token_limit: msg.max_token_limit,
+        unit_price: msg.unit_price,
     };
     COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
     let admin = deps.api.addr_validate(&msg.admin)?;
-    let config = Config { admin };
+    let config = Config {
+        admin,
+        native_denom: msg.native_denom,
+    };
     CONFIG.save(deps.storage, &config)?;
 
     LOCKS.save(deps.storage, &locks)?;
@@ -336,6 +331,7 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
+    let config = CONFIG.load(deps.storage)?;
     let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
 
     let locks = LOCKS.load(deps.storage)?;
@@ -364,6 +360,14 @@ pub fn execute_mint(
         && total_minted + 1 > collection_config.per_address_limit.unwrap()
     {
         return Err(ContractError::TokenLimitReached {});
+    }
+
+    if collection_config.unit_price.is_some() {
+        check_funds(
+            &info,
+            &config.native_denom,
+            collection_config.unit_price.unwrap().amount,
+        )?;
     }
 
     // TODO: Check for start time here
@@ -764,6 +768,41 @@ fn execute_init_whitelist_contract(
     Ok(Response::new()
         .add_submessage(sub_msg)
         .add_attribute("action", "execute_init_whitelist_contract"))
+}
+
+fn check_whitelist(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
+    let contracts = CONTRACTS.load(deps.storage)?;
+
+    if contracts.whitelist.is_none() {
+        return Ok(true);
+    }
+    let whitelist = contracts.whitelist.unwrap();
+
+    let whitelist_config: ResponseWrapper<WhitelistConfigResponse> = deps
+        .querier
+        .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
+    if !whitelist_config.data.is_active {
+        return Ok(true);
+    }
+
+    let res: ResponseWrapper<bool> = deps.querier.query_wasm_smart(
+        whitelist,
+        &WhitelistQueryMsg::HasMember {
+            member: info.sender.to_string(),
+        },
+    )?;
+    if !res.data {
+        return Err(ContractError::NotWhitelisted {});
+    }
+
+    let total_minted = MINTED_TOKENS_PER_ADDR
+        .may_load(deps.storage, &info.sender.to_string())?
+        .unwrap_or(0);
+    if total_minted >= (whitelist_config.data.per_address_limit as u32) {
+        return Err(ContractError::TokenLimitReached {});
+    }
+
+    Ok(false)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
