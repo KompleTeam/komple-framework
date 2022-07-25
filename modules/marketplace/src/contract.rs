@@ -12,8 +12,8 @@ use rift_types::module::Modules;
 use rift_types::query::ResponseWrapper;
 use rift_types::tokens::CONTRACTS_NAMESPACE;
 use rift_utils::{
-    query_collection_address, query_collection_locks, query_module_address, query_storage,
-    query_token_locks, query_token_operation_lock, query_token_owner,
+    check_funds, query_collection_address, query_collection_locks, query_module_address,
+    query_storage, query_token_locks, query_token_operation_lock, query_token_owner,
 };
 use token_contract::state::Contracts;
 
@@ -222,7 +222,7 @@ fn _execute_buy_fixed_listing(
     let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
 
     // Check for the sent funds
-    check_funds(&info, &config, fixed_listing.price)?;
+    check_funds(&info, &config.native_denom, fixed_listing.price)?;
 
     let mint_module_addr =
         query_module_address(&deps.querier, &controller_addr, Modules::MintModule)?;
@@ -306,21 +306,6 @@ fn _execute_buy_fixed_listing(
         .add_submessages(sub_msgs)
         .add_messages(vec![transfer_msg, unlock_msg])
         .add_attribute("action", "execute_buy"))
-}
-
-fn check_funds(info: &MessageInfo, config: &Config, price: Uint128) -> Result<(), ContractError> {
-    if info.funds.len() != 1 {
-        return Err(ContractError::InvalidFunds {});
-    };
-    let sent_fund = info.funds.get(0).unwrap();
-    if sent_fund.denom != config.native_denom {
-        return Err(ContractError::InvalidDenom {});
-    }
-    if sent_fund.amount != price {
-        return Err(ContractError::InvalidFunds {});
-    }
-
-    Ok(())
 }
 
 fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {
