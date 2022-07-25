@@ -9,7 +9,7 @@ use rift_types::royalty::Royalty;
 use rift_utils::query_token_owner;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RoyaltyResponse};
 use crate::state::{Config, COLLECTION_ADDR, CONFIG, OWNER_ROYALTY_ADDR, TOKEN_ROYALTY_ADDR};
 
 // version info for migration info
@@ -112,16 +112,11 @@ fn execute_update_token_royalty_address(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::RoyaltyAddress {
+        QueryMsg::Royalty {
             owner,
             collection_id,
             token_id,
-        } => to_binary(&query_royalty_address(
-            deps,
-            owner,
-            collection_id,
-            token_id,
-        )?),
+        } => to_binary(&query_royalty(deps, owner, collection_id, token_id)?),
     }
 }
 
@@ -130,12 +125,12 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     Ok(ResponseWrapper::new("config", config))
 }
 
-fn query_royalty_address(
+fn query_royalty(
     deps: Deps,
     owner: String,
     collection_id: u32,
     token_id: u32,
-) -> StdResult<ResponseWrapper<String>> {
+) -> StdResult<ResponseWrapper<RoyaltyResponse>> {
     let config = CONFIG.load(deps.storage)?;
 
     let addr = match config.royalty_type {
@@ -164,5 +159,11 @@ fn query_royalty_address(
             }
         }
     };
-    Ok(ResponseWrapper::new("royalty_address", addr))
+    Ok(ResponseWrapper::new(
+        "royalty_address",
+        RoyaltyResponse {
+            share: config.share,
+            address: addr,
+        },
+    ))
 }

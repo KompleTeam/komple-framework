@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::msg::{ExecuteMsg, QueryMsg};
+    use crate::msg::{ExecuteMsg, QueryMsg, RoyaltyResponse};
     use crate::ContractError;
     use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -125,16 +125,16 @@ mod tests {
                 let royalty_contract_addr =
                     proper_instantiate(&mut app, Decimal::from_str("0.5").unwrap(), Royalty::Admin);
 
-                let query_msg = QueryMsg::RoyaltyAddress {
+                let query_msg = QueryMsg::Royalty {
                     owner: USER.to_string(),
                     collection_id: 1,
                     token_id: 1,
                 };
-                let res: ResponseWrapper<Addr> = app
+                let res: ResponseWrapper<RoyaltyResponse> = app
                     .wrap()
                     .query_wasm_smart(royalty_contract_addr.clone(), &query_msg)
                     .unwrap();
-                assert_eq!(res.data, Addr::unchecked(ADMIN));
+                assert_eq!(res.data.address, Addr::unchecked(ADMIN));
 
                 let update_msg = ExecuteMsg::UpdateOwnerRoyaltyAddress {
                     address: USER.to_string(),
@@ -148,16 +148,16 @@ mod tests {
                     )
                     .unwrap();
 
-                let query_msg = QueryMsg::RoyaltyAddress {
+                let query_msg = QueryMsg::Royalty {
                     owner: USER.to_string(),
                     collection_id: 1,
                     token_id: 1,
                 };
-                let res: ResponseWrapper<Addr> = app
+                let res: ResponseWrapper<RoyaltyResponse> = app
                     .wrap()
                     .query_wasm_smart(royalty_contract_addr.clone(), &query_msg)
                     .unwrap();
-                assert_eq!(res.data, Addr::unchecked(ADMIN));
+                assert_eq!(res.data.address, Addr::unchecked(ADMIN));
             }
         }
 
@@ -185,16 +185,16 @@ mod tests {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::RoyaltyAddress {
+                let msg = QueryMsg::Royalty {
                     owner: USER.to_string(),
                     collection_id: 1,
                     token_id: 1,
                 };
-                let res: ResponseWrapper<Addr> = app
+                let res: ResponseWrapper<RoyaltyResponse> = app
                     .wrap()
                     .query_wasm_smart(royalty_contract_addr.clone(), &msg)
                     .unwrap();
-                assert_eq!(res.data, Addr::unchecked(USER));
+                assert_eq!(res.data.address, Addr::unchecked(USER));
             }
         }
     }

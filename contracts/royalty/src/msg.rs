@@ -27,9 +27,15 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    RoyaltyAddress {
+    Royalty {
         owner: String,
         collection_id: u32,
         token_id: u32,
     },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct RoyaltyResponse {
+    pub share: Decimal,
+    pub address: String,
 }

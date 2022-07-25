@@ -206,6 +206,7 @@ pub enum QueryMsg {
         address: String,
     },
     CollectionInfo {},
+    Contracts {},
 }
 
 impl From<QueryMsg> for Cw721QueryMsg {
