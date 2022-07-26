@@ -12,6 +12,12 @@ pub enum ContractError {
     #[error("Invalid member limit")]
     InvalidMemberLimit {},
 
+    #[error("Member list cannot be empty")]
+    EmptyMemberList {},
+
+    #[error("Member limit exceeded")]
+    MemberLimitExceeded {},
+
     #[error("Invalid per address limit")]
     InvalidPerAddressLimit {},
 

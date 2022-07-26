@@ -372,7 +372,6 @@ mod permission_merge {
     mod ownership_permission {
         use super::*;
 
-        use cosmwasm_std::coin;
         use permission_module::msg::OwnershipMsg;
         use rift_utils::query_collection_address;
 

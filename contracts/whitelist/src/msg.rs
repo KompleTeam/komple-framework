@@ -17,8 +17,8 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     UpdateStartTime(Timestamp),
     UpdateEndTime(Timestamp),
-    AddMembers { members: Vec<String> },
-    RemoveMembers { members: Vec<String> },
+    AddMembers(Vec<String>),
+    RemoveMembers(Vec<String>),
     UpdatePerAddressLimit(u8),
     UpdateMemberLimit(u16),
 }
@@ -48,5 +48,6 @@ pub struct ConfigResponse {
     pub unit_price: Coin,
     pub per_address_limit: u8,
     pub member_limit: u16,
+    pub member_num: u16,
     pub is_active: bool,
 }

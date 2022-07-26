@@ -17,6 +17,7 @@ pub struct WhitelistConfig {
     pub unit_price: Coin,
     pub per_address_limit: u8,
     pub member_limit: u16,
+    pub member_num: u16,
 }
 pub const WHITELIST_CONFIG: Item<WhitelistConfig> = Item::new("whitelist_config");
 

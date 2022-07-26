@@ -33,6 +33,10 @@ pub fn instantiate(
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
+    if msg.members.len() == 0 {
+        return Err(ContractError::EmptyMemberList {});
+    }
+
     if msg.start_time <= env.block.time {
         return Err(ContractError::InvalidStartTime {});
     }
@@ -46,22 +50,25 @@ pub fn instantiate(
     let config = Config { admin: info.sender };
     CONFIG.save(deps.storage, &config)?;
 
+    msg.members.sort_unstable();
+    msg.members.dedup();
+
+    let member_num = msg.members.len() as u16;
+
+    for member in msg.members.into_iter() {
+        let addr = deps.api.addr_validate(&member.clone())?;
+        WHITELIST.save(deps.storage, addr, &true)?;
+    }
+
     let whitelist_config = WhitelistConfig {
         start_time: msg.start_time,
         end_time: msg.end_time,
         unit_price: msg.unit_price,
         per_address_limit: msg.per_address_limit,
         member_limit: msg.member_limit,
+        member_num,
     };
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
-
-    msg.members.sort_unstable();
-    msg.members.dedup();
-
-    for member in msg.members.into_iter() {
-        let addr = deps.api.addr_validate(&member.clone())?;
-        WHITELIST.save(deps.storage, addr, &true)?;
-    }
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
@@ -78,8 +85,8 @@ pub fn execute(
             execute_update_start_time(deps, env, info, start_time)
         }
         ExecuteMsg::UpdateEndTime(end_time) => execute_update_end_time(deps, env, info, end_time),
-        ExecuteMsg::AddMembers { members } => execute_add_members(deps, env, info, members),
-        ExecuteMsg::RemoveMembers { members } => execute_remove_members(deps, env, info, members),
+        ExecuteMsg::AddMembers(members) => execute_add_members(deps, env, info, members),
+        ExecuteMsg::RemoveMembers(members) => execute_remove_members(deps, env, info, members),
         ExecuteMsg::UpdatePerAddressLimit(limit) => {
             execute_update_per_address_limit(deps, env, info, limit)
         }
@@ -103,7 +110,9 @@ fn execute_update_start_time(
     if env.block.time >= whitelist_config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
-
+    if start_time <= env.block.time {
+        return Err(ContractError::InvalidStartTime {});
+    }
     if start_time >= whitelist_config.end_time {
         return Err(ContractError::InvalidStartTime {});
     }
@@ -130,7 +139,9 @@ fn execute_update_end_time(
     if env.block.time >= whitelist_config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
-
+    if end_time <= env.block.time {
+        return Err(ContractError::InvalidEndTime {});
+    }
     if end_time <= whitelist_config.start_time {
         return Err(ContractError::InvalidEndTime {});
     }
@@ -152,7 +163,7 @@ fn execute_add_members(
         return Err(ContractError::Unauthorized {});
     }
 
-    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
+    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
     if env.block.time >= whitelist_config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
@@ -161,12 +172,18 @@ fn execute_add_members(
     members.dedup();
 
     for member in members {
+        if whitelist_config.member_num >= whitelist_config.member_limit {
+            return Err(ContractError::MemberLimitExceeded {});
+        }
         let addr = deps.api.addr_validate(&member)?;
         if WHITELIST.has(deps.storage, addr.clone()) {
             return Err(ContractError::MemberExists {});
         }
         WHITELIST.save(deps.storage, addr, &true)?;
+        whitelist_config.member_num += 1;
     }
+
+    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
     Ok(Response::new().add_attribute("action", "execute_add_members"))
 }
@@ -182,7 +199,7 @@ fn execute_remove_members(
         return Err(ContractError::Unauthorized {});
     }
 
-    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
+    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
     if env.block.time >= whitelist_config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
@@ -196,7 +213,10 @@ fn execute_remove_members(
             return Err(ContractError::MemberNotFound {});
         }
         WHITELIST.remove(deps.storage, addr);
+        whitelist_config.member_num -= 1;
     }
+
+    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
     Ok(Response::new().add_attribute("action", "execute_add_members"))
 }
@@ -217,7 +237,7 @@ fn execute_update_per_address_limit(
         return Err(ContractError::AlreadyStarted {});
     }
 
-    if whitelist_config.per_address_limit == 0 {
+    if limit == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
@@ -242,8 +262,7 @@ fn execute_update_member_limit(
     if env.block.time >= whitelist_config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
-
-    if whitelist_config.member_limit == 0 {
+    if limit == 0 {
         return Err(ContractError::InvalidMemberLimit {});
     }
 
@@ -277,6 +296,7 @@ fn query_config(deps: Deps, env: Env) -> StdResult<ResponseWrapper<ConfigRespons
         unit_price: whitelist_config.unit_price,
         per_address_limit: whitelist_config.per_address_limit,
         member_limit: whitelist_config.member_limit,
+        member_num: whitelist_config.member_num,
         is_active: get_active_status(deps, env)?,
     };
     Ok(ResponseWrapper::new("config", config_res))
