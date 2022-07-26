@@ -34,6 +34,9 @@ pub enum ContractError {
     #[error("Invalid start time")]
     InvalidStartTime {},
 
+    #[error("Minting has not started")]
+    MintingNotStarted {},
+
     #[error("Minting has already started")]
     AlreadyStarted {},
 
