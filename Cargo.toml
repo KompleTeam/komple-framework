@@ -1,9 +1,52 @@
 [workspace]
 members = [
     "contracts/*",
-    "modules/*",
     "packages/*"
 ]
+
+[profile.release.package.controller]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.metadata]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.royalty]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.token]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.whitelist]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.marketplace]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.merge]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.mint]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.permission]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.types]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.utils]
+codegen-units = 1
+incremental = false
 
 [profile.release]
 rpath = false

@@ -1,5 +1,5 @@
 [package]
-name = "marketplace-module"
+name = "mint-module"
 version = "0.1.0"
 authors = ["AnalogGhost <analoghost@proton.me>"]
 edition = "2018"
@@ -47,10 +47,12 @@ cw2 = "0.13.2"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
+cw721 = "0.13.2"
+token-contract = { path = "../token", features = ["library"] }
+permission-module = { path = "../permission" }
+cw-utils = "0.13.2"
 rift-types = { path = "../../packages/types" }
 rift-utils = { path = "../../packages/utils" }
-token-contract = { path = "../../contracts/token" }
-royalty-contract = { path = "../../contracts/royalty" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
