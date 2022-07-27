@@ -213,6 +213,8 @@ pub enum QueryMsg {
     },
     CollectionInfo {},
     Contracts {},
+    Config {},
+    ContractOperators {},
 }
 
 impl From<QueryMsg> for Cw721QueryMsg {
@@ -292,6 +294,17 @@ impl From<TokenContractQueryMsg> for QueryMsg {
             },
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct ConfigResponse {
+    pub admin: String,
+    pub native_denom: String,
+    pub per_address_limit: Option<u32>,
+    pub start_time: Option<Timestamp>,
+    pub max_token_limit: Option<u32>,
+    pub unit_price: Option<Coin>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

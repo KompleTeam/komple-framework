@@ -31,6 +31,12 @@ pub enum ContractError {
     #[error("Token limit is exceeded")]
     TokenLimitReached {},
 
+    #[error("Token not found")]
+    TokenNotFound {},
+
+    #[error("Invalid max token limit")]
+    InvalidMaxTokenLimit {},
+
     #[error("Invalid start time")]
     InvalidStartTime {},
 

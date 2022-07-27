@@ -14,7 +14,7 @@ use rift_utils::{check_admin_privileges, check_funds};
 use url::Url;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
     CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO,
     CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATION_LOCK, OPERATORS,
@@ -66,8 +66,16 @@ pub fn instantiate(
     };
     CONTRACTS.save(deps.storage, &contracts)?;
 
-    if msg.start_time.is_some() && env.block.time > msg.start_time.unwrap() {
+    if msg.start_time.is_some() && env.block.time >= msg.start_time.unwrap() {
         return Err(ContractError::InvalidStartTime {});
+    };
+
+    if msg.max_token_limit.is_some() && msg.max_token_limit.unwrap() == 0 {
+        return Err(ContractError::InvalidMaxTokenLimit {});
+    };
+
+    if msg.per_address_limit.is_some() && msg.per_address_limit.unwrap() == 0 {
+        return Err(ContractError::InvalidPerAddressLimit {});
     };
 
     let collection_config = CollectionConfig {
@@ -147,6 +155,7 @@ pub fn execute(
         ExecuteMsg::UpdateOperationLock { lock } => {
             execute_update_operation_lock(deps, env, info, lock)
         }
+
         // OPERATION MESSAGES
         ExecuteMsg::Mint { owner } => execute_mint(deps, env, info, owner),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
@@ -159,6 +168,7 @@ pub fn execute(
             contract,
             msg,
         } => execute_send(deps, env, info, token_id, contract, msg),
+
         // CONFIG MESSAGES
         ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
             execute_update_per_address_limit(deps, env, info, per_address_limit)
@@ -173,6 +183,7 @@ pub fn execute(
         ExecuteMsg::UpdateMetadata { metadata } => {
             execute_update_metadata(deps, env, info, metadata)
         }
+
         // ADMIN MESSAGES
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::AdminTransferNft {
@@ -258,7 +269,7 @@ pub fn execute_update_locks(
     LOCKS.save(deps.storage, &locks)?;
 
     Ok(Response::new()
-        .add_attribute("action", "update_locks")
+        .add_attribute("action", "execute_update_locks")
         .add_attribute("mint_lock", locks.mint_lock.to_string())
         .add_attribute("burn_lock", locks.burn_lock.to_string())
         .add_attribute("transfer_lock", locks.transfer_lock.to_string())
@@ -284,10 +295,14 @@ pub fn execute_update_token_locks(
         operators,
     )?;
 
+    if !Cw721Contract::default().tokens.has(deps.storage, &token_id) {
+        return Err(ContractError::TokenNotFound {});
+    }
+
     TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
 
     Ok(Response::new()
-        .add_attribute("action", "update_token_locks")
+        .add_attribute("action", "execute_update_token_locks")
         .add_attribute("token_id", token_id)
         .add_attribute("mint_lock", locks.mint_lock.to_string())
         .add_attribute("burn_lock", locks.burn_lock.to_string())
@@ -316,7 +331,7 @@ pub fn execute_update_operation_lock(
     OPERATION_LOCK.save(deps.storage, &lock)?;
 
     Ok(Response::new()
-        .add_attribute("action", "update_operation_lock")
+        .add_attribute("action", "execute_update_operation_lock")
         .add_attribute("lock", lock.to_string()))
 }
 
@@ -532,7 +547,7 @@ pub fn execute_update_per_address_limit(
     collection_config.per_address_limit = per_address_limit;
     COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
-    Ok(Response::new().add_attribute("action", "update_per_address_limit"))
+    Ok(Response::new().add_attribute("action", "execute_update_per_address_limit"))
 }
 
 fn execute_update_start_time(
@@ -563,7 +578,7 @@ fn execute_update_start_time(
 
     match start_time {
         Some(time) => {
-            if env.block.time > time {
+            if env.block.time >= time {
                 return Err(ContractError::InvalidStartTime {});
             }
             collection_config.start_time = start_time;
@@ -573,7 +588,7 @@ fn execute_update_start_time(
 
     COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
-    Ok(Response::new().add_attribute("action", "update_start_time"))
+    Ok(Response::new().add_attribute("action", "execute_update_start_time"))
 }
 
 fn execute_update_whitelist(
@@ -598,7 +613,7 @@ fn execute_update_whitelist(
     contracts.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
     CONTRACTS.save(deps.storage, &contracts)?;
 
-    Ok(Response::new().add_attribute("action", "update_whitelist"))
+    Ok(Response::new().add_attribute("action", "execute_update_whitelist"))
 }
 
 fn execute_update_royalty(
@@ -623,7 +638,7 @@ fn execute_update_royalty(
     contracts.royalty = royalty.and_then(|r| deps.api.addr_validate(r.as_str()).ok());
     CONTRACTS.save(deps.storage, &contracts)?;
 
-    Ok(Response::new().add_attribute("action", "update_royalty"))
+    Ok(Response::new().add_attribute("action", "execute_update_royalty"))
 }
 
 fn execute_update_metadata(
@@ -648,7 +663,7 @@ fn execute_update_metadata(
     contracts.metadata = metadata.and_then(|m| deps.api.addr_validate(m.as_str()).ok());
     CONTRACTS.save(deps.storage, &contracts)?;
 
-    Ok(Response::new().add_attribute("action", "update_metadata"))
+    Ok(Response::new().add_attribute("action", "execute_update_metadata"))
 }
 
 fn execute_init_metadata_contract(
@@ -832,6 +847,7 @@ fn get_mint_price(deps: &DepsMut) -> Result<Option<Coin>, ContractError> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::Locks {} => to_binary(&query_locks(deps)?),
         QueryMsg::TokenLocks { token_id } => to_binary(&query_token_locks(deps, token_id)?),
         QueryMsg::MintedTokensPerAddress { address } => {
@@ -839,8 +855,25 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
         QueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
         QueryMsg::Contracts {} => to_binary(&query_contracts(deps)?),
+        QueryMsg::ContractOperators {} => to_binary(&query_contract_operators(deps)?),
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
+}
+
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
+    let config = CONFIG.load(deps.storage)?;
+    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+    Ok(ResponseWrapper::new(
+        "locks",
+        ConfigResponse {
+            admin: config.admin.to_string(),
+            native_denom: config.native_denom,
+            per_address_limit: collection_config.per_address_limit,
+            start_time: collection_config.start_time,
+            max_token_limit: collection_config.max_token_limit,
+            unit_price: collection_config.unit_price,
+        },
+    ))
 }
 
 fn query_locks(deps: Deps) -> StdResult<ResponseWrapper<Locks>> {
@@ -868,6 +901,14 @@ fn query_collection_info(deps: Deps) -> StdResult<ResponseWrapper<CollectionInfo
 fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<Contracts>> {
     let contracts = CONTRACTS.load(deps.storage)?;
     Ok(ResponseWrapper::new("contracts", contracts))
+}
+
+fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let operators = OPERATORS.load(deps.storage).unwrap_or(vec![]);
+    Ok(ResponseWrapper::new(
+        "contract_operators",
+        operators.iter().map(|o| o.to_string()).collect(),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
