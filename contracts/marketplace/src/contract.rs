@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -15,6 +13,7 @@ use rift_utils::{
     check_funds, query_collection_address, query_collection_locks, query_module_address,
     query_storage, query_token_locks, query_token_operation_lock, query_token_owner,
 };
+use std::ops::Mul;
 use token_contract::state::Contracts;
 
 use crate::error::ContractError;

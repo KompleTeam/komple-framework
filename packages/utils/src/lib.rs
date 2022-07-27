@@ -3,7 +3,7 @@ use std::{
     str::{from_utf8, Utf8Error},
 };
 
-use cosmwasm_std::{Addr, MessageInfo, QuerierWrapper, StdError, StdResult, Uint128};
+use cosmwasm_std::{from_slice, Addr, MessageInfo, QuerierWrapper, StdError, StdResult, Uint128};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
 use rift_types::{
@@ -13,7 +13,6 @@ use rift_types::{
         Locks, LOCKS_NAMESPACE, OPERATION_LOCK_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
     },
 };
-use schemars::_serde_json::from_str;
 use serde::de::DeserializeOwned;
 use thiserror::Error;
 
@@ -166,7 +165,7 @@ where
     match data {
         Some(data) => {
             let res = from_utf8(&data)?;
-            let res = from_str(&res).unwrap();
+            let res = from_slice(res.as_bytes())?;
             Ok(Some(res))
         }
         None => Ok(None),
