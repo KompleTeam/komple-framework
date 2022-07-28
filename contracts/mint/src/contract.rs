@@ -86,15 +86,27 @@ pub fn execute(
             linked_collections,
         ),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
-        ExecuteMsg::Mint { collection_id } => execute_mint(deps, env, info, collection_id),
+        ExecuteMsg::Mint {
+            collection_id,
+            metadata_id,
+        } => execute_mint(deps, env, info, collection_id, metadata_id),
         ExecuteMsg::MintTo {
             collection_id,
             recipient,
-        } => execute_mint_to(deps, env, info, collection_id, recipient),
+            metadata_id,
+        } => execute_mint_to(deps, env, info, collection_id, recipient, metadata_id),
         ExecuteMsg::PermissionMint {
             permission_msg,
             collection_ids,
-        } => execute_permission_mint(deps, env, info, permission_msg, collection_ids),
+            metadata_ids,
+        } => execute_permission_mint(
+            deps,
+            env,
+            info,
+            permission_msg,
+            collection_ids,
+            metadata_ids,
+        ),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::UpdateLinkedCollections {
             collection_id,
@@ -214,6 +226,7 @@ fn execute_mint(
     _env: Env,
     info: MessageInfo,
     collection_id: u32,
+    metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     if config.mint_lock {
@@ -223,6 +236,7 @@ fn execute_mint(
     let mint_msg = vec![MintMsg {
         collection_id,
         owner: info.sender.to_string(),
+        metadata_id,
     }];
 
     _execute_mint(deps, info.clone(), "execute_mint", mint_msg)
@@ -234,6 +248,7 @@ fn execute_mint_to(
     info: MessageInfo,
     collection_id: u32,
     recipient: String,
+    metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -252,6 +267,7 @@ fn execute_mint_to(
     let mint_msg = vec![MintMsg {
         collection_id,
         owner: owner.to_string(),
+        metadata_id,
     }];
 
     _execute_mint(deps, info, "execute_mint_to", mint_msg)
@@ -263,6 +279,7 @@ fn execute_permission_mint(
     info: MessageInfo,
     permission_msg: Binary,
     collection_ids: Vec<u32>,
+    metadata_ids: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let permission_module_addr =
@@ -280,12 +297,17 @@ fn execute_permission_mint(
         funds: info.funds.clone(),
     }));
 
-    for collection_id in collection_ids {
+    if metadata_ids.is_some() && metadata_ids.as_ref().unwrap().len() != collection_ids.len() {
+        return Err(ContractError::InvalidMetadataIds {});
+    }
+
+    for (index, collection_id) in collection_ids.iter().enumerate() {
         msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: env.contract.address.to_string(),
             msg: to_binary(&ExecuteMsg::MintTo {
-                collection_id,
+                collection_id: *collection_id,
                 recipient: info.sender.to_string(),
+                metadata_id: metadata_ids.as_ref().and_then(|ids| Some(ids[index])),
             })?,
             funds: info.funds.clone(),
         }))
@@ -309,6 +331,7 @@ fn _execute_mint(
 
         let mint_msg = TokenExecuteMsg::Mint {
             owner: msg.owner.clone(),
+            metadata_id: msg.metadata_id,
         };
         let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: collection_addr.to_string(),

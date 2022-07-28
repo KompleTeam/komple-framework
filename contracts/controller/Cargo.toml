@@ -61,3 +61,4 @@ royalty-contract = { path = "../royalty", features = ["library"]  }
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
 cw-multi-test = "0.13.2"
+metadata-contract = { path = "../metadata", features = ["library"] }

@@ -5,7 +5,8 @@ use cw_multi_test::Executor;
 pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, mint_module, mint_token, mock_app,
-    proper_instantiate, setup_all_modules, token_contract, ADMIN, USER,
+    proper_instantiate, setup_all_modules, setup_metadata, setup_metadata_contract, token_contract,
+    ADMIN, USER,
 };
 
 mod initialization {
@@ -70,7 +71,9 @@ mod permission_mint {
     use cw721::OwnerOfResponse;
     use mint_module::msg::ExecuteMsg as MintExecuteMsg;
     use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
-    use rift_types::{collection::Collections, module::Modules, permission::Permissions};
+    use rift_types::{
+        collection::Collections, metadata::Metadata, module::Modules, permission::Permissions,
+    };
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
@@ -105,6 +108,20 @@ mod permission_mint {
             None,
         );
 
+        let collection_addr_1 =
+            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
+        let collection_addr_2 =
+            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &2).unwrap();
+
+        let metadata_contract_addr_1 =
+            setup_metadata_contract(&mut app, collection_addr_1, Metadata::OneToOne);
+        let metadata_contract_addr_2 =
+            setup_metadata_contract(&mut app, collection_addr_2, Metadata::OneToOne);
+
+        setup_metadata(&mut app, metadata_contract_addr_1.clone());
+        setup_metadata(&mut app, metadata_contract_addr_1.clone());
+        setup_metadata(&mut app, metadata_contract_addr_2);
+
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -136,6 +153,7 @@ mod permission_mint {
         let msg = MintExecuteMsg::PermissionMint {
             permission_msg,
             collection_ids,
+            metadata_ids: None,
         };
         let _ = app
             .execute_contract(

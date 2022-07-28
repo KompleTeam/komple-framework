@@ -28,14 +28,17 @@ pub enum ExecuteMsg {
     },
     Mint {
         collection_id: u32,
+        metadata_id: Option<u32>,
     },
     MintTo {
         collection_id: u32,
         recipient: String,
+        metadata_id: Option<u32>,
     },
     PermissionMint {
         permission_msg: Binary,
         collection_ids: Vec<u32>,
+        metadata_ids: Option<Vec<u32>>,
     },
     UpdateOperators {
         addrs: Vec<String>,
@@ -74,4 +77,5 @@ impl From<MintModuleQueryMsg> for QueryMsg {
 pub struct MintMsg {
     pub collection_id: u32,
     pub owner: String,
+    pub metadata_id: Option<u32>,
 }

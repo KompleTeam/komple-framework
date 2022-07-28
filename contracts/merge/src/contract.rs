@@ -154,6 +154,12 @@ fn make_merge_msg(
         return Err(ContractError::BurnNotFound {});
     }
 
+    if merge_msg.metadata_ids.is_some()
+        && merge_msg.metadata_ids.as_ref().unwrap().len() != merge_msg.mint.len()
+    {
+        return Err(ContractError::InvalidMetadataIds {});
+    }
+
     let mut burn_collection_ids: Vec<u32> = vec![];
 
     for burn_msg in merge_msg.clone().burn {
@@ -174,13 +180,13 @@ fn make_merge_msg(
 
     let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
 
-    for collection_id in merge_msg.mint {
+    for (index, collection_id) in merge_msg.mint.iter().enumerate() {
         let linked_collections = match linked_collection_map.contains_key(&collection_id) {
             true => linked_collection_map.get(&collection_id).unwrap().clone(),
             false => {
                 let collections =
-                    query_linked_collections(&deps.querier, &mint_module_addr, collection_id)?;
-                linked_collection_map.insert(collection_id, collections.clone());
+                    query_linked_collections(&deps.querier, &mint_module_addr, *collection_id)?;
+                linked_collection_map.insert(*collection_id, collections.clone());
                 collections
             }
         };
@@ -194,8 +200,13 @@ fn make_merge_msg(
         }
 
         let msg = MintModuleExecuteMsg::MintTo {
-            collection_id,
+            collection_id: *collection_id,
             recipient: info.sender.to_string(),
+            metadata_id: merge_msg
+                .metadata_ids
+                .as_ref()
+                .as_ref()
+                .and_then(|ids| Some(ids[index])),
         };
         msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: mint_module_addr.to_string(),

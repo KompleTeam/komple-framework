@@ -63,8 +63,11 @@ pub enum ContractError {
     #[error("Invalid reply ID")]
     InvalidReplyID {},
 
-    #[error("Error while instantiating metadata contract")]
-    MetadataInstantiateError {},
+    #[error("Metadata contract not found")]
+    MetadataContractNotFound {},
+
+    #[error("Error while instantiating contract")]
+    ContractsInstantiateError {},
 
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },

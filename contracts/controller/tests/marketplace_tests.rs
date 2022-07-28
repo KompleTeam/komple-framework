@@ -6,8 +6,9 @@ pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, give_approval_to_module, marketplace_module,
     mint_token, mock_app, proper_instantiate, setup_all_modules, setup_marketplace_listing,
-    setup_royalty_contract, setup_token_contract_operators, token_contract, ADMIN, NATIVE_DENOM,
-    RANDOM, RANDOM_2, TEST_DENOM, USER,
+    setup_metadata, setup_metadata_contract, setup_royalty_contract,
+    setup_token_contract_operators, token_contract, ADMIN, NATIVE_DENOM, RANDOM, RANDOM_2,
+    TEST_DENOM, USER,
 };
 
 mod initialization {
@@ -77,6 +78,8 @@ mod actions {
     use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
     use token_contract::ContractError as TokenContractError;
 
+    use rift_types::metadata::Metadata;
+
     mod listing {
         use super::*;
 
@@ -84,7 +87,7 @@ mod actions {
             use super::*;
 
             use marketplace_module::state::FixedListing;
-            use rift_types::{query::ResponseWrapper, tokens::Locks};
+            use rift_types::{metadata::Metadata, query::ResponseWrapper, tokens::Locks};
             use rift_utils::{query_collection_address, query_token_operation_lock};
 
             #[test]
@@ -109,10 +112,14 @@ mod actions {
                     None,
                 );
 
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
                 let collection_addr =
                     query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
@@ -174,6 +181,13 @@ mod actions {
                     None,
                 );
 
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
@@ -216,6 +230,13 @@ mod actions {
                     None,
                     None,
                 );
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -362,6 +383,13 @@ mod actions {
                     None,
                 );
 
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
@@ -416,10 +444,14 @@ mod actions {
                     None,
                 );
 
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
                 let collection_addr =
                     query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
@@ -491,10 +523,14 @@ mod actions {
                     None,
                 );
 
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
                 let collection_addr =
                     query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
@@ -556,10 +592,14 @@ mod actions {
                     None,
                 );
 
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
                 let collection_addr =
                     query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
@@ -610,6 +650,8 @@ mod actions {
         use super::*;
 
         mod fixed_tokens {
+            use rift_utils::query_collection_address;
+
             use super::*;
 
             #[test]
@@ -633,6 +675,13 @@ mod actions {
                     None,
                     None,
                 );
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -692,6 +741,13 @@ mod actions {
                     None,
                     None,
                 );
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -765,6 +821,12 @@ mod actions {
 
                 let collection_addr =
                     query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+                setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -916,6 +978,13 @@ mod actions {
                     None,
                     None,
                 );
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 

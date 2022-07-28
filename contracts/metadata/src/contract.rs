@@ -104,6 +104,7 @@ fn execute_add_metadata(
     let metadata_id = (METADATA_ID.load(deps.storage)?) + 1;
 
     METADATA.save(deps.storage, metadata_id, &metadata)?;
+    METADATA_ID.save(deps.storage, &metadata_id)?;
 
     Ok(Response::new().add_attribute("action", "execute_add_metadata"))
 }

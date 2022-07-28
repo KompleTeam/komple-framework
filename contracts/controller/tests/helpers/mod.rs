@@ -1,18 +1,20 @@
+use controller_contract::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
+use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
+use metadata_contract::state::{MetaInfo, Trait};
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use rift_types::{
-    collection::Collections, module::Modules, permission::Permissions, royalty::Royalty,
+    collection::Collections, metadata::Metadata as MetadataType, module::Modules,
+    permission::Permissions, query::ResponseWrapper, royalty::Royalty,
 };
 use rift_utils::{query_collection_address, query_module_address};
 use token_contract::{
-    msg::{ExecuteMsg as TokenExecuteMsg, TokenInfo},
-    state::CollectionInfo,
+    msg::{ExecuteMsg as TokenExecuteMsg, QueryMsg as TokenQueryMsg, TokenInfo},
+    state::{CollectionInfo, Contracts},
 };
-
-use controller_contract::msg::{ExecuteMsg, InstantiateMsg};
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -83,6 +85,15 @@ pub fn royalty_contract() -> Box<dyn Contract<Empty>> {
         royalty_contract::contract::execute,
         royalty_contract::contract::instantiate,
         royalty_contract::contract::query,
+    );
+    Box::new(contract)
+}
+
+pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        metadata_contract::contract::execute,
+        metadata_contract::contract::instantiate,
+        metadata_contract::contract::query,
     );
     Box::new(contract)
 }
@@ -254,7 +265,10 @@ pub fn create_collection(
 }
 
 pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
-    let msg = MintExecuteMsg::Mint { collection_id };
+    let msg = MintExecuteMsg::Mint {
+        collection_id,
+        metadata_id: None,
+    };
     let _ = app
         .execute_contract(Addr::unchecked(sender), mint_module_addr, &msg, &vec![])
         .unwrap();
@@ -388,6 +402,65 @@ pub fn setup_marketplace_listing(
         .execute_contract(
             Addr::unchecked(USER),
             marketplace_module_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap();
+}
+
+pub fn setup_metadata_contract(
+    app: &mut App,
+    token_contract_addr: Addr,
+    metadata_type: MetadataType,
+) -> Addr {
+    let metadata_code_id = app.store_code(metadata_contract());
+
+    let msg = TokenExecuteMsg::InitMetadataContract {
+        code_id: metadata_code_id,
+        metadata_type,
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            token_contract_addr.clone(),
+            &msg,
+            &[],
+        )
+        .unwrap();
+
+    let res: ResponseWrapper<Contracts> = app
+        .wrap()
+        .query_wasm_smart(token_contract_addr.clone(), &TokenQueryMsg::Contracts {})
+        .unwrap();
+    res.data.metadata.unwrap()
+}
+
+pub fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
+    let meta_info = MetaInfo {
+        image: Some("https://some-image.com".to_string()),
+        external_url: None,
+        description: Some("Some description".to_string()),
+        youtube_url: None,
+        animation_url: None,
+    };
+    let attributes = vec![
+        Trait {
+            trait_type: "trait_1".to_string(),
+            value: "value_1".to_string(),
+        },
+        Trait {
+            trait_type: "trait_2".to_string(),
+            value: "value_2".to_string(),
+        },
+    ];
+    let msg = MetadataExecuteMsg::AddMetadata {
+        meta_info,
+        attributes,
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            metadata_contract_addr.clone(),
             &msg,
             &vec![],
         )

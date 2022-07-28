@@ -62,6 +62,7 @@ pub enum ExecuteMsg {
     },
     Mint {
         owner: String,
+        metadata_id: Option<u32>,
     },
     Burn {
         token_id: String,
