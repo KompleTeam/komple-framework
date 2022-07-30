@@ -11,13 +11,11 @@ use rift_types::module::{
     Modules, MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID, MERGE_MODULE_INSTANTIATE_REPLY_ID,
     MINT_MODULE_INSTANTIATE_REPLY_ID, PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
 };
-use rift_types::query::ResponseWrapper;
+use rift_types::{
+    instantiate::{MarketplaceModuleInstantiateMsg, ModuleInstantiateMsg},
+    query::ResponseWrapper,
+};
 use rift_utils::check_admin_privileges;
-
-use marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
-use merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
-use mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
-use permission_module::msg::InstantiateMsg as PermissionModuleInstantiateMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -103,7 +101,7 @@ fn execute_init_mint_module(
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&MintModuleInstantiateMsg {
+            msg: to_binary(&ModuleInstantiateMsg {
                 admin: config.admin.to_string(),
             })?,
             funds: info.funds,
@@ -140,7 +138,7 @@ fn execute_init_permission_module(
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&PermissionModuleInstantiateMsg {
+            msg: to_binary(&ModuleInstantiateMsg {
                 admin: config.admin.to_string(),
             })?,
             funds: info.funds,
@@ -177,7 +175,7 @@ fn execute_init_merge_module(
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&MergeModuleInstantiateMsg {
+            msg: to_binary(&ModuleInstantiateMsg {
                 admin: config.admin.to_string(),
             })?,
             funds: info.funds,
