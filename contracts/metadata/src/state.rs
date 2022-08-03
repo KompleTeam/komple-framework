@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use cw_storage_plus::{Item, Map};
 
-use rift_types::metadata::Metadata as MetadataType;
+use komple_types::metadata::Metadata as MetadataType;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct Config {

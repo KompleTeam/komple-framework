@@ -1,5 +1,5 @@
 use cosmwasm_std::Decimal;
-use rift_types::royalty::Royalty;
+use komple_types::royalty::Royalty;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

@@ -4,16 +4,16 @@ use cosmwasm_std::{
     to_binary, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use rift_types::query::ResponseWrapper;
-use rift_types::royalty::Royalty;
-use rift_utils::query_token_owner;
+use komple_types::query::ResponseWrapper;
+use komple_types::royalty::Royalty;
+use komple_utils::query_token_owner;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RoyaltyResponse};
 use crate::state::{Config, COLLECTION_ADDR, CONFIG, OWNER_ROYALTY_ADDR, TOKEN_ROYALTY_ADDR};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:rift-royalty-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-royalty-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

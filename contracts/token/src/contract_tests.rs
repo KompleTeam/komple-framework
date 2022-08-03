@@ -1,10 +1,10 @@
 use crate::{msg::ConfigResponse, ContractError};
 use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use rift_types::collection::Collections;
-use rift_types::query::ResponseWrapper;
-use rift_types::tokens::Locks;
-use rift_utils::{query_token_operation_lock, query_token_owner, FundsError};
+use komple_types::collection::Collections;
+use komple_types::query::ResponseWrapper;
+use komple_types::tokens::Locks;
+use komple_utils::{query_token_operation_lock, query_token_owner, FundsError};
 
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo},

@@ -7,10 +7,10 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
-use rift_types::collection::Collections;
-use rift_types::module::Modules;
-use rift_types::query::ResponseWrapper;
-use rift_utils::{check_admin_privileges, query_module_address};
+use komple_types::collection::Collections;
+use komple_types::module::Modules;
+use komple_types::query::ResponseWrapper;
+use komple_utils::{check_admin_privileges, query_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
 };
@@ -26,7 +26,7 @@ use crate::state::{
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:rift-mint-module";
+const CONTRACT_NAME: &str = "crates.io:komple-mint-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TOKEN_INSTANTIATE_REPLY_ID: u64 = 1;
@@ -146,7 +146,7 @@ pub fn execute_create_collection(
             msg: to_binary(&instantiate_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework Token Contract"),
+            label: String::from("komple Framework Token Contract"),
         }
         .into(),
         id: TOKEN_INSTANTIATE_REPLY_ID,

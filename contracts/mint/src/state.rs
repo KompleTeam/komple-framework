@@ -1,4 +1,4 @@
-use rift_types::collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE};
+use komple_types::collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

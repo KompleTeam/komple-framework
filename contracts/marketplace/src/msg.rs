@@ -1,5 +1,5 @@
 use cosmwasm_std::Uint128;
-use rift_types::marketplace::Listing;
+use komple_types::marketplace::Listing;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

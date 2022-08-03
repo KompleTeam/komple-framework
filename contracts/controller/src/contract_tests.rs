@@ -85,7 +85,7 @@ mod modules {
             ContractError,
         };
 
-        use rift_types::{module::Modules, query::ResponseWrapper};
+        use komple_types::{module::Modules, query::ResponseWrapper};
 
         #[test]
         fn test_init_happy_path() {
@@ -145,7 +145,7 @@ mod modules {
             ContractError,
         };
 
-        use rift_types::{module::Modules, query::ResponseWrapper};
+        use komple_types::{module::Modules, query::ResponseWrapper};
 
         #[test]
         fn test_init_module() {

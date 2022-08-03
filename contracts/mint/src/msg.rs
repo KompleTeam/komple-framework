@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
-use rift_types::{collection::Collections, query::MintModuleQueryMsg};
+use komple_types::{collection::Collections, query::MintModuleQueryMsg};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {

@@ -1,8 +1,8 @@
 use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use rift_types::{collection::Collections, query::ResponseWrapper};
-use rift_utils::query_token_owner;
+use komple_types::{collection::Collections, query::ResponseWrapper};
+use komple_utils::query_token_owner;
 use token_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
 use token_contract::state::{CollectionInfo, Contracts};
 use token_contract::ContractError;
@@ -174,7 +174,7 @@ mod actions {
     use super::*;
 
     mod minting {
-        use rift_utils::FundsError;
+        use komple_utils::FundsError;
 
         use super::*;
 

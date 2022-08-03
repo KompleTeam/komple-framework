@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use rift_utils::UtilError;
+use komple_utils::UtilError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

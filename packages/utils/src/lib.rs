@@ -6,7 +6,7 @@ use std::{
 use cosmwasm_std::{from_slice, Addr, MessageInfo, QuerierWrapper, StdError, StdResult, Uint128};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
-use rift_types::{
+use komple_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
     tokens::{
