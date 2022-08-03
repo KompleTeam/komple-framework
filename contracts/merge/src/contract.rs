@@ -7,9 +7,9 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use std::collections::HashMap;
 
-use rift_types::module::Modules;
-use rift_types::query::ResponseWrapper;
-use rift_utils::{
+use komple_types::module::Modules;
+use komple_types::query::ResponseWrapper;
+use komple_utils::{
     check_admin_privileges, query_collection_address, query_linked_collections,
     query_module_address,
 };
@@ -23,7 +23,7 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, QueryMsg};
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, OPERATORS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:rift-merge-module";
+const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -71,13 +71,13 @@ dependencies = [
  "cw-utils",
  "cw2",
  "cw721",
+ "komple-types",
+ "komple-utils",
  "marketplace-module",
  "merge-module",
  "metadata-contract",
  "mint-module",
  "permission-module",
- "rift-types",
- "rift-utils",
  "royalty-contract",
  "schemars",
  "serde",
@@ -466,6 +466,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "komple-types"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-std",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "komple-utils"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw721",
+ "komple-types",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -481,8 +503,8 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus",
  "cw2",
- "rift-types",
- "rift-utils",
+ "komple-types",
+ "komple-utils",
  "royalty-contract",
  "schemars",
  "serde",
@@ -500,10 +522,10 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus",
  "cw2",
+ "komple-types",
+ "komple-utils",
  "mint-module",
  "permission-module",
- "rift-types",
- "rift-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -520,8 +542,8 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus",
  "cw2",
- "rift-types",
- "rift-utils",
+ "komple-types",
+ "komple-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -539,10 +561,10 @@ dependencies = [
  "cw-utils",
  "cw2",
  "cw721",
+ "komple-types",
+ "komple-utils",
  "metadata-contract",
  "permission-module",
- "rift-types",
- "rift-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -566,8 +588,8 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "cw721",
- "rift-types",
- "rift-utils",
+ "komple-types",
+ "komple-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -656,28 +678,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rift-types"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-std",
- "schemars",
- "serde",
-]
-
-[[package]]
-name = "rift-utils"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-std",
- "cw-storage-plus",
- "cw721",
- "rift-types",
- "schemars",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "royalty-contract"
 version = "0.1.0"
 dependencies = [
@@ -688,8 +688,8 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "cw721",
- "rift-types",
- "rift-utils",
+ "komple-types",
+ "komple-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -878,9 +878,9 @@ dependencies = [
  "cw2",
  "cw721",
  "cw721-base",
+ "komple-types",
+ "komple-utils",
  "metadata-contract",
- "rift-types",
- "rift-utils",
  "royalty-contract",
  "schemars",
  "serde",
@@ -941,7 +941,7 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
- "rift-types",
+ "komple-types",
  "schemars",
  "serde",
  "thiserror",

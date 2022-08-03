@@ -5,7 +5,7 @@ use metadata_contract::{
     msg::ExecuteMsg as MetadataExecuteMsg,
     state::{MetaInfo, Trait},
 };
-use rift_types::{
+use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
 use token_contract::{
@@ -178,8 +178,8 @@ mod mint {
         ContractError,
     };
     use cw721::OwnerOfResponse;
-    use rift_types::query::ResponseWrapper;
-    use rift_utils::query_collection_address;
+    use komple_types::query::ResponseWrapper;
+    use komple_utils::query_collection_address;
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
@@ -245,7 +245,7 @@ mod mint {
 }
 
 mod locks {
-    use rift_types::query::ResponseWrapper;
+    use komple_types::query::ResponseWrapper;
 
     use super::*;
     use crate::{
@@ -271,7 +271,7 @@ mod locks {
 }
 
 mod collections {
-    use rift_types::query::ResponseWrapper;
+    use komple_types::query::ResponseWrapper;
 
     use super::*;
 

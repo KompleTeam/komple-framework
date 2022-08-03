@@ -6,11 +6,11 @@ use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use rift_types::{
+use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, module::Modules,
     permission::Permissions, query::ResponseWrapper, royalty::Royalty,
 };
-use rift_utils::{query_collection_address, query_module_address};
+use komple_utils::{query_collection_address, query_module_address};
 use token_contract::{
     msg::{ExecuteMsg as TokenExecuteMsg, QueryMsg as TokenQueryMsg, TokenInfo},
     state::{CollectionInfo, Contracts},

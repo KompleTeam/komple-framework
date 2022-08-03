@@ -4,10 +4,10 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use rift_types::module::Modules;
-use rift_types::permission::Permissions;
-use rift_types::query::ResponseWrapper;
-use rift_utils::{
+use komple_types::module::Modules;
+use komple_types::permission::Permissions;
+use komple_types::query::ResponseWrapper;
+use komple_utils::{
     check_admin_privileges, query_collection_address, query_module_address, query_token_owner,
 };
 use std::collections::HashMap;
@@ -17,7 +17,7 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, OwnershipMsg, PermissionCheckMsg, Q
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, MODULE_PERMISSIONS, OPERATORS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:rift-permission-module";
+const CONTRACT_NAME: &str = "crates.io:komple-permission-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

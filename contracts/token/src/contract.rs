@@ -6,11 +6,11 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
-use rift_types::metadata::Metadata as MetadataType;
-use rift_types::query::ResponseWrapper;
-use rift_types::royalty::Royalty;
-use rift_types::tokens::Locks;
-use rift_utils::{check_admin_privileges, check_funds};
+use komple_types::metadata::Metadata as MetadataType;
+use komple_types::query::ResponseWrapper;
+use komple_types::royalty::Royalty;
+use komple_types::tokens::Locks;
+use komple_utils::{check_admin_privileges, check_funds};
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -35,7 +35,7 @@ use whitelist_contract::msg::{
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:rift-token-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-token-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
@@ -707,7 +707,7 @@ fn execute_init_metadata_contract(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework Metadata Contract"),
+            label: String::from("komple Framework Metadata Contract"),
         }
         .into(),
         id: METADATA_CONTRACT_INSTANTIATE_REPLY_ID,
@@ -750,7 +750,7 @@ fn execute_init_royalty_contract(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework Royalty Contract"),
+            label: String::from("komple Framework Royalty Contract"),
         }
         .into(),
         id: ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID,
@@ -788,7 +788,7 @@ fn execute_init_whitelist_contract(
             msg: to_binary(&instantiate_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework Whitelist Contract"),
+            label: String::from("komple Framework Whitelist Contract"),
         }
         .into(),
         id: WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID,

@@ -14,10 +14,10 @@ use helpers::{
 mod initialization {
     use super::*;
 
-    use rift_types::module::Modules;
+    use komple_types::module::Modules;
 
     use controller_contract::ContractError;
-    use rift_utils::query_module_address;
+    use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
@@ -74,11 +74,11 @@ mod actions {
         msg::{ExecuteMsg as MarketplaceExecuteMsg, QueryMsg as MarketplaceQueryMsg},
         ContractError as MarketplaceContractError,
     };
-    use rift_types::collection::Collections;
+    use komple_types::collection::Collections;
     use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
     use token_contract::ContractError as TokenContractError;
 
-    use rift_types::metadata::Metadata;
+    use komple_types::metadata::Metadata;
 
     mod listing {
         use super::*;
@@ -87,8 +87,8 @@ mod actions {
             use super::*;
 
             use marketplace_module::state::FixedListing;
-            use rift_types::{metadata::Metadata, query::ResponseWrapper, tokens::Locks};
-            use rift_utils::{query_collection_address, query_token_operation_lock};
+            use komple_types::{metadata::Metadata, query::ResponseWrapper, tokens::Locks};
+            use komple_utils::{query_collection_address, query_token_operation_lock};
 
             #[test]
             fn test_happy_path() {
@@ -417,7 +417,7 @@ mod actions {
         use super::*;
 
         use cosmwasm_std::Empty;
-        use rift_utils::{query_collection_address, query_token_operation_lock};
+        use komple_utils::{query_collection_address, query_token_operation_lock};
 
         mod fixed_tokens {
             use super::*;
@@ -645,12 +645,12 @@ mod actions {
 
     mod pricing {
         use marketplace_module::state::FixedListing;
-        use rift_types::{marketplace::Listing, query::ResponseWrapper};
+        use komple_types::{marketplace::Listing, query::ResponseWrapper};
 
         use super::*;
 
         mod fixed_tokens {
-            use rift_utils::query_collection_address;
+            use komple_utils::query_collection_address;
 
             use super::*;
 
@@ -785,15 +785,15 @@ mod actions {
         use super::*;
 
         use cosmwasm_std::coin;
-        use rift_types::marketplace::Listing;
-        use rift_utils::{query_collection_address, query_token_owner};
+        use komple_types::marketplace::Listing;
+        use komple_utils::{query_collection_address, query_token_owner};
 
         mod fixed_tokens {
             use std::str::FromStr;
 
             use cosmwasm_std::Decimal;
-            use rift_types::royalty::Royalty;
-            use rift_utils::FundsError;
+            use komple_types::royalty::Royalty;
+            use komple_utils::FundsError;
 
             use super::*;
 

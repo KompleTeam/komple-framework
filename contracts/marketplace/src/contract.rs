@@ -5,11 +5,11 @@ use cosmwasm_std::{
     MessageInfo, Response, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
-use rift_types::marketplace::Listing;
-use rift_types::module::Modules;
-use rift_types::query::ResponseWrapper;
-use rift_types::tokens::CONTRACTS_NAMESPACE;
-use rift_utils::{
+use komple_types::marketplace::Listing;
+use komple_types::module::Modules;
+use komple_types::query::ResponseWrapper;
+use komple_types::tokens::CONTRACTS_NAMESPACE;
+use komple_utils::{
     check_funds, query_collection_address, query_collection_locks, query_module_address,
     query_storage, query_token_locks, query_token_operation_lock, query_token_owner,
 };

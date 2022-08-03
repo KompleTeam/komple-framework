@@ -1,5 +1,5 @@
 use cosmwasm_std::{OverflowError, StdError};
-use rift_utils::{FundsError, UtilError};
+use komple_utils::{FundsError, UtilError};
 use thiserror::Error;
 use token_contract::ContractError as TokenContractError;
 

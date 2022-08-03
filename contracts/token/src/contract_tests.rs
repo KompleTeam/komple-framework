@@ -10,10 +10,10 @@ use metadata_contract::{
     msg::ExecuteMsg as MetadataExecuteMsg,
     state::{MetaInfo, Trait},
 };
-use rift_types::query::ResponseWrapper;
-use rift_types::tokens::Locks;
-use rift_types::{collection::Collections, metadata::Metadata as MetadataType};
-use rift_utils::{query_token_operation_lock, query_token_owner, FundsError};
+use komple_types::query::ResponseWrapper;
+use komple_types::tokens::Locks;
+use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
+use komple_utils::{query_token_operation_lock, query_token_owner, FundsError};
 
 pub fn token_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

@@ -4,8 +4,8 @@ mod tests {
     use crate::ContractError;
     use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-    use rift_types::query::ResponseWrapper;
-    use rift_types::royalty::Royalty;
+    use komple_types::query::ResponseWrapper;
+    use komple_types::royalty::Royalty;
     use std::str::FromStr;
 
     use crate::msg::InstantiateMsg;

@@ -2,9 +2,9 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use rift_types::metadata::Metadata as MetadataType;
-use rift_types::query::ResponseWrapper;
-use rift_utils::check_admin_privileges;
+use komple_types::metadata::Metadata as MetadataType;
+use komple_types::query::ResponseWrapper;
+use komple_utils::check_admin_privileges;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, QueryMsg};
@@ -14,7 +14,7 @@ use crate::state::{
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:rift-metadata-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-metadata-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

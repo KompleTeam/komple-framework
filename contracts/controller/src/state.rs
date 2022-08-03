@@ -1,4 +1,4 @@
-use rift_types::module::MODULE_ADDRS_NAMESPACE;
+use komple_types::module::MODULE_ADDRS_NAMESPACE;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

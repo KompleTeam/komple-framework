@@ -3,10 +3,10 @@ use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
-use rift_types::{
+use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
-use rift_utils::query_token_owner;
+use komple_utils::query_token_owner;
 use token_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
 use token_contract::state::{CollectionInfo, Contracts};
 use token_contract::ContractError;
@@ -246,7 +246,7 @@ mod actions {
     use super::*;
 
     mod minting {
-        use rift_utils::FundsError;
+        use komple_utils::FundsError;
 
         use super::*;
 

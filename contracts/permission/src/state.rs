@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 
-use rift_types::permission::Permissions;
+use komple_types::permission::Permissions;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {

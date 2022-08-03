@@ -4,8 +4,8 @@ use metadata_contract::{
     msg::ExecuteMsg as MetadataExecuteMsg,
     state::{MetaInfo, Trait},
 };
-use rift_types::{collection::Collections, query::ResponseWrapper};
-use rift_types::{metadata::Metadata as MetadataType, royalty::Royalty};
+use komple_types::{collection::Collections, query::ResponseWrapper};
+use komple_types::{metadata::Metadata as MetadataType, royalty::Royalty};
 use royalty_contract::msg::{ExecuteMsg as RoyaltyExecuteMsg, QueryMsg as RoyaltyQueryMsg};
 use std::str::FromStr;
 use token_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};

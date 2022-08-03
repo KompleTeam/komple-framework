@@ -62,7 +62,7 @@ mod tests {
             ContractError,
         };
 
-        use rift_types::{module::Modules, permission::Permissions, query::ResponseWrapper};
+        use komple_types::{module::Modules, permission::Permissions, query::ResponseWrapper};
 
         #[test]
         fn test_update_happy_path() {
@@ -175,7 +175,7 @@ mod tests {
     mod whitelist_addresses {
         use super::*;
 
-        use rift_types::query::ResponseWrapper;
+        use komple_types::query::ResponseWrapper;
 
         use crate::{
             msg::{ExecuteMsg, QueryMsg},

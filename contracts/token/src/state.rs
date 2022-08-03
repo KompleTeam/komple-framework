@@ -1,4 +1,4 @@
-use rift_types::{
+use komple_types::{
     collection::Collections,
     tokens::{Locks, LOCKS_NAMESPACE, OPERATION_LOCK_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
 };

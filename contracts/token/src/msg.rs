@@ -1,7 +1,7 @@
 use cosmwasm_std::{Binary, Coin, Decimal, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use rift_types::{
+use komple_types::{
     metadata::Metadata as MetadataType, query::TokenContractQueryMsg, royalty::Royalty,
     tokens::Locks,
 };
