@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use komple_types::{module::Modules, query::ControllerQueryMsg};
+use komple_types::module::Modules;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -26,12 +26,4 @@ pub enum QueryMsg {
     Config {},
     ContollerInfo {},
     ModuleAddress(Modules),
-}
-
-impl From<ControllerQueryMsg> for QueryMsg {
-    fn from(msg: ControllerQueryMsg) -> QueryMsg {
-        match msg {
-            ControllerQueryMsg::ModuleAddress(module) => QueryMsg::ModuleAddress(module),
-        }
-    }
 }

@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
-use komple_types::{collection::Collections, query::MintModuleQueryMsg};
+use komple_types::collection::Collections;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -57,19 +57,6 @@ pub enum QueryMsg {
     Operators {},
     CollectionTypes(Collections),
     LinkedCollections { collection_id: u32 },
-}
-
-impl From<MintModuleQueryMsg> for QueryMsg {
-    fn from(msg: MintModuleQueryMsg) -> QueryMsg {
-        match msg {
-            MintModuleQueryMsg::CollectionAddress(collection_id) => {
-                QueryMsg::CollectionAddress(collection_id)
-            }
-            MintModuleQueryMsg::LinkedCollections { collection_id } => {
-                QueryMsg::LinkedCollections { collection_id }
-            }
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
