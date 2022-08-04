@@ -1,7 +1,6 @@
 use cosmwasm_std::StdError;
 use rift_utils::{FundsError, UtilError};
 use thiserror::Error;
-use url::ParseError;
 
 use cw721_base::ContractError as Cw721ContractError;
 
@@ -69,9 +68,6 @@ pub enum ContractError {
 
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
-
-    #[error("{0}")]
-    Parse(#[from] ParseError),
 
     #[error("{0}")]
     Util(#[from] UtilError),

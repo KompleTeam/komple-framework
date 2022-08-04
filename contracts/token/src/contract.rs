@@ -11,7 +11,6 @@ use rift_types::query::ResponseWrapper;
 use rift_types::royalty::Royalty;
 use rift_types::tokens::Locks;
 use rift_utils::{check_admin_privileges, check_funds};
-use url::Url;
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -103,12 +102,6 @@ pub fn instantiate(
 
     if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
-    }
-
-    Url::parse(&msg.collection_info.image)?;
-
-    if let Some(ref external_link) = msg.collection_info.external_link {
-        Url::parse(external_link)?;
     }
 
     let collection_info = CollectionInfo {
