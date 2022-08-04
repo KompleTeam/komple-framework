@@ -25,3 +25,5 @@ impl Modules {
         }
     }
 }
+
+pub const MODULE_ADDRS_NAMESPACE: &str = "module_addrs";
