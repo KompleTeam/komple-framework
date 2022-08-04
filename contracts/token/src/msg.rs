@@ -41,6 +41,10 @@ pub enum ExecuteMsg<T> {
     UpdateLocks {
         locks: Locks,
     },
+    UpdateTokenLock {
+        token_id: String,
+        locks: Locks,
+    },
 }
 
 impl From<ExecuteMsg<Empty>> for Cw721ExecuteMsg<Empty> {
@@ -127,6 +131,9 @@ pub enum QueryMsg {
     },
     Minter {},
     Locks {},
+    TokenLocks {
+        token_id: String,
+    },
 }
 
 impl From<QueryMsg> for Cw721QueryMsg {
@@ -197,5 +204,11 @@ impl From<QueryMsg> for Cw721QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct LocksReponse {
+    pub locks: Locks,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct TokenLocksReponse {
     pub locks: Locks,
 }

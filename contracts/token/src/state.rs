@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Addr;
-use cw_storage_plus::{Item};
+use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
@@ -18,3 +18,5 @@ pub struct Locks {
     pub transfer_lock: bool,
     pub send_lock: bool,
 }
+
+pub const TOKEN_LOCKS: Map<&str, Locks> = Map::new("token_locks");
