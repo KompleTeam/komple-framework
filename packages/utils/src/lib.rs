@@ -3,13 +3,12 @@ use std::{
     str::{from_utf8, Utf8Error},
 };
 
-use cosmwasm_std::{Addr, DepsMut, QuerierWrapper, StdError, StdResult};
+use cosmwasm_std::{Addr, QuerierWrapper, StdError, StdResult};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
 use rift_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
-    query::{AddressResponse, ControllerQueryMsg, MintModuleQueryMsg, TokenContractQueryMsg},
     tokens::TOKENS_NAMESPACE,
 };
 use schemars::_serde_json::from_str;
@@ -50,8 +49,12 @@ pub fn query_module_address(
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(MODULE_ADDRS_NAMESPACE, module.as_str().as_bytes())?;
     let res = query_storage::<Addr>(&querier, &controller_addr, &key)?;
-    // TODO: Handle none value?
-    Ok(res.unwrap())
+    match res {
+        Some(res) => Ok(res),
+        None => Err(StdError::NotFound {
+            kind: "module".to_string(),
+        }),
+    }
 }
 
 pub fn query_collection_address(
@@ -61,8 +64,12 @@ pub fn query_collection_address(
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(COLLECTION_ADDRS_NAMESPACE, &collection_id.to_be_bytes())?;
     let res = query_storage::<Addr>(&querier, &mint_module_address, &key)?;
-    // TODO: Handle none value?
-    Ok(res.unwrap())
+    match res {
+        Some(res) => Ok(res),
+        None => Err(StdError::NotFound {
+            kind: "collection".to_string(),
+        }),
+    }
 }
 
 pub fn query_linked_collections(
@@ -73,7 +80,7 @@ pub fn query_linked_collections(
     let key = get_map_storage_key(LINKED_COLLECTIONS_NAMESPACE, &collection_id.to_be_bytes())?;
     let res = query_storage::<Vec<u32>>(&querier, &mint_module_address, &key)?;
     match res {
-        Some(v) => Ok(v),
+        Some(res) => Ok(res),
         None => Ok(vec![]),
     }
 }
@@ -85,8 +92,12 @@ pub fn query_token_owner(
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(TOKENS_NAMESPACE, token_id.as_bytes())?;
     let res = query_storage::<OwnerOfResponse>(&querier, &collection_addr, &key)?;
-    // TODO: Handle none value?
-    Ok(Addr::unchecked(res.unwrap().owner))
+    match res {
+        Some(res) => Ok(Addr::unchecked(res.owner)),
+        None => Err(StdError::NotFound {
+            kind: "token".to_string(),
+        }),
+    }
 }
 
 // namespace -> storage key
