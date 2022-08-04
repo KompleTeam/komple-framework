@@ -879,6 +879,7 @@ dependencies = [
  "cw721",
  "cw721-base",
  "rift-types",
+ "rift-utils",
  "schemars",
  "serde",
  "thiserror",

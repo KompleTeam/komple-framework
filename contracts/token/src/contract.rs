@@ -4,13 +4,14 @@ use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Timestamp,
 };
 use cw2::set_contract_version;
+use rift_utils::check_admin_privileges;
 use url::Url;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
 use crate::state::{
     CollectionInfo, Config, Locks, COLLECTION_INFO, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS,
-    MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS, TOKEN_LOCKS,
+    MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -68,7 +69,7 @@ pub fn instantiate(
 
     TOKEN_IDS.save(deps.storage, &0)?;
 
-    MODULE_ADDR.save(deps.storage, &info.sender)?;
+    MINT_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
     OPERATION_LOCK.save(deps.storage, &false)?;
 
@@ -155,11 +156,20 @@ pub fn execute(
 
 pub fn execute_update_locks(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     locks: Locks,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
 
     LOCKS.save(deps.storage, &locks)?;
 
@@ -173,12 +183,21 @@ pub fn execute_update_locks(
 
 pub fn execute_update_token_locks(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     token_id: String,
     locks: Locks,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
 
     TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
 
@@ -336,11 +355,20 @@ pub fn execute_send(
 
 pub fn execute_update_per_address_limit(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     per_address_limit: Option<u32>,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
 
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -360,7 +388,16 @@ fn execute_update_start_time(
     info: MessageInfo,
     start_time: Option<Timestamp>,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
 
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -385,11 +422,20 @@ fn execute_update_start_time(
 
 fn execute_update_whitelist(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     whitelist: Option<String>,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
 
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -401,11 +447,20 @@ fn execute_update_whitelist(
 
 fn execute_update_royalty(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     royalty: Option<String>,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
 
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -448,15 +503,4 @@ fn query_minted_token_amount(deps: Deps, address: String) -> StdResult<MintedTok
 fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
     let collection_info = COLLECTION_INFO.load(deps.storage)?;
     Ok(collection_info)
-}
-
-fn can_execute(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    let module_addr = MODULE_ADDR.load(deps.storage)?;
-
-    if config.admin != info.sender && module_addr != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    Ok(true)
 }
