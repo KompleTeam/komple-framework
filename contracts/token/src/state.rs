@@ -35,6 +35,8 @@ pub const LOCKS: Item<Locks> = Item::new("locks");
 
 pub const TOKEN_LOCKS: Map<&str, Locks> = Map::new("token_locks");
 
+pub const OPERATION_LOCK: Item<bool> = Item::new("operation_lock");
+
 pub const TOKEN_IDS: Item<u32> = Item::new("token_ids");
 
 pub const MINTED_TOKEN_AMOUNTS: Map<&str, u32> = Map::new("minted_token_amounts");
