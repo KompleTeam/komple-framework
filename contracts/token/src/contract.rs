@@ -1,9 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Timestamp,
+    to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
+    StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw_utils::parse_reply_instantiate_data;
 use rift_utils::check_admin_privileges;
 use url::Url;
 
@@ -18,6 +20,8 @@ use crate::state::{
 use cw721::{ContractInfoResponse, Cw721Execute};
 use cw721_base::MintMsg;
 
+use metadata_contract::msg::InstantiateMsg as MetadataInstantiateMsg;
+
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
 // version info for migration info
@@ -25,6 +29,8 @@ const CONTRACT_NAME: &str = "crates.io:token-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
+
+const METADATA_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 1;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -157,6 +163,9 @@ pub fn execute(
         ExecuteMsg::UpdateRoyalty { royalty } => execute_update_royalty(deps, env, info, royalty),
         ExecuteMsg::UpdateMetadata { metadata } => {
             execute_update_metadata(deps, env, info, metadata)
+        }
+        ExecuteMsg::InitMetadataContract { code_id } => {
+            execute_init_metadata_contract(deps, env, info, code_id)
         }
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
@@ -512,6 +521,44 @@ fn execute_update_metadata(
     Ok(Response::new().add_attribute("action", "update_metadata"))
 }
 
+fn execute_init_metadata_contract(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    code_id: u64,
+) -> Result<Response, ContractError> {
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
+
+    let sub_msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id,
+            msg: to_binary(&MetadataInstantiateMsg {
+                admin: config.admin.to_string(),
+            })?,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: String::from("Rift Framework Metadata Contract"),
+        }
+        .into(),
+        id: METADATA_CONTRACT_INSTANTIATE_REPLY_ID,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("action", "execute_init_metadata_contract"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -548,4 +595,22 @@ fn query_minted_tokens_per_address(
 fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
     let collection_info = COLLECTION_INFO.load(deps.storage)?;
     Ok(collection_info)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    if msg.id != METADATA_CONTRACT_INSTANTIATE_REPLY_ID {
+        return Err(ContractError::InvalidReplyID {});
+    }
+
+    let reply = parse_reply_instantiate_data(msg);
+    match reply {
+        Ok(res) => {
+            let mut contracts = CONTRACTS.load(deps.storage)?;
+            contracts.metadata = Some(Addr::unchecked(res.contract_address));
+            CONTRACTS.save(deps.storage, &contracts)?;
+            Ok(Response::default().add_attribute("action", "instantiate_metadata_reply"))
+        }
+        Err(_) => Err(ContractError::MetadataInstantiateError {}),
+    }
 }
