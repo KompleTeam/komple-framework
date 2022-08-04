@@ -89,11 +89,9 @@ mod tests {
         fn test_happy_path() {
             let (mut app, minter_addr) = proper_instantiate();
 
-            let msg = ExecuteMsg::Mint {
-                recipient: Some(USER.to_string()),
-            };
+            let msg = ExecuteMsg::Mint {};
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
                 .unwrap();
 
             let msg = QueryMsg::GetTokenAddress {};
@@ -119,7 +117,7 @@ mod tests {
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
                 .unwrap();
 
-            let msg = ExecuteMsg::Mint { recipient: None };
+            let msg = ExecuteMsg::Mint {};
             let err = app
                 .execute_contract(Addr::unchecked(USER), minter_addr, &msg, &vec![])
                 .unwrap_err();
