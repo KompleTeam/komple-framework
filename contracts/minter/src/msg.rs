@@ -11,7 +11,7 @@ pub struct InstantiateMsg {
     pub minter: String,
     pub token_code_id: u64,
     pub collection_info: CollectionInfo,
-    pub per_address_limit: u32,
+    pub per_address_limit: Option<u32>,
     pub whitelist: Option<String>,
     pub start_time: Option<Timestamp>,
 }
@@ -23,7 +23,7 @@ pub enum ExecuteMsg {
     Mint { recipient: String, token_id: u32 },
     SetWhitelist { whitelist: Option<String> },
     UpdateStartTime(Option<Timestamp>),
-    UpdatePerAddressLimit { per_address_limit: u32 },
+    UpdatePerAddressLimit { per_address_limit: Option<u32> },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
