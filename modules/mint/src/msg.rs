@@ -1,5 +1,4 @@
 use cosmwasm_std::{Binary, Timestamp};
-use permission_module::msg::PermissionCheckMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use token_contract::{msg::TokenInfo, state::CollectionInfo};

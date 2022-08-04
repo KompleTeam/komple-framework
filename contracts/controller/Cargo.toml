@@ -53,6 +53,7 @@ permission-module = { path = "../../modules/permission" }
 cw-utils = "0.13.2"
 rift-types = { path = "../../packages/types" }
 rift-utils = { path = "../../packages/utils" }
+merge-module = { path = "../../modules/merge" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
