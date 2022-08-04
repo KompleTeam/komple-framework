@@ -29,6 +29,12 @@ pub enum ContractError {
     #[error("Token per address limit is exceeded")]
     TokenLimitReached {},
 
+    #[error("Invalid start time")]
+    InvalidStartTime {},
+
+    #[error("Minting has already started")]
+    AlreadyStarted {},
+
     #[error("token_id already claimed")]
     Claimed {},
 

@@ -64,6 +64,9 @@ pub enum ExecuteMsg<T> {
     UpdatePerAddressLimit {
         per_address_limit: Option<u32>,
     },
+    UpdateStartTime {
+        start_time: Option<Timestamp>,
+    },
 }
 
 impl From<ExecuteMsg<Empty>> for Cw721ExecuteMsg<Empty> {

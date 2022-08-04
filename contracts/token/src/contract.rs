@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+    to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Timestamp,
 };
 use cw2::set_contract_version;
 
@@ -90,6 +90,9 @@ pub fn execute(
         ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
             execute_update_per_address_limit(deps, env, info, per_address_limit)
         }
+        ExecuteMsg::UpdateStartTime { start_time } => {
+            execute_update_start_time(deps, env, info, start_time)
+        }
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
             match res {
@@ -169,6 +172,8 @@ pub fn execute_mint(
     if config.per_address_limit.is_some() && total_minted + 1 > config.per_address_limit.unwrap() {
         return Err(ContractError::TokenLimitReached {});
     }
+
+    // TODO: Check for start time here
 
     MINTED_TOKEN_AMOUNTS.save(deps.storage, &mint_msg.owner, &(total_minted + 1))?;
 
@@ -270,6 +275,36 @@ pub fn execute_update_per_address_limit(
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_attribute("action", "update_per_address_limit"))
+}
+
+fn execute_update_start_time(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    start_time: Option<Timestamp>,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    if config.start_time.is_some() && env.block.time >= config.start_time.unwrap() {
+        return Err(ContractError::AlreadyStarted {});
+    }
+
+    match start_time {
+        Some(time) => {
+            if env.block.time > time {
+                return Err(ContractError::InvalidStartTime {});
+            }
+            config.start_time = start_time;
+        }
+        None => config.start_time = None,
+    }
+
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new().add_attribute("action", "update_start_time"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
