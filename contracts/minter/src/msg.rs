@@ -8,7 +8,6 @@ use crate::state::CollectionInfo;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub symbol: String,
-    pub minter: String,
     pub token_code_id: u64,
     pub collection_info: CollectionInfo,
     pub per_address_limit: Option<u32>,
