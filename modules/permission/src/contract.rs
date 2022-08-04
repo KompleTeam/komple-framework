@@ -20,7 +20,7 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, OwnershipMsg, PermissionCheckMsg, Q
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, MODULE_PERMISSIONS, WHITELIST_ADDRS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:permission-module";
+const CONTRACT_NAME: &str = "crates.io:rift-permission-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

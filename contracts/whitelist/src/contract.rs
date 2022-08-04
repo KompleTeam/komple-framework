@@ -12,7 +12,7 @@ use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, WhitelistConfig, CONFIG, WHITELIST, WHITELIST_CONFIG};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:whitelist-contract";
+const CONTRACT_NAME: &str = "crates.io:rift-whitelist-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

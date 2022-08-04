@@ -26,7 +26,7 @@ use crate::state::{
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:mint-module";
+const CONTRACT_NAME: &str = "crates.io:rift-mint-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TOKEN_INSTANTIATE_REPLY_ID: u64 = 1;
