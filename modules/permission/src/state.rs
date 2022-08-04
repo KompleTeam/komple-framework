@@ -10,4 +10,4 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
-pub const MODULE_ADDR: Item<Addr> = Item::new("module_add");
+pub const CONTROLLER_ADDR: Item<Addr> = Item::new("controller_addr");
