@@ -63,6 +63,9 @@ pub enum ExecuteMsg {
     },
 
     // ADMIN MESSAGES
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
     AdminTransferNft {
         recipient: String,
         token_id: String,
