@@ -4,4 +4,4 @@ Komple Framework is a smart contract framework that provides the tools for creat
 
 # Maintainers
 
-- Analog Ghost [@AnalogGhost](https://github.com/AnalogGhost)
+- Arda [@findolor](https://github.com/findolor)
