@@ -16,3 +16,5 @@ pub const TOKEN_ADDRS: Map<u32, Addr> = Map::new("token_addrs");
 pub const COLLECTION_ID: Item<u32> = Item::new("collection_id");
 
 pub const CONTROLLER_ADDR: Item<Addr> = Item::new("controller_addr");
+
+pub const WHITELIST_ADDRS: Item<Vec<Addr>> = Item::new("whitelist_addrs");

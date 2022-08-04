@@ -36,6 +36,9 @@ pub enum ExecuteMsg {
         permission_msg: Binary,
         mint_msg: Binary,
     },
+    UpdateWhitelistAddresses {
+        addrs: Vec<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -43,6 +46,7 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     Config {},
     CollectionAddress(u32),
+    WhitelistAddresses {},
 }
 
 impl From<MintModuleQueryMsg> for QueryMsg {

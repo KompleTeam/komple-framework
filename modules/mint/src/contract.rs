@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
 use rift_types::module::Modules;
-use rift_types::query::{AddressResponse, ControllerQueryMsg};
+use rift_types::query::{AddressResponse, MultipleAddressResponse};
 use rift_utils::{check_admin_privileges, get_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
@@ -19,7 +19,7 @@ use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, COLLECTION_ID, CONFIG, CONTROLLER_ADDR, TOKEN_ADDRS};
+use crate::state::{Config, COLLECTION_ID, CONFIG, CONTROLLER_ADDR, TOKEN_ADDRS, WHITELIST_ADDRS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:mint-module";
@@ -89,6 +89,9 @@ pub fn execute(
             permission_msg,
             mint_msg,
         } => execute_permission_mint(deps, env, info, permission_msg, mint_msg),
+        ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
+            execute_update_whitelist_addresses(deps, env, info, addrs)
+        }
     }
 }
 
@@ -104,10 +107,10 @@ pub fn execute_create_collection(
     whitelist: Option<String>,
     royalty: Option<String>,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
+    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
@@ -146,10 +149,10 @@ pub fn execute_update_mint_lock(
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
+    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
 
     config.mint_lock = lock;
 
@@ -187,10 +190,16 @@ fn execute_mint_to(
     collection_id: u32,
     recipient: String,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
+    check_admin_privileges(
+        &info.sender,
+        &config.admin,
+        controller_addr,
+        whitelist_addrs,
+    )?;
 
     let owner = deps.api.addr_validate(&recipient)?;
 
@@ -248,6 +257,30 @@ fn _execute_mint(
         .add_attribute("action", action))
 }
 
+fn execute_update_whitelist_addresses(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    addrs: Vec<String>,
+) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(&info.sender, &config.admin, controller_addr, None)?;
+
+    let whitelist_addrs = addrs
+        .iter()
+        .map(|addr| -> StdResult<Addr> {
+            let addr = deps.api.addr_validate(addr)?;
+            Ok(addr)
+        })
+        .collect::<StdResult<Vec<Addr>>>()?;
+
+    WHITELIST_ADDRS.save(deps.storage, &whitelist_addrs)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -255,6 +288,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::CollectionAddress(collection_id) => {
             to_binary(&query_collection_address(deps, collection_id)?)
         }
+        QueryMsg::WhitelistAddresses {} => to_binary(&query_whitelist_addresses(deps)?),
     }
 }
 
@@ -267,6 +301,13 @@ fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<Address
     let addr = TOKEN_ADDRS.load(deps.storage, collection_id)?;
     Ok(AddressResponse {
         address: addr.to_string(),
+    })
+}
+
+fn query_whitelist_addresses(deps: Deps) -> StdResult<MultipleAddressResponse> {
+    let addrs = WHITELIST_ADDRS.load(deps.storage)?;
+    Ok(MultipleAddressResponse {
+        addresses: addrs.iter().map(|a| a.to_string()).collect(),
     })
 }
 
