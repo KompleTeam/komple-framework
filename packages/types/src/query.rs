@@ -20,3 +20,9 @@ pub enum MintModuleQueryMsg {
 pub struct AddressResponse {
     pub address: String,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct MultipleAddressResponse {
+    pub addresses: Vec<String>,
+}

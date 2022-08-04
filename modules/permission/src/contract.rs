@@ -9,13 +9,14 @@ use cw721::OwnerOfResponse;
 use rift_types::collection::Collections;
 use rift_types::module::Modules;
 use rift_types::permission::Permissions;
-use rift_utils::{check_admin_privilages, get_collection_address, get_module_address};
+use rift_types::query::MultipleAddressResponse;
+use rift_utils::{check_admin_privileges, get_collection_address, get_module_address};
 
 use token_contract::msg::QueryMsg as TokenQueryMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg};
-use crate::state::{Config, CONFIG, CONTROLLER_ADDR, MODULE_PERMISSIONS};
+use crate::state::{Config, CONFIG, CONTROLLER_ADDR, MODULE_PERMISSIONS, WHITELIST_ADDRS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:permission-module";
@@ -52,6 +53,9 @@ pub fn execute(
             module,
             permissions,
         } => execute_update_module_permissions(deps, env, info, module, permissions),
+        ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
+            execute_update_whitelist_addresses(deps, env, info, addrs)
+        }
         ExecuteMsg::Check { module, msg } => execute_check(deps, env, info, module, msg),
     }
 }
@@ -64,20 +68,50 @@ fn execute_update_module_permissions(
     permissions: Vec<Permissions>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privilages(&info.sender, &config.admin, Some(&controller_addr), None)?;
+    check_admin_privileges(
+        &info.sender,
+        &config.admin,
+        Some(&controller_addr),
+        whitelist_addrs,
+    )?;
 
     MODULE_PERMISSIONS.save(deps.storage, module.to_string(), &permissions)?;
 
     Ok(Response::new()
-        .add_attribute("action", "execute_check_permission")
+        .add_attribute("action", "execute_update_module_permissions")
         .add_attributes(
             permissions
                 .iter()
                 .map(|p| ("permission", p.to_string()))
                 .collect::<Vec<(&str, &str)>>(),
         ))
+}
+
+fn execute_update_whitelist_addresses(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    addrs: Vec<String>,
+) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
+
+    let whitelist_addrs = addrs
+        .iter()
+        .map(|addr| -> StdResult<Addr> {
+            let addr = deps.api.addr_validate(addr)?;
+            Ok(addr)
+        })
+        .collect::<StdResult<Vec<Addr>>>()?;
+
+    WHITELIST_ADDRS.save(deps.storage, &whitelist_addrs)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
 }
 
 fn execute_check(
@@ -164,10 +198,18 @@ fn check_ownership_permission(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::ModulePermissions(module) => to_binary(&query_module_permissions(deps, module)?),
+        QueryMsg::WhitelistAddresses {} => to_binary(&query_whitelist_addresses(deps)?),
     }
 }
 
 fn query_module_permissions(deps: Deps, module: Modules) -> StdResult<Vec<Permissions>> {
     let permissions = MODULE_PERMISSIONS.load(deps.storage, module.to_string())?;
     Ok(permissions)
+}
+
+fn query_whitelist_addresses(deps: Deps) -> StdResult<MultipleAddressResponse> {
+    let addrs = WHITELIST_ADDRS.load(deps.storage)?;
+    Ok(MultipleAddressResponse {
+        addresses: addrs.iter().map(|a| a.to_string()).collect(),
+    })
 }

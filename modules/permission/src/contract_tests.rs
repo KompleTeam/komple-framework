@@ -15,7 +15,7 @@ mod tests {
 
     const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
     const ADMIN: &str = "juno1qamfln8u5w8d3vlhp5t9mhmylfkgad4jz6t7cv";
-    // const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
+    const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
     const NATIVE_DENOM: &str = "denom";
 
     fn mock_app() -> App {
@@ -108,6 +108,38 @@ mod tests {
                 .query_wasm_smart(permission_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res, vec![Permissions::Attribute, Permissions::Ownership]);
+
+            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+                addrs: vec![USER.to_string()],
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap();
+
+            let msg = ExecuteMsg::UpdateModulePermissions {
+                module: Modules::MintModule,
+                permissions: vec![Permissions::Attribute],
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap();
+
+            let msg = QueryMsg::ModulePermissions(Modules::MintModule);
+            let res: Vec<Permissions> = app
+                .wrap()
+                .query_wasm_smart(permission_module_addr, &msg)
+                .unwrap();
+            assert_eq!(res, vec![Permissions::Attribute]);
         }
 
         #[test]
@@ -118,6 +150,64 @@ mod tests {
             let msg = ExecuteMsg::UpdateModulePermissions {
                 module: Modules::MintModule,
                 permissions: vec![Permissions::Ownership],
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+        }
+    }
+
+    mod whitelist_addresses {
+        use super::*;
+
+        use rift_types::query::MultipleAddressResponse;
+
+        use crate::{
+            msg::{ExecuteMsg, QueryMsg},
+            ContractError,
+        };
+
+        #[test]
+        fn test_update_happy_path() {
+            let mut app = mock_app();
+            let permission_module_addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+                addrs: vec![RANDOM.to_string()],
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap();
+
+            let msg = QueryMsg::WhitelistAddresses {};
+            let res: MultipleAddressResponse = app
+                .wrap()
+                .query_wasm_smart(permission_module_addr, &msg)
+                .unwrap();
+            assert_eq!(res.addresses, vec![RANDOM.to_string()]);
+        }
+
+        #[test]
+        fn test_update_unhappy_path() {
+            let mut app = mock_app();
+            let permission_module_addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+                addrs: vec![RANDOM.to_string()],
             };
             let err = app
                 .execute_contract(
