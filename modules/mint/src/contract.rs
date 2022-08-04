@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
+    to_binary, Addr, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
     ReplyOn, Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -14,7 +14,7 @@ use rift_utils::{check_admin_privileges, query_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
 };
-use token_contract::state::{CollectionInfo, Contracts};
+use token_contract::state::CollectionInfo;
 
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
@@ -69,6 +69,8 @@ pub fn execute(
             token_info,
             per_address_limit,
             start_time,
+            unit_price,
+            native_denom,
             linked_collections,
         } => execute_create_collection(
             deps,
@@ -79,6 +81,8 @@ pub fn execute(
             token_info,
             per_address_limit,
             start_time,
+            unit_price,
+            native_denom,
             linked_collections,
         ),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
@@ -108,6 +112,8 @@ pub fn execute_create_collection(
     token_info: TokenInfo,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
+    unit_price: Option<Coin>,
+    native_denom: String,
     linked_collections: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
@@ -129,11 +135,8 @@ pub fn execute_create_collection(
         per_address_limit,
         start_time,
         max_token_limit: None,
-        contracts: Contracts {
-            metadata: None,
-            whitelist: None,
-            royalty: None,
-        },
+        unit_price,
+        native_denom,
     };
 
     // Instantiate token contract

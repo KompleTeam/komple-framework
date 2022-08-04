@@ -5,7 +5,7 @@ use rift_types::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Timestamp};
+use cosmwasm_std::{Addr, Coin, Timestamp};
 use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -21,6 +21,7 @@ pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new("collection_info");
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
+    pub native_denom: String,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
@@ -29,6 +30,7 @@ pub struct CollectionConfig {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
+    pub unit_price: Option<Coin>,
 }
 pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new("collection_config");
 

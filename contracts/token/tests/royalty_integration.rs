@@ -61,11 +61,6 @@ fn token_contract_instantiation(app: &mut App) -> Addr {
         symbol: "TEST".to_string(),
         minter: ADMIN.to_string(),
     };
-    let contracts = Contracts {
-        whitelist: None,
-        royalty: None,
-        metadata: None,
-    };
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
         token_info,
@@ -73,7 +68,8 @@ fn token_contract_instantiation(app: &mut App) -> Addr {
         start_time: None,
         collection_info,
         max_token_limit: None,
-        contracts,
+        unit_price: None,
+        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_contract_addr = app
         .instantiate_contract(

@@ -225,6 +225,7 @@ pub fn create_collection(
     start_time: Option<Timestamp>,
     collection_type: Collections,
     linked_collections: Option<Vec<u32>>,
+    unit_price: Option<Coin>,
 ) {
     let collection_info = CollectionInfo {
         collection_type,
@@ -244,6 +245,8 @@ pub fn create_collection(
         per_address_limit,
         start_time,
         linked_collections,
+        unit_price,
+        native_denom: NATIVE_DENOM.to_string(),
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])

@@ -92,6 +92,7 @@ mod permission_mint {
             None,
             Collections::Normal,
             None,
+            None,
         );
         create_collection(
             &mut app,
@@ -100,6 +101,7 @@ mod permission_mint {
             None,
             None,
             Collections::Normal,
+            None,
             None,
         );
 
