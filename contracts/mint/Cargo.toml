@@ -49,7 +49,7 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 cw721 = "0.13.2"
 token-contract = { path = "../token", features = ["library"] }
-permission-module = { path = "../permission" }
+permission-module = { path = "../permission", features = ["library"] }
 cw-utils = "0.13.2"
 rift-types = { path = "../../packages/types" }
 rift-utils = { path = "../../packages/utils" }

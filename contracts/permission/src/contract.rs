@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -12,6 +10,7 @@ use rift_types::query::ResponseWrapper;
 use rift_utils::{
     check_admin_privileges, query_collection_address, query_module_address, query_token_owner,
 };
+use std::collections::HashMap;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg};
