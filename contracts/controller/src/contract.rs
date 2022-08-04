@@ -11,7 +11,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, ModuleAddrResponse, QueryMsg};
 use crate::state::{Config, ControllerInfo, CONFIG, CONTROLLER_INFO, MINT_MODULE_ADDR};
 
-use mint::msg::InstantiateMsg as MintModuleInstantiateMsg;
+use mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:controller";

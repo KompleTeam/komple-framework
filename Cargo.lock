@@ -60,7 +60,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4c78c047431fee22c1a7bb92e00ad095a02a983affe4d8a72e2a2c62c1b94f3"
 
 [[package]]
-name = "controller"
+name = "controller-contract"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
@@ -70,11 +70,11 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
- "mint",
+ "mint-module",
  "schemars",
  "serde",
  "thiserror",
- "token_contract",
+ "token-contract",
 ]
 
 [[package]]
@@ -491,7 +491,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
-name = "mint"
+name = "mint-module"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
@@ -506,7 +506,7 @@ dependencies = [
  "schemars",
  "serde",
  "thiserror",
- "token_contract",
+ "token-contract",
 ]
 
 [[package]]
@@ -514,21 +514,6 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
-
-[[package]]
-name = "passcard"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus",
- "cw2",
- "schemars",
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "percent-encoding"
@@ -818,7 +803,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
-name = "token_contract"
+name = "token-contract"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",

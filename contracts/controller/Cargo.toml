@@ -1,5 +1,5 @@
 [package]
-name = "controller"
+name = "controller-contract"
 version = "0.1.0"
 authors = ["AnalogGhost <analoghost@proton.me>"]
 edition = "2018"
@@ -47,8 +47,8 @@ cw2 = "0.13.2"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-mint = { path = "../../modules/mint" }
-token_contract = { path = "../token" }
+mint-module = { path = "../../modules/mint" }
+token-contract = { path = "../token" }
 cw-utils = "0.13.2"
 
 [dev-dependencies]
