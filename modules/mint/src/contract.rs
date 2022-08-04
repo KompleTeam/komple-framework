@@ -264,7 +264,7 @@ fn execute_permission_mint(
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
+        query_module_address(&deps.querier, &controller_addr, Modules::PermissionModule)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 

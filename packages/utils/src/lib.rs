@@ -42,34 +42,34 @@ pub fn check_admin_privileges(
 }
 
 pub fn query_module_address(
-    deps: &DepsMut,
+    querier: &QuerierWrapper,
     controller_addr: &Addr,
     module: Modules,
 ) -> StdResult<Addr> {
     let key = get_map_storage_key("module_address", module.as_str().as_bytes())?;
-    let res = query_storage::<Addr>(&deps.querier, &controller_addr, &key)?;
+    let res = query_storage::<Addr>(&querier, &controller_addr, &key)?;
     // TODO: Handle none value?
     Ok(res.unwrap())
 }
 
 pub fn query_collection_address(
-    deps: &DepsMut,
+    querier: &QuerierWrapper,
     mint_module_address: &Addr,
     collection_id: u32,
 ) -> StdResult<Addr> {
     let key = get_map_storage_key("collection_addrs", &collection_id.to_be_bytes())?;
-    let res = query_storage::<Addr>(&deps.querier, &mint_module_address, &key)?;
+    let res = query_storage::<Addr>(&querier, &mint_module_address, &key)?;
     // TODO: Handle none value?
     Ok(res.unwrap())
 }
 
 pub fn query_linked_collections(
-    deps: &DepsMut,
+    querier: &QuerierWrapper,
     mint_module_address: &Addr,
     collection_id: u32,
 ) -> StdResult<Vec<u32>> {
     let key = get_map_storage_key("linked_collections", &collection_id.to_be_bytes())?;
-    let res = query_storage::<Vec<u32>>(&deps.querier, &mint_module_address, &key)?;
+    let res = query_storage::<Vec<u32>>(&querier, &mint_module_address, &key)?;
     match res {
         Some(v) => Ok(v),
         None => Ok(vec![]),

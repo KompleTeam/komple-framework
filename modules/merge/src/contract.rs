@@ -120,7 +120,7 @@ fn execute_permission_merge(
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
+        query_module_address(&deps.querier, &controller_addr, Modules::PermissionModule)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
@@ -148,7 +148,8 @@ fn make_merge_msg(
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
-    let mint_module_addr = query_module_address(&deps, &controller_addr, Modules::MintModule)?;
+    let mint_module_addr =
+        query_module_address(&deps.querier, &controller_addr, Modules::MintModule)?;
 
     let merge_msg: MergeMsg = from_binary(&msg)?;
 
@@ -162,7 +163,7 @@ fn make_merge_msg(
         burn_collection_ids.push(burn_msg.collection_id);
 
         let collection_addr =
-            query_collection_address(&deps, &mint_module_addr, burn_msg.collection_id)?;
+            query_collection_address(&deps.querier, &mint_module_addr, burn_msg.collection_id)?;
 
         let msg = TokenExecuteMsg::Burn {
             token_id: burn_msg.token_id.to_string(),
@@ -181,7 +182,7 @@ fn make_merge_msg(
             true => linked_collection_map.get(&collection_id).unwrap().clone(),
             false => {
                 let collections =
-                    query_linked_collections(&deps, &mint_module_addr, collection_id)?;
+                    query_linked_collections(&deps.querier, &mint_module_addr, collection_id)?;
                 linked_collection_map.insert(collection_id, collections.clone());
                 collections
             }
