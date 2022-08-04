@@ -12,6 +12,9 @@ pub enum ContractError {
     #[error("Description too long")]
     DescriptionTooLong {},
 
+    #[error("Invalid code id")]
+    InvalidCodeId {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
     // Add any other custom errors you like here.

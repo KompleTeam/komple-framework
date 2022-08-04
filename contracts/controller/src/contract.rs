@@ -27,6 +27,7 @@ pub fn instantiate(
 
     let config = Config {
         admin: info.sender.clone(),
+        mint_code_id: msg.mint_code_id,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -52,16 +53,54 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
-    // match msg {}
+    match msg {
+        ExecuteMsg::UpdateMintCodeId { code_id } => {
+            execute_update_mint_code_id(deps, env, info, code_id)
+        }
+        ExecuteMsg::AddCollection {
+            mint_code_id,
+            mint_instantiate_msg,
+        } => unimplemented!(),
+    }
+}
+
+fn execute_update_mint_code_id(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    code_id: u64,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    if code_id == 0 {
+        return Err(ContractError::InvalidCodeId {});
+    }
+
+    config.mint_code_id = code_id;
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_mint_code_id")
+        .add_attribute("code_id", code_id.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
-    // match msg {}
+    match msg {
+        QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
+        QueryMsg::GetCollection { collection_id } => unimplemented!(),
+        QueryMsg::GetContollerInfo {} => unimplemented!(),
+    }
+}
+
+fn query_config(deps: Deps) -> StdResult<Config> {
+    let config = CONFIG.load(deps.storage)?;
+    Ok(config)
 }

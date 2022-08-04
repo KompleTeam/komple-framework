@@ -24,6 +24,7 @@ pub const CONTROLLER_INFO: Item<ControllerInfo> = Item::new("controller_info");
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
+    pub mint_code_id: u64,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 

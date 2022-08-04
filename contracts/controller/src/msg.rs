@@ -9,11 +9,15 @@ pub struct InstantiateMsg {
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
+    pub mint_code_id: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
+    UpdateMintCodeId {
+        code_id: u64,
+    },
     AddCollection {
         mint_code_id: u64,
         mint_instantiate_msg: MintInstantiateMsg,
