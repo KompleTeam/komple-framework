@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::state::{MetaInfo, Metadata, Trait};
 
-use rift_types::metadata::Metadata as MetadataType;
+use komple_types::metadata::Metadata as MetadataType;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {

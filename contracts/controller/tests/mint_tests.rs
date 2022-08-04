@@ -11,10 +11,10 @@ use helpers::{
 mod initialization {
     use super::*;
 
-    use rift_types::module::Modules;
+    use komple_types::module::Modules;
 
     use controller_contract::ContractError;
-    use rift_utils::query_module_address;
+    use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
@@ -62,7 +62,7 @@ mod initialization {
 
 mod permission_mint {
     use helpers::add_permission_for_module;
-    use rift_utils::query_collection_address;
+    use komple_utils::query_collection_address;
 
     use super::*;
 
@@ -70,7 +70,7 @@ mod permission_mint {
     use cw721::OwnerOfResponse;
     use mint_module::msg::ExecuteMsg as MintExecuteMsg;
     use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
-    use rift_types::{collection::Collections, module::Modules, permission::Permissions};
+    use komple_types::{collection::Collections, module::Modules, permission::Permissions};
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     #[test]

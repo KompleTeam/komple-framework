@@ -12,10 +12,10 @@ use helpers::{
 mod initialization {
     use super::*;
 
-    use rift_types::module::Modules;
+    use komple_types::module::Modules;
 
     use controller_contract::ContractError;
-    use rift_utils::query_module_address;
+    use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
@@ -72,8 +72,8 @@ mod normal_merge {
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
     };
-    use rift_types::collection::Collections;
-    use rift_utils::query_collection_address;
+    use komple_types::collection::Collections;
+    use komple_utils::query_collection_address;
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
@@ -364,16 +364,16 @@ mod permission_merge {
     use helpers::{add_permission_for_module, link_collection_to_collections};
     use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
     use permission_module::msg::PermissionCheckMsg;
-    use rift_types::collection::Collections;
-    use rift_types::module::Modules;
-    use rift_types::permission::Permissions;
+    use komple_types::collection::Collections;
+    use komple_types::module::Modules;
+    use komple_types::permission::Permissions;
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     mod ownership_permission {
         use super::*;
 
         use permission_module::msg::OwnershipMsg;
-        use rift_utils::query_collection_address;
+        use komple_utils::query_collection_address;
 
         #[test]
         fn test_happy_path() {

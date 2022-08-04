@@ -2,7 +2,7 @@ use cosmwasm_std::Binary;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use rift_types::{module::Modules, permission::Permissions};
+use komple_types::{module::Modules, permission::Permissions};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {

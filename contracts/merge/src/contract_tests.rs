@@ -55,7 +55,7 @@ mod tests {
     }
 
     mod merge_lock {
-        use rift_types::query::ResponseWrapper;
+        use komple_types::query::ResponseWrapper;
 
         use super::*;
 
@@ -141,7 +141,7 @@ mod tests {
     mod whitelist_addresses {
         use super::*;
 
-        use rift_types::query::ResponseWrapper;
+        use komple_types::query::ResponseWrapper;
 
         use crate::{
             msg::{ExecuteMsg, QueryMsg},

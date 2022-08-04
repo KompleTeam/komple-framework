@@ -3,7 +3,7 @@ mod tests {
     use crate::msg::{ExecuteMsg, InstantiateMsg};
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-    use rift_types::collection::Collections;
+    use komple_types::collection::Collections;
     use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
     pub fn minter_contract() -> Box<dyn Contract<Empty>> {
@@ -102,7 +102,7 @@ mod tests {
             ContractError,
         };
         use cw721::OwnerOfResponse;
-        use rift_types::query::ResponseWrapper;
+        use komple_types::query::ResponseWrapper;
         use token_contract::msg::QueryMsg as TokenQueryMsg;
 
         #[test]
@@ -153,7 +153,7 @@ mod tests {
     }
 
     mod locks {
-        use rift_types::query::ResponseWrapper;
+        use komple_types::query::ResponseWrapper;
 
         use super::*;
         use crate::{
@@ -179,7 +179,7 @@ mod tests {
     }
 
     mod collections {
-        use rift_types::query::ResponseWrapper;
+        use komple_types::query::ResponseWrapper;
 
         use super::*;
 

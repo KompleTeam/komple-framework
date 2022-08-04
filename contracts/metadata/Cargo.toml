@@ -47,8 +47,8 @@ cw2 = "0.13.2"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-rift-utils = { path = "../../packages/utils" }
-rift-types = { path = "../../packages/types" }
+komple-utils = { path = "../../packages/utils" }
+komple-types = { path = "../../packages/types" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"

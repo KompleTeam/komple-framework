@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use rift_types::royalty::Royalty;
-use rift_types::{collection::Collections, query::ResponseWrapper};
+use komple_types::royalty::Royalty;
+use komple_types::{collection::Collections, query::ResponseWrapper};
 use royalty_contract::msg::{ExecuteMsg as RoyaltyExecuteMsg, QueryMsg as RoyaltyQueryMsg};
 use std::str::FromStr;
 use token_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};

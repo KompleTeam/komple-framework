@@ -49,8 +49,8 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 cw721 = "0.13.4"
 cw721-base = { version = "0.13.4", features = ["library"] }
-rift-types = { path = "../../packages/types" }
-rift-utils = { path = "../../packages/utils" }
+komple-types = { path = "../../packages/types" }
+komple-utils = { path = "../../packages/utils" }
 metadata-contract = { path = "../metadata", features = ["library"] }
 royalty-contract = { path = "../royalty", features = ["library"] }
 whitelist-contract = { path = "../whitelist", features = ["library"]  }

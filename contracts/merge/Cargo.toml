@@ -50,8 +50,8 @@ thiserror = { version = "1.0.31" }
 token-contract = { path = "../token", features = ["library"] }
 permission-module = { path = "../permission", features = ["library"] }
 mint-module = { path = "../mint", features = ["library"] }
-rift-utils = { path = "../../packages/utils" }
-rift-types = { path = "../../packages/types" }
+komple-utils = { path = "../../packages/utils" }
+komple-types = { path = "../../packages/types" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"

@@ -7,22 +7,22 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
-use rift_types::module::{
+use komple_types::module::{
     Modules, MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID, MERGE_MODULE_INSTANTIATE_REPLY_ID,
     MINT_MODULE_INSTANTIATE_REPLY_ID, PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
 };
-use rift_types::{
+use komple_types::{
     instantiate::{MarketplaceModuleInstantiateMsg, ModuleInstantiateMsg},
     query::ResponseWrapper,
 };
-use rift_utils::check_admin_privileges;
+use komple_utils::check_admin_privileges;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, ControllerInfo, CONFIG, CONTROLLER_INFO, MODULE_ADDR};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:rift-controller-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-controller-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
@@ -106,7 +106,7 @@ fn execute_init_mint_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework mint module"),
+            label: String::from("Komple Framework mint module"),
         }
         .into(),
         id: MINT_MODULE_INSTANTIATE_REPLY_ID,
@@ -143,7 +143,7 @@ fn execute_init_permission_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework permission module"),
+            label: String::from("Komple Framework permission module"),
         }
         .into(),
         id: PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
@@ -180,7 +180,7 @@ fn execute_init_merge_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework merge module"),
+            label: String::from("Komple Framework merge module"),
         }
         .into(),
         id: MERGE_MODULE_INSTANTIATE_REPLY_ID,
@@ -219,7 +219,7 @@ fn execute_init_marketplace_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Rift Framework Marketplace Module"),
+            label: String::from("Komple Framework Marketplace Module"),
         }
         .into(),
         id: MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID,

@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use rift_types::{module::Modules, query::ControllerQueryMsg};
+use komple_types::{module::Modules, query::ControllerQueryMsg};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {

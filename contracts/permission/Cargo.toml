@@ -48,8 +48,8 @@ schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 token-contract = { path = "../token", features = ["library"] }
-rift-types = { path = "../../packages/types" }
-rift-utils = { path = "../../packages/utils" }
+komple-types = { path = "../../packages/types" }
+komple-utils = { path = "../../packages/utils" }
 cw721 = "0.13.2"
 
 [dev-dependencies]

@@ -3,7 +3,7 @@ use crate::ContractError;
 use cosmwasm_std::coin;
 use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use rift_types::query::ResponseWrapper;
+use komple_types::query::ResponseWrapper;
 
 use crate::msg::InstantiateMsg;
 

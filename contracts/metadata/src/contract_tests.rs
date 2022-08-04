@@ -6,8 +6,8 @@ use crate::{
 };
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use rift_types::metadata::Metadata as MetadataType;
-use rift_types::query::ResponseWrapper;
+use komple_types::metadata::Metadata as MetadataType;
+use komple_types::query::ResponseWrapper;
 
 pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

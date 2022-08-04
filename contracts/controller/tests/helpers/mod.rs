@@ -3,10 +3,10 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use rift_types::{
+use komple_types::{
     collection::Collections, module::Modules, permission::Permissions, royalty::Royalty,
 };
-use rift_utils::{query_collection_address, query_module_address};
+use komple_utils::{query_collection_address, query_module_address};
 use token_contract::{
     msg::{ExecuteMsg as TokenExecuteMsg, TokenInfo},
     state::CollectionInfo,
