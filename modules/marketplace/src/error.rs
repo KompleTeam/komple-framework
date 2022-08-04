@@ -1,4 +1,4 @@
-use cosmwasm_std::StdError;
+use cosmwasm_std::{OverflowError, StdError};
 use rift_utils::UtilError;
 use thiserror::Error;
 
@@ -10,8 +10,14 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Invalid fee percentage")]
-    InvalidFeePercentage {},
+    #[error("Invalid funds")]
+    InvalidFunds {},
+
+    #[error("Invalid denom")]
+    InvalidDenom {},
+
+    #[error("{0}")]
+    Overflow(#[from] OverflowError),
 
     #[error("{0}")]
     Util(#[from] UtilError),

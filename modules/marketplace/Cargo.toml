@@ -49,6 +49,7 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 rift-types = { path = "../../packages/types" }
 rift-utils = { path = "../../packages/utils" }
+token-contract = { path = "../../contracts/token" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"

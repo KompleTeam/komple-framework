@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub admin: String,
+    pub native_denom: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -16,11 +17,20 @@ pub enum ExecuteMsg {
         token_id: u32,
         price: Uint128,
     },
+    DelistFixedToken {
+        collection_id: u32,
+        token_id: u32,
+    },
     UpdatePrice {
         listing_type: Listing,
         collection_id: u32,
         token_id: u32,
         price: Uint128,
+    },
+    Buy {
+        listing_type: Listing,
+        collection_id: u32,
+        token_id: u32,
     },
 }
 
