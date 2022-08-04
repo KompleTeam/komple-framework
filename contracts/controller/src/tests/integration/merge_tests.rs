@@ -354,3 +354,180 @@ mod normal_merge {
         );
     }
 }
+
+mod permission_merge {
+    use super::*;
+
+    use crate::tests::integration::helpers::{
+        add_permission_for_module, link_collection_to_collections,
+    };
+    use cosmwasm_std::to_binary;
+    use cw721::OwnerOfResponse;
+    use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
+    use permission_module::msg::PermissionCheckMsg;
+    use rift_types::collection::Collections;
+    use rift_types::module::Modules;
+    use rift_types::permission::Permissions;
+    use token_contract::msg::QueryMsg as TokenQueryMsg;
+
+    mod ownership_permission {
+        use super::*;
+
+        use permission_module::msg::OwnershipMsg;
+
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let controller_addr = proper_instantiate(&mut app);
+
+            setup_all_modules(&mut app, controller_addr.clone());
+
+            let (mint_module_addr, merge_module_addr, permission_module_addr) =
+                get_modules_addresses(&mut app, &controller_addr.to_string());
+
+            let token_contract_code_id = app.store_code(token_contract());
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_contract_code_id,
+                None,
+                None,
+                None,
+                None,
+                Collections::Normal,
+                None,
+            );
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_contract_code_id,
+                None,
+                None,
+                None,
+                None,
+                Collections::Normal,
+                None,
+            );
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_contract_code_id,
+                None,
+                None,
+                None,
+                None,
+                Collections::Normal,
+                None,
+            );
+
+            link_collection_to_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
+
+            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+            mint_token(&mut app, mint_module_addr.clone(), 3, USER);
+
+            setup_mint_module_whitelist(
+                &mut app,
+                mint_module_addr.clone(),
+                vec![merge_module_addr.to_string()],
+            );
+
+            let collection_1_addr =
+                get_collection_address(&mut app, &mint_module_addr.to_string(), 1);
+            give_approval_to_module(
+                &mut app,
+                collection_1_addr.clone(),
+                USER,
+                &merge_module_addr,
+            );
+            let collection_3_addr =
+                get_collection_address(&mut app, &mint_module_addr.to_string(), 3);
+            give_approval_to_module(
+                &mut app,
+                collection_3_addr.clone(),
+                USER,
+                &merge_module_addr,
+            );
+
+            add_permission_for_module(
+                &mut app,
+                permission_module_addr,
+                Modules::MergeModule,
+                vec![Permissions::Ownership],
+            );
+
+            let permission_msg = to_binary(&vec![PermissionCheckMsg {
+                permission_type: Permissions::Ownership,
+                data: to_binary(&vec![
+                    OwnershipMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        owner: USER.to_string(),
+                    },
+                    OwnershipMsg {
+                        collection_id: 1,
+                        token_id: 2,
+                        owner: USER.to_string(),
+                    },
+                ])
+                .unwrap(),
+            }])
+            .unwrap();
+            let merge_msg = to_binary(&MergeMsg {
+                mint: vec![2],
+                burn: vec![
+                    MergeBurnMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                    },
+                    MergeBurnMsg {
+                        collection_id: 1,
+                        token_id: 3,
+                    },
+                    MergeBurnMsg {
+                        collection_id: 3,
+                        token_id: 1,
+                    },
+                ],
+            })
+            .unwrap();
+            let msg = MergeExecuteMsg::PermissionMerge {
+                permission_msg,
+                merge_msg,
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &vec![])
+                .unwrap();
+
+            let msg = TokenQueryMsg::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            };
+            let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
+                app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
+            assert!(res.is_err());
+
+            let msg = TokenQueryMsg::OwnerOf {
+                token_id: "3".to_string(),
+                include_expired: None,
+            };
+            let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
+                app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
+            assert!(res.is_err());
+
+            let collection_2_addr =
+                get_collection_address(&mut app, &mint_module_addr.to_string(), 2);
+
+            let msg = TokenQueryMsg::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            };
+            let res: OwnerOfResponse = app
+                .wrap()
+                .query_wasm_smart(collection_2_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.owner, USER);
+        }
+    }
+}
