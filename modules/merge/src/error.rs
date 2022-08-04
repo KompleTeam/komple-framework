@@ -10,8 +10,11 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Merge failed")]
-    MergeFailed {},
+    #[error("Cannot mint passcard")]
+    InvalidPasscard {},
+
+    #[error("No burn messages found")]
+    BurnNotFound {},
 
     #[error("{0}")]
     Util(#[from] UtilError),

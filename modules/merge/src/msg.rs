@@ -46,6 +46,5 @@ pub struct MergeMsg {
     pub collection_type: Collections,
     pub collection_id: u32,
     pub action: MergeAction,
-    pub owner: Option<String>,
     pub token_id: Option<u32>,
 }
