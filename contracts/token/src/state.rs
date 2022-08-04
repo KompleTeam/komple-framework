@@ -20,6 +20,7 @@ pub struct Config {
     pub start_time: Option<Timestamp>,
     pub whitelist: Option<Addr>,
     pub royalty: Option<Addr>,
+    pub max_token_limit: Option<u32>,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 

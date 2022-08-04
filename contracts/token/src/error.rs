@@ -27,7 +27,7 @@ pub enum ContractError {
     #[error("Per address limit must be greater than 0")]
     InvalidPerAddressLimit {},
 
-    #[error("Token per address limit is exceeded")]
+    #[error("Token limit is exceeded")]
     TokenLimitReached {},
 
     #[error("Invalid start time")]

@@ -20,6 +20,10 @@ pub enum ExecuteMsg {
         whitelist: Option<String>,
         royalty: Option<String>,
         main_collections: Vec<u32>,
+        max_token_limit: Option<u32>,
+    },
+    Mint {
+        passcard_id: u32,
     },
 }
 

@@ -37,7 +37,7 @@ mod tests {
         })
     }
 
-    fn proper_instantiate() -> (App, Addr) {
+    fn proper_instantiate(max_token_limit: Option<u32>) -> (App, Addr) {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_contract());
 
@@ -59,6 +59,7 @@ mod tests {
             whitelist: None,
             royalty: None,
             collection_info,
+            max_token_limit,
         };
         let token_contract_addr = app
             .instantiate_contract(
@@ -86,7 +87,7 @@ mod tests {
 
         #[test]
         fn test_happy_path() {
-            let (mut app, token_addr) = proper_instantiate();
+            let (mut app, token_addr) = proper_instantiate(None);
 
             let msg = ExecuteMsg::Mint {
                 owner: USER.to_string(),
@@ -115,7 +116,7 @@ mod tests {
 
         #[test]
         fn test_unhappy_path() {
-            let (mut app, token_addr) = proper_instantiate();
+            let (mut app, token_addr) = proper_instantiate(None);
 
             let mint_msg = ExecuteMsg::Mint {
                 owner: USER.to_string(),
@@ -194,6 +195,30 @@ mod tests {
             );
 
             // TODO: Add token per address limit test
+            // TODO: Add max token amount test
+        }
+
+        #[test]
+        fn test_max_token_limit() {
+            let (mut app, token_addr) = proper_instantiate(Some(2));
+
+            let msg = ExecuteMsg::Mint {
+                owner: USER.to_string(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap();
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::TokenLimitReached {}.to_string()
+            );
         }
     }
 
@@ -208,7 +233,7 @@ mod tests {
 
         #[test]
         fn test_app_level_locks_happy_path() {
-            let (mut app, token_addr) = proper_instantiate();
+            let (mut app, token_addr) = proper_instantiate(None);
 
             let locks = Locks {
                 burn_lock: false,
@@ -256,7 +281,7 @@ mod tests {
 
         #[test]
         fn test_token_level_locks_happy_path() {
-            let (mut app, token_addr) = proper_instantiate();
+            let (mut app, token_addr) = proper_instantiate(None);
 
             let locks = Locks {
                 burn_lock: false,
@@ -313,7 +338,7 @@ mod tests {
 
         #[test]
         fn test_happy_path() {
-            let (mut app, token_addr) = proper_instantiate();
+            let (mut app, token_addr) = proper_instantiate(None);
 
             let msg = ExecuteMsg::UpdatePerAddressLimit {
                 per_address_limit: Some(1),
@@ -343,7 +368,7 @@ mod tests {
 
         #[test]
         fn test_unhappy_path() {
-            let (mut app, token_addr) = proper_instantiate();
+            let (mut app, token_addr) = proper_instantiate(None);
 
             let msg = ExecuteMsg::UpdatePerAddressLimit {
                 per_address_limit: Some(1),

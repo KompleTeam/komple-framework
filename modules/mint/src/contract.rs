@@ -111,6 +111,7 @@ pub fn execute_create_collection(
                 start_time,
                 whitelist,
                 royalty,
+                max_token_limit: None,
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),

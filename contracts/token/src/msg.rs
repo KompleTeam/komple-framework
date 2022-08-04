@@ -23,6 +23,7 @@ pub struct InstantiateMsg {
     pub whitelist: Option<String>,
     pub royalty: Option<String>,
     pub collection_info: CollectionInfo,
+    pub max_token_limit: Option<u32>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
