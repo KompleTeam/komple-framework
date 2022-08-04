@@ -1,19 +1,45 @@
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, DepsMut, StdError};
+use rift_types::{
+    module::Modules,
+    query::{AddressResponse, ControllerQueryMsg},
+};
+use thiserror::Error;
 
-pub fn have_admin_privilages(
+pub fn check_admin_privilages(
     sender: &Addr,
     admin: &Addr,
     parent_contract: Option<&Addr>,
     enabled_modules: Option<&Vec<Addr>>,
-) -> bool {
+) -> Result<(), UtilError> {
     if admin != sender {
-        return false;
+        return Err(UtilError::Unauthorized {});
     }
     if parent_contract.is_some() && parent_contract.unwrap() != sender {
-        return false;
+        return Err(UtilError::Unauthorized {});
     }
     if enabled_modules.is_some() && !enabled_modules.unwrap().contains(&sender) {
-        return false;
+        return Err(UtilError::Unauthorized {});
     }
-    true
+    Ok(())
+}
+
+pub fn get_module_address(
+    deps: &DepsMut,
+    controller_addr: &Addr,
+    module: Modules,
+) -> Result<Addr, UtilError> {
+    let res: AddressResponse = deps
+        .querier
+        .query_wasm_smart(controller_addr, &ControllerQueryMsg::ModuleAddress(module))
+        .unwrap();
+    Ok(Addr::unchecked(res.address))
+}
+
+#[derive(Error, Debug, PartialEq)]
+pub enum UtilError {
+    #[error("{0}")]
+    Std(#[from] StdError),
+
+    #[error("Unauthorized")]
+    Unauthorized {},
 }
