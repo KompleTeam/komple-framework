@@ -1,5 +1,6 @@
 use cosmwasm_std::StdError;
 use thiserror::Error;
+use url::ParseError;
 
 use cw721_base::ContractError as Cw721ContractError;
 
@@ -35,6 +36,9 @@ pub enum ContractError {
     #[error("Minting has already started")]
     AlreadyStarted {},
 
+    #[error("Description too long")]
+    DescriptionTooLong {},
+
     #[error("token_id already claimed")]
     Claimed {},
 
@@ -46,6 +50,9 @@ pub enum ContractError {
 
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
+
+    #[error("{0}")]
+    Parse(#[from] ParseError),
 }
 
 impl From<Cw721ContractError> for ContractError {
