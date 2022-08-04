@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::{MetaInfo, Metadata, Trait};
+use crate::state::{MetaInfo, Trait};
 
 use rift_types::metadata::Metadata as MetadataType;
 

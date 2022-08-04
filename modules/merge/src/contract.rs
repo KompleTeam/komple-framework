@@ -9,7 +9,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use rift_types::module::Modules;
-use rift_types::query::{MultipleAddressResponse, ResponseWrapper};
+use rift_types::query::ResponseWrapper;
 use rift_utils::{
     check_admin_privileges, query_collection_address, query_linked_collections,
     query_module_address,

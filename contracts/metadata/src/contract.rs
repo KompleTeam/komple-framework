@@ -6,7 +6,7 @@ use rift_types::metadata::Metadata as MetadataType;
 use rift_utils::check_admin_privileges;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, LockResponse, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
     Config, MetaInfo, Metadata, Trait, COLLECTION_ADDR, CONFIG, DYNAMIC_METADATA, METADATA,
     METADATA_ID, STATIC_METADATA,

@@ -9,7 +9,7 @@ use cw_utils::parse_reply_instantiate_data;
 
 use rift_types::collection::Collections;
 use rift_types::module::Modules;
-use rift_types::query::{AddressResponse, MultipleAddressResponse, ResponseWrapper};
+use rift_types::query::ResponseWrapper;
 use rift_utils::{check_admin_privileges, query_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
