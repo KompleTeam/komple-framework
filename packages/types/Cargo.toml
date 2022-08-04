@@ -1,0 +1,9 @@
+[package]
+name = "rift-types"
+version = "0.1.0"
+authors = ["AnalogGhost <analoghost@proton.me>"]
+edition = "2018"
+
+[dependencies]
+schemars = "0.8.8"
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
