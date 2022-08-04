@@ -1,8 +1,9 @@
-use crate::msg::ExecuteMsg;
+use controller_contract::msg::ExecuteMsg;
 use cosmwasm_std::Addr;
 use cw_multi_test::Executor;
 
-use crate::tests::integration::helpers::{
+pub mod helpers;
+use helpers::{
     create_collection, get_collection_address, get_modules_addresses, mint_module, mint_token,
     mock_app, proper_instantiate, setup_all_modules, token_contract, ADMIN, USER,
 };
@@ -12,7 +13,7 @@ mod initialization {
 
     use rift_types::{module::Modules, query::AddressResponse};
 
-    use crate::{msg::QueryMsg, ContractError};
+    use controller_contract::{msg::QueryMsg, ContractError};
 
     #[test]
     fn test_happy_path() {
@@ -60,7 +61,7 @@ mod initialization {
 }
 
 mod permission_mint {
-    use crate::tests::integration::helpers::add_permission_for_module;
+    use helpers::add_permission_for_module;
 
     use super::*;
 
