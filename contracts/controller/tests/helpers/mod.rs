@@ -63,6 +63,15 @@ pub fn merge_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
+pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        marketplace_module::contract::execute,
+        marketplace_module::contract::instantiate,
+        marketplace_module::contract::query,
+    );
+    Box::new(contract)
+}
+
 pub fn mock_app() -> App {
     AppBuilder::new().build(|router, _, storage| {
         router
@@ -135,10 +144,23 @@ pub fn setup_permission_module(app: &mut App, controller_addr: Addr) {
         .unwrap();
 }
 
+pub fn setup_marketplace_module(app: &mut App, controller_addr: Addr) {
+    let marketplace_module_code_id = app.store_code(marketplace_module());
+
+    let msg = ExecuteMsg::InitMarketplaceModule {
+        code_id: marketplace_module_code_id,
+        native_denom: NATIVE_DENOM.to_string(),
+    };
+    let _ = app
+        .execute_contract(Addr::unchecked(ADMIN), controller_addr, &msg, &vec![])
+        .unwrap();
+}
+
 pub fn setup_all_modules(app: &mut App, controller_addr: Addr) {
     setup_mint_module(app, controller_addr.clone());
     setup_merge_module(app, controller_addr.clone());
     setup_permission_module(app, controller_addr.clone());
+    setup_marketplace_module(app, controller_addr.clone());
 }
 
 pub fn create_collection(
@@ -240,10 +262,11 @@ pub fn link_collection_to_collections(
         .unwrap();
 }
 
-pub fn get_modules_addresses(app: &mut App, controller_addr: &Addr) -> (Addr, Addr, Addr) {
+pub fn get_modules_addresses(app: &mut App, controller_addr: &Addr) -> (Addr, Addr, Addr, Addr) {
     let mint_module_addr: Addr;
     let merge_module_addr: Addr;
     let permission_module_addr: Addr;
+    let marketplace_module_addr: Addr;
 
     let res = query_module_address(&app.wrap(), controller_addr, Modules::MintModule);
     mint_module_addr = res.unwrap();
@@ -254,11 +277,19 @@ pub fn get_modules_addresses(app: &mut App, controller_addr: &Addr) -> (Addr, Ad
     let res = query_module_address(&app.wrap(), controller_addr, Modules::PermissionModule);
     permission_module_addr = res.unwrap();
 
+    let res = query_module_address(&app.wrap(), controller_addr, Modules::MarketplaceModule);
+    marketplace_module_addr = res.unwrap();
+
     // println!("");
     // println!("mint_module_addr: {}", mint_module_addr);
     // println!("merge_module_addr: {}", merge_module_addr);
     // println!("permission_module_addr: {}", permission_module_addr);
     // println!("");
 
-    (mint_module_addr, merge_module_addr, permission_module_addr)
+    (
+        mint_module_addr,
+        merge_module_addr,
+        permission_module_addr,
+        marketplace_module_addr,
+    )
 }
