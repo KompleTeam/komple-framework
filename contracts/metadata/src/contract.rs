@@ -78,14 +78,14 @@ fn execute_add_metadata(
     metadata: Metadata,
     attribute: Vec<Trait>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        Some(collection_addr),
+        collection_addr,
         None,
     )?;
 
@@ -108,14 +108,14 @@ fn execute_update_metadata(
     token_id: String,
     metadata: Metadata,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        Some(collection_addr),
+        collection_addr,
         None,
     )?;
     check_metadata_lock(&deps, &config, &token_id)?;
@@ -132,14 +132,14 @@ fn execute_add_attribute(
     token_id: String,
     attribute: Trait,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        Some(collection_addr.clone()),
+        collection_addr,
         None,
     )?;
     check_metadata_lock(&deps, &config, &token_id)?;
@@ -165,14 +165,14 @@ fn execute_update_attribute(
     token_id: String,
     attribute: Trait,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        Some(collection_addr.clone()),
+        collection_addr,
         None,
     )?;
     check_metadata_lock(&deps, &config, &token_id)?;
@@ -198,14 +198,14 @@ fn execute_remove_attribute(
     token_id: String,
     trait_type: String,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        Some(collection_addr.clone()),
+        collection_addr,
         None,
     )?;
     check_metadata_lock(&deps, &config, &token_id)?;
