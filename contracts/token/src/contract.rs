@@ -10,8 +10,9 @@ use url::Url;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
 use crate::state::{
-    CollectionInfo, Config, Contracts, Locks, COLLECTION_INFO, CONFIG, CONTRACTS, LOCKS,
-    MINTED_TOKEN_AMOUNTS, MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS, TOKEN_LOCKS,
+    CollectionConfig, CollectionInfo, Config, Contracts, Locks, COLLECTION_CONFIG, COLLECTION_INFO,
+    CONFIG, CONTRACTS, LOCKS, MINTED_TOKEN_AMOUNTS, MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS,
+    TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -64,14 +65,15 @@ pub fn instantiate(
         return Err(ContractError::InvalidStartTime {});
     };
 
-    let admin = deps.api.addr_validate(&msg.admin)?;
-
-    let config = Config {
-        admin,
+    let collection_config = CollectionConfig {
         per_address_limit: msg.per_address_limit,
         start_time: msg.start_time,
         max_token_limit: msg.max_token_limit,
     };
+    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
+
+    let admin = deps.api.addr_validate(&msg.admin)?;
+    let config = Config { admin };
     CONFIG.save(deps.storage, &config)?;
 
     LOCKS.save(deps.storage, &locks)?;
@@ -233,7 +235,7 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
-    let config = CONFIG.load(deps.storage)?;
+    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
 
     let locks = LOCKS.load(deps.storage)?;
     if locks.mint_lock {
@@ -247,7 +249,9 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
-    if config.max_token_limit.is_some() && token_id > config.max_token_limit.unwrap() {
+    if collection_config.max_token_limit.is_some()
+        && token_id > collection_config.max_token_limit.unwrap()
+    {
         return Err(ContractError::TokenLimitReached {});
     }
 
@@ -255,7 +259,9 @@ pub fn execute_mint(
         .may_load(deps.storage, &owner)?
         .unwrap_or(0);
 
-    if config.per_address_limit.is_some() && total_minted + 1 > config.per_address_limit.unwrap() {
+    if collection_config.per_address_limit.is_some()
+        && total_minted + 1 > collection_config.per_address_limit.unwrap()
+    {
         return Err(ContractError::TokenLimitReached {});
     }
 
@@ -382,14 +388,14 @@ pub fn execute_update_per_address_limit(
         None,
     )?;
 
-    let mut config = CONFIG.load(deps.storage)?;
+    let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
 
     if per_address_limit.is_some() && per_address_limit.unwrap() == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
-    config.per_address_limit = per_address_limit;
-    CONFIG.save(deps.storage, &config)?;
+    collection_config.per_address_limit = per_address_limit;
+    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
     Ok(Response::new().add_attribute("action", "update_per_address_limit"))
 }
@@ -411,9 +417,11 @@ fn execute_update_start_time(
         None,
     )?;
 
-    let mut config = CONFIG.load(deps.storage)?;
+    let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
 
-    if config.start_time.is_some() && env.block.time >= config.start_time.unwrap() {
+    if collection_config.start_time.is_some()
+        && env.block.time >= collection_config.start_time.unwrap()
+    {
         return Err(ContractError::AlreadyStarted {});
     }
 
@@ -422,12 +430,12 @@ fn execute_update_start_time(
             if env.block.time > time {
                 return Err(ContractError::InvalidStartTime {});
             }
-            config.start_time = start_time;
+            collection_config.start_time = start_time;
         }
-        None => config.start_time = None,
+        None => collection_config.start_time = None,
     }
 
-    CONFIG.save(deps.storage, &config)?;
+    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
     Ok(Response::new().add_attribute("action", "update_start_time"))
 }

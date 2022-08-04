@@ -18,11 +18,16 @@ pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new("collection_info");
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
+}
+pub const CONFIG: Item<Config> = Item::new("config");
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct CollectionConfig {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
 }
-pub const CONFIG: Item<Config> = Item::new("config");
+pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new("collection_config");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Contracts {
