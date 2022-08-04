@@ -74,7 +74,7 @@ mod normal_merge {
     };
     use rift_types::collection::Collections;
     use rift_utils::query_collection_address;
-    use token_contract::{msg::QueryMsg as TokenQueryMsg, state::Contracts};
+    use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
     fn test_happy_path() {
@@ -95,11 +95,6 @@ mod normal_merge {
             None,
             Collections::Normal,
             None,
-            Contracts {
-                whitelist: None,
-                royalty: None,
-                metadata: None,
-            },
         );
         create_collection(
             &mut app,
@@ -109,11 +104,6 @@ mod normal_merge {
             None,
             Collections::Normal,
             None,
-            Contracts {
-                whitelist: None,
-                royalty: None,
-                metadata: None,
-            },
         );
         create_collection(
             &mut app,
@@ -123,11 +113,6 @@ mod normal_merge {
             None,
             Collections::Normal,
             None,
-            Contracts {
-                whitelist: None,
-                royalty: None,
-                metadata: None,
-            },
         );
 
         link_collection_to_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
@@ -233,11 +218,6 @@ mod normal_merge {
             None,
             Collections::Normal,
             None,
-            Contracts {
-                whitelist: None,
-                royalty: None,
-                metadata: None,
-            },
         );
         create_collection(
             &mut app,
@@ -247,11 +227,6 @@ mod normal_merge {
             None,
             Collections::Normal,
             None,
-            Contracts {
-                whitelist: None,
-                royalty: None,
-                metadata: None,
-            },
         );
         create_collection(
             &mut app,
@@ -261,11 +236,6 @@ mod normal_merge {
             None,
             Collections::Normal,
             Some(vec![2]),
-            Contracts {
-                whitelist: None,
-                royalty: None,
-                metadata: None,
-            },
         );
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -398,7 +368,6 @@ mod permission_merge {
 
         use permission_module::msg::OwnershipMsg;
         use rift_utils::query_collection_address;
-        use token_contract::state::Contracts;
 
         #[test]
         fn test_happy_path() {
@@ -419,11 +388,6 @@ mod permission_merge {
                 None,
                 Collections::Normal,
                 None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
             );
             create_collection(
                 &mut app,
@@ -433,11 +397,6 @@ mod permission_merge {
                 None,
                 Collections::Normal,
                 None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
             );
             create_collection(
                 &mut app,
@@ -447,11 +406,6 @@ mod permission_merge {
                 None,
                 Collections::Normal,
                 None,
-                Contracts {
-                    whitelist: None,
-                    royalty: None,
-                    metadata: None,
-                },
             );
 
             link_collection_to_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);

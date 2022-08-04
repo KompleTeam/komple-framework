@@ -70,7 +70,6 @@ pub fn execute(
             per_address_limit,
             start_time,
             linked_collections,
-            contracts,
         } => execute_create_collection(
             deps,
             env,
@@ -81,7 +80,6 @@ pub fn execute(
             per_address_limit,
             start_time,
             linked_collections,
-            contracts,
         ),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
         ExecuteMsg::Mint { collection_id } => execute_mint(deps, env, info, collection_id),
@@ -111,7 +109,6 @@ pub fn execute_create_collection(
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
     linked_collections: Option<Vec<u32>>,
-    contracts: Contracts,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -132,7 +129,11 @@ pub fn execute_create_collection(
         per_address_limit,
         start_time,
         max_token_limit: None,
-        contracts,
+        contracts: Contracts {
+            metadata: None,
+            whitelist: None,
+            royalty: None,
+        },
     };
 
     // Instantiate token contract
