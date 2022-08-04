@@ -22,7 +22,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, QueryMsg};
 use crate::state::{
     Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, CONTROLLER_ADDR,
-    LINKED_COLLECTIONS, WHITELIST_ADDRS,
+    LINKED_COLLECTIONS, OPERATORS,
 };
 
 // version info for migration info
@@ -93,9 +93,7 @@ pub fn execute(
             permission_msg,
             collection_ids,
         } => execute_permission_mint(deps, env, info, permission_msg, collection_ids),
-        ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
-            execute_update_whitelist_addresses(deps, env, info, addrs)
-        }
+        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::UpdateLinkedCollections {
             collection_id,
             linked_collections,
@@ -116,7 +114,7 @@ pub fn execute_create_collection(
     contracts: Contracts,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -124,7 +122,7 @@ pub fn execute_create_collection(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addr,
+        operators,
     )?;
 
     let instantiate_msg = TokenInstantiateMsg {
@@ -187,7 +185,7 @@ pub fn execute_update_mint_lock(
     lock: bool,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -195,7 +193,7 @@ pub fn execute_update_mint_lock(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addrs,
+        operators,
     )?;
 
     config.mint_lock = lock;
@@ -234,7 +232,7 @@ fn execute_mint_to(
     recipient: String,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -242,7 +240,7 @@ fn execute_mint_to(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addrs,
+        operators,
     )?;
 
     let owner = deps.api.addr_validate(&recipient)?;
@@ -321,14 +319,14 @@ fn _execute_mint(
         .add_attribute("action", action))
 }
 
-fn execute_update_whitelist_addresses(
+fn execute_update_operators(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -336,10 +334,10 @@ fn execute_update_whitelist_addresses(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addrs,
+        operators,
     )?;
 
-    let whitelist_addrs = addrs
+    let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
@@ -347,7 +345,7 @@ fn execute_update_whitelist_addresses(
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
-    WHITELIST_ADDRS.save(deps.storage, &whitelist_addrs)?;
+    OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
 }
@@ -360,7 +358,7 @@ fn execute_update_linked_collections(
     linked_collections: Vec<u32>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -368,7 +366,7 @@ fn execute_update_linked_collections(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addrs,
+        operators,
     )?;
 
     if linked_collections.contains(&collection_id) {
@@ -409,7 +407,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::CollectionAddress(collection_id) => {
             to_binary(&query_collection_address(deps, collection_id)?)
         }
-        QueryMsg::WhitelistAddresses {} => to_binary(&query_whitelist_addresses(deps)?),
+        QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
         QueryMsg::CollectionTypes(collection_type) => {
             to_binary(&query_collection_types(deps, collection_type)?)
         }
@@ -429,13 +427,13 @@ fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<Respons
     Ok(ResponseWrapper::new("collection_address", addr.to_string()))
 }
 
-fn query_whitelist_addresses(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
-    let addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = OPERATORS.may_load(deps.storage)?;
     let addrs = match addrs {
         Some(addrs) => addrs.iter().map(|a| a.to_string()).collect(),
         None => vec![],
     };
-    Ok(ResponseWrapper::new("whitelist_addresses", addrs))
+    Ok(ResponseWrapper::new("operators", addrs))
 }
 
 fn query_collection_types(

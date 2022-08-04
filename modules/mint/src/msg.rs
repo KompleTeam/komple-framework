@@ -39,7 +39,7 @@ pub enum ExecuteMsg {
         permission_msg: Binary,
         collection_ids: Vec<u32>,
     },
-    UpdateWhitelistAddresses {
+    UpdateOperators {
         addrs: Vec<String>,
     },
     UpdateLinkedCollections {
@@ -53,7 +53,7 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     Config {},
     CollectionAddress(u32),
-    WhitelistAddresses {},
+    Operators {},
     CollectionTypes(Collections),
     LinkedCollections { collection_id: u32 },
 }

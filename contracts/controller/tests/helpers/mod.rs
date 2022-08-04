@@ -230,8 +230,8 @@ pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sen
         .unwrap();
 }
 
-pub fn setup_mint_module_whitelist(app: &mut App, mint_module_addr: Addr, addrs: Vec<String>) {
-    let msg = MintExecuteMsg::UpdateWhitelistAddresses { addrs };
+pub fn setup_mint_module_operators(app: &mut App, mint_module_addr: Addr, addrs: Vec<String>) {
+    let msg = MintExecuteMsg::UpdateOperators { addrs };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
         .unwrap();

@@ -87,7 +87,7 @@ mod tests {
                 .unwrap();
             assert_eq!(res.data.merge_lock, true);
 
-            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+            let msg = ExecuteMsg::UpdateOperators {
                 addrs: vec![USER.to_string()],
             };
             let _ = app
@@ -153,7 +153,7 @@ mod tests {
             let mut app = mock_app();
             let merge_module_addr = proper_instantiate(&mut app);
 
-            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+            let msg = ExecuteMsg::UpdateOperators {
                 addrs: vec![RANDOM.to_string()],
             };
             let _ = app
@@ -165,7 +165,7 @@ mod tests {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::WhitelistAddresses {};
+            let msg = QueryMsg::Operators {};
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(merge_module_addr, &msg)
@@ -178,7 +178,7 @@ mod tests {
             let mut app = mock_app();
             let merge_module_addr = proper_instantiate(&mut app);
 
-            let msg = ExecuteMsg::UpdateWhitelistAddresses {
+            let msg = ExecuteMsg::UpdateOperators {
                 addrs: vec![RANDOM.to_string()],
             };
             let err = app

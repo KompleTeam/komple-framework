@@ -15,7 +15,7 @@ use rift_utils::{
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg};
-use crate::state::{Config, CONFIG, CONTROLLER_ADDR, MODULE_PERMISSIONS, WHITELIST_ADDRS};
+use crate::state::{Config, CONFIG, CONTROLLER_ADDR, MODULE_PERMISSIONS, OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rift-permission-module";
@@ -52,9 +52,7 @@ pub fn execute(
             module,
             permissions,
         } => execute_update_module_permissions(deps, env, info, module, permissions),
-        ExecuteMsg::UpdateWhitelistAddresses { addrs } => {
-            execute_update_whitelist_addresses(deps, env, info, addrs)
-        }
+        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::Check { module, msg } => execute_check(deps, env, info, module, msg),
     }
 }
@@ -67,7 +65,7 @@ fn execute_update_module_permissions(
     permissions: Vec<Permissions>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -75,7 +73,7 @@ fn execute_update_module_permissions(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addrs,
+        operators,
     )?;
 
     MODULE_PERMISSIONS.save(deps.storage, module.as_str(), &permissions)?;
@@ -90,14 +88,14 @@ fn execute_update_module_permissions(
         ))
 }
 
-fn execute_update_whitelist_addresses(
+fn execute_update_operators(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let whitelist_addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -105,10 +103,10 @@ fn execute_update_whitelist_addresses(
         &env.contract.address,
         &config.admin,
         controller_addr,
-        whitelist_addrs,
+        operators,
     )?;
 
-    let whitelist_addrs = addrs
+    let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
@@ -116,9 +114,9 @@ fn execute_update_whitelist_addresses(
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
-    WHITELIST_ADDRS.save(deps.storage, &whitelist_addrs)?;
+    OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
 fn execute_check(
@@ -205,7 +203,7 @@ fn check_ownership_permission(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::ModulePermissions(module) => to_binary(&query_module_permissions(deps, module)?),
-        QueryMsg::WhitelistAddresses {} => to_binary(&query_whitelist_addresses(deps)?),
+        QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
 
@@ -220,10 +218,10 @@ fn query_module_permissions(
     ))
 }
 
-fn query_whitelist_addresses(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
-    let addrs = WHITELIST_ADDRS.load(deps.storage)?;
+fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = OPERATORS.load(deps.storage)?;
     Ok(ResponseWrapper::new(
-        "whitelist_addresses",
+        "operators",
         addrs.iter().map(|a| a.to_string()).collect(),
     ))
 }
