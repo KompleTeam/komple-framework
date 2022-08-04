@@ -10,8 +10,8 @@ use url::Url;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
 use crate::state::{
-    CollectionInfo, Config, Locks, COLLECTION_INFO, CONFIG, LOCKS, MINTED_TOKEN_AMOUNTS,
-    MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS, TOKEN_LOCKS,
+    CollectionInfo, Config, Contracts, Locks, COLLECTION_INFO, CONFIG, CONTRACTS, LOCKS,
+    MINTED_TOKEN_AMOUNTS, MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -42,12 +42,23 @@ pub fn instantiate(
     };
 
     let whitelist = msg
+        .contracts
         .whitelist
         .and_then(|w| deps.api.addr_validate(w.as_str()).ok());
-
     let royalty = msg
+        .contracts
         .royalty
         .and_then(|r| deps.api.addr_validate(r.as_str()).ok());
+    let metadata = msg
+        .contracts
+        .metadata
+        .and_then(|m| deps.api.addr_validate(m.as_str()).ok());
+    let contracts = Contracts {
+        whitelist,
+        royalty,
+        metadata,
+    };
+    CONTRACTS.save(deps.storage, &contracts)?;
 
     if msg.start_time.is_some() && env.block.time > msg.start_time.unwrap() {
         return Err(ContractError::InvalidStartTime {});
@@ -59,8 +70,6 @@ pub fn instantiate(
         admin,
         per_address_limit: msg.per_address_limit,
         start_time: msg.start_time,
-        whitelist,
-        royalty,
         max_token_limit: msg.max_token_limit,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -144,6 +153,9 @@ pub fn execute(
             execute_update_whitelist(deps, env, info, whitelist)
         }
         ExecuteMsg::UpdateRoyalty { royalty } => execute_update_royalty(deps, env, info, royalty),
+        ExecuteMsg::UpdateMetadata { metadata } => {
+            execute_update_metadata(deps, env, info, metadata)
+        }
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
             match res {
@@ -437,10 +449,9 @@ fn execute_update_whitelist(
         None,
     )?;
 
-    let mut config = CONFIG.load(deps.storage)?;
-
-    config.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
-    CONFIG.save(deps.storage, &config)?;
+    let mut contracts = CONTRACTS.load(deps.storage)?;
+    contracts.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
+    CONTRACTS.save(deps.storage, &contracts)?;
 
     Ok(Response::new().add_attribute("action", "update_whitelist"))
 }
@@ -462,12 +473,35 @@ fn execute_update_royalty(
         None,
     )?;
 
-    let mut config = CONFIG.load(deps.storage)?;
-
-    config.royalty = royalty.and_then(|r| deps.api.addr_validate(r.as_str()).ok());
-    CONFIG.save(deps.storage, &config)?;
+    let mut contracts = CONTRACTS.load(deps.storage)?;
+    contracts.royalty = royalty.and_then(|r| deps.api.addr_validate(r.as_str()).ok());
+    CONTRACTS.save(deps.storage, &contracts)?;
 
     Ok(Response::new().add_attribute("action", "update_royalty"))
+}
+
+fn execute_update_metadata(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    metadata: Option<String>,
+) -> Result<Response, ContractError> {
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
+
+    let mut contracts = CONTRACTS.load(deps.storage)?;
+    contracts.metadata = metadata.and_then(|m| deps.api.addr_validate(m.as_str()).ok());
+    CONTRACTS.save(deps.storage, &contracts)?;
+
+    Ok(Response::new().add_attribute("action", "update_metadata"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

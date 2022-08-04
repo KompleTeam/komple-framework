@@ -6,7 +6,7 @@ mod tests {
 
     use crate::{
         msg::{InstantiateMsg, TokenInfo},
-        state::CollectionInfo,
+        state::{CollectionInfo, Contracts},
     };
 
     pub fn token_contract() -> Box<dyn Contract<Empty>> {
@@ -53,15 +53,19 @@ mod tests {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
         };
+        let contracts = Contracts {
+            whitelist: None,
+            royalty: None,
+            metadata: None,
+        };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             token_info,
             per_address_limit: None,
             start_time: None,
-            whitelist: None,
-            royalty: None,
             collection_info,
             max_token_limit,
+            contracts,
         };
         let token_contract_addr = app
             .instantiate_contract(

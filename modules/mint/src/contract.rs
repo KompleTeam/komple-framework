@@ -14,7 +14,7 @@ use rift_utils::{check_admin_privileges, get_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
 };
-use token_contract::state::CollectionInfo;
+use token_contract::state::{CollectionInfo, Contracts};
 
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
@@ -69,9 +69,8 @@ pub fn execute(
             token_info,
             per_address_limit,
             start_time,
-            whitelist,
-            royalty,
             linked_collections,
+            contracts,
         } => execute_create_collection(
             deps,
             env,
@@ -81,9 +80,8 @@ pub fn execute(
             token_info,
             per_address_limit,
             start_time,
-            whitelist,
-            royalty,
             linked_collections,
+            contracts,
         ),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
         ExecuteMsg::Mint { collection_id } => execute_mint(deps, env, info, collection_id),
@@ -114,9 +112,8 @@ pub fn execute_create_collection(
     token_info: TokenInfo,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
-    whitelist: Option<String>,
-    royalty: Option<String>,
     linked_collections: Option<Vec<u32>>,
+    contracts: Contracts,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
     let whitelist_addr = WHITELIST_ADDRS.may_load(deps.storage)?;
@@ -130,20 +127,21 @@ pub fn execute_create_collection(
         whitelist_addr,
     )?;
 
+    let instantiate_msg = TokenInstantiateMsg {
+        admin: config.admin.to_string(),
+        token_info,
+        collection_info: collection_info.clone(),
+        per_address_limit,
+        start_time,
+        max_token_limit: None,
+        contracts,
+    };
+
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&TokenInstantiateMsg {
-                admin: config.admin.to_string(),
-                token_info,
-                collection_info: collection_info.clone(),
-                per_address_limit,
-                start_time,
-                whitelist,
-                royalty,
-                max_token_limit: None,
-            })?,
+            msg: to_binary(&instantiate_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: String::from("Rift Framework Token Contract"),

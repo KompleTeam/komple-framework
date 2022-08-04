@@ -4,7 +4,10 @@ mod tests {
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
     use rift_types::collection::Collections;
-    use token_contract::{msg::TokenInfo, state::CollectionInfo};
+    use token_contract::{
+        msg::TokenInfo,
+        state::{CollectionInfo, Contracts},
+    };
 
     pub fn minter_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
@@ -80,15 +83,19 @@ mod tests {
             symbol: "TEST".to_string(),
             minter: minter_addr.to_string(),
         };
+        let contracts = Contracts {
+            whitelist: None,
+            royalty: None,
+            metadata: None,
+        };
         let msg = ExecuteMsg::CreateCollection {
             code_id: token_code_id,
             collection_info,
             token_info,
             per_address_limit: None,
             start_time: None,
-            whitelist: None,
-            royalty: None,
             linked_collections,
+            contracts,
         };
         let _ = app
             .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])

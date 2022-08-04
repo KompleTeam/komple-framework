@@ -69,7 +69,7 @@ mod permission_mint {
     use mint_module::msg::ExecuteMsg as MintExecuteMsg;
     use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
     use rift_types::{collection::Collections, module::Modules, permission::Permissions};
-    use token_contract::msg::QueryMsg as TokenQueryMsg;
+    use token_contract::{msg::QueryMsg as TokenQueryMsg, state::Contracts};
 
     #[test]
     fn test_happy_path() {
@@ -88,10 +88,13 @@ mod permission_mint {
             token_contract_code_id,
             None,
             None,
-            None,
-            None,
             Collections::Normal,
             None,
+            Contracts {
+                whitelist: None,
+                royalty: None,
+                metadata: None,
+            },
         );
         create_collection(
             &mut app,
@@ -99,10 +102,13 @@ mod permission_mint {
             token_contract_code_id,
             None,
             None,
-            None,
-            None,
             Collections::Normal,
             None,
+            Contracts {
+                whitelist: None,
+                royalty: None,
+                metadata: None,
+            },
         );
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);

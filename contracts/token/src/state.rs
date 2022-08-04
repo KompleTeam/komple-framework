@@ -20,11 +20,17 @@ pub struct Config {
     pub admin: Addr,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
-    pub whitelist: Option<Addr>,
-    pub royalty: Option<Addr>,
     pub max_token_limit: Option<u32>,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct Contracts {
+    pub metadata: Option<Addr>,
+    pub whitelist: Option<Addr>,
+    pub royalty: Option<Addr>,
+}
+pub const CONTRACTS: Item<Contracts> = Item::new("contracts");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Locks {

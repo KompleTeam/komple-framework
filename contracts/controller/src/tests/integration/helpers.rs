@@ -7,7 +7,7 @@ use rift_types::{
 };
 use token_contract::{
     msg::{ExecuteMsg as TokenExecuteMsg, TokenInfo},
-    state::CollectionInfo,
+    state::{CollectionInfo, Contracts},
 };
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -148,10 +148,9 @@ pub fn create_collection(
     token_contract_code_id: u64,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
-    whitelist: Option<String>,
-    royalty: Option<String>,
     collection_type: Collections,
     linked_collections: Option<Vec<u32>>,
+    contracts: Contracts,
 ) {
     let collection_info = CollectionInfo {
         collection_type,
@@ -170,9 +169,8 @@ pub fn create_collection(
         token_info,
         per_address_limit,
         start_time,
-        whitelist,
-        royalty,
         linked_collections,
+        contracts,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])

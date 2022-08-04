@@ -4,7 +4,7 @@ use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::{CollectionInfo, Locks};
+use crate::state::{CollectionInfo, Contracts, Locks};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -20,10 +20,9 @@ pub struct InstantiateMsg {
     pub token_info: TokenInfo,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
-    pub whitelist: Option<String>,
-    pub royalty: Option<String>,
     pub collection_info: CollectionInfo,
     pub max_token_limit: Option<u32>,
+    pub contracts: Contracts,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -79,6 +78,9 @@ pub enum ExecuteMsg {
     },
     UpdateRoyalty {
         royalty: Option<String>,
+    },
+    UpdateMetadata {
+        metadata: Option<String>,
     },
 }
 
