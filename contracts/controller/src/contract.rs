@@ -81,13 +81,19 @@ pub fn execute(
 
 fn execute_init_mint_module(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, None, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        None,
+    )?;
 
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
@@ -112,13 +118,19 @@ fn execute_init_mint_module(
 
 fn execute_init_permission_module(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, None, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        None,
+    )?;
 
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
@@ -143,13 +155,19 @@ fn execute_init_permission_module(
 
 fn execute_init_merge_module(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(&info.sender, &config.admin, None, None)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        None,
+    )?;
 
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {

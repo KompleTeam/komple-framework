@@ -1,7 +1,8 @@
 use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use mint_module::msg::{ExecuteMsg as MintExecuteMsg, QueryMsg as MintQueryMsg};
-use rift_types::{module::Modules, query::AddressResponse};
+use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use rift_types::{module::Modules, permission::Permissions, query::AddressResponse};
 use token_contract::{
     msg::{ExecuteMsg as TokenExecuteMsg, TokenInfo},
     state::CollectionInfo,
@@ -10,6 +11,7 @@ use token_contract::{
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 pub const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
+pub const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
 pub const ADMIN: &str = "juno1qamfln8u5w8d3vlhp5t9mhmylfkgad4jz6t7cv";
 pub const NATIVE_DENOM: &str = "denom";
 
@@ -197,6 +199,26 @@ pub fn give_approval_to_module(
     };
     let _ = app
         .execute_contract(Addr::unchecked(owner), token_contract_addr, &msg, &vec![])
+        .unwrap();
+}
+
+pub fn add_permission_for_module(
+    app: &mut App,
+    permission_module_addr: Addr,
+    module: Modules,
+    permissions: Vec<Permissions>,
+) {
+    let msg = PermissionExecuteMsg::UpdateModulePermissions {
+        module,
+        permissions,
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            permission_module_addr,
+            &msg,
+            &vec![],
+        )
         .unwrap();
 }
 
