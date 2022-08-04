@@ -29,6 +29,7 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
+    // CW721 MESSAGES
     TransferNft {
         recipient: String,
         token_id: String,
@@ -60,7 +61,14 @@ pub enum ExecuteMsg {
     Burn {
         token_id: String,
     },
-    // Custom execute messages
+
+    // ADMIN MESSAGES
+    AdminTransferNft {
+        recipient: String,
+        token_id: String,
+    },
+
+    // LOCK MESSAGES
     UpdateLocks {
         locks: Locks,
     },
@@ -71,6 +79,8 @@ pub enum ExecuteMsg {
     UpdateOperationLock {
         lock: bool,
     },
+
+    // CONFIG MESSAGES
     UpdatePerAddressLimit {
         per_address_limit: Option<u32>,
     },
@@ -86,6 +96,8 @@ pub enum ExecuteMsg {
     UpdateMetadata {
         metadata: Option<String>,
     },
+
+    // CONTRACT MESSAGES
     InitMetadataContract {
         code_id: u64,
         metadata_type: MetadataType,
