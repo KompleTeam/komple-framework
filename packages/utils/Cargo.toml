@@ -8,3 +8,4 @@ edition = "2018"
 cosmwasm-std = { version = "1.0.0" }
 rift-types = { path = "../types" }
 thiserror = "1.0.30"
+cw721 = "0.13.2"

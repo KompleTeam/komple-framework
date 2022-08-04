@@ -1,7 +1,7 @@
 use cosmwasm_std::{Binary, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use rift_types::metadata::Metadata as MetadataType;
+use rift_types::{metadata::Metadata as MetadataType, query::TokenContractQueryMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -243,6 +243,20 @@ impl From<QueryMsg> for Cw721QueryMsg {
             }
             QueryMsg::Minter {} => Cw721QueryMsg::Minter {},
             _ => unreachable!("cannot convert {:?} to Cw721QueryMsg", msg),
+        }
+    }
+}
+
+impl From<TokenContractQueryMsg> for QueryMsg {
+    fn from(msg: TokenContractQueryMsg) -> QueryMsg {
+        match msg {
+            TokenContractQueryMsg::OwnerOf {
+                token_id,
+                include_expired,
+            } => QueryMsg::OwnerOf {
+                token_id,
+                include_expired,
+            },
         }
     }
 }

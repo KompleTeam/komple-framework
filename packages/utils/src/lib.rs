@@ -1,7 +1,8 @@
-use cosmwasm_std::{Addr, DepsMut, StdError};
+use cosmwasm_std::{Addr, DepsMut, QuerierWrapper, StdError, StdResult};
+use cw721::OwnerOfResponse;
 use rift_types::{
     module::Modules,
-    query::{AddressResponse, ControllerQueryMsg, MintModuleQueryMsg},
+    query::{AddressResponse, ControllerQueryMsg, MintModuleQueryMsg, TokenContractQueryMsg},
 };
 use thiserror::Error;
 
@@ -32,11 +33,11 @@ pub fn check_admin_privileges(
     }
 }
 
-pub fn get_module_address(
+pub fn query_module_address(
     deps: &DepsMut,
     controller_addr: &Addr,
     module: Modules,
-) -> Result<Addr, UtilError> {
+) -> StdResult<Addr> {
     let res: AddressResponse = deps
         .querier
         .query_wasm_smart(controller_addr, &ControllerQueryMsg::ModuleAddress(module))
@@ -44,11 +45,11 @@ pub fn get_module_address(
     Ok(Addr::unchecked(res.address))
 }
 
-pub fn get_collection_address(
+pub fn query_collection_address(
     deps: &DepsMut,
     module_address: &Addr,
     collection_id: u32,
-) -> Result<Addr, UtilError> {
+) -> StdResult<Addr> {
     let res: AddressResponse = deps
         .querier
         .query_wasm_smart(
@@ -59,11 +60,11 @@ pub fn get_collection_address(
     Ok(Addr::unchecked(res.address))
 }
 
-pub fn get_linked_collections(
+pub fn query_linked_collections(
     deps: &DepsMut,
     module_address: &Addr,
     collection_id: u32,
-) -> Result<Vec<u32>, UtilError> {
+) -> StdResult<Vec<u32>> {
     let res: Vec<u32> = deps
         .querier
         .query_wasm_smart(
@@ -72,6 +73,23 @@ pub fn get_linked_collections(
         )
         .unwrap();
     Ok(res)
+}
+
+pub fn query_token_owner(
+    querier: &QuerierWrapper,
+    collection_addr: &Addr,
+    token_id: String,
+) -> StdResult<Addr> {
+    let res: OwnerOfResponse = querier
+        .query_wasm_smart(
+            collection_addr,
+            &TokenContractQueryMsg::OwnerOf {
+                token_id,
+                include_expired: None,
+            },
+        )
+        .unwrap();
+    Ok(Addr::unchecked(res.owner))
 }
 
 #[derive(Error, Debug, PartialEq)]
