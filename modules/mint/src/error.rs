@@ -1,4 +1,5 @@
 use cosmwasm_std::StdError;
+use rift_utils::UtilError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -18,6 +19,6 @@ pub enum ContractError {
     #[error("Error while instantiating token contract")]
     TokenInstantiateError {},
 
-    #[error("Custom Error val: {val:?}")]
-    CustomError { val: String },
+    #[error("{0}")]
+    Util(#[from] UtilError),
 }

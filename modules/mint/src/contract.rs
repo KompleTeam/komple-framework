@@ -9,6 +9,7 @@ use cw_utils::parse_reply_instantiate_data;
 
 use rift_types::module::Modules;
 use rift_types::query::{AddressResponse, ControllerQueryMsg};
+use rift_utils::{check_admin_privileges, get_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
 };
@@ -103,9 +104,10 @@ pub fn execute_create_collection(
     whitelist: Option<String>,
     royalty: Option<String>,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
-
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
@@ -144,7 +146,10 @@ pub fn execute_update_mint_lock(
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
 
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -184,7 +189,10 @@ fn execute_mint_to(
     collection_id: u32,
     recipient: String,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(&info.sender, &config.admin, Some(&controller_addr), None)?;
 
     let owner = deps.api.addr_validate(&recipient)?;
 
@@ -199,12 +207,8 @@ fn execute_permission_mint(
     _mint_msg: Binary,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
-    let msg = ControllerQueryMsg::ModuleAddress(Modules::PermissionModule);
-    let res: AddressResponse = deps
-        .querier
-        .query_wasm_smart(controller_addr, &msg)
-        .unwrap();
-    let permission_module_addr = res.address;
+    let permission_module_addr =
+        get_module_address(&deps, &controller_addr, Modules::PermissionModule)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
@@ -213,7 +217,7 @@ fn execute_permission_mint(
         msg: permission_msg,
     };
     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: permission_module_addr,
+        contract_addr: permission_module_addr.to_string(),
         msg: to_binary(&permission_msg)?,
         funds: info.funds,
     }));
@@ -287,15 +291,4 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         }
         Err(_) => Err(ContractError::TokenInstantiateError {}),
     }
-}
-
-fn can_execute(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
-
-    if config.admin != info.sender && controller_addr != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    Ok(true)
 }
