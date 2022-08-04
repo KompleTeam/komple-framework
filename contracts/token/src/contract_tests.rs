@@ -2,7 +2,7 @@
 mod tests {
     use crate::{
         contract::{execute, instantiate, query},
-        msg::{ExecuteMsg, QueryMsg},
+        msg::{ExecuteMsg, LocksReponse, QueryMsg},
         state::Locks,
         ContractError,
     };
@@ -75,7 +75,9 @@ mod tests {
             transfer_lock: true,
             send_lock: false,
         };
-        let msg = ExecuteMsg::UpdateLocks { locks };
+        let msg = ExecuteMsg::UpdateLocks {
+            locks: locks.clone(),
+        };
 
         let res = execute(deps.as_mut(), mock_env(), random_info.clone(), msg.clone()).unwrap_err();
         assert_eq!(res, ContractError::Unauthorized {});
@@ -91,6 +93,10 @@ mod tests {
                 attr("send_lock", "false"),
             ]
         );
+
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::Locks {}).unwrap();
+        let data: LocksReponse = from_binary(&res).unwrap();
+        assert_eq!(data.locks, locks);
 
         let msg: ExecuteMsg<Empty> = ExecuteMsg::Mint(MintMsg {
             token_id: "1".to_string(),
