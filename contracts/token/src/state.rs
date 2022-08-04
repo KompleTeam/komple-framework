@@ -52,6 +52,6 @@ pub const OPERATION_LOCK: Item<bool> = Item::new("operation_lock");
 
 pub const TOKEN_IDS: Item<u32> = Item::new("token_ids");
 
-pub const MINTED_TOKEN_AMOUNTS: Map<&str, u32> = Map::new("minted_token_amounts");
+pub const MINTED_TOKENS_PER_ADDR: Map<&str, u32> = Map::new("minted_tokens_per_addr");
 
 pub const MINT_MODULE_ADDR: Item<Addr> = Item::new("mint_module_addr");

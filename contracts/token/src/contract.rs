@@ -11,7 +11,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, LocksReponse, MintedTokenAmountResponse, QueryMsg};
 use crate::state::{
     CollectionConfig, CollectionInfo, Config, Contracts, Locks, COLLECTION_CONFIG, COLLECTION_INFO,
-    CONFIG, CONTRACTS, LOCKS, MINTED_TOKEN_AMOUNTS, MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS,
+    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATION_LOCK, TOKEN_IDS,
     TOKEN_LOCKS,
 };
 
@@ -255,7 +255,7 @@ pub fn execute_mint(
         return Err(ContractError::TokenLimitReached {});
     }
 
-    let total_minted = MINTED_TOKEN_AMOUNTS
+    let total_minted = MINTED_TOKENS_PER_ADDR
         .may_load(deps.storage, &owner)?
         .unwrap_or(0);
 
@@ -274,7 +274,7 @@ pub fn execute_mint(
         extension: Empty {},
     };
 
-    MINTED_TOKEN_AMOUNTS.save(deps.storage, &owner, &(total_minted + 1))?;
+    MINTED_TOKENS_PER_ADDR.save(deps.storage, &owner, &(total_minted + 1))?;
     TOKEN_IDS.save(deps.storage, &token_id)?;
 
     let res = Cw721Contract::default().mint(deps, env, info, mint_msg);
@@ -517,8 +517,8 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Locks {} => to_binary(&query_locks(deps)?),
         QueryMsg::TokenLocks { token_id } => to_binary(&query_token_locks(deps, token_id)?),
-        QueryMsg::MintedTokenAmount { address } => {
-            to_binary(&query_minted_token_amount(deps, address)?)
+        QueryMsg::MintedTokensPerAddress { address } => {
+            to_binary(&query_minted_tokens_per_address(deps, address)?)
         }
         QueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
         _ => Cw721Contract::default().query(deps, env, msg.into()),
@@ -535,8 +535,11 @@ fn query_token_locks(deps: Deps, token_id: String) -> StdResult<LocksReponse> {
     Ok(LocksReponse { locks })
 }
 
-fn query_minted_token_amount(deps: Deps, address: String) -> StdResult<MintedTokenAmountResponse> {
-    let amount = MINTED_TOKEN_AMOUNTS
+fn query_minted_tokens_per_address(
+    deps: Deps,
+    address: String,
+) -> StdResult<MintedTokenAmountResponse> {
+    let amount = MINTED_TOKENS_PER_ADDR
         .may_load(deps.storage, &address)?
         .unwrap_or(0);
     Ok(MintedTokenAmountResponse { amount })
