@@ -17,6 +17,7 @@ pub enum ExecuteMsg {
     InitMintModule { code_id: u64 },
     InitPermissionModule { code_id: u64 },
     InitMergeModule { code_id: u64 },
+    InitMarketplaceModule { code_id: u64, native_denom: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
