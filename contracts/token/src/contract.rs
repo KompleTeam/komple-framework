@@ -721,6 +721,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_binary(&query_minted_tokens_per_address(deps, address)?)
         }
         QueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
+        QueryMsg::Contracts {} => to_binary(&query_contracts(deps)?),
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
 }
@@ -747,10 +748,15 @@ fn query_collection_info(deps: Deps) -> StdResult<ResponseWrapper<CollectionInfo
     Ok(ResponseWrapper::new("collection_info", collection_info))
 }
 
+fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<Contracts>> {
+    let contracts = CONTRACTS.load(deps.storage)?;
+    Ok(ResponseWrapper::new("contracts", contracts))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     if msg.id != METADATA_CONTRACT_INSTANTIATE_REPLY_ID
-        || msg.id != ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID
+        && msg.id != ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID
     {
         return Err(ContractError::InvalidReplyID {});
     }
