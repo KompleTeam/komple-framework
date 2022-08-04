@@ -37,8 +37,6 @@ pub fn get_module_address(
     controller_addr: &Addr,
     module: Modules,
 ) -> Result<Addr, UtilError> {
-    println!("controller_addr: {:?}", controller_addr);
-    println!("module: {:?}", module);
     let res: AddressResponse = deps
         .querier
         .query_wasm_smart(controller_addr, &ControllerQueryMsg::ModuleAddress(module))
