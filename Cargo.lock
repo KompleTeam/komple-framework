@@ -499,6 +499,8 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus",
  "cw2",
+ "rift-types",
+ "rift-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -684,6 +686,7 @@ dependencies = [
 name = "rift-types"
 version = "0.1.0"
 dependencies = [
+ "cosmwasm-std",
  "schemars",
  "serde",
 ]

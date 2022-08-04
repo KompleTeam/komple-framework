@@ -144,7 +144,7 @@ mod normal_merge {
         );
 
         let collection_1_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, 1).unwrap();
+            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         give_approval_to_module(
             &mut app,
             collection_1_addr.clone(),
@@ -152,7 +152,7 @@ mod normal_merge {
             &merge_module_addr,
         );
         let collection_3_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, 3).unwrap();
+            query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
         give_approval_to_module(
             &mut app,
             collection_3_addr.clone(),
@@ -201,7 +201,7 @@ mod normal_merge {
         assert!(res.is_err());
 
         let collection_2_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, 2).unwrap();
+            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
         let msg = TokenQueryMsg::OwnerOf {
             token_id: "1".to_string(),
@@ -357,7 +357,7 @@ mod normal_merge {
 
         setup_mint_module_whitelist(&mut app, mint_module_addr.clone(), vec![]);
         let collection_1_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, 1).unwrap();
+            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         give_approval_to_module(
             &mut app,
             collection_1_addr.clone(),
@@ -468,7 +468,7 @@ mod permission_merge {
             );
 
             let collection_1_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, 1).unwrap();
+                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
             give_approval_to_module(
                 &mut app,
                 collection_1_addr.clone(),
@@ -476,7 +476,7 @@ mod permission_merge {
                 &merge_module_addr,
             );
             let collection_3_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, 3).unwrap();
+                query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
             give_approval_to_module(
                 &mut app,
                 collection_3_addr.clone(),
@@ -551,7 +551,7 @@ mod permission_merge {
             assert!(res.is_err());
 
             let collection_2_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, 2).unwrap();
+                query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
             let msg = TokenQueryMsg::OwnerOf {
                 token_id: "1".to_string(),

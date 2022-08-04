@@ -1,4 +1,5 @@
 pub mod collection;
+pub mod marketplace;
 pub mod metadata;
 pub mod module;
 pub mod permission;
