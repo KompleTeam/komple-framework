@@ -932,6 +932,7 @@ dependencies = [
  "serde",
  "thiserror",
  "url",
+ "whitelist-contract",
 ]
 
 [[package]]

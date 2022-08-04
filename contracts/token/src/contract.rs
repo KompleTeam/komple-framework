@@ -26,6 +26,7 @@ use cw721_base::MintMsg;
 
 use metadata_contract::msg::InstantiateMsg as MetadataInstantiateMsg;
 use royalty_contract::msg::InstantiateMsg as RoyaltyInstantiateMsg;
+use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
@@ -37,6 +38,7 @@ const MAX_DESCRIPTION_LENGTH: u32 = 512;
 
 const METADATA_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 1;
 const ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 2;
+const WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 3;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -193,6 +195,10 @@ pub fn execute(
             share,
             royalty_type,
         } => execute_init_royalty_contract(deps, env, info, code_id, share, royalty_type),
+        ExecuteMsg::InitWhitelistContract {
+            code_id,
+            instantiate_msg,
+        } => execute_init_whitelist_contract(deps, env, info, code_id, instantiate_msg),
 
         // CW721 MESSAGES
         _ => {
@@ -243,6 +249,7 @@ pub fn execute_update_locks(
     locks: Locks,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -250,7 +257,7 @@ pub fn execute_update_locks(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     LOCKS.save(deps.storage, &locks)?;
@@ -271,6 +278,7 @@ pub fn execute_update_token_locks(
     locks: Locks,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -278,7 +286,7 @@ pub fn execute_update_token_locks(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
@@ -444,6 +452,7 @@ pub fn execute_admin_transfer(
     let config = CONFIG.load(deps.storage)?;
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
+
     check_admin_privileges(
         &info.sender,
         &&env.contract.address,
@@ -496,6 +505,7 @@ pub fn execute_update_per_address_limit(
     per_address_limit: Option<u32>,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -503,7 +513,7 @@ pub fn execute_update_per_address_limit(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
@@ -525,6 +535,7 @@ fn execute_update_start_time(
     start_time: Option<Timestamp>,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -532,7 +543,7 @@ fn execute_update_start_time(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
@@ -565,6 +576,7 @@ fn execute_update_whitelist(
     whitelist: Option<String>,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -572,7 +584,7 @@ fn execute_update_whitelist(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     let mut contracts = CONTRACTS.load(deps.storage)?;
@@ -589,6 +601,7 @@ fn execute_update_royalty(
     royalty: Option<String>,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -596,7 +609,7 @@ fn execute_update_royalty(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     let mut contracts = CONTRACTS.load(deps.storage)?;
@@ -613,6 +626,7 @@ fn execute_update_metadata(
     metadata: Option<String>,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -620,7 +634,7 @@ fn execute_update_metadata(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     let mut contracts = CONTRACTS.load(deps.storage)?;
@@ -638,6 +652,7 @@ fn execute_init_metadata_contract(
     metadata_type: MetadataType,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -645,7 +660,7 @@ fn execute_init_metadata_contract(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     let sub_msg: SubMsg = SubMsg {
@@ -679,6 +694,7 @@ fn execute_init_royalty_contract(
     royalty_type: Royalty,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -686,7 +702,7 @@ fn execute_init_royalty_contract(
         &env.contract.address,
         &config.admin,
         mint_module_addr,
-        None,
+        operators,
     )?;
 
     let sub_msg: SubMsg = SubMsg {
@@ -710,6 +726,44 @@ fn execute_init_royalty_contract(
     Ok(Response::new()
         .add_submessage(sub_msg)
         .add_attribute("action", "execute_init_royalty_contract"))
+}
+
+fn execute_init_whitelist_contract(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    code_id: u64,
+    instantiate_msg: WhitelistInstantiateMsg,
+) -> Result<Response, ContractError> {
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        operators,
+    )?;
+
+    let sub_msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id,
+            msg: to_binary(&instantiate_msg)?,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: String::from("Rift Framework Whitelist Contract"),
+        }
+        .into(),
+        id: WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("action", "execute_init_whitelist_contract"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -757,6 +811,7 @@ fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<Contracts>> {
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     if msg.id != METADATA_CONTRACT_INSTANTIATE_REPLY_ID
         && msg.id != ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID
+        && msg.id != WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID
     {
         return Err(ContractError::InvalidReplyID {});
     }
@@ -774,6 +829,10 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
                 ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID => {
                     contracts.royalty = Some(Addr::unchecked(res.contract_address));
                     contract = "royalty";
+                }
+                WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID => {
+                    contracts.whitelist = Some(Addr::unchecked(res.contract_address));
+                    contract = "whitelist";
                 }
                 _ => unreachable!(),
             }

@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::state::{CollectionInfo, Contracts};
 
+use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct TokenInfo {
@@ -112,6 +113,10 @@ pub enum ExecuteMsg {
         code_id: u64,
         share: Decimal,
         royalty_type: Royalty,
+    },
+    InitWhitelistContract {
+        code_id: u64,
+        instantiate_msg: WhitelistInstantiateMsg,
     },
 }
 
