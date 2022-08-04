@@ -212,6 +212,17 @@ pub fn setup_mint_module_whitelist(app: &mut App, mint_module_addr: Addr, addrs:
         .unwrap();
 }
 
+pub fn setup_token_contract_operators(
+    app: &mut App,
+    token_contract_addr: Addr,
+    addrs: Vec<String>,
+) {
+    let msg = TokenExecuteMsg::UpdateOperators { addrs };
+    let _ = app
+        .execute_contract(Addr::unchecked(ADMIN), token_contract_addr, &msg, &vec![])
+        .unwrap();
+}
+
 pub fn give_approval_to_module(
     app: &mut App,
     token_contract_addr: Addr,
