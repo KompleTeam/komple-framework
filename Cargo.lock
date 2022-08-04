@@ -525,6 +525,7 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus",
  "cw2",
+ "rift-types",
  "rift-utils",
  "schemars",
  "serde",

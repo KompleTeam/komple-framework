@@ -6,6 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
+use rift_types::metadata::Metadata as MetadataType;
 use rift_utils::check_admin_privileges;
 use url::Url;
 
@@ -164,9 +165,10 @@ pub fn execute(
         ExecuteMsg::UpdateMetadata { metadata } => {
             execute_update_metadata(deps, env, info, metadata)
         }
-        ExecuteMsg::InitMetadataContract { code_id } => {
-            execute_init_metadata_contract(deps, env, info, code_id)
-        }
+        ExecuteMsg::InitMetadataContract {
+            code_id,
+            metadata_type,
+        } => execute_init_metadata_contract(deps, env, info, code_id, metadata_type),
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
             match res {
@@ -526,6 +528,7 @@ fn execute_init_metadata_contract(
     env: Env,
     info: MessageInfo,
     code_id: u64,
+    metadata_type: MetadataType,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
@@ -543,6 +546,7 @@ fn execute_init_metadata_contract(
             code_id,
             msg: to_binary(&MetadataInstantiateMsg {
                 admin: config.admin.to_string(),
+                metadata_type,
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
