@@ -10,13 +10,16 @@ use cw2::set_contract_version;
 use rift_types::marketplace::Listing;
 use rift_types::module::Modules;
 use rift_types::query::ResponseWrapper;
-use rift_utils::{query_collection_address, query_module_address, query_token_owner};
+use rift_utils::{
+    query_collection_address, query_collection_locks, query_module_address, query_token_locks,
+    query_token_operation_lock, query_token_owner,
+};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, CONTROLLER_ADDR, FIXED_LISTING};
 
-use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
+use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:minter";
@@ -95,13 +98,27 @@ fn execute_list_fixed_token(
     token_id: u32,
     price: Uint128,
 ) -> Result<Response, ContractError> {
-    let owner = get_token_owner(&deps, &collection_id, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id, &token_id)?;
+    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    // TODO: Check for token permissions
+    let operation_lock = query_token_operation_lock(&deps.querier, &collection_addr)?;
+    if operation_lock {
+        return Err(TokenContractError::TransferLocked {}.into());
+    }
+
+    let collection_locks = query_collection_locks(&deps.querier, &collection_addr)?;
+    if collection_locks.transfer_lock {
+        return Err(TokenContractError::TransferLocked {}.into());
+    }
+
+    let token_locks = query_token_locks(&deps.querier, &collection_addr, &token_id)?;
+    if token_locks.transfer_lock {
+        return Err(TokenContractError::TransferLocked {}.into());
+    }
 
     let fixed_listing = FixedListing {
         collection_id,
@@ -121,7 +138,8 @@ fn execute_delist_fixed_token(
     collection_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
-    let owner = get_token_owner(&deps, &collection_id, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id, &token_id)?;
+    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
@@ -141,7 +159,8 @@ fn execute_update_price(
     token_id: u32,
     price: Uint128,
 ) -> Result<Response, ContractError> {
-    let owner = get_token_owner(&deps, &collection_id, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id, &token_id)?;
+    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
@@ -238,7 +257,7 @@ fn check_funds(info: &MessageInfo, config: &Config, price: Uint128) -> Result<()
     Ok(())
 }
 
-fn get_token_owner(
+fn get_collection_address(
     deps: &DepsMut,
     collection_id: &u32,
     token_id: &u32,
@@ -248,8 +267,7 @@ fn get_token_owner(
         query_module_address(&deps.querier, &controller_addr, Modules::MintModule)?;
     let collection_addr =
         query_collection_address(&deps.querier, &mint_module_addr, collection_id)?;
-    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
-    Ok(owner)
+    Ok(collection_addr)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -71,6 +71,7 @@ dependencies = [
  "cw-utils",
  "cw2",
  "cw721",
+ "marketplace-module",
  "merge-module",
  "mint-module",
  "permission-module",

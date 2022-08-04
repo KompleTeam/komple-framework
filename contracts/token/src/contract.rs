@@ -8,13 +8,14 @@ use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 use rift_types::metadata::Metadata as MetadataType;
 use rift_types::query::ResponseWrapper;
+use rift_types::tokens::Locks;
 use rift_utils::check_admin_privileges;
 use url::Url;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
-    CollectionConfig, CollectionInfo, Config, Contracts, Locks, COLLECTION_CONFIG, COLLECTION_INFO,
+    CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO,
     CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATION_LOCK, OPERATORS,
     TOKEN_IDS, TOKEN_LOCKS,
 };

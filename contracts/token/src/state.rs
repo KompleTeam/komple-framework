@@ -1,4 +1,7 @@
-use rift_types::collection::Collections;
+use rift_types::{
+    collection::Collections,
+    tokens::{Locks, LOCKS_NAMESPACE, OPERATION_LOCK_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -37,18 +40,11 @@ pub struct Contracts {
 }
 pub const CONTRACTS: Item<Contracts> = Item::new("contracts");
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Locks {
-    pub burn_lock: bool,
-    pub mint_lock: bool,
-    pub transfer_lock: bool,
-    pub send_lock: bool,
-}
-pub const LOCKS: Item<Locks> = Item::new("locks");
+pub const LOCKS: Item<Locks> = Item::new(LOCKS_NAMESPACE);
 
-pub const TOKEN_LOCKS: Map<&str, Locks> = Map::new("token_locks");
+pub const TOKEN_LOCKS: Map<&str, Locks> = Map::new(TOKEN_LOCKS_NAMESPACE);
 
-pub const OPERATION_LOCK: Item<bool> = Item::new("operation_lock");
+pub const OPERATION_LOCK: Item<bool> = Item::new(OPERATION_LOCK_NAMESPACE);
 
 pub const TOKEN_IDS: Item<u32> = Item::new("token_ids");
 

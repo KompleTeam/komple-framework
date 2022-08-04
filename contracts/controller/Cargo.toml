@@ -55,6 +55,7 @@ rift-types = { path = "../../packages/types" }
 rift-utils = { path = "../../packages/utils" }
 merge-module = { path = "../../modules/merge" }
 cw721 = "0.13.2"
+marketplace-module = { path = "../../modules/marketplace" }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"

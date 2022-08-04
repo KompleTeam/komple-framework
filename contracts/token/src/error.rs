@@ -13,16 +13,16 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Minting is locked")]
+    #[error("Token mint locked")]
     MintLocked {},
 
-    #[error("Burning is locked")]
+    #[error("Token burn locked")]
     BurnLocked {},
 
-    #[error("Transferring is locked")]
+    #[error("Token transfer locked")]
     TransferLocked {},
 
-    #[error("Sending is locked")]
+    #[error("token send locked")]
     SendLocked {},
 
     #[error("Per address limit must be greater than 0")]
