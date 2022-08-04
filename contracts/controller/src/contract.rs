@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult,
-    SubMsg, WasmMsg,
+    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
+    Response, StdResult, SubMsg, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
@@ -11,7 +11,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetCollectionResponse, InstantiateMsg, QueryMsg};
 use crate::state::{Config, ControllerInfo, COLLECTIONS, COLLECTION_ID, CONFIG, CONTROLLER_INFO};
 
-use mint::msg::InstantiateMsg as MintInstantiateMsg;
+use mint::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:controller";
@@ -65,6 +65,10 @@ pub fn execute(
         ExecuteMsg::UpdateMintCodeId { code_id } => {
             execute_update_mint_code_id(deps, env, info, code_id)
         }
+        ExecuteMsg::UpdateMintLock {
+            collection_id,
+            lock,
+        } => execute_update_mint_lock(deps, env, info, collection_id, lock),
         ExecuteMsg::AddCollection { instantiate_msg } => {
             execute_add_collection(deps, env, info, instantiate_msg)
         }
@@ -92,6 +96,33 @@ fn execute_update_mint_code_id(
     Ok(Response::new()
         .add_attribute("action", "update_mint_code_id")
         .add_attribute("code_id", code_id.to_string()))
+}
+
+fn execute_update_mint_lock(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    collection_id: u32,
+    lock: bool,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    let collection_address = COLLECTIONS.load(deps.storage, collection_id)?;
+
+    let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: collection_address.to_string(),
+        msg: to_binary(&MintExecuteMsg::UpdateMintLock { mint_lock: lock })?,
+        funds: vec![],
+    });
+
+    Ok(Response::new()
+        .add_message(msg)
+        .add_attribute("action", "update_mint_lock")
+        .add_attribute("collection_id", collection_id.to_string())
+        .add_attribute("lock", lock.to_string()))
 }
 
 fn execute_add_collection(

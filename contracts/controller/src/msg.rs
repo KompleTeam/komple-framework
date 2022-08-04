@@ -17,6 +17,7 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     UpdateMintCodeId { code_id: u64 },
     AddCollection { instantiate_msg: MintInstantiateMsg },
+    UpdateMintLock { collection_id: u32, lock: bool },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
