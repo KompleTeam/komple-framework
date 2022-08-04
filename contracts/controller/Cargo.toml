@@ -47,16 +47,16 @@ cw2 = "0.13.2"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-mint-module = { path = "../../modules/mint" }
+mint-module = { path = "../mint" }
 token-contract = { path = "../token" }
-permission-module = { path = "../../modules/permission" }
+permission-module = { path = "../permission"  }
 cw-utils = "0.13.2"
 rift-types = { path = "../../packages/types" }
 rift-utils = { path = "../../packages/utils" }
-merge-module = { path = "../../modules/merge" }
+merge-module = { path = "../merge"  }
 cw721 = "0.13.2"
-marketplace-module = { path = "../../modules/marketplace" }
-royalty-contract = { path = "../royalty" }
+marketplace-module = { path = "../marketplace"  }
+royalty-contract = { path = "../royalty"  }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"

@@ -54,7 +54,7 @@ rift-types = { path = "../../packages/types" }
 rift-utils = { path = "../../packages/utils" }
 metadata-contract = { path = "../metadata" }
 royalty-contract = { path = "../royalty" }
-whitelist-contract = { path = "../whitelist" }
+whitelist-contract = { path = "../whitelist", features = ["library"]  }
 cw-utils = "0.13.2"
 
 [dev-dependencies]
