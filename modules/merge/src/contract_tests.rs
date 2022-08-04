@@ -55,6 +55,8 @@ mod tests {
     }
 
     mod merge_lock {
+        use rift_types::query::ResponseWrapper;
+
         use super::*;
 
         use crate::{
@@ -79,11 +81,11 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::Config {};
-            let res: Config = app
+            let res: ResponseWrapper<Config> = app
                 .wrap()
                 .query_wasm_smart(merge_module_addr.clone(), &msg)
                 .unwrap();
-            assert_eq!(res.merge_lock, true);
+            assert_eq!(res.data.merge_lock, true);
 
             let msg = ExecuteMsg::UpdateWhitelistAddresses {
                 addrs: vec![USER.to_string()],
@@ -108,11 +110,11 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::Config {};
-            let res: Config = app
+            let res: ResponseWrapper<Config> = app
                 .wrap()
                 .query_wasm_smart(merge_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res.merge_lock, false);
+            assert_eq!(res.data.merge_lock, false);
         }
 
         #[test]
@@ -139,7 +141,7 @@ mod tests {
     mod whitelist_addresses {
         use super::*;
 
-        use rift_types::query::MultipleAddressResponse;
+        use rift_types::query::{MultipleAddressResponse, ResponseWrapper};
 
         use crate::{
             msg::{ExecuteMsg, QueryMsg},
@@ -164,11 +166,11 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::WhitelistAddresses {};
-            let res: MultipleAddressResponse = app
+            let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(merge_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res.addresses, vec![RANDOM.to_string()]);
+            assert_eq!(res.data, vec![RANDOM.to_string()]);
         }
 
         #[test]

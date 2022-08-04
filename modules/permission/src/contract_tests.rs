@@ -62,7 +62,7 @@ mod tests {
             ContractError,
         };
 
-        use rift_types::{module::Modules, permission::Permissions};
+        use rift_types::{module::Modules, permission::Permissions, query::ResponseWrapper};
 
         #[test]
         fn test_update_happy_path() {
@@ -83,11 +83,11 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::ModulePermissions(Modules::MintModule);
-            let res: Vec<Permissions> = app
+            let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr.clone(), &msg)
                 .unwrap();
-            assert_eq!(res, vec![Permissions::Ownership]);
+            assert_eq!(res.data, vec![Permissions::Ownership.as_str()]);
 
             let msg = ExecuteMsg::UpdateModulePermissions {
                 module: Modules::PermissionModule,
@@ -103,11 +103,17 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::ModulePermissions(Modules::PermissionModule);
-            let res: Vec<Permissions> = app
+            let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr.clone(), &msg)
                 .unwrap();
-            assert_eq!(res, vec![Permissions::Attribute, Permissions::Ownership]);
+            assert_eq!(
+                res.data,
+                vec![
+                    Permissions::Attribute.as_str(),
+                    Permissions::Ownership.as_str()
+                ]
+            );
 
             let msg = ExecuteMsg::UpdateWhitelistAddresses {
                 addrs: vec![USER.to_string()],
@@ -135,11 +141,11 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::ModulePermissions(Modules::MintModule);
-            let res: Vec<Permissions> = app
+            let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res, vec![Permissions::Attribute]);
+            assert_eq!(res.data, vec![Permissions::Attribute.as_str()]);
         }
 
         #[test]
@@ -169,7 +175,7 @@ mod tests {
     mod whitelist_addresses {
         use super::*;
 
-        use rift_types::query::MultipleAddressResponse;
+        use rift_types::query::{MultipleAddressResponse, ResponseWrapper};
 
         use crate::{
             msg::{ExecuteMsg, QueryMsg},
@@ -194,11 +200,11 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::WhitelistAddresses {};
-            let res: MultipleAddressResponse = app
+            let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res.addresses, vec![RANDOM.to_string()]);
+            assert_eq!(res.data, vec![RANDOM.to_string()]);
         }
 
         #[test]

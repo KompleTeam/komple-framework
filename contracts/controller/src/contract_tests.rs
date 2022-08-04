@@ -85,7 +85,7 @@ mod modules {
             ContractError,
         };
 
-        use rift_types::{module::Modules, query::AddressResponse};
+        use rift_types::{module::Modules, query::ResponseWrapper};
 
         #[test]
         fn test_init_happy_path() {
@@ -106,11 +106,11 @@ mod modules {
                 .unwrap();
 
             let msg = QueryMsg::ModuleAddress(Modules::MintModule);
-            let res: AddressResponse = app
+            let res: ResponseWrapper<String> = app
                 .wrap()
                 .query_wasm_smart(controller_contract_addr, &msg)
                 .unwrap();
-            assert_eq!(res.address, "contract1")
+            assert_eq!(res.data, "contract1")
         }
 
         #[test]
@@ -145,7 +145,7 @@ mod modules {
             ContractError,
         };
 
-        use rift_types::{module::Modules, query::AddressResponse};
+        use rift_types::{module::Modules, query::ResponseWrapper};
 
         #[test]
         fn test_init_module() {
@@ -166,11 +166,11 @@ mod modules {
                 .unwrap();
 
             let msg = QueryMsg::ModuleAddress(Modules::PermissionModule);
-            let res: AddressResponse = app
+            let res: ResponseWrapper<String> = app
                 .wrap()
                 .query_wasm_smart(controller_contract_addr, &msg)
                 .unwrap();
-            assert_eq!(res.address, "contract1")
+            assert_eq!(res.data, "contract1")
         }
 
         #[test]

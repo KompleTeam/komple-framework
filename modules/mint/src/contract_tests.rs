@@ -109,7 +109,7 @@ mod tests {
             ContractError,
         };
         use cw721::OwnerOfResponse;
-        use rift_types::query::AddressResponse;
+        use rift_types::query::{AddressResponse, ResponseWrapper};
         use token_contract::msg::QueryMsg as TokenQueryMsg;
 
         #[test]
@@ -124,8 +124,9 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::CollectionAddress(1);
-            let response: AddressResponse = app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-            let token_address = response.address;
+            let response: ResponseWrapper<String> =
+                app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+            let token_address = response.data;
 
             let msg = TokenQueryMsg::OwnerOf {
                 token_id: "1".to_string(),
@@ -159,6 +160,8 @@ mod tests {
     }
 
     mod locks {
+        use rift_types::query::ResponseWrapper;
+
         use super::*;
         use crate::{
             msg::{ExecuteMsg, QueryMsg},
@@ -176,12 +179,15 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::Config {};
-            let response: Config = app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-            assert_eq!(response.mint_lock, true);
+            let response: ResponseWrapper<Config> =
+                app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+            assert_eq!(response.data.mint_lock, true);
         }
     }
 
     mod collections {
+        use rift_types::query::ResponseWrapper;
+
         use super::*;
 
         use crate::{
@@ -208,15 +214,16 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::LinkedCollections { collection_id: 2 };
-            let res: Vec<u32> = app
+            let res: ResponseWrapper<Vec<u32>> = app
                 .wrap()
                 .query_wasm_smart(minter_addr.clone(), &msg)
                 .unwrap();
-            assert_eq!(res, vec![1]);
+            assert_eq!(res.data, vec![1]);
 
             let msg = QueryMsg::LinkedCollections { collection_id: 4 };
-            let res: Vec<u32> = app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-            assert_eq!(res, vec![1, 3]);
+            let res: ResponseWrapper<Vec<u32>> =
+                app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+            assert_eq!(res.data, vec![1, 3]);
         }
 
         #[test]

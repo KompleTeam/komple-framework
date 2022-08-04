@@ -7,6 +7,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 use rift_types::metadata::Metadata as MetadataType;
+use rift_types::query::ResponseWrapper;
 use rift_utils::check_admin_privileges;
 use url::Url;
 
@@ -576,29 +577,26 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_locks(deps: Deps) -> StdResult<LocksReponse> {
+fn query_locks(deps: Deps) -> StdResult<ResponseWrapper<Locks>> {
     let locks = LOCKS.load(deps.storage)?;
-    Ok(LocksReponse { locks })
+    Ok(ResponseWrapper::new("locks", locks))
 }
 
-fn query_token_locks(deps: Deps, token_id: String) -> StdResult<LocksReponse> {
+fn query_token_locks(deps: Deps, token_id: String) -> StdResult<ResponseWrapper<Locks>> {
     let locks = TOKEN_LOCKS.load(deps.storage, &token_id)?;
-    Ok(LocksReponse { locks })
+    Ok(ResponseWrapper::new("locks", locks))
 }
 
-fn query_minted_tokens_per_address(
-    deps: Deps,
-    address: String,
-) -> StdResult<MintedTokenAmountResponse> {
+fn query_minted_tokens_per_address(deps: Deps, address: String) -> StdResult<ResponseWrapper<u32>> {
     let amount = MINTED_TOKENS_PER_ADDR
         .may_load(deps.storage, &address)?
         .unwrap_or(0);
-    Ok(MintedTokenAmountResponse { amount })
+    Ok(ResponseWrapper::new("minted_tokens_per_address", amount))
 }
 
-fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
+fn query_collection_info(deps: Deps) -> StdResult<ResponseWrapper<CollectionInfo>> {
     let collection_info = COLLECTION_INFO.load(deps.storage)?;
-    Ok(collection_info)
+    Ok(ResponseWrapper::new("collection_info", collection_info))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

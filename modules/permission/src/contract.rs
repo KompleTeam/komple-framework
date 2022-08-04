@@ -8,7 +8,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use rift_types::module::Modules;
 use rift_types::permission::Permissions;
-use rift_types::query::MultipleAddressResponse;
+use rift_types::query::{MultipleAddressResponse, ResponseWrapper};
 use rift_utils::{
     check_admin_privileges, query_collection_address, query_module_address, query_token_owner,
 };
@@ -213,14 +213,21 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_module_permissions(deps: Deps, module: Modules) -> StdResult<Vec<Permissions>> {
+fn query_module_permissions(
+    deps: Deps,
+    module: Modules,
+) -> StdResult<ResponseWrapper<Vec<String>>> {
     let permissions = MODULE_PERMISSIONS.load(deps.storage, module.as_str())?;
-    Ok(permissions)
+    Ok(ResponseWrapper::new(
+        "module_permissions",
+        permissions.iter().map(|p| p.as_str().to_string()).collect(),
+    ))
 }
 
-fn query_whitelist_addresses(deps: Deps) -> StdResult<MultipleAddressResponse> {
+fn query_whitelist_addresses(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
     let addrs = WHITELIST_ADDRS.load(deps.storage)?;
-    Ok(MultipleAddressResponse {
-        addresses: addrs.iter().map(|a| a.to_string()).collect(),
-    })
+    Ok(ResponseWrapper::new(
+        "whitelist_addresses",
+        addrs.iter().map(|a| a.to_string()).collect(),
+    ))
 }

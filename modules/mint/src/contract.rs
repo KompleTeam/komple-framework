@@ -9,7 +9,7 @@ use cw_utils::parse_reply_instantiate_data;
 
 use rift_types::collection::Collections;
 use rift_types::module::Modules;
-use rift_types::query::{AddressResponse, MultipleAddressResponse};
+use rift_types::query::{AddressResponse, MultipleAddressResponse, ResponseWrapper};
 use rift_utils::{check_admin_privileges, query_module_address};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
@@ -419,42 +419,50 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<Config> {
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     let config = CONFIG.load(deps.storage)?;
-    Ok(config)
+    Ok(ResponseWrapper::new("config", config))
 }
 
-fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<AddressResponse> {
+fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<ResponseWrapper<String>> {
     let addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
-    Ok(AddressResponse {
-        address: addr.to_string(),
-    })
+    Ok(ResponseWrapper::new("collection_address", addr.to_string()))
 }
 
-fn query_whitelist_addresses(deps: Deps) -> StdResult<MultipleAddressResponse> {
+fn query_whitelist_addresses(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
     let addrs = WHITELIST_ADDRS.may_load(deps.storage)?;
-    match addrs {
-        Some(addrs) => Ok(MultipleAddressResponse {
-            addresses: addrs.iter().map(|a| a.to_string()).collect(),
-        }),
-        None => Ok(MultipleAddressResponse { addresses: vec![] }),
-    }
+    let addrs = match addrs {
+        Some(addrs) => addrs.iter().map(|a| a.to_string()).collect(),
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new("whitelist_addresses", addrs))
 }
 
-fn query_collection_types(deps: Deps, collection_type: Collections) -> StdResult<Vec<u32>> {
+fn query_collection_types(
+    deps: Deps,
+    collection_type: Collections,
+) -> StdResult<ResponseWrapper<Vec<u32>>> {
     let collection_ids = COLLECTION_TYPES.may_load(deps.storage, collection_type.as_str())?;
-    match collection_ids {
-        Some(ids) => Ok(ids),
-        None => Ok(vec![]),
-    }
+    let collection_ids = match collection_ids {
+        Some(ids) => ids,
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new("collection_types", collection_ids))
 }
 
-fn query_linked_collections(deps: Deps, collection_id: u32) -> StdResult<Vec<u32>> {
+fn query_linked_collections(
+    deps: Deps,
+    collection_id: u32,
+) -> StdResult<ResponseWrapper<Vec<u32>>> {
     let linked_collection_ids = LINKED_COLLECTIONS.may_load(deps.storage, collection_id)?;
-    match linked_collection_ids {
-        Some(linked_collection_ids) => Ok(linked_collection_ids),
-        None => Ok(vec![]),
-    }
+    let linked_collection_ids = match linked_collection_ids {
+        Some(linked_collection_ids) => linked_collection_ids,
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new(
+        "linked_collections",
+        linked_collection_ids,
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

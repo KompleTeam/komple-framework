@@ -6,6 +6,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
+use rift_types::query::ResponseWrapper;
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -266,39 +267,49 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
     let config = CONFIG.load(deps.storage)?;
     let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    Ok(ConfigResponse {
+    let config_res = ConfigResponse {
         admin: config.admin.to_string(),
         start_time: whitelist_config.start_time,
         end_time: whitelist_config.end_time,
         unit_price: whitelist_config.unit_price,
         per_address_limit: whitelist_config.per_address_limit,
         member_limit: whitelist_config.member_limit,
-    })
+    };
+    Ok(ResponseWrapper::new("config", config_res))
 }
 
-fn query_has_started(deps: Deps, env: Env) -> StdResult<bool> {
+fn query_has_started(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
     let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    Ok(env.block.time >= whitelist_config.start_time)
+    Ok(ResponseWrapper::new(
+        "has_started",
+        env.block.time >= whitelist_config.start_time,
+    ))
 }
 
-fn query_has_ended(deps: Deps, env: Env) -> StdResult<bool> {
+fn query_has_ended(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
     let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    Ok(env.block.time >= whitelist_config.end_time)
+    Ok(ResponseWrapper::new(
+        "has_end",
+        env.block.time >= whitelist_config.end_time,
+    ))
 }
 
-fn query_is_active(deps: Deps, env: Env) -> StdResult<bool> {
+fn query_is_active(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
     let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    Ok(env.block.time >= whitelist_config.start_time && env.block.time < whitelist_config.end_time)
+    Ok(ResponseWrapper::new(
+        "is_active",
+        env.block.time >= whitelist_config.start_time && env.block.time < whitelist_config.end_time,
+    ))
 }
 
 fn query_members(
     deps: Deps,
     start_after: Option<String>,
     limit: Option<u8>,
-) -> StdResult<Vec<String>> {
+) -> StdResult<ResponseWrapper<Vec<String>>> {
     let limit = limit.unwrap_or(10) as usize;
     let start_addr = maybe_addr(deps.api, start_after)?;
     let start = start_addr.map(Bound::exclusive);
@@ -307,12 +318,11 @@ fn query_members(
         .take(limit)
         .map(|addr| addr.unwrap().0.to_string())
         .collect::<Vec<String>>();
-
-    Ok(members)
+    Ok(ResponseWrapper::new("members", members))
 }
 
-fn query_has_member(deps: Deps, member: String) -> StdResult<bool> {
+fn query_has_member(deps: Deps, member: String) -> StdResult<ResponseWrapper<bool>> {
     let addr = deps.api.addr_validate(&member)?;
     let exists = WHITELIST.has(deps.storage, addr);
-    Ok(exists)
+    Ok(ResponseWrapper::new("has_member", exists))
 }

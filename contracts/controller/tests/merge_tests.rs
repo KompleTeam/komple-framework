@@ -4,9 +4,9 @@ use cw_multi_test::Executor;
 
 pub mod helpers;
 use helpers::{
-    create_collection, get_collection_address, get_modules_addresses, give_approval_to_module,
-    merge_module, mint_token, mock_app, proper_instantiate, setup_all_modules,
-    setup_mint_module_whitelist, token_contract, ADMIN, USER,
+    create_collection, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
+    mock_app, proper_instantiate, setup_all_modules, setup_mint_module_whitelist, token_contract,
+    ADMIN, USER,
 };
 
 mod initialization {
@@ -15,6 +15,7 @@ mod initialization {
     use rift_types::{module::Modules, query::AddressResponse};
 
     use controller_contract::{msg::QueryMsg, ContractError};
+    use rift_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
@@ -32,9 +33,9 @@ mod initialization {
             &vec![],
         );
 
-        let msg = QueryMsg::ModuleAddress(Modules::MergeModule);
-        let res: AddressResponse = app.wrap().query_wasm_smart(controller_addr, &msg).unwrap();
-        assert_eq!(res.address, "contract1")
+        let res =
+            query_module_address(&app.wrap(), &controller_addr, Modules::MergeModule).unwrap();
+        assert_eq!(res, "contract1")
     }
 
     #[test]
@@ -72,6 +73,7 @@ mod normal_merge {
         ContractError as MergeContractError,
     };
     use rift_types::collection::Collections;
+    use rift_utils::query_collection_address;
     use token_contract::{msg::QueryMsg as TokenQueryMsg, state::Contracts};
 
     #[test]
@@ -82,7 +84,7 @@ mod normal_merge {
         setup_all_modules(&mut app, controller_addr.clone());
 
         let (mint_module_addr, merge_module_addr, _) =
-            get_modules_addresses(&mut app, &controller_addr.to_string());
+            get_modules_addresses(&mut app, &controller_addr);
 
         let token_contract_code_id = app.store_code(token_contract());
         create_collection(
@@ -141,14 +143,16 @@ mod normal_merge {
             vec![merge_module_addr.to_string()],
         );
 
-        let collection_1_addr = get_collection_address(&mut app, &mint_module_addr.to_string(), 1);
+        let collection_1_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, 1).unwrap();
         give_approval_to_module(
             &mut app,
             collection_1_addr.clone(),
             USER,
             &merge_module_addr,
         );
-        let collection_3_addr = get_collection_address(&mut app, &mint_module_addr.to_string(), 3);
+        let collection_3_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, 3).unwrap();
         give_approval_to_module(
             &mut app,
             collection_3_addr.clone(),
@@ -196,7 +200,8 @@ mod normal_merge {
             app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
         assert!(res.is_err());
 
-        let collection_2_addr = get_collection_address(&mut app, &mint_module_addr.to_string(), 2);
+        let collection_2_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, 2).unwrap();
 
         let msg = TokenQueryMsg::OwnerOf {
             token_id: "1".to_string(),
@@ -217,7 +222,7 @@ mod normal_merge {
         setup_all_modules(&mut app, controller_addr.clone());
 
         let (mint_module_addr, merge_module_addr, _) =
-            get_modules_addresses(&mut app, &controller_addr.to_string());
+            get_modules_addresses(&mut app, &controller_addr);
 
         let token_contract_code_id = app.store_code(token_contract());
         create_collection(
@@ -351,7 +356,8 @@ mod normal_merge {
         );
 
         setup_mint_module_whitelist(&mut app, mint_module_addr.clone(), vec![]);
-        let collection_1_addr = get_collection_address(&mut app, &mint_module_addr.to_string(), 1);
+        let collection_1_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, 1).unwrap();
         give_approval_to_module(
             &mut app,
             collection_1_addr.clone(),
@@ -391,6 +397,7 @@ mod permission_merge {
         use super::*;
 
         use permission_module::msg::OwnershipMsg;
+        use rift_utils::query_collection_address;
         use token_contract::state::Contracts;
 
         #[test]
@@ -401,7 +408,7 @@ mod permission_merge {
             setup_all_modules(&mut app, controller_addr.clone());
 
             let (mint_module_addr, merge_module_addr, permission_module_addr) =
-                get_modules_addresses(&mut app, &controller_addr.to_string());
+                get_modules_addresses(&mut app, &controller_addr);
 
             let token_contract_code_id = app.store_code(token_contract());
             create_collection(
@@ -461,7 +468,7 @@ mod permission_merge {
             );
 
             let collection_1_addr =
-                get_collection_address(&mut app, &mint_module_addr.to_string(), 1);
+                query_collection_address(&app.wrap(), &mint_module_addr, 1).unwrap();
             give_approval_to_module(
                 &mut app,
                 collection_1_addr.clone(),
@@ -469,7 +476,7 @@ mod permission_merge {
                 &merge_module_addr,
             );
             let collection_3_addr =
-                get_collection_address(&mut app, &mint_module_addr.to_string(), 3);
+                query_collection_address(&app.wrap(), &mint_module_addr, 3).unwrap();
             give_approval_to_module(
                 &mut app,
                 collection_3_addr.clone(),
@@ -544,7 +551,7 @@ mod permission_merge {
             assert!(res.is_err());
 
             let collection_2_addr =
-                get_collection_address(&mut app, &mint_module_addr.to_string(), 2);
+                query_collection_address(&app.wrap(), &mint_module_addr, 2).unwrap();
 
             let msg = TokenQueryMsg::OwnerOf {
                 token_id: "1".to_string(),
