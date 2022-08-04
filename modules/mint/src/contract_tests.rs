@@ -95,7 +95,7 @@ mod tests {
     mod mint {
         use super::*;
         use crate::{
-            msg::{ExecuteMsg, QueryMsg, TokenAddressResponse},
+            msg::{AddressResponse, ExecuteMsg, QueryMsg},
             ContractError,
         };
         use cw721::OwnerOfResponse;
@@ -113,9 +113,8 @@ mod tests {
                 .unwrap();
 
             let msg = QueryMsg::CollectionAddress { collection_id: 1 };
-            let response: TokenAddressResponse =
-                app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-            let token_address = response.token_address;
+            let response: AddressResponse = app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+            let token_address = response.address;
 
             let msg = TokenQueryMsg::OwnerOf {
                 token_id: "1".to_string(),
@@ -151,7 +150,7 @@ mod tests {
     mod locks {
         use super::*;
         use crate::{
-            msg::{ExecuteMsg, QueryMsg, TokenAddressResponse},
+            msg::{AddressResponse, ExecuteMsg, QueryMsg},
             state::Config,
         };
         use token_contract::{
