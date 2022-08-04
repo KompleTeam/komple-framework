@@ -7,13 +7,17 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
+use rift_types::module::Modules;
+use rift_types::query::{AddressResponse, ControllerQueryMsg};
 use token_contract::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
 };
 use token_contract::state::CollectionInfo;
 
+use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+
 use crate::error::ContractError;
-use crate::msg::{AddressResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, COLLECTION_ID, CONFIG, CONTROLLER_ADDR, TOKEN_ADDRS};
 
 // version info for migration info
@@ -80,6 +84,10 @@ pub fn execute(
             collection_id,
             recipient,
         } => execute_mint_to(deps, env, info, collection_id, recipient),
+        ExecuteMsg::PermissionMint {
+            permission_msg,
+            mint_msg,
+        } => execute_permission_mint(deps, env, info, permission_msg, mint_msg),
     }
 }
 
@@ -183,6 +191,40 @@ fn execute_mint_to(
     _execute_mint(deps, info, "mint_to", collection_id, owner.to_string())
 }
 
+fn execute_permission_mint(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    permission_msg: Binary,
+    _mint_msg: Binary,
+) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let msg = ControllerQueryMsg::ModuleAddress(Modules::PermissionModule);
+    let res: AddressResponse = deps
+        .querier
+        .query_wasm_smart(controller_addr, &msg)
+        .unwrap();
+    let permission_module_addr = res.address;
+
+    let mut msgs: Vec<CosmosMsg> = vec![];
+
+    let permission_msg = PermissionExecuteMsg::Check {
+        module: Modules::MintModule,
+        msg: permission_msg,
+    };
+    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: permission_module_addr,
+        msg: to_binary(&permission_msg)?,
+        funds: info.funds,
+    }));
+
+    // TODO: Construct mint msg and send
+
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("action", "execute_permission_mint"))
+}
+
 fn _execute_mint(
     deps: DepsMut,
     info: MessageInfo,
@@ -208,7 +250,7 @@ fn _execute_mint(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::CollectionAddress { collection_id } => {
+        QueryMsg::CollectionAddress(collection_id) => {
             to_binary(&query_collection_address(deps, collection_id)?)
         }
     }

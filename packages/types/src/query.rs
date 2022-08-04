@@ -11,6 +11,12 @@ pub enum ControllerQueryMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
+pub enum MintModuleQueryMsg {
+    CollectionAddress(u32),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub struct AddressResponse {
     pub address: String,
 }

@@ -71,6 +71,9 @@ dependencies = [
  "cw-utils",
  "cw2",
  "mint-module",
+ "permission-module",
+ "rift-types",
+ "rift-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -502,6 +505,8 @@ dependencies = [
  "cw-utils",
  "cw2",
  "cw721",
+ "permission-module",
+ "rift-types",
  "schemars",
  "serde",
  "thiserror",
@@ -548,9 +553,13 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus",
  "cw2",
+ "cw721",
+ "rift-types",
+ "rift-utils",
  "schemars",
  "serde",
  "thiserror",
+ "token-contract",
 ]
 
 [[package]]
@@ -632,6 +641,23 @@ dependencies = [
  "crypto-bigint",
  "hmac",
  "zeroize",
+]
+
+[[package]]
+name = "rift-types"
+version = "0.1.0"
+dependencies = [
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "rift-utils"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-std",
+ "rift-types",
+ "thiserror",
 ]
 
 [[package]]

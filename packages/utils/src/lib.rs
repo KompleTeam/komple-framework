@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, DepsMut, StdError};
 use rift_types::{
     module::Modules,
-    query::{AddressResponse, ControllerQueryMsg},
+    query::{AddressResponse, ControllerQueryMsg, MintModuleQueryMsg},
 };
 use thiserror::Error;
 
@@ -31,6 +31,21 @@ pub fn get_module_address(
     let res: AddressResponse = deps
         .querier
         .query_wasm_smart(controller_addr, &ControllerQueryMsg::ModuleAddress(module))
+        .unwrap();
+    Ok(Addr::unchecked(res.address))
+}
+
+pub fn get_collection_address(
+    deps: &DepsMut,
+    module_address: &Addr,
+    collection_id: u32,
+) -> Result<Addr, UtilError> {
+    let res: AddressResponse = deps
+        .querier
+        .query_wasm_smart(
+            module_address,
+            &MintModuleQueryMsg::CollectionAddress(collection_id),
+        )
         .unwrap();
     Ok(Addr::unchecked(res.address))
 }

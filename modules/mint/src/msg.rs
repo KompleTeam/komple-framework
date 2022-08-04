@@ -1,7 +1,10 @@
-use cosmwasm_std::Timestamp;
+use cosmwasm_std::{Binary, Timestamp};
+use permission_module::msg::PermissionCheckMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use token_contract::{msg::TokenInfo, state::CollectionInfo};
+
+use rift_types::query::MintModuleQueryMsg;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -30,17 +33,25 @@ pub enum ExecuteMsg {
         collection_id: u32,
         recipient: String,
     },
+    PermissionMint {
+        permission_msg: Binary,
+        mint_msg: Binary,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    CollectionAddress { collection_id: u32 },
+    CollectionAddress(u32),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub struct AddressResponse {
-    pub address: String,
+impl From<MintModuleQueryMsg> for QueryMsg {
+    fn from(msg: MintModuleQueryMsg) -> QueryMsg {
+        match msg {
+            MintModuleQueryMsg::CollectionAddress(collection_id) => {
+                QueryMsg::CollectionAddress(collection_id)
+            }
+        }
+    }
 }
