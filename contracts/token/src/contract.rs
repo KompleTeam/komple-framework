@@ -178,7 +178,7 @@ pub fn execute(
         ExecuteMsg::AdminTransferNft {
             recipient,
             token_id,
-        } => execute_admin_transfer(deps, env, info, recipient, token_id),
+        } => execute_admin_transfer(deps, env, info, token_id, recipient),
 
         // CONTRACT MESSAGES
         ExecuteMsg::InitMetadataContract {
