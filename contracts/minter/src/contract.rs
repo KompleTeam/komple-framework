@@ -31,10 +31,21 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+    let whitelist = msg
+        .whitelist
+        .and_then(|w| deps.api.addr_validate(w.as_str()).ok());
+
+    if msg.start_time.is_some() && env.block.time > msg.start_time.unwrap() {
+        return Err(ContractError::InvalidStartTime {});
+    }
+
     let config = Config {
         admin: info.sender.clone(),
         // TODO: Implement royalty
         royalty_info: None,
+        per_address_limit: msg.per_address_limit,
+        whitelist,
+        start_time: msg.start_time,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -91,7 +102,13 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
-        ExecuteMsg::Mint {} => unimplemented!(),
+        ExecuteMsg::Mint {
+            recipient,
+            token_id,
+        } => unimplemented!(),
+        ExecuteMsg::SetWhitelist { whitelist } => unimplemented!(),
+        ExecuteMsg::UpdateStartTime(time) => unimplemented!(),
+        ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => unimplemented!(),
     }
 }
 
