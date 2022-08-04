@@ -68,6 +68,9 @@ pub enum ExecuteMsg {
         token_id: String,
         locks: Locks,
     },
+    UpdateOperationLock {
+        lock: bool,
+    },
     UpdatePerAddressLimit {
         per_address_limit: Option<u32>,
     },

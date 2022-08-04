@@ -142,6 +142,9 @@ pub fn execute(
         ExecuteMsg::UpdateTokenLock { token_id, locks } => {
             execute_update_token_locks(deps, env, info, token_id, locks)
         }
+        ExecuteMsg::UpdateOperationLock { lock } => {
+            execute_update_operation_lock(deps, env, info, lock)
+        }
         ExecuteMsg::Mint { owner } => execute_mint(deps, env, info, owner),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
         ExecuteMsg::TransferNft {
@@ -234,6 +237,30 @@ pub fn execute_update_token_locks(
         .add_attribute("burn_lock", locks.burn_lock.to_string())
         .add_attribute("transfer_lock", locks.transfer_lock.to_string())
         .add_attribute("send_lock", locks.send_lock.to_string()))
+}
+
+pub fn execute_update_operation_lock(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    lock: bool,
+) -> Result<Response, ContractError> {
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
+
+    OPERATION_LOCK.save(deps.storage, &lock)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_operation_lock")
+        .add_attribute("lock", lock.to_string()))
 }
 
 pub fn execute_mint(
