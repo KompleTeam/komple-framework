@@ -90,10 +90,9 @@ pub fn execute_create_collection(
     start_time: Option<Timestamp>,
     whitelist: Option<String>,
 ) -> Result<Response, ContractError> {
+    can_execute(&deps, &info)?;
+
     let config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    };
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
@@ -130,10 +129,9 @@ pub fn execute_update_mint_lock(
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
+    can_execute(&deps, &info)?;
+
     let mut config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    };
 
     config.mint_lock = lock;
 
@@ -171,10 +169,7 @@ fn execute_mint_to(
     collection_id: u32,
     recipient: String,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
+    can_execute(&deps, &info)?;
 
     let owner = deps.api.addr_validate(&recipient)?;
 
@@ -243,4 +238,15 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         }
         Err(_) => Err(ContractError::TokenInstantiateError {}),
     }
+}
+
+fn can_execute(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+
+    if config.admin != info.sender && controller_addr != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    Ok(true)
 }
