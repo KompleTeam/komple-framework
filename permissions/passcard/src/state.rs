@@ -18,7 +18,7 @@ pub struct PasscardInfo {
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
-    pub total_num: Option<u16>,
+    pub total_num: u16,
 }
 pub const PASSCARD_INFO: Map<u32, PasscardInfo> = Map::new("passcard_info");
 
@@ -33,4 +33,4 @@ pub const PASSCARDS: Map<(u32, u16), Passcard> = Map::new("passcards");
 
 pub const MINTABLE_PASSCARDS: Map<(u32, u16), bool> = Map::new("mintable_passcards");
 
-pub const PASSCARD_IDS: Map<u32, u16> = Map::new("passcard_ids");
+pub const PASSCARD_AMOUNT: Map<u32, u16> = Map::new("passcard_amount");
