@@ -7,7 +7,7 @@ use cw2::set_contract_version;
 use rift_utils::check_admin_privileges;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, LockResponse, MetadataResponse, QueryMsg};
 use crate::state::{
     Config, Metadata, Trait, ATTRIBUTES, COLLECTION_ADDR, CONFIG, METADATA, METADATA_LOCK,
 };
@@ -265,7 +265,7 @@ fn query_metadata(deps: Deps, token_id: String) -> StdResult<MetadataResponse> {
     })
 }
 
-fn query_metadata_lock(deps: Deps, token_id: String) -> StdResult<bool> {
-    let is_locked = METADATA_LOCK.load(deps.storage, &token_id)?;
-    Ok(is_locked)
+fn query_metadata_lock(deps: Deps, token_id: String) -> StdResult<LockResponse> {
+    let locked = METADATA_LOCK.load(deps.storage, &token_id)?;
+    Ok(LockResponse { locked })
 }
