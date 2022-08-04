@@ -23,6 +23,18 @@ pub enum ContractError {
     #[error("Sending is locked")]
     SendLocked {},
 
+    #[error("Token per address limit is exceeded")]
+    TokenLimitReached {},
+
+    #[error("token_id already claimed")]
+    Claimed {},
+
+    #[error("Cannot set approval that is already expired")]
+    Expired {},
+
+    #[error("Approval not found for: {spender}")]
+    ApprovalNotFound { spender: String },
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 }
@@ -30,7 +42,13 @@ pub enum ContractError {
 impl From<Cw721ContractError> for ContractError {
     fn from(err: Cw721ContractError) -> ContractError {
         match err {
-            _ => unreachable!("cannot convert {:?} to Cw721ContractError", err),
+            Cw721ContractError::Std(err) => ContractError::Std(err),
+            Cw721ContractError::Unauthorized {} => ContractError::Unauthorized {},
+            Cw721ContractError::Claimed {} => ContractError::Claimed {},
+            Cw721ContractError::Expired {} => ContractError::Expired {},
+            Cw721ContractError::ApprovalNotFound { spender } => {
+                ContractError::ApprovalNotFound { spender }
+            }
         }
     }
 }
