@@ -5,5 +5,18 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 pub enum Collections {
     Normal,
-    Passcard,
+    // Multiple,
+    Linked,
+    // OneToOne,
+}
+
+impl Collections {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Collections::Normal => "normal",
+            // Collections::Multiple => "multiple",
+            Collections::Linked => "linked",
+            // Collections::OneToOne => "one_to_one",
+        }
+    }
 }

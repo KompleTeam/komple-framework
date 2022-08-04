@@ -19,6 +19,12 @@ pub enum ContractError {
     #[error("Error while instantiating token contract")]
     TokenInstantiateError {},
 
+    #[error("Invalid collection ID")]
+    InvalidCollectionId {},
+
+    #[error("Collection cannot be linked to itself")]
+    SelfLinkedCollection {},
+
     #[error("{0}")]
     Util(#[from] UtilError),
 }

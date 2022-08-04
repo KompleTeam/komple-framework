@@ -90,6 +90,8 @@ mod permission_mint {
             None,
             None,
             None,
+            Collections::Normal,
+            None,
         );
         create_collection(
             &mut app,
@@ -98,6 +100,8 @@ mod permission_mint {
             None,
             None,
             None,
+            None,
+            Collections::Normal,
             None,
         );
 
@@ -115,13 +119,11 @@ mod permission_mint {
             permission_type: Permissions::Ownership,
             data: to_binary(&vec![
                 OwnershipMsg {
-                    collection_type: Collections::Normal,
                     collection_id: 1,
                     token_id: 1,
                     owner: USER.to_string(),
                 },
                 OwnershipMsg {
-                    collection_type: Collections::Normal,
                     collection_id: 1,
                     token_id: 2,
                     owner: USER.to_string(),

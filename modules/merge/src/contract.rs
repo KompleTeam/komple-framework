@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -9,13 +11,15 @@ use cw2::set_contract_version;
 use rift_types::collection::Collections;
 use rift_types::module::Modules;
 use rift_types::query::MultipleAddressResponse;
-use rift_utils::{check_admin_privileges, get_collection_address, get_module_address};
+use rift_utils::{
+    check_admin_privileges, get_collection_address, get_linked_collections, get_module_address,
+};
 
 use mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
 use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MergeAction, MergeMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, QueryMsg};
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, WHITELIST_ADDRS};
 
 // version info for migration info
@@ -99,65 +103,62 @@ fn execute_merge(
     msg: Binary,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let mint_module_addr = get_module_address(&deps, &controller_addr, Modules::MintModule)?;
 
-    let merge_msgs: Vec<MergeMsg> = from_binary(&msg)?;
     let mut msgs: Vec<CosmosMsg> = vec![];
+    let merge_msg: MergeMsg = from_binary(&msg)?;
 
-    check_burn_message_exists(merge_msgs.clone())?;
+    if merge_msg.burn.len() == 0 {
+        return Err(ContractError::BurnNotFound {});
+    }
 
-    for merge_msg in merge_msgs {
-        // TODO: Use map to save unnecessary lookups
-        let mint_module_addr = get_module_address(&deps, &controller_addr, Modules::MintModule)?;
+    let mut burn_collection_ids: Vec<u32> = vec![];
 
-        match merge_msg.action {
-            MergeAction::Mint => match merge_msg.collection_type {
-                Collections::Normal => {
-                    let msg = MintModuleExecuteMsg::MintTo {
-                        collection_id: merge_msg.collection_id,
-                        recipient: info.sender.to_string(),
-                    };
-                    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-                        contract_addr: mint_module_addr.to_string(),
-                        msg: to_binary(&msg)?,
-                        funds: info.funds.clone(),
-                    }));
+    for burn_msg in merge_msg.clone().burn {
+        burn_collection_ids.push(burn_msg.collection_id);
+
+        let collection_addr =
+            get_collection_address(&deps, &mint_module_addr, burn_msg.collection_id)?;
+
+        let msg = TokenExecuteMsg::Burn {
+            token_id: burn_msg.token_id.to_string(),
+        };
+        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: collection_addr.to_string(),
+            msg: to_binary(&msg)?,
+            funds: info.funds.clone(),
+        }));
+    }
+
+    let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
+
+    for collection_id in merge_msg.mint {
+        let linked_collections = match linked_collection_map.contains_key(&collection_id) {
+            true => linked_collection_map.get(&collection_id).unwrap().clone(),
+            false => {
+                let collections = get_linked_collections(&deps, &mint_module_addr, collection_id)?;
+                linked_collection_map.insert(collection_id, collections.clone());
+                collections
+            }
+        };
+
+        if linked_collections.len() > 0 {
+            for linked_collection_id in linked_collections {
+                if !burn_collection_ids.contains(&linked_collection_id) {
+                    return Err(ContractError::LinkedCollectionNotFound {});
                 }
-                Collections::Passcard => Err(ContractError::InvalidPasscard {})?,
-            },
-            MergeAction::Burn => {
-                let address: Addr;
-
-                match merge_msg.collection_type {
-                    Collections::Normal => {
-                        address = get_collection_address(
-                            &deps,
-                            &mint_module_addr,
-                            merge_msg.collection_id,
-                        )?;
-                    }
-                    Collections::Passcard => {
-                        // TODO: Use map to save unnecessary lookups
-                        let passcard_module_addr =
-                            get_module_address(&deps, &controller_addr, Modules::PasscardModule)?;
-
-                        address = get_collection_address(
-                            &deps,
-                            &passcard_module_addr,
-                            merge_msg.collection_id,
-                        )?;
-                    }
-                }
-
-                let msg = TokenExecuteMsg::Burn {
-                    token_id: merge_msg.token_id.unwrap().to_string(),
-                };
-                msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-                    contract_addr: address.to_string(),
-                    msg: to_binary(&msg)?,
-                    funds: info.funds.clone(),
-                }));
             }
         }
+
+        let msg = MintModuleExecuteMsg::MintTo {
+            collection_id,
+            recipient: info.sender.to_string(),
+        };
+        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: mint_module_addr.to_string(),
+            msg: to_binary(&msg)?,
+            funds: info.funds.clone(),
+        }));
     }
 
     Ok(Response::new()
@@ -193,18 +194,6 @@ fn execute_update_whitelist_addresses(
     WHITELIST_ADDRS.save(deps.storage, &whitelist_addrs)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_whitelist_addresses"))
-}
-
-fn check_burn_message_exists(merge_msgs: Vec<MergeMsg>) -> Result<(), ContractError> {
-    let msgs: Vec<MergeMsg> = merge_msgs
-        .iter()
-        .filter(|m| m.action == MergeAction::Burn)
-        .map(|m| m.clone())
-        .collect::<Vec<MergeMsg>>();
-    if msgs.is_empty() {
-        return Err(ContractError::BurnNotFound {});
-    };
-    Ok(())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

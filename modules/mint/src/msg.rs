@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
-use rift_types::query::MintModuleQueryMsg;
+use rift_types::{collection::Collections, query::MintModuleQueryMsg};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -21,6 +21,7 @@ pub enum ExecuteMsg {
         start_time: Option<Timestamp>,
         whitelist: Option<String>,
         royalty: Option<String>,
+        linked_collections: Option<Vec<u32>>,
     },
     UpdateMintLock {
         lock: bool,
@@ -39,6 +40,10 @@ pub enum ExecuteMsg {
     UpdateWhitelistAddresses {
         addrs: Vec<String>,
     },
+    UpdateLinkedCollections {
+        collection_id: u32,
+        linked_collections: Vec<u32>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -47,6 +52,8 @@ pub enum QueryMsg {
     Config {},
     CollectionAddress(u32),
     WhitelistAddresses {},
+    CollectionTypes(Collections),
+    LinkedCollections { collection_id: u32 },
 }
 
 impl From<MintModuleQueryMsg> for QueryMsg {
@@ -54,6 +61,9 @@ impl From<MintModuleQueryMsg> for QueryMsg {
         match msg {
             MintModuleQueryMsg::CollectionAddress(collection_id) => {
                 QueryMsg::CollectionAddress(collection_id)
+            }
+            MintModuleQueryMsg::LinkedCollections { collection_id } => {
+                QueryMsg::LinkedCollections { collection_id }
             }
         }
     }

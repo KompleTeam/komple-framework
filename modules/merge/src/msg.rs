@@ -35,16 +35,14 @@ pub enum QueryMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum MergeAction {
-    Mint,
-    Burn,
+pub struct MergeBurnMsg {
+    pub collection_id: u32,
+    pub token_id: u32,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct MergeMsg {
-    pub collection_type: Collections,
-    pub collection_id: u32,
-    pub action: MergeAction,
-    pub token_id: Option<u32>,
+    pub mint: Vec<u32>,
+    pub burn: Vec<MergeBurnMsg>,
 }

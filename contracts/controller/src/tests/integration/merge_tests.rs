@@ -63,10 +63,11 @@ mod initialization {
 mod normal_merge {
     use super::*;
 
+    use crate::tests::integration::helpers::link_collection_to_collections;
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use merge_module::{
-        msg::{ExecuteMsg as MergeExecuteMsg, MergeAction, MergeMsg},
+        msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
     };
     use rift_types::collection::Collections;
@@ -91,6 +92,8 @@ mod normal_merge {
             None,
             None,
             None,
+            Collections::Normal,
+            None,
         );
         create_collection(
             &mut app,
@@ -100,11 +103,27 @@ mod normal_merge {
             None,
             None,
             None,
+            Collections::Normal,
+            None,
         );
+        create_collection(
+            &mut app,
+            mint_module_addr.clone(),
+            token_contract_code_id,
+            None,
+            None,
+            None,
+            None,
+            Collections::Normal,
+            None,
+        );
+
+        link_collection_to_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+        mint_token(&mut app, mint_module_addr.clone(), 3, USER);
 
         setup_mint_module_whitelist(
             &mut app,
@@ -119,27 +138,31 @@ mod normal_merge {
             USER,
             &merge_module_addr,
         );
+        let collection_3_addr = get_collection_address(&mut app, &mint_module_addr.to_string(), 3);
+        give_approval_to_module(
+            &mut app,
+            collection_3_addr.clone(),
+            USER,
+            &merge_module_addr,
+        );
 
-        let merge_msg = vec![
-            MergeMsg {
-                collection_id: 1,
-                token_id: Some(1),
-                collection_type: Collections::Normal,
-                action: MergeAction::Burn,
-            },
-            MergeMsg {
-                collection_id: 1,
-                token_id: Some(3),
-                collection_type: Collections::Normal,
-                action: MergeAction::Burn,
-            },
-            MergeMsg {
-                collection_id: 2,
-                token_id: None,
-                collection_type: Collections::Normal,
-                action: MergeAction::Mint,
-            },
-        ];
+        let merge_msg = MergeMsg {
+            mint: vec![2],
+            burn: vec![
+                MergeBurnMsg {
+                    collection_id: 1,
+                    token_id: 1,
+                },
+                MergeBurnMsg {
+                    collection_id: 1,
+                    token_id: 3,
+                },
+                MergeBurnMsg {
+                    collection_id: 3,
+                    token_id: 1,
+                },
+            ],
+        };
         let msg = MergeExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
@@ -186,12 +209,47 @@ mod normal_merge {
         let (mint_module_addr, merge_module_addr, _) =
             get_modules_addresses(&mut app, &controller_addr.to_string());
 
-        let merge_msg = vec![MergeMsg {
-            collection_id: 2,
-            token_id: None,
-            collection_type: Collections::Passcard,
-            action: MergeAction::Mint,
-        }];
+        let token_contract_code_id = app.store_code(token_contract());
+        create_collection(
+            &mut app,
+            mint_module_addr.clone(),
+            token_contract_code_id,
+            None,
+            None,
+            None,
+            None,
+            Collections::Normal,
+            None,
+        );
+        create_collection(
+            &mut app,
+            mint_module_addr.clone(),
+            token_contract_code_id,
+            None,
+            None,
+            None,
+            None,
+            Collections::Normal,
+            None,
+        );
+        create_collection(
+            &mut app,
+            mint_module_addr.clone(),
+            token_contract_code_id,
+            None,
+            None,
+            None,
+            None,
+            Collections::Normal,
+            Some(vec![2]),
+        );
+
+        mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+
+        let merge_msg = MergeMsg {
+            mint: vec![2],
+            burn: vec![],
+        };
         let msg = MergeExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
@@ -208,40 +266,91 @@ mod normal_merge {
             MergeContractError::BurnNotFound {}.to_string()
         );
 
-        let token_contract_code_id = app.store_code(token_contract());
-        create_collection(
-            &mut app,
-            mint_module_addr.clone(),
-            token_contract_code_id,
-            None,
-            None,
-            None,
-            None,
-        );
-
-        let merge_msg = vec![
-            MergeMsg {
+        let merge_msg = MergeMsg {
+            mint: vec![3],
+            burn: vec![MergeBurnMsg {
                 collection_id: 1,
-                token_id: Some(1),
-                collection_type: Collections::Normal,
-                action: MergeAction::Burn,
-            },
-            MergeMsg {
-                collection_id: 2,
-                token_id: None,
-                collection_type: Collections::Passcard,
-                action: MergeAction::Mint,
-            },
-        ];
+                token_id: 1,
+            }],
+        };
         let msg = MergeExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let err = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &vec![])
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
-            MergeContractError::InvalidPasscard {}.to_string()
+            MergeContractError::LinkedCollectionNotFound {}.to_string()
+        );
+
+        let merge_msg = MergeMsg {
+            mint: vec![2],
+            burn: vec![MergeBurnMsg {
+                collection_id: 1,
+                token_id: 1,
+            }],
+        };
+        let msg = MergeExecuteMsg::Merge {
+            msg: to_binary(&merge_msg).unwrap(),
+        };
+        let err = app
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().source().unwrap().to_string(),
+            MergeContractError::Unauthorized {}.to_string()
+        );
+
+        setup_mint_module_whitelist(
+            &mut app,
+            mint_module_addr.clone(),
+            vec![merge_module_addr.to_string()],
+        );
+
+        let err = app
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().source().unwrap().to_string(),
+            MergeContractError::Unauthorized {}.to_string()
+        );
+
+        setup_mint_module_whitelist(&mut app, mint_module_addr.clone(), vec![]);
+        let collection_1_addr = get_collection_address(&mut app, &mint_module_addr.to_string(), 1);
+        give_approval_to_module(
+            &mut app,
+            collection_1_addr.clone(),
+            USER,
+            &merge_module_addr,
+        );
+
+        let err = app
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().source().unwrap().to_string(),
+            MergeContractError::Unauthorized {}.to_string()
         );
     }
 }
