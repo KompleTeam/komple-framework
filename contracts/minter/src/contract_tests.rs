@@ -78,7 +78,10 @@ mod tests {
 
     mod mint {
         use super::*;
-        use crate::msg::{ExecuteMsg, QueryMsg, TokenAddressResponse};
+        use crate::{
+            msg::{ExecuteMsg, QueryMsg, TokenAddressResponse},
+            ContractError,
+        };
         use cw721::OwnerOfResponse;
         use token::msg::QueryMsg as TokenQueryMsg;
 
@@ -105,6 +108,25 @@ mod tests {
             let response: OwnerOfResponse =
                 app.wrap().query_wasm_smart(token_address, &msg).unwrap();
             assert_eq!(response.owner, USER.to_string());
+        }
+
+        #[test]
+        fn test_locked_minting() {
+            let (mut app, minter_addr) = proper_instantiate();
+
+            let msg = ExecuteMsg::UpdateMintLock { mint_lock: true };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let msg = ExecuteMsg::Mint { recipient: None };
+            let err = app
+                .execute_contract(Addr::unchecked(USER), minter_addr, &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::LockedMint {}.to_string()
+            )
         }
     }
 }
