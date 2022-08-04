@@ -15,6 +15,12 @@ pub enum ContractError {
     #[error("Invalid code id")]
     InvalidCodeId {},
 
+    #[error("Invalid reply ID")]
+    InvalidReplyID {},
+
+    #[error("Error while instantiating mint contract")]
+    MintInstantiateError {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
     // Add any other custom errors you like here.
