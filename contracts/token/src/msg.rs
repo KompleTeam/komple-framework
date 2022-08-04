@@ -61,6 +61,9 @@ pub enum ExecuteMsg<T> {
         token_id: String,
         locks: Locks,
     },
+    UpdatePerAddressLimit {
+        per_address_limit: Option<u32>,
+    },
 }
 
 impl From<ExecuteMsg<Empty>> for Cw721ExecuteMsg<Empty> {

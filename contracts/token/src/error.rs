@@ -23,6 +23,9 @@ pub enum ContractError {
     #[error("Sending is locked")]
     SendLocked {},
 
+    #[error("Per address limit must be greater than 0")]
+    InvalidPerAddressLimit {},
+
     #[error("Token per address limit is exceeded")]
     TokenLimitReached {},
 

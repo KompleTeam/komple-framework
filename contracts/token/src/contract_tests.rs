@@ -307,4 +307,75 @@ mod tests {
             );
         }
     }
+
+    mod per_address_limit {
+        use cw721_base::MintMsg;
+
+        use super::*;
+
+        use crate::{msg::ExecuteMsg, ContractError};
+
+        #[test]
+        fn test_happy_path() {
+            let (mut app, token_addr) = proper_instantiate();
+
+            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdatePerAddressLimit {
+                per_address_limit: Some(1),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let msg = ExecuteMsg::Mint(MintMsg {
+                token_id: "1".to_string(),
+                owner: USER.to_string(),
+                token_uri: None,
+                extension: Empty {},
+            });
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let msg = ExecuteMsg::Mint(MintMsg {
+                token_id: "1".to_string(),
+                owner: USER.to_string(),
+                token_uri: None,
+                extension: Empty {},
+            });
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::TokenLimitReached {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_unhappy_path() {
+            let (mut app, token_addr) = proper_instantiate();
+
+            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdatePerAddressLimit {
+                per_address_limit: Some(1),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(USER), token_addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+
+            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdatePerAddressLimit {
+                per_address_limit: Some(0),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::InvalidPerAddressLimit {}.to_string()
+            );
+        }
+    }
 }

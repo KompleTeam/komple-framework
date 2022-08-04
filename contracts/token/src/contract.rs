@@ -87,6 +87,9 @@ pub fn execute(
             contract,
             msg,
         } => execute_send(deps, env, info, token_id, contract, msg),
+        ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
+            execute_update_per_address_limit(deps, env, info, per_address_limit)
+        }
         _ => {
             let res = Cw721Contract::default().execute(deps, env, info, msg.into());
             match res {
@@ -246,6 +249,27 @@ pub fn execute_send(
         Ok(res) => Ok(res),
         Err(e) => Err(e.into()),
     }
+}
+
+pub fn execute_update_per_address_limit(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    per_address_limit: Option<u32>,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    if per_address_limit.is_some() && per_address_limit.unwrap() == 0 {
+        return Err(ContractError::InvalidPerAddressLimit {});
+    }
+
+    config.per_address_limit = per_address_limit;
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new().add_attribute("action", "update_per_address_limit"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
