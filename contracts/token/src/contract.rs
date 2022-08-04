@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
+    to_binary, Addr, Binary, Coin, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
     Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -352,6 +352,8 @@ pub fn execute_mint(
         return Err(ContractError::TokenLimitReached {});
     }
 
+    check_whitelist(&deps, &owner)?;
+
     let total_minted = MINTED_TOKENS_PER_ADDR
         .may_load(deps.storage, &owner)?
         .unwrap_or(0);
@@ -362,15 +364,16 @@ pub fn execute_mint(
         return Err(ContractError::TokenLimitReached {});
     }
 
-    if collection_config.unit_price.is_some() {
-        check_funds(
-            &info,
-            &config.native_denom,
-            collection_config.unit_price.unwrap().amount,
-        )?;
+    if collection_config.start_time.is_some()
+        && env.block.time < collection_config.start_time.unwrap()
+    {
+        return Err(ContractError::MintingNotStarted {});
     }
 
-    // TODO: Check for start time here
+    let mint_price = get_mint_price(&deps)?;
+    if mint_price.is_some() {
+        check_funds(&info, &config.native_denom, mint_price.unwrap().amount)?;
+    }
 
     let mint_msg = MintMsg {
         token_id: token_id.to_string(),
@@ -770,11 +773,11 @@ fn execute_init_whitelist_contract(
         .add_attribute("action", "execute_init_whitelist_contract"))
 }
 
-fn check_whitelist(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
+fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     let contracts = CONTRACTS.load(deps.storage)?;
 
     if contracts.whitelist.is_none() {
-        return Ok(true);
+        return Ok(());
     }
     let whitelist = contracts.whitelist.unwrap();
 
@@ -782,13 +785,13 @@ fn check_whitelist(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractE
         .querier
         .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
     if !whitelist_config.data.is_active {
-        return Ok(true);
+        return Ok(());
     }
 
     let res: ResponseWrapper<bool> = deps.querier.query_wasm_smart(
         whitelist,
         &WhitelistQueryMsg::HasMember {
-            member: info.sender.to_string(),
+            member: owner.to_string(),
         },
     )?;
     if !res.data {
@@ -796,13 +799,34 @@ fn check_whitelist(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractE
     }
 
     let total_minted = MINTED_TOKENS_PER_ADDR
-        .may_load(deps.storage, &info.sender.to_string())?
+        .may_load(deps.storage, owner)?
         .unwrap_or(0);
-    if total_minted >= (whitelist_config.data.per_address_limit as u32) {
+    if total_minted + 1 > (whitelist_config.data.per_address_limit as u32) {
         return Err(ContractError::TokenLimitReached {});
     }
 
-    Ok(false)
+    Ok(())
+}
+
+fn get_mint_price(deps: &DepsMut) -> Result<Option<Coin>, ContractError> {
+    let contracts = CONTRACTS.load(deps.storage)?;
+    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+
+    if contracts.whitelist.is_none() {
+        return Ok(collection_config.unit_price);
+    };
+
+    let whitelist = contracts.whitelist.unwrap();
+
+    let res: ResponseWrapper<WhitelistConfigResponse> = deps
+        .querier
+        .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
+
+    if res.data.is_active {
+        return Ok(Some(res.data.unit_price));
+    } else {
+        return Ok(collection_config.unit_price);
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
