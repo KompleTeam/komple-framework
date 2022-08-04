@@ -1,5 +1,5 @@
 [package]
-name = "token"
+name = "token_contract"
 version = "0.1.0"
 authors = ["AnalogGhost <analoghost@proton.me>"]
 edition = "2018"

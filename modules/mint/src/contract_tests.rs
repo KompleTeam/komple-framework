@@ -3,7 +3,7 @@ mod tests {
     use crate::msg::{ExecuteMsg, InstantiateMsg};
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-    use token::{msg::TokenInfo, state::CollectionInfo};
+    use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
     pub fn minter_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
@@ -17,9 +17,9 @@ mod tests {
 
     pub fn token_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
-            token::contract::execute,
-            token::contract::instantiate,
-            token::contract::query,
+            token_contract::contract::execute,
+            token_contract::contract::instantiate,
+            token_contract::contract::query,
         );
         Box::new(contract)
     }
@@ -99,7 +99,7 @@ mod tests {
             ContractError,
         };
         use cw721::OwnerOfResponse;
-        use token::msg::QueryMsg as TokenQueryMsg;
+        use token_contract::msg::QueryMsg as TokenQueryMsg;
 
         #[test]
         fn test_happy_path() {
@@ -154,7 +154,7 @@ mod tests {
             msg::{ExecuteMsg, QueryMsg, TokenAddressResponse},
             state::Config,
         };
-        use token::{
+        use token_contract::{
             msg::{LocksReponse, QueryMsg as TokenQueryMsg},
             state::Locks,
         };

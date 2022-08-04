@@ -48,7 +48,7 @@ schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 mint = { path = "../../modules/mint" }
-token = { path = "../token" }
+token_contract = { path = "../token" }
 cw-utils = "0.13.2"
 
 [dev-dependencies]
