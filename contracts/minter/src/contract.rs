@@ -105,6 +105,9 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::UpdateMintLock { mint_lock } => {
+            execute_update_mint_lock(deps, env, info, mint_lock)
+        }
         ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
         ExecuteMsg::Mint { recipient } => execute_mint(deps, env, info, recipient),
         ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
@@ -115,6 +118,26 @@ pub fn execute(
             execute_update_per_address_limit(deps, env, info, per_address_limit)
         }
     }
+}
+
+pub fn execute_update_mint_lock(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    mint_lock: bool,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    config.mint_lock = mint_lock;
+
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_mint_lock")
+        .add_attribute("mint_lock", mint_lock.to_string()))
 }
 
 pub fn execute_update_locks(
