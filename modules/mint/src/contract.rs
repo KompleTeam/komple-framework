@@ -323,6 +323,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
         QueryMsg::GetTokenAddress {} => to_binary(&query_token_address(deps)?),
+        QueryMsg::GetCollectionInfo {} => to_binary(&query_collection_info(deps)?),
     }
 }
 
@@ -336,6 +337,11 @@ fn query_token_address(deps: Deps) -> StdResult<TokenAddressResponse> {
     Ok(TokenAddressResponse {
         token_address: addr.to_string(),
     })
+}
+
+fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
+    let collection_info = COLLECTION_INFO.load(deps.storage)?;
+    Ok(collection_info)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
