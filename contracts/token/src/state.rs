@@ -7,7 +7,6 @@ use cw_storage_plus::{Item, Map};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
-    pub locks: Locks,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
@@ -18,5 +17,6 @@ pub struct Locks {
     pub transfer_lock: bool,
     pub send_lock: bool,
 }
+pub const LOCKS: Item<Locks> = Item::new("locks");
 
 pub const TOKEN_LOCKS: Map<&str, Locks> = Map::new("token_locks");
