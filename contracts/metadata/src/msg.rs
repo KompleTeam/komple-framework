@@ -54,6 +54,11 @@ pub enum QueryMsg {
         start_after: Option<u32>,
         limit: Option<u8>,
     },
+    Metadatas {
+        metadata_type: MetadataType,
+        start_after: Option<u32>,
+        limit: Option<u8>,
+    },
     // MetadataLock { token_id: u32 },
 }
 

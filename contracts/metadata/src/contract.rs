@@ -151,7 +151,7 @@ fn execute_link_metadata(
         }
         MetadataType::Dynamic => {
             let metadata = metadata.unwrap();
-            DYNAMIC_METADATA.save(deps.storage, metadata_id, &metadata)?;
+            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
@@ -397,7 +397,13 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Metadata { token_id } => to_binary(&query_metadata(deps, token_id)?),
         QueryMsg::RawMetadatas { start_after, limit } => {
             to_binary(&query_raw_metadatas(deps, start_after, limit)?)
-        } // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
+        }
+        QueryMsg::Metadatas {
+            metadata_type,
+            start_after,
+            limit,
+        } => to_binary(&query_metadatas(deps, metadata_type, start_after, limit)?),
+        // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
     }
 }
 
@@ -439,20 +445,61 @@ fn query_raw_metadatas(
     deps: Deps,
     start_after: Option<u32>,
     limit: Option<u8>,
-) -> StdResult<ResponseWrapper<Vec<MetadataResponse>>> {
+) -> StdResult<ResponseWrapper<Vec<Metadata>>> {
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
     let metadatas = METADATA
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {
-            let (metadata_id, metadata) = item.unwrap();
-            MetadataResponse {
-                metadata_id,
-                metadata,
-            }
+            let (_, metadata) = item.unwrap();
+            metadata
         })
-        .collect::<Vec<MetadataResponse>>();
+        .collect::<Vec<Metadata>>();
+    Ok(ResponseWrapper::new("metadatas", metadatas))
+}
+
+fn query_metadatas(
+    deps: Deps,
+    metadata_type: MetadataType,
+    start_after: Option<u32>,
+    limit: Option<u8>,
+) -> StdResult<ResponseWrapper<Vec<MetadataResponse>>> {
+    let limit = limit.unwrap_or(30) as usize;
+    let start = start_after.map(Bound::exclusive);
+
+    let metadatas = match metadata_type {
+        MetadataType::OneToOne | MetadataType::Static => {
+            let data = STATIC_METADATA
+                .range(deps.storage, start, None, Order::Ascending)
+                .take(limit)
+                .map(|item| {
+                    let (token_id, metadata_id) = item.unwrap();
+                    let metadata = METADATA.load(deps.storage, metadata_id).unwrap();
+                    MetadataResponse {
+                        metadata_id: token_id,
+                        metadata,
+                    }
+                })
+                .collect::<Vec<MetadataResponse>>();
+            data
+        }
+        MetadataType::Dynamic => {
+            let data = DYNAMIC_METADATA
+                .range(deps.storage, start, None, Order::Ascending)
+                .take(limit)
+                .map(|item| {
+                    let (metadata_id, metadata) = item.unwrap();
+                    MetadataResponse {
+                        metadata_id,
+                        metadata,
+                    }
+                })
+                .collect::<Vec<MetadataResponse>>();
+            data
+        }
+    };
+
     Ok(ResponseWrapper::new("metadatas", metadatas))
 }
 
