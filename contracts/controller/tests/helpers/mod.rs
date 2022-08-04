@@ -12,7 +12,7 @@ use token_contract::{
 use controller_contract::msg::{ExecuteMsg, InstantiateMsg};
 
 pub const USER: &str = "juno..user";
-// const RANDOM: &str = "juno..random";
+pub const RANDOM: &str = "juno..random";
 pub const ADMIN: &str = "juno..admin";
 pub const NATIVE_DENOM: &str = "denom";
 
