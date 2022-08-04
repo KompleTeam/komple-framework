@@ -15,8 +15,8 @@ pub enum ContractError {
     #[error("Invalid reply ID")]
     InvalidReplyID {},
 
-    #[error("Error while instantiating mint contract")]
-    MintInstantiateError {},
+    #[error("Error while instantiating {module:?} module")]
+    ModuleInstantiateError { module: String },
 
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },

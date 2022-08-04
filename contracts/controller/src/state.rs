@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Addr;
-use cw_storage_plus::Item;
+use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ControllerInfo {
@@ -19,4 +19,4 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
-pub const MINT_MODULE_ADDR: Item<Addr> = Item::new("mint_module_addr");
+pub const MODULE_ADDR: Map<&str, Addr> = Map::new("module_address");

@@ -1,6 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use rift_types::{module::Modules, query::ControllerQueryMsg};
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub name: String,
@@ -13,6 +15,7 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     InitMintModule { code_id: u64 },
+    InitPermissionModule { code_id: u64 },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -20,11 +23,13 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     Config {},
     ContollerInfo {},
-    MintModuleAddr {},
+    ModuleAddress(Modules),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub struct ModuleAddrResponse {
-    pub addr: String,
+impl From<ControllerQueryMsg> for QueryMsg {
+    fn from(msg: ControllerQueryMsg) -> QueryMsg {
+        match msg {
+            ControllerQueryMsg::ModuleAddress(module) => QueryMsg::ModuleAddress(module),
+        }
+    }
 }

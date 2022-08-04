@@ -1,23 +1,30 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
-    Response, StdError, StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult,
+    SubMsg, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 
-use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, ModuleAddrResponse, QueryMsg};
-use crate::state::{Config, ControllerInfo, CONFIG, CONTROLLER_INFO, MINT_MODULE_ADDR};
+use rift_types::module::{
+    Modules, MINT_MODULE_INSTANTIATE_REPLY_ID, PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
+};
+use rift_types::query::AddressResponse;
 
 use mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
+
+use permission_module::msg::InstantiateMsg as PermissionModuleInstantiateMsg;
+use rift_utils::have_admin_privilages;
+
+use crate::error::ContractError;
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{Config, ControllerInfo, CONFIG, CONTROLLER_INFO, MODULE_ADDR};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:controller-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const MINT_MODULE_INSTANTIATE_REPLY_ID: u64 = 1;
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -62,6 +69,9 @@ pub fn execute(
         ExecuteMsg::InitMintModule { code_id } => {
             execute_init_mint_module(deps, env, info, code_id)
         }
+        ExecuteMsg::InitPermissionModule { code_id } => {
+            execute_init_permission_module(deps, env, info, code_id)
+        }
     }
 }
 
@@ -71,9 +81,10 @@ fn execute_init_mint_module(
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
-    can_execute(&deps, &info)?;
-
     let config = CONFIG.load(deps.storage)?;
+    if !have_admin_privilages(&info.sender, &config.admin, None, None) {
+        return Err(ContractError::Unauthorized {});
+    }
 
     let msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
@@ -83,7 +94,7 @@ fn execute_init_mint_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Framework mint contract"),
+            label: String::from("Framework mint module"),
         }
         .into(),
         id: MINT_MODULE_INSTANTIATE_REPLY_ID,
@@ -93,7 +104,39 @@ fn execute_init_mint_module(
 
     Ok(Response::new()
         .add_submessage(msg)
-        .add_attribute("action", "init_mint_module"))
+        .add_attribute("action", "execute_init_mint_module"))
+}
+
+fn execute_init_permission_module(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    code_id: u64,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if !have_admin_privilages(&info.sender, &config.admin, None, None) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id,
+            msg: to_binary(&PermissionModuleInstantiateMsg {
+                admin: config.admin.to_string(),
+            })?,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: String::from("Framework permission module"),
+        }
+        .into(),
+        id: PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
+    Ok(Response::new()
+        .add_submessage(msg)
+        .add_attribute("action", "execute_init_permission_module"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -101,7 +144,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::ContollerInfo {} => unimplemented!(),
-        QueryMsg::MintModuleAddr {} => to_binary(&query_mint_module_addr(deps)?),
+        QueryMsg::ModuleAddress(module) => to_binary(&query_module_address(deps, module)?),
     }
 }
 
@@ -110,41 +153,46 @@ fn query_config(deps: Deps) -> StdResult<Config> {
     Ok(config)
 }
 
-fn query_mint_module_addr(deps: Deps) -> StdResult<ModuleAddrResponse> {
-    let addr = MINT_MODULE_ADDR.load(deps.storage)?;
-    Ok(ModuleAddrResponse {
-        addr: addr.to_string(),
+fn query_module_address(deps: Deps, module: Modules) -> StdResult<AddressResponse> {
+    let addr = MODULE_ADDR.load(deps.storage, module.to_string())?;
+    Ok(AddressResponse {
+        address: addr.to_string(),
     })
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id {
-        MINT_MODULE_INSTANTIATE_REPLY_ID => handle_mint_module_instantiate_reply(deps, msg),
+        MINT_MODULE_INSTANTIATE_REPLY_ID => {
+            handle_module_instantiate_reply(deps, msg, Modules::MintModule)
+        }
+        PERMISSION_MODULE_INSTANTIATE_REPLY_ID => {
+            handle_module_instantiate_reply(deps, msg, Modules::PermissionModule)
+        }
         _ => return Err(ContractError::InvalidReplyID {}),
     }
 }
 
-fn handle_mint_module_instantiate_reply(
+fn handle_module_instantiate_reply(
     deps: DepsMut,
     msg: Reply,
+    module: Modules,
 ) -> Result<Response, ContractError> {
     let reply = parse_reply_instantiate_data(msg);
     match reply {
         Ok(res) => {
-            MINT_MODULE_ADDR.save(deps.storage, &Addr::unchecked(res.contract_address))?;
-            Ok(Response::default().add_attribute("action", "instantiate_mint_module_reply"))
+            MODULE_ADDR.save(
+                deps.storage,
+                module.to_string(),
+                &Addr::unchecked(res.contract_address),
+            )?;
+            Ok(Response::default().add_attribute(
+                "action",
+                format!("instantiate_{}_module_reply", module.to_string()),
+            ))
         }
-        Err(_) => Err(ContractError::MintInstantiateError {}),
+        Err(_) => Err(ContractError::ModuleInstantiateError {
+            module: module.to_string().to_string(),
+        }),
     }
-}
-
-fn can_execute(deps: &DepsMut, info: &MessageInfo) -> Result<bool, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
-
-    if config.admin != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    Ok(true)
 }
