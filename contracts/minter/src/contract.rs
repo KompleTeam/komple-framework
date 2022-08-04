@@ -110,7 +110,9 @@ pub fn execute(
         ExecuteMsg::UpdateStartTime(start_time) => {
             execute_update_start_time(deps, env, info, start_time)
         }
-        ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => unimplemented!(),
+        ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
+            execute_update_per_address_limit(deps, env, info, per_address_limit)
+        }
     }
 }
 
@@ -192,6 +194,29 @@ fn execute_update_start_time(
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_attribute("action", "update_start_time"))
+}
+
+fn execute_update_per_address_limit(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    per_address_limit: u32,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    if per_address_limit == 0 {
+        return Err(ContractError::InvalidPerAddressLimit {});
+    }
+
+    config.per_address_limit = per_address_limit;
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_per_address_limit")
+        .add_attribute("per_address_limit", per_address_limit.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
