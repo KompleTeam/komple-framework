@@ -21,6 +21,7 @@ pub struct InstantiateMsg {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub whitelist: Option<String>,
+    pub royalty: Option<String>,
     pub collection_info: CollectionInfo,
 }
 
@@ -58,6 +59,7 @@ pub enum ExecuteMsg {
     Burn {
         token_id: String,
     },
+    // Custom execute messages
     UpdateLocks {
         locks: Locks,
     },
@@ -71,8 +73,11 @@ pub enum ExecuteMsg {
     UpdateStartTime {
         start_time: Option<Timestamp>,
     },
-    SetWhitelist {
+    UpdateWhitelist {
         whitelist: Option<String>,
+    },
+    UpdateRoyalty {
+        royalty: Option<String>,
     },
 }
 
@@ -158,6 +163,7 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     Minter {},
+    // Custom query messages
     Locks {},
     TokenLocks {
         token_id: String,

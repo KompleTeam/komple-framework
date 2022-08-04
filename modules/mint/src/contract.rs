@@ -59,6 +59,7 @@ pub fn execute(
             per_address_limit,
             start_time,
             whitelist,
+            royalty,
         } => execute_create_collection(
             deps,
             env,
@@ -69,6 +70,7 @@ pub fn execute(
             per_address_limit,
             start_time,
             whitelist,
+            royalty,
         ),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
         ExecuteMsg::Mint { collection_id } => execute_mint(deps, env, info, collection_id),
@@ -89,6 +91,7 @@ pub fn execute_create_collection(
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
     whitelist: Option<String>,
+    royalty: Option<String>,
 ) -> Result<Response, ContractError> {
     can_execute(&deps, &info)?;
 
@@ -105,6 +108,7 @@ pub fn execute_create_collection(
                 per_address_limit,
                 start_time,
                 whitelist,
+                royalty,
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),

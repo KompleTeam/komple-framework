@@ -9,20 +9,8 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Description too long")]
-    DescriptionTooLong {},
-
-    #[error("Invalid start time")]
-    InvalidStartTime {},
-
-    #[error("Minting has already started")]
-    AlreadyStarted {},
-
     #[error("Minting locked")]
     LockedMint {},
-
-    #[error("Per address limit must be greater than 0")]
-    InvalidPerAddressLimit {},
 
     #[error("Invalid reply ID")]
     InvalidReplyID {},

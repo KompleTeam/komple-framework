@@ -12,9 +12,6 @@ pub enum ContractError {
     #[error("Description too long")]
     DescriptionTooLong {},
 
-    #[error("Invalid code id")]
-    InvalidCodeId {},
-
     #[error("Invalid reply ID")]
     InvalidReplyID {},
 

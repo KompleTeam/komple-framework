@@ -85,6 +85,7 @@ mod tests {
             per_address_limit: None,
             start_time: None,
             whitelist: None,
+            royalty: None,
         };
         let _ = app
             .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
