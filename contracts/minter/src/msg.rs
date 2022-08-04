@@ -20,7 +20,7 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     UpdateLocks { locks: Locks },
-    Mint { recipient: String, token_id: u32 },
+    Mint { recipient: Option<String> },
     SetWhitelist { whitelist: Option<String> },
     UpdateStartTime(Option<Timestamp>),
     UpdatePerAddressLimit { per_address_limit: Option<u32> },
