@@ -1,13 +1,14 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
-    StdResult, SubMsg, Timestamp, WasmMsg,
+    to_binary, Addr, Binary, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
+    Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 use rift_types::metadata::Metadata as MetadataType;
 use rift_types::query::ResponseWrapper;
+use rift_types::royalty::Royalty;
 use rift_types::tokens::Locks;
 use rift_utils::check_admin_privileges;
 use url::Url;
@@ -24,6 +25,7 @@ use cw721::{ContractInfoResponse, Cw721Execute};
 use cw721_base::MintMsg;
 
 use metadata_contract::msg::InstantiateMsg as MetadataInstantiateMsg;
+use royalty_contract::msg::InstantiateMsg as RoyaltyInstantiateMsg;
 
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
@@ -34,6 +36,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
 
 const METADATA_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 1;
+const ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 2;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -185,6 +188,11 @@ pub fn execute(
             code_id,
             metadata_type,
         } => execute_init_metadata_contract(deps, env, info, code_id, metadata_type),
+        ExecuteMsg::InitRoyaltyContract {
+            code_id,
+            share,
+            royalty_type,
+        } => execute_init_royalty_contract(deps, env, info, code_id, share, royalty_type),
 
         // CW721 MESSAGES
         _ => {
@@ -662,6 +670,48 @@ fn execute_init_metadata_contract(
         .add_attribute("action", "execute_init_metadata_contract"))
 }
 
+fn execute_init_royalty_contract(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    code_id: u64,
+    share: Decimal,
+    royalty_type: Royalty,
+) -> Result<Response, ContractError> {
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        None,
+    )?;
+
+    let sub_msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id,
+            msg: to_binary(&RoyaltyInstantiateMsg {
+                admin: config.admin.to_string(),
+                share,
+                royalty_type,
+            })?,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: String::from("Rift Framework Royalty Contract"),
+        }
+        .into(),
+        id: ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("action", "execute_init_royalty_contract"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -699,17 +749,31 @@ fn query_collection_info(deps: Deps) -> StdResult<ResponseWrapper<CollectionInfo
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    if msg.id != METADATA_CONTRACT_INSTANTIATE_REPLY_ID {
+    if msg.id != METADATA_CONTRACT_INSTANTIATE_REPLY_ID
+        || msg.id != ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID
+    {
         return Err(ContractError::InvalidReplyID {});
     }
 
-    let reply = parse_reply_instantiate_data(msg);
+    let reply = parse_reply_instantiate_data(msg.clone());
     match reply {
         Ok(res) => {
             let mut contracts = CONTRACTS.load(deps.storage)?;
-            contracts.metadata = Some(Addr::unchecked(res.contract_address));
+            let contract: &str;
+            match msg.id {
+                METADATA_CONTRACT_INSTANTIATE_REPLY_ID => {
+                    contracts.metadata = Some(Addr::unchecked(res.contract_address));
+                    contract = "metadata";
+                }
+                ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID => {
+                    contracts.royalty = Some(Addr::unchecked(res.contract_address));
+                    contract = "royalty";
+                }
+                _ => unreachable!(),
+            }
             CONTRACTS.save(deps.storage, &contracts)?;
-            Ok(Response::default().add_attribute("action", "instantiate_metadata_reply"))
+            Ok(Response::default()
+                .add_attribute("action", format!("instantiate_{}_reply", contract)))
         }
         Err(_) => Err(ContractError::MetadataInstantiateError {}),
     }
