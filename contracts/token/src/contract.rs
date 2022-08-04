@@ -79,7 +79,7 @@ pub fn instantiate(
     COLLECTION_INFO.save(deps.storage, &collection_info)?;
 
     let contract_info = ContractInfoResponse {
-        name: msg.token_info.name.clone(),
+        name: msg.collection_info.name.clone(),
         symbol: msg.token_info.symbol,
     };
     Cw721Contract::default()
@@ -94,7 +94,7 @@ pub fn instantiate(
     Ok(Response::new()
         .add_attribute("action", "instantiate")
         .add_attribute("minter", msg.token_info.minter)
-        .add_attribute("collection_name", msg.token_info.name))
+        .add_attribute("collection_name", msg.collection_info.name))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -9,7 +9,6 @@ use crate::state::{CollectionInfo, Locks};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct TokenInfo {
-    pub name: String,
     pub symbol: String,
     pub minter: String,
 }
