@@ -44,8 +44,16 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    RawMetadata { metadata_id: u32 },
-    Metadata { token_id: u32 },
+    RawMetadata {
+        metadata_id: u32,
+    },
+    Metadata {
+        token_id: u32,
+    },
+    RawMetadatas {
+        start_after: Option<u32>,
+        limit: Option<u8>,
+    },
     // MetadataLock { token_id: u32 },
 }
 

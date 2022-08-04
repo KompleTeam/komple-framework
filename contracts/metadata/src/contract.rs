@@ -1,7 +1,10 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
+};
 use cw2::set_contract_version;
+use cw_storage_plus::Bound;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
@@ -392,7 +395,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::RawMetadata { metadata_id } => to_binary(&query_raw_metadata(deps, metadata_id)?),
         QueryMsg::Metadata { token_id } => to_binary(&query_metadata(deps, token_id)?),
-        // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
+        QueryMsg::RawMetadatas { start_after, limit } => {
+            to_binary(&query_raw_metadatas(deps, start_after, limit)?)
+        } // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
     }
 }
 
@@ -428,6 +433,27 @@ fn query_metadata(deps: Deps, token_id: u32) -> StdResult<ResponseWrapper<Metada
             metadata,
         },
     ))
+}
+
+fn query_raw_metadatas(
+    deps: Deps,
+    start_after: Option<u32>,
+    limit: Option<u8>,
+) -> StdResult<ResponseWrapper<Vec<MetadataResponse>>> {
+    let limit = limit.unwrap_or(30) as usize;
+    let start = start_after.map(Bound::exclusive);
+    let metadatas = METADATA
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| {
+            let (metadata_id, metadata) = item.unwrap();
+            MetadataResponse {
+                metadata_id,
+                metadata,
+            }
+        })
+        .collect::<Vec<MetadataResponse>>();
+    Ok(ResponseWrapper::new("metadatas", metadatas))
 }
 
 // fn query_metadata_lock(deps: Deps, token_id: String) -> StdResult<LockResponse> {

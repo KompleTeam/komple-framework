@@ -1391,3 +1391,145 @@ mod actions {
         }
     }
 }
+mod queries {
+    use super::*;
+
+    mod raw_metadatas {
+        use super::*;
+
+        #[test]
+        fn test_normal() {
+            let mut app = mock_app();
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+
+            let meta_info = MetaInfo {
+                image: Some("https://example.com/image.png".to_string()),
+                external_url: None,
+                description: None,
+                animation_url: None,
+                youtube_url: None,
+            };
+
+            for index in 0..50 {
+                let attributes = vec![Trait {
+                    trait_type: format!("trait_type_{}", index + 1),
+                    value: "10".to_string(),
+                }];
+                let msg = ExecuteMsg::AddMetadata {
+                    meta_info: meta_info.clone(),
+                    attributes: attributes.clone(),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        metadata_contract_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+            }
+
+            let msg: QueryMsg = QueryMsg::RawMetadatas {
+                start_after: None,
+                limit: None,
+            };
+            let res: ResponseWrapper<Vec<MetadataResponse>> = app
+                .wrap()
+                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data.len(), 30);
+            assert_eq!(
+                res.data[14],
+                MetadataResponse {
+                    metadata_id: 15,
+                    metadata: Metadata {
+                        meta_info,
+                        attributes: vec![Trait {
+                            trait_type: "trait_type_15".to_string(),
+                            value: "10".to_string(),
+                        }]
+                    }
+                }
+            );
+        }
+
+        #[test]
+        fn test_filters() {
+            let mut app = mock_app();
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+
+            let meta_info = MetaInfo {
+                image: Some("https://example.com/image.png".to_string()),
+                external_url: None,
+                description: None,
+                animation_url: None,
+                youtube_url: None,
+            };
+
+            for index in 0..50 {
+                let attributes = vec![Trait {
+                    trait_type: format!("trait_type_{}", index + 1),
+                    value: "10".to_string(),
+                }];
+                let msg = ExecuteMsg::AddMetadata {
+                    meta_info: meta_info.clone(),
+                    attributes: attributes.clone(),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        metadata_contract_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+            }
+
+            let msg: QueryMsg = QueryMsg::RawMetadatas {
+                start_after: Some(35),
+                limit: None,
+            };
+            let res: ResponseWrapper<Vec<MetadataResponse>> = app
+                .wrap()
+                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data.len(), 15);
+            assert_eq!(
+                res.data[0],
+                MetadataResponse {
+                    metadata_id: 36,
+                    metadata: Metadata {
+                        meta_info: meta_info.clone(),
+                        attributes: vec![Trait {
+                            trait_type: "trait_type_36".to_string(),
+                            value: "10".to_string(),
+                        }]
+                    }
+                }
+            );
+
+            let msg: QueryMsg = QueryMsg::RawMetadatas {
+                start_after: Some(35),
+                limit: Some(7),
+            };
+            let res: ResponseWrapper<Vec<MetadataResponse>> = app
+                .wrap()
+                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data.len(), 7);
+            assert_eq!(
+                res.data[6],
+                MetadataResponse {
+                    metadata_id: 42,
+                    metadata: Metadata {
+                        meta_info,
+                        attributes: vec![Trait {
+                            trait_type: "trait_type_42".to_string(),
+                            value: "10".to_string(),
+                        }]
+                    }
+                }
+            );
+        }
+    }
+}
