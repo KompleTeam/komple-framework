@@ -5,6 +5,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{Config, CONFIG};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:passcard";
@@ -18,6 +19,16 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    let controller_addr = deps.api.addr_validate(&msg.controller_address)?;
+
+    let config = Config {
+        admin: info.sender,
+        main_collection: None,
+        controller_addr,
+    };
+
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
