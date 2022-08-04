@@ -6,7 +6,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, LocksReponse, QueryMsg, TokenLocksReponse};
+use crate::msg::{ExecuteMsg, LocksReponse, QueryMsg};
 use crate::state::{Config, Locks, CONFIG, TOKEN_LOCKS};
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -246,7 +246,7 @@ fn query_locks(deps: Deps) -> StdResult<LocksReponse> {
     })
 }
 
-fn query_token_locks(deps: Deps, token_id: String) -> StdResult<TokenLocksReponse> {
+fn query_token_locks(deps: Deps, token_id: String) -> StdResult<LocksReponse> {
     let locks = TOKEN_LOCKS.load(deps.storage, &token_id)?;
-    Ok(TokenLocksReponse { locks })
+    Ok(LocksReponse { locks })
 }

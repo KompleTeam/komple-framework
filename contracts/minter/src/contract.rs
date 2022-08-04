@@ -109,6 +109,9 @@ pub fn execute(
             execute_update_mint_lock(deps, env, info, mint_lock)
         }
         ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
+        ExecuteMsg::UpdateTokenLocks { token_id, locks } => {
+            execute_update_token_locks(deps, env, info, token_id, locks)
+        }
         ExecuteMsg::Mint { recipient } => execute_mint(deps, env, info, recipient),
         ExecuteMsg::SetWhitelist { whitelist } => execute_set_whitelist(deps, env, info, whitelist),
         ExecuteMsg::UpdateStartTime(start_time) => {
@@ -165,6 +168,39 @@ pub fn execute_update_locks(
     Ok(Response::new()
         .add_message(msg)
         .add_attribute("action", "update_locks")
+        .add_attribute("mint_lock", &locks.mint_lock.to_string())
+        .add_attribute("burn_lock", &locks.burn_lock.to_string())
+        .add_attribute("transfer_lock", &locks.transfer_lock.to_string())
+        .add_attribute("send_lock", &locks.send_lock.to_string()))
+}
+
+pub fn execute_update_token_locks(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    token_id: u32,
+    locks: Locks,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.admin != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let token_address = TOKEN_ADDR.load(deps.storage)?;
+
+    let msg: TokenExecuteMsg<Empty> = TokenExecuteMsg::UpdateTokenLock {
+        token_id: token_id.to_string(),
+        locks: locks.clone(),
+    };
+    let msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: token_address.to_string(),
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    });
+
+    Ok(Response::new()
+        .add_message(msg)
+        .add_attribute("action", "update_token_locks")
         .add_attribute("mint_lock", &locks.mint_lock.to_string())
         .add_attribute("burn_lock", &locks.burn_lock.to_string())
         .add_attribute("transfer_lock", &locks.transfer_lock.to_string())

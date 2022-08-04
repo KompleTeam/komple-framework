@@ -206,9 +206,3 @@ impl From<QueryMsg> for Cw721QueryMsg {
 pub struct LocksReponse {
     pub locks: Locks,
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub struct TokenLocksReponse {
-    pub locks: Locks,
-}

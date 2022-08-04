@@ -20,6 +20,7 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     UpdateMintLock { mint_lock: bool },
     UpdateLocks { locks: Locks },
+    UpdateTokenLocks { token_id: u32, locks: Locks },
     Mint { recipient: Option<String> },
     SetWhitelist { whitelist: Option<String> },
     UpdateStartTime(Option<Timestamp>),

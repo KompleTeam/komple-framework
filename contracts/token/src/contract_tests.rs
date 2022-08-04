@@ -91,7 +91,7 @@ mod tests {
 
         use crate::{
             error::ContractError,
-            msg::{ExecuteMsg, LocksReponse, QueryMsg, TokenLocksReponse},
+            msg::{ExecuteMsg, LocksReponse, QueryMsg},
             state::Locks,
         };
         use cw721_base::MintMsg;
@@ -168,7 +168,7 @@ mod tests {
             let msg = QueryMsg::TokenLocks {
                 token_id: "1".to_string(),
             };
-            let response: TokenLocksReponse = app
+            let response: LocksReponse = app
                 .wrap()
                 .query_wasm_smart(token_addr.clone(), &msg)
                 .unwrap();
