@@ -3,10 +3,11 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 use rift_types::metadata::Metadata as MetadataType;
+use rift_types::query::ResponseWrapper;
 use rift_utils::check_admin_privileges;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, QueryMsg};
 use crate::state::{
     Config, MetaInfo, Metadata, Trait, COLLECTION_ADDR, CONFIG, DYNAMIC_METADATA, METADATA,
     METADATA_ID, STATIC_METADATA,
@@ -172,23 +173,17 @@ fn execute_update_meta_info(
     )?;
     // check_metadata_lock(&deps, &config, &token_id)?;
 
+    let (metadata_id, mut metadata) =
+        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
+
     match config.metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
-            let metadata_id = STATIC_METADATA.load(deps.storage, token_id)?;
-            let mut metadata = METADATA.may_load(deps.storage, metadata_id)?;
-            if metadata.is_none() {
-                return Err(ContractError::MissingMetadata {});
-            }
-            metadata.as_mut().unwrap().meta_info = meta_info;
-            METADATA.save(deps.storage, metadata_id, &metadata.unwrap())?;
+            metadata.meta_info = meta_info;
+            METADATA.save(deps.storage, metadata_id, &metadata)?;
         }
         MetadataType::Dynamic => {
-            let mut metadata = DYNAMIC_METADATA.may_load(deps.storage, token_id)?;
-            if metadata.is_none() {
-                return Err(ContractError::MissingMetadata {});
-            }
-            metadata.as_mut().unwrap().meta_info = meta_info;
-            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata.unwrap())?;
+            metadata.meta_info = meta_info;
+            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
@@ -213,23 +208,21 @@ fn execute_add_attribute(
         None,
     )?;
 
+    let (metadata_id, mut metadata) =
+        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
+
     match config.metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
-            let (metadata_id, mut metadata) =
-                get_metadata_from_type(&deps, config.metadata_type, token_id)?;
             if check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeAlreadyExists {});
             }
-
             metadata.attributes.push(attribute);
             METADATA.save(deps.storage, metadata_id, &metadata)?;
         }
         MetadataType::Dynamic => {
-            let (_, mut metadata) = get_metadata_from_type(&deps, config.metadata_type, token_id)?;
             if check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeAlreadyExists {});
             }
-
             metadata.attributes.push(attribute);
             DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
         }
@@ -257,10 +250,11 @@ fn execute_update_attribute(
     )?;
     // check_metadata_lock(&deps, &config, &token_id)?;
 
+    let (metadata_id, mut metadata) =
+        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
+
     match config.metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
-            let (metadata_id, mut metadata) =
-                get_metadata_from_type(&deps, config.metadata_type, token_id)?;
             if !check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeNotFound {});
             }
@@ -274,7 +268,6 @@ fn execute_update_attribute(
             METADATA.save(deps.storage, metadata_id, &metadata)?;
         }
         MetadataType::Dynamic => {
-            let (_, mut metadata) = get_metadata_from_type(&deps, config.metadata_type, token_id)?;
             if !check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeNotFound {});
             }
@@ -311,10 +304,11 @@ fn execute_remove_attribute(
     )?;
     // check_metadata_lock(&deps, &config, &token_id)?;
 
+    let (metadata_id, mut metadata) =
+        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
+
     match config.metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
-            let (metadata_id, mut metadata) =
-                get_metadata_from_type(&deps, config.metadata_type, token_id)?;
             if !check_attribute_exists(&metadata, &trait_type) {
                 return Err(ContractError::AttributeNotFound {});
             }
@@ -327,7 +321,6 @@ fn execute_remove_attribute(
             METADATA.save(deps.storage, metadata_id, &metadata)?;
         }
         MetadataType::Dynamic => {
-            let (_, mut metadata) = get_metadata_from_type(&deps, config.metadata_type, token_id)?;
             if !check_attribute_exists(&metadata, &trait_type) {
                 return Err(ContractError::AttributeNotFound {});
             }
@@ -358,12 +351,16 @@ fn execute_remove_attribute(
 
 fn get_metadata_from_type(
     deps: &DepsMut,
-    metadata_type: MetadataType,
+    metadata_type: &MetadataType,
     token_id: u32,
 ) -> Result<(u32, Metadata), ContractError> {
     match metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
-            let metadata_id = STATIC_METADATA.load(deps.storage, token_id)?;
+            let metadata_id = STATIC_METADATA.may_load(deps.storage, token_id)?;
+            if metadata_id.is_none() {
+                return Err(ContractError::MissingMetadata {});
+            }
+            let metadata_id = metadata_id.unwrap();
             let metadata = METADATA.may_load(deps.storage, metadata_id)?;
             if metadata.is_none() {
                 return Err(ContractError::MissingMetadata {});
@@ -398,32 +395,38 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<Config> {
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     let config = CONFIG.load(deps.storage)?;
-    Ok(config)
+    Ok(ResponseWrapper::new("config", config))
 }
 
-fn query_raw_metadata(deps: Deps, metadata_id: u32) -> StdResult<Metadata> {
+fn query_raw_metadata(deps: Deps, metadata_id: u32) -> StdResult<ResponseWrapper<Metadata>> {
     let metadata = METADATA.load(deps.storage, metadata_id)?;
-    Ok(metadata)
+    Ok(ResponseWrapper::new("raw_metadata", metadata))
 }
 
-fn query_metadata(deps: Deps, token_id: u32) -> StdResult<Metadata> {
+fn query_metadata(deps: Deps, token_id: u32) -> StdResult<ResponseWrapper<MetadataResponse>> {
     let config = CONFIG.load(deps.storage)?;
 
-    let metadata = match config.metadata_type {
+    let (metadata_id, metadata) = match config.metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
             let metadata_id = STATIC_METADATA.load(deps.storage, token_id)?;
             let metadata = METADATA.load(deps.storage, metadata_id)?;
-            metadata
+            (metadata_id, metadata)
         }
         MetadataType::Dynamic => {
             let metadata = DYNAMIC_METADATA.load(deps.storage, token_id)?;
-            metadata
+            (token_id, metadata)
         }
     };
 
-    Ok(metadata)
+    Ok(ResponseWrapper::new(
+        "metadata",
+        MetadataResponse {
+            metadata_id,
+            metadata,
+        },
+    ))
 }
 
 // fn query_metadata_lock(deps: Deps, token_id: String) -> StdResult<LockResponse> {

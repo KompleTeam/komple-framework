@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::{MetaInfo, Trait};
+use crate::state::{MetaInfo, Metadata, Trait};
 
 use rift_types::metadata::Metadata as MetadataType;
 
@@ -51,6 +51,7 @@ pub enum QueryMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub struct LockResponse {
-    pub locked: bool,
+pub struct MetadataResponse {
+    pub metadata: Metadata,
+    pub metadata_id: u32,
 }
