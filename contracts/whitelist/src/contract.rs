@@ -256,7 +256,7 @@ fn execute_update_member_limit(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
+        QueryMsg::Config {} => to_binary(&query_config(deps, env)?),
         QueryMsg::HasStarted {} => to_binary(&query_has_started(deps, env)?),
         QueryMsg::HasEnded {} => to_binary(&query_has_ended(deps, env)?),
         QueryMsg::IsActive {} => to_binary(&query_is_active(deps, env)?),
@@ -267,7 +267,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
+fn query_config(deps: Deps, env: Env) -> StdResult<ResponseWrapper<ConfigResponse>> {
     let config = CONFIG.load(deps.storage)?;
     let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
     let config_res = ConfigResponse {
@@ -277,6 +277,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
         unit_price: whitelist_config.unit_price,
         per_address_limit: whitelist_config.per_address_limit,
         member_limit: whitelist_config.member_limit,
+        is_active: get_active_status(deps, env)?,
     };
     Ok(ResponseWrapper::new("config", config_res))
 }
@@ -298,10 +299,9 @@ fn query_has_ended(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
 }
 
 fn query_is_active(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
-    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
     Ok(ResponseWrapper::new(
         "is_active",
-        env.block.time >= whitelist_config.start_time && env.block.time < whitelist_config.end_time,
+        get_active_status(deps, env)?,
     ))
 }
 
@@ -325,4 +325,9 @@ fn query_has_member(deps: Deps, member: String) -> StdResult<ResponseWrapper<boo
     let addr = deps.api.addr_validate(&member)?;
     let exists = WHITELIST.has(deps.storage, addr);
     Ok(ResponseWrapper::new("has_member", exists))
+}
+
+fn get_active_status(deps: Deps, env: Env) -> StdResult<bool> {
+    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
+    Ok(env.block.time >= whitelist_config.start_time && env.block.time < whitelist_config.end_time)
 }

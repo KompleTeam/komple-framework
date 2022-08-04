@@ -48,4 +48,5 @@ pub struct ConfigResponse {
     pub unit_price: Coin,
     pub per_address_limit: u8,
     pub member_limit: u16,
+    pub is_active: bool,
 }
