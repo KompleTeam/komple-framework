@@ -128,7 +128,15 @@ fn execute_list_fixed_token(
     };
     FIXED_LISTING.save(deps.storage, (collection_id, token_id), &fixed_listing)?;
 
-    Ok(Response::new().add_attribute("action", "execute_list_fixed_token"))
+    let lock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: collection_addr.to_string(),
+        msg: to_binary(&TokenExecuteMsg::UpdateOperationLock { lock: true }).unwrap(),
+        funds: vec![],
+    });
+
+    Ok(Response::new()
+        .add_message(lock_msg)
+        .add_attribute("action", "execute_list_fixed_token"))
 }
 
 fn execute_delist_fixed_token(
@@ -147,7 +155,15 @@ fn execute_delist_fixed_token(
 
     FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
-    Ok(Response::new().add_attribute("action", "execute_delist_fixed_token"))
+    let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: collection_addr.to_string(),
+        msg: to_binary(&TokenExecuteMsg::UpdateOperationLock { lock: false }).unwrap(),
+        funds: vec![],
+    });
+
+    Ok(Response::new()
+        .add_message(unlock_msg)
+        .add_attribute("action", "execute_delist_fixed_token"))
 }
 
 fn execute_update_price(
