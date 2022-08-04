@@ -60,23 +60,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4c78c047431fee22c1a7bb92e00ad095a02a983affe4d8a72e2a2c62c1b94f3"
 
 [[package]]
-name = "controller"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus",
- "cw2",
- "minter",
- "schemars",
- "serde",
- "thiserror",
- "url",
-]
-
-[[package]]
 name = "cosmwasm-crypto"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
