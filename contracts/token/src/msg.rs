@@ -1,10 +1,7 @@
 use cosmwasm_std::{Binary, Coin, Decimal, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use komple_types::{
-    metadata::Metadata as MetadataType, query::TokenContractQueryMsg, royalty::Royalty,
-    tokens::Locks,
-};
+use komple_types::{metadata::Metadata as MetadataType, royalty::Royalty, tokens::Locks};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -62,6 +59,7 @@ pub enum ExecuteMsg {
     },
     Mint {
         owner: String,
+        metadata_id: Option<u32>,
     },
     Burn {
         token_id: String,
@@ -278,20 +276,6 @@ impl From<QueryMsg> for Cw721QueryMsg {
             }
             QueryMsg::Minter {} => Cw721QueryMsg::Minter {},
             _ => unreachable!("cannot convert {:?} to Cw721QueryMsg", msg),
-        }
-    }
-}
-
-impl From<TokenContractQueryMsg> for QueryMsg {
-    fn from(msg: TokenContractQueryMsg) -> QueryMsg {
-        match msg {
-            TokenContractQueryMsg::OwnerOf {
-                token_id,
-                include_expired,
-            } => QueryMsg::OwnerOf {
-                token_id,
-                include_expired,
-            },
         }
     }
 }

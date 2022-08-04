@@ -1,21 +1,35 @@
+use crate::state::Contracts;
 use crate::{msg::ConfigResponse, ContractError};
-use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
-use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::collection::Collections;
-use komple_types::query::ResponseWrapper;
-use komple_types::tokens::Locks;
-use komple_utils::{query_token_operation_lock, query_token_owner, FundsError};
-
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo},
     state::CollectionInfo,
 };
+use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
+use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use metadata_contract::{
+    msg::ExecuteMsg as MetadataExecuteMsg,
+    state::{MetaInfo, Trait},
+};
+use komple_types::query::ResponseWrapper;
+use komple_types::tokens::Locks;
+use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
+use komple_utils::{query_token_operation_lock, query_token_owner, FundsError};
 
 pub fn token_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
         crate::contract::query,
+    )
+    .with_reply(crate::contract::reply);
+    Box::new(contract)
+}
+
+pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        metadata_contract::contract::execute,
+        metadata_contract::contract::instantiate,
+        metadata_contract::contract::query,
     );
     Box::new(contract)
 }
@@ -97,6 +111,65 @@ fn proper_instantiate(
         .unwrap();
 
     token_contract_addr
+}
+
+fn setup_metadata_contract(
+    app: &mut App,
+    token_contract_addr: Addr,
+    metadata_type: MetadataType,
+) -> Addr {
+    let metadata_code_id = app.store_code(metadata_contract());
+
+    let msg = ExecuteMsg::InitMetadataContract {
+        code_id: metadata_code_id,
+        metadata_type,
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            token_contract_addr.clone(),
+            &msg,
+            &[],
+        )
+        .unwrap();
+
+    let res: ResponseWrapper<Contracts> = app
+        .wrap()
+        .query_wasm_smart(token_contract_addr.clone(), &QueryMsg::Contracts {})
+        .unwrap();
+    res.data.metadata.unwrap()
+}
+
+fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
+    let meta_info = MetaInfo {
+        image: Some("https://some-image.com".to_string()),
+        external_url: None,
+        description: Some("Some description".to_string()),
+        youtube_url: None,
+        animation_url: None,
+    };
+    let attributes = vec![
+        Trait {
+            trait_type: "trait_1".to_string(),
+            value: "value_1".to_string(),
+        },
+        Trait {
+            trait_type: "trait_2".to_string(),
+            value: "value_2".to_string(),
+        },
+    ];
+    let msg = MetadataExecuteMsg::AddMetadata {
+        meta_info,
+        attributes,
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            metadata_contract_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap();
 }
 
 mod initialization {
@@ -518,8 +591,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -817,8 +898,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -852,8 +941,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -968,8 +1065,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1016,8 +1121,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1043,8 +1156,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1077,8 +1198,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1190,8 +1319,16 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1211,6 +1348,13 @@ mod actions {
                 let mut app = mock_app();
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
+
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
 
                 let locks = Locks {
                     mint_lock: true,
@@ -1233,6 +1377,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1259,6 +1404,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1280,8 +1426,17 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, Some(2), None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1294,6 +1449,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: RANDOM.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1306,6 +1462,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: RANDOM_2.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1327,8 +1484,17 @@ mod actions {
                 let token_contract_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), Some(2), None, None, None);
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1341,6 +1507,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let _ = app
                     .execute_contract(
@@ -1353,6 +1520,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1381,8 +1549,16 @@ mod actions {
                     None,
                 );
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1410,8 +1586,16 @@ mod actions {
                     Some(coin(100, NATIVE_DENOM)),
                 );
 
+                let metadata_contract_addr = setup_metadata_contract(
+                    &mut app,
+                    token_contract_addr.clone(),
+                    MetadataType::OneToOne,
+                );
+                setup_metadata(&mut app, metadata_contract_addr);
+
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1441,6 +1625,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(
@@ -1457,6 +1642,7 @@ mod actions {
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
+                    metadata_id: None,
                 };
                 let err = app
                     .execute_contract(

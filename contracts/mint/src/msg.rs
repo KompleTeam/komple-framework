@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use token_contract::{msg::TokenInfo, state::CollectionInfo};
 
-use komple_types::{collection::Collections, query::MintModuleQueryMsg};
+use komple_types::collection::Collections;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -28,14 +28,17 @@ pub enum ExecuteMsg {
     },
     Mint {
         collection_id: u32,
+        metadata_id: Option<u32>,
     },
     MintTo {
         collection_id: u32,
         recipient: String,
+        metadata_id: Option<u32>,
     },
     PermissionMint {
         permission_msg: Binary,
         collection_ids: Vec<u32>,
+        metadata_ids: Option<Vec<u32>>,
     },
     UpdateOperators {
         addrs: Vec<String>,
@@ -56,22 +59,10 @@ pub enum QueryMsg {
     LinkedCollections { collection_id: u32 },
 }
 
-impl From<MintModuleQueryMsg> for QueryMsg {
-    fn from(msg: MintModuleQueryMsg) -> QueryMsg {
-        match msg {
-            MintModuleQueryMsg::CollectionAddress(collection_id) => {
-                QueryMsg::CollectionAddress(collection_id)
-            }
-            MintModuleQueryMsg::LinkedCollections { collection_id } => {
-                QueryMsg::LinkedCollections { collection_id }
-            }
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct MintMsg {
     pub collection_id: u32,
     pub owner: String,
+    pub metadata_id: Option<u32>,
 }

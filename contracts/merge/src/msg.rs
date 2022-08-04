@@ -44,4 +44,5 @@ pub struct MergeBurnMsg {
 pub struct MergeMsg {
     pub mint: Vec<u32>,
     pub burn: Vec<MergeBurnMsg>,
+    pub metadata_ids: Option<Vec<u32>>,
 }

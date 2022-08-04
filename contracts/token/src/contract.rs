@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Coin, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
-    Response, StdResult, SubMsg, Timestamp, WasmMsg,
+    to_binary, Addr, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, MessageInfo,
+    Reply, ReplyOn, Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
@@ -23,7 +23,9 @@ use crate::state::{
 use cw721::{ContractInfoResponse, Cw721Execute};
 use cw721_base::MintMsg;
 
-use metadata_contract::msg::InstantiateMsg as MetadataInstantiateMsg;
+use metadata_contract::msg::{
+    ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
+};
 use royalty_contract::msg::InstantiateMsg as RoyaltyInstantiateMsg;
 use whitelist_contract::msg::{
     ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
@@ -150,7 +152,9 @@ pub fn execute(
         }
 
         // OPERATION MESSAGES
-        ExecuteMsg::Mint { owner } => execute_mint(deps, env, info, owner),
+        ExecuteMsg::Mint { owner, metadata_id } => {
+            execute_mint(deps, env, info, owner, metadata_id)
+        }
         ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
         ExecuteMsg::TransferNft {
             token_id,
@@ -333,6 +337,7 @@ pub fn execute_mint(
     env: Env,
     info: MessageInfo,
     owner: String,
+    metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
     let lock = OPERATION_LOCK.load(deps.storage)?;
     if lock {
@@ -393,9 +398,24 @@ pub fn execute_mint(
     MINTED_TOKENS_PER_ADDR.save(deps.storage, &owner, &(total_minted + 1))?;
     TOKEN_IDS.save(deps.storage, &token_id)?;
 
+    let contracts = CONTRACTS.load(deps.storage)?;
+    if contracts.metadata.is_none() {
+        return Err(ContractError::MetadataContractNotFound {});
+    };
+
+    let metadata_msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: contracts.metadata.unwrap().to_string(),
+        msg: to_binary(&MetadataExecuteMsg::LinkMetadata {
+            token_id,
+            metadata_id,
+        })
+        .unwrap(),
+        funds: vec![],
+    });
+
     let res = Cw721Contract::default().mint(deps, env, info, mint_msg);
     match res {
-        Ok(res) => Ok(res),
+        Ok(res) => Ok(res.add_message(metadata_msg)),
         Err(e) => Err(e.into()),
     }
 }
@@ -937,6 +957,6 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
             Ok(Response::default()
                 .add_attribute("action", format!("instantiate_{}_reply", contract)))
         }
-        Err(_) => Err(ContractError::MetadataInstantiateError {}),
+        Err(_) => Err(ContractError::ContractsInstantiateError {}),
     }
 }

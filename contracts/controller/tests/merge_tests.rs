@@ -5,8 +5,8 @@ use cw_multi_test::Executor;
 pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
-    mock_app, proper_instantiate, setup_all_modules, setup_mint_module_operators, token_contract,
-    ADMIN, USER,
+    mock_app, proper_instantiate, setup_all_modules, setup_metadata, setup_metadata_contract,
+    setup_mint_module_operators, token_contract, ADMIN, USER,
 };
 
 mod initialization {
@@ -72,7 +72,7 @@ mod normal_merge {
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
     };
-    use komple_types::collection::Collections;
+    use komple_types::{collection::Collections, metadata::Metadata};
     use komple_utils::query_collection_address;
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
@@ -120,6 +120,26 @@ mod normal_merge {
 
         link_collection_to_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
 
+        let collection_1_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        let collection_2_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+        let collection_3_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+
+        let metadata_contract_addr_1 =
+            setup_metadata_contract(&mut app, collection_1_addr.clone(), Metadata::OneToOne);
+        let metadata_contract_addr_2 =
+            setup_metadata_contract(&mut app, collection_2_addr.clone(), Metadata::OneToOne);
+        let metadata_contract_addr_3 =
+            setup_metadata_contract(&mut app, collection_3_addr.clone(), Metadata::OneToOne);
+
+        setup_metadata(&mut app, metadata_contract_addr_1.clone());
+        setup_metadata(&mut app, metadata_contract_addr_1.clone());
+        setup_metadata(&mut app, metadata_contract_addr_1.clone());
+        setup_metadata(&mut app, metadata_contract_addr_2);
+        setup_metadata(&mut app, metadata_contract_addr_3);
+
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -131,16 +151,12 @@ mod normal_merge {
             vec![merge_module_addr.to_string()],
         );
 
-        let collection_1_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         give_approval_to_module(
             &mut app,
             collection_1_addr.clone(),
             USER,
             &merge_module_addr,
         );
-        let collection_3_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
         give_approval_to_module(
             &mut app,
             collection_3_addr.clone(),
@@ -164,6 +180,7 @@ mod normal_merge {
                     token_id: 1,
                 },
             ],
+            metadata_ids: None,
         };
         let msg = MergeExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
@@ -244,11 +261,18 @@ mod normal_merge {
             None,
         );
 
+        let collection_1_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        let metadata_contract_addr_1 =
+            setup_metadata_contract(&mut app, collection_1_addr.clone(), Metadata::OneToOne);
+        setup_metadata(&mut app, metadata_contract_addr_1.clone());
+
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
         let merge_msg = MergeMsg {
             mint: vec![2],
             burn: vec![],
+            metadata_ids: None,
         };
         let msg = MergeExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
@@ -272,6 +296,7 @@ mod normal_merge {
                 collection_id: 1,
                 token_id: 1,
             }],
+            metadata_ids: None,
         };
         let msg = MergeExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
@@ -295,6 +320,7 @@ mod normal_merge {
                 collection_id: 1,
                 token_id: 1,
             }],
+            metadata_ids: None,
         };
         let msg = MergeExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
@@ -373,6 +399,7 @@ mod permission_merge {
         use super::*;
 
         use permission_module::msg::OwnershipMsg;
+        use komple_types::metadata::Metadata;
         use komple_utils::query_collection_address;
 
         #[test]
@@ -418,6 +445,26 @@ mod permission_merge {
             );
 
             link_collection_to_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
+
+            let collection_1_addr =
+                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+            let collection_2_addr =
+                query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+            let collection_3_addr =
+                query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+
+            let metadata_contract_addr_1 =
+                setup_metadata_contract(&mut app, collection_1_addr.clone(), Metadata::OneToOne);
+            let metadata_contract_addr_2 =
+                setup_metadata_contract(&mut app, collection_2_addr.clone(), Metadata::OneToOne);
+            let metadata_contract_addr_3 =
+                setup_metadata_contract(&mut app, collection_3_addr.clone(), Metadata::OneToOne);
+
+            setup_metadata(&mut app, metadata_contract_addr_1.clone());
+            setup_metadata(&mut app, metadata_contract_addr_1.clone());
+            setup_metadata(&mut app, metadata_contract_addr_1.clone());
+            setup_metadata(&mut app, metadata_contract_addr_2);
+            setup_metadata(&mut app, metadata_contract_addr_3);
 
             mint_token(&mut app, mint_module_addr.clone(), 1, USER);
             mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -487,6 +534,7 @@ mod permission_merge {
                         token_id: 1,
                     },
                 ],
+                metadata_ids: None,
             })
             .unwrap();
             let msg = MergeExecuteMsg::PermissionMerge {

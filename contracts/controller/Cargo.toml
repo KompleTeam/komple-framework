@@ -61,3 +61,4 @@ permission-module = { path = "../permission", features = ["library"]  }
 mint-module = { path = "../mint", features = ["library"] }
 token-contract = { path = "../token", features = ["library"] }
 royalty-contract = { path = "../royalty", features = ["library"]  }
+metadata-contract = { path = "../metadata", features = ["library"]  }
