@@ -210,7 +210,7 @@ fn _execute_buy_fixed_listing(
     // TODO: Construct a royalty payout message here if needed
     let transfer_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
-        msg: to_binary(&TokenExecuteMsg::TransferNft {
+        msg: to_binary(&TokenExecuteMsg::AdminTransferNft {
             recipient: info.sender.to_string(),
             token_id: token_id.to_string(),
         })?,
