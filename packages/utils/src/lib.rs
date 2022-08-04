@@ -3,7 +3,7 @@ use std::{
     str::{from_utf8, Utf8Error},
 };
 
-use cosmwasm_std::{Addr, QuerierWrapper, StdError, StdResult};
+use cosmwasm_std::{Addr, MessageInfo, QuerierWrapper, StdError, StdResult, Uint128};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
 use rift_types::{
@@ -173,6 +173,31 @@ where
     }
 }
 
+pub fn check_funds(
+    info: &MessageInfo,
+    native_denom: &str,
+    price: Uint128,
+) -> Result<(), FundsError> {
+    if info.funds.len() != 1 {
+        return Err(FundsError::MissingFunds {});
+    };
+    let sent_fund = info.funds.get(0).unwrap();
+    if sent_fund.denom != native_denom {
+        return Err(FundsError::InvalidDenom {
+            got: sent_fund.denom.to_string(),
+            expected: native_denom.to_string(),
+        });
+    }
+    if sent_fund.amount != price {
+        return Err(FundsError::InvalidFunds {
+            got: sent_fund.amount.to_string(),
+            expected: price.to_string(),
+        });
+    }
+
+    Ok(())
+}
+
 #[derive(Error, Debug, PartialEq)]
 pub enum UtilError {
     #[error("{0}")]
@@ -183,4 +208,19 @@ pub enum UtilError {
 
     #[error("{0}")]
     Utf8(#[from] Utf8Error),
+}
+
+#[derive(Error, Debug, PartialEq)]
+pub enum FundsError {
+    #[error("{0}")]
+    Std(#[from] StdError),
+
+    #[error("Invalid denom! Got: {got} - Expected: {expected}")]
+    InvalidDenom { got: String, expected: String },
+
+    #[error("Invalid funds! Got: {got} - Expected: {expected}")]
+    InvalidFunds { got: String, expected: String },
+
+    #[error("No funds found!")]
+    MissingFunds {},
 }

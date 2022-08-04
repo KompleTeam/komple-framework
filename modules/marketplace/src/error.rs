@@ -1,5 +1,5 @@
 use cosmwasm_std::{OverflowError, StdError};
-use rift_utils::UtilError;
+use rift_utils::{FundsError, UtilError};
 use thiserror::Error;
 use token_contract::ContractError as TokenContractError;
 
@@ -25,6 +25,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     Util(#[from] UtilError),
+
+    #[error("{0}")]
+    Funds(#[from] FundsError),
 }
 
 impl From<TokenContractError> for ContractError {
