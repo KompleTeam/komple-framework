@@ -52,6 +52,7 @@ mod tests {
             minter: ADMIN.to_string(),
         };
         let msg = InstantiateMsg {
+            admin: ADMIN.to_string(),
             token_info,
             per_address_limit: None,
             start_time: None,
@@ -81,18 +82,14 @@ mod tests {
             ContractError,
         };
         use cw721::OwnerOfResponse;
-        use cw721_base::MintMsg;
 
         #[test]
         fn test_happy_path() {
             let (mut app, token_addr) = proper_instantiate();
 
-            let msg = ExecuteMsg::Mint(MintMsg {
-                token_id: "1".to_string(),
+            let msg = ExecuteMsg::Mint {
                 owner: USER.to_string(),
-                token_uri: None,
-                extension: Empty {},
-            });
+            };
             let _ = app
                 .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
                 .unwrap();
@@ -119,12 +116,9 @@ mod tests {
         fn test_unhappy_path() {
             let (mut app, token_addr) = proper_instantiate();
 
-            let mint_msg = ExecuteMsg::Mint(MintMsg {
-                token_id: "1".to_string(),
+            let mint_msg = ExecuteMsg::Mint {
                 owner: USER.to_string(),
-                token_uri: None,
-                extension: Empty {},
-            });
+            };
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
@@ -144,7 +138,7 @@ mod tests {
                 send_lock: false,
                 transfer_lock: false,
             };
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateLocks {
+            let msg = ExecuteMsg::UpdateLocks {
                 locks: locks.clone(),
             };
             let _ = app
@@ -164,7 +158,7 @@ mod tests {
                 ContractError::MintLocked {}.to_string()
             );
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateTokenLock {
+            let msg = ExecuteMsg::UpdateTokenLock {
                 token_id: "1".to_string(),
                 locks: locks.clone(),
             };
@@ -178,7 +172,7 @@ mod tests {
                 send_lock: false,
                 transfer_lock: false,
             };
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateLocks {
+            let msg = ExecuteMsg::UpdateLocks {
                 locks: locks.clone(),
             };
             let _ = app
@@ -210,7 +204,6 @@ mod tests {
             msg::{ExecuteMsg, LocksReponse, QueryMsg},
             state::Locks,
         };
-        use cw721_base::MintMsg;
 
         #[test]
         fn test_app_level_locks_happy_path() {
@@ -222,7 +215,7 @@ mod tests {
                 transfer_lock: true,
                 send_lock: false,
             };
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateLocks {
+            let msg = ExecuteMsg::UpdateLocks {
                 locks: locks.clone(),
             };
             let _ = app
@@ -236,12 +229,9 @@ mod tests {
                 .unwrap();
             assert_eq!(response.locks, locks);
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::Mint(MintMsg {
-                token_id: "1".to_string(),
+            let msg = ExecuteMsg::Mint {
                 owner: "random".to_string(),
-                token_uri: None,
-                extension: Empty {},
-            });
+            };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
                 .unwrap_err();
@@ -250,7 +240,7 @@ mod tests {
                 ContractError::MintLocked {}.to_string()
             );
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::TransferNft {
+            let msg = ExecuteMsg::TransferNft {
                 recipient: "admin".to_string(),
                 token_id: "1".to_string(),
             };
@@ -273,7 +263,7 @@ mod tests {
                 transfer_lock: true,
                 send_lock: false,
             };
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdateTokenLock {
+            let msg = ExecuteMsg::UpdateTokenLock {
                 token_id: "1".to_string(),
                 locks: locks.clone(),
             };
@@ -290,12 +280,9 @@ mod tests {
                 .unwrap();
             assert_eq!(response.locks, locks);
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::Mint(MintMsg {
-                token_id: "1".to_string(),
+            let msg = ExecuteMsg::Mint {
                 owner: "random".to_string(),
-                token_uri: None,
-                extension: Empty {},
-            });
+            };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
                 .unwrap_err();
@@ -304,7 +291,7 @@ mod tests {
                 ContractError::MintLocked {}.to_string()
             );
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::TransferNft {
+            let msg = ExecuteMsg::TransferNft {
                 recipient: "admin".to_string(),
                 token_id: "1".to_string(),
             };
@@ -319,8 +306,6 @@ mod tests {
     }
 
     mod per_address_limit {
-        use cw721_base::MintMsg;
-
         use super::*;
 
         use crate::{msg::ExecuteMsg, ContractError};
@@ -329,29 +314,23 @@ mod tests {
         fn test_happy_path() {
             let (mut app, token_addr) = proper_instantiate();
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdatePerAddressLimit {
+            let msg = ExecuteMsg::UpdatePerAddressLimit {
                 per_address_limit: Some(1),
             };
             let _ = app
                 .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
                 .unwrap();
 
-            let msg = ExecuteMsg::Mint(MintMsg {
-                token_id: "1".to_string(),
+            let msg = ExecuteMsg::Mint {
                 owner: USER.to_string(),
-                token_uri: None,
-                extension: Empty {},
-            });
+            };
             let _ = app
                 .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
                 .unwrap();
 
-            let msg = ExecuteMsg::Mint(MintMsg {
-                token_id: "1".to_string(),
+            let msg = ExecuteMsg::Mint {
                 owner: USER.to_string(),
-                token_uri: None,
-                extension: Empty {},
-            });
+            };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), token_addr.clone(), &msg, &vec![])
                 .unwrap_err();
@@ -365,7 +344,7 @@ mod tests {
         fn test_unhappy_path() {
             let (mut app, token_addr) = proper_instantiate();
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdatePerAddressLimit {
+            let msg = ExecuteMsg::UpdatePerAddressLimit {
                 per_address_limit: Some(1),
             };
             let err = app
@@ -376,7 +355,7 @@ mod tests {
                 ContractError::Unauthorized {}.to_string()
             );
 
-            let msg: ExecuteMsg<Empty> = ExecuteMsg::UpdatePerAddressLimit {
+            let msg = ExecuteMsg::UpdatePerAddressLimit {
                 per_address_limit: Some(0),
             };
             let err = app

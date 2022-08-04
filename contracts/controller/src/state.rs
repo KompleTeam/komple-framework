@@ -2,15 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Addr;
-use cw_storage_plus::{Item, Map};
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct State {
-    pub count: i32,
-    pub owner: Addr,
-}
-
-pub const STATE: Item<State> = Item::new("state");
+use cw_storage_plus::Item;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ControllerInfo {
@@ -24,10 +16,7 @@ pub const CONTROLLER_INFO: Item<ControllerInfo> = Item::new("controller_info");
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
-    pub mint_code_id: u64,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
-pub const COLLECTION_ID: Item<u32> = Item::new("collection_id");
-
-pub const COLLECTIONS: Map<u32, Addr> = Map::new("collections");
+pub const MINT_MODULE_ADDR: Item<Addr> = Item::new("mint_module_addr");
