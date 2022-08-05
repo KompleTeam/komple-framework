@@ -59,7 +59,7 @@ fn mock_app() -> App {
                 &Addr::unchecked(USER),
                 vec![Coin {
                     denom: NATIVE_DENOM.to_string(),
-                    amount: Uint128::new(1),
+                    amount: Uint128::new(1_000_000),
                 }],
             )
             .unwrap();
@@ -86,7 +86,12 @@ fn proper_instantiate(app: &mut App) -> Addr {
     minter_contract_addr
 }
 
-fn setup_collection(app: &mut App, minter_addr: &Addr, linked_collections: Option<Vec<u32>>) {
+fn setup_collection(
+    app: &mut App,
+    minter_addr: &Addr,
+    linked_collections: Option<Vec<u32>>,
+    unit_price: Option<Coin>,
+) {
     let token_code_id = app.store_code(token_contract());
 
     let collection_info = CollectionInfo {
@@ -108,7 +113,7 @@ fn setup_collection(app: &mut App, minter_addr: &Addr, linked_collections: Optio
             token_info,
             per_address_limit: None,
             start_time: None,
-            unit_price: None,
+            unit_price,
             native_denom: NATIVE_DENOM.to_string(),
             max_token_limit: None,
             royalty_share: Some(Decimal::new(Uint128::new(5))),
@@ -185,6 +190,7 @@ mod mint {
         msg::{ExecuteMsg, QueryMsg},
         ContractError,
     };
+    use cosmwasm_std::coin;
     use cw721::OwnerOfResponse;
     use komple_types::query::ResponseWrapper;
     use komple_utils::query_collection_address;
@@ -194,19 +200,32 @@ mod mint {
     fn test_happy_path() {
         let mut app = mock_app();
         let minter_addr = proper_instantiate(&mut app);
-        setup_collection(&mut app, &minter_addr, None);
+        setup_collection(
+            &mut app,
+            &minter_addr,
+            None,
+            Some(coin(50_000, NATIVE_DENOM)),
+        );
 
         let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
         let metadata_contract_addr =
             setup_metadata_contract(&mut app, collection_addr, MetadataType::OneToOne);
         setup_metadata(&mut app, metadata_contract_addr);
 
+        let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+        assert_eq!(res.amount, Uint128::new(0));
+
         let msg = ExecuteMsg::Mint {
             collection_id: 1,
             metadata_id: None,
         };
         let _ = app
-            .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
+            .execute_contract(
+                Addr::unchecked(USER),
+                minter_addr.clone(),
+                &msg,
+                &vec![coin(50_000, NATIVE_DENOM)],
+            )
             .unwrap();
 
         let msg = QueryMsg::CollectionAddress(1);
@@ -220,13 +239,16 @@ mod mint {
         };
         let response: OwnerOfResponse = app.wrap().query_wasm_smart(token_address, &msg).unwrap();
         assert_eq!(response.owner, USER.to_string());
+
+        let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+        assert_eq!(res.amount, Uint128::new(50_000));
     }
 
     #[test]
     fn test_locked_minting() {
         let mut app = mock_app();
         let minter_addr = proper_instantiate(&mut app);
-        setup_collection(&mut app, &minter_addr, None);
+        setup_collection(&mut app, &minter_addr, None, None);
 
         let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
         let metadata_contract_addr =
@@ -293,10 +315,10 @@ mod collections {
         let mut app = mock_app();
         let minter_addr = proper_instantiate(&mut app);
 
-        setup_collection(&mut app, &minter_addr, None);
-        setup_collection(&mut app, &minter_addr, Some(vec![1]));
-        setup_collection(&mut app, &minter_addr, None);
-        setup_collection(&mut app, &minter_addr, None);
+        setup_collection(&mut app, &minter_addr, None, None);
+        setup_collection(&mut app, &minter_addr, Some(vec![1]), None);
+        setup_collection(&mut app, &minter_addr, None, None);
+        setup_collection(&mut app, &minter_addr, None, None);
 
         let msg = ExecuteMsg::UpdateLinkedCollections {
             collection_id: 4,
@@ -324,10 +346,10 @@ mod collections {
         let mut app = mock_app();
         let minter_addr = proper_instantiate(&mut app);
 
-        setup_collection(&mut app, &minter_addr, None);
-        setup_collection(&mut app, &minter_addr, None);
-        setup_collection(&mut app, &minter_addr, None);
-        setup_collection(&mut app, &minter_addr, None);
+        setup_collection(&mut app, &minter_addr, None, None);
+        setup_collection(&mut app, &minter_addr, None, None);
+        setup_collection(&mut app, &minter_addr, None, None);
+        setup_collection(&mut app, &minter_addr, None, None);
 
         let msg = ExecuteMsg::UpdateLinkedCollections {
             collection_id: 5,
