@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
-    ReplyOn, Response, StdResult, SubMsg, Timestamp, WasmMsg,
+    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
+    ReplyOn, Response, StdResult, SubMsg, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
@@ -11,10 +11,7 @@ use komple_types::collection::Collections;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{check_admin_privileges, query_module_address};
-use token_contract::msg::{
-    ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, TokenInfo,
-};
-use token_contract::state::CollectionInfo;
+use token_contract::msg::{ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg};
 
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
@@ -65,24 +62,14 @@ pub fn execute(
     match msg {
         ExecuteMsg::CreateCollection {
             code_id,
-            collection_info,
-            token_info,
-            per_address_limit,
-            start_time,
-            unit_price,
-            native_denom,
+            token_instantiate_msg,
             linked_collections,
         } => execute_create_collection(
             deps,
             env,
             info,
             code_id,
-            collection_info,
-            token_info,
-            per_address_limit,
-            start_time,
-            unit_price,
-            native_denom,
+            token_instantiate_msg,
             linked_collections,
         ),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
@@ -120,12 +107,7 @@ pub fn execute_create_collection(
     env: Env,
     info: MessageInfo,
     code_id: u64,
-    collection_info: CollectionInfo,
-    token_info: TokenInfo,
-    per_address_limit: Option<u32>,
-    start_time: Option<Timestamp>,
-    unit_price: Option<Coin>,
-    native_denom: String,
+    token_instantiate_msg: TokenInstantiateMsg,
     linked_collections: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
@@ -140,22 +122,14 @@ pub fn execute_create_collection(
         operators,
     )?;
 
-    let instantiate_msg = TokenInstantiateMsg {
-        admin: config.admin.to_string(),
-        token_info,
-        collection_info: collection_info.clone(),
-        per_address_limit,
-        start_time,
-        max_token_limit: None,
-        unit_price,
-        native_denom,
-    };
+    let mut msg = token_instantiate_msg.clone();
+    msg.admin = config.admin.to_string();
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&instantiate_msg)?,
+            msg: to_binary(&msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: String::from("komple Framework Token Contract"),
@@ -176,7 +150,10 @@ pub fn execute_create_collection(
 
     COLLECTION_TYPES.update(
         deps.storage,
-        collection_info.collection_type.as_str(),
+        token_instantiate_msg
+            .collection_info
+            .collection_type
+            .as_str(),
         |value| -> StdResult<Vec<u32>> {
             match value {
                 Some(mut id_list) => {

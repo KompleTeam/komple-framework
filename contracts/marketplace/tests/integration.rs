@@ -8,14 +8,16 @@ use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::royalty::Royalty;
 use komple_utils::query_collection_address;
 use marketplace_module::msg::ExecuteMsg;
 use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use token_contract::{
-    msg::{ExecuteMsg as TokenExecuteMsg, QueryMsg as TokenQueryMsg, TokenInfo},
+    msg::{
+        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
+        QueryMsg as TokenQueryMsg, TokenInfo,
+    },
     state::{CollectionInfo, Contracts},
 };
 
@@ -70,15 +72,6 @@ pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
         metadata_contract::contract::execute,
         metadata_contract::contract::instantiate,
         metadata_contract::contract::query,
-    );
-    Box::new(contract)
-}
-
-pub fn royalty_contract() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        royalty_contract::contract::execute,
-        royalty_contract::contract::instantiate,
-        royalty_contract::contract::query,
     );
     Box::new(contract)
 }
@@ -195,6 +188,8 @@ pub fn create_collection(
     collection_type: Collections,
     linked_collections: Option<Vec<u32>>,
     unit_price: Option<Coin>,
+    max_token_limit: Option<u32>,
+    royalty_share: Option<Decimal>,
 ) {
     let collection_info = CollectionInfo {
         collection_type,
@@ -209,13 +204,18 @@ pub fn create_collection(
     };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_contract_code_id,
-        collection_info,
-        token_info,
-        per_address_limit,
-        start_time,
+        token_instantiate_msg: TokenInstantiateMsg {
+            admin: ADMIN.to_string(),
+            collection_info,
+            token_info,
+            per_address_limit,
+            start_time,
+            unit_price,
+            native_denom: NATIVE_DENOM.to_string(),
+            max_token_limit,
+            royalty_share,
+        },
         linked_collections,
-        unit_price,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
@@ -349,23 +349,6 @@ pub fn setup_marketplace_listing(
         .unwrap();
 }
 
-pub fn setup_royalty_contract(
-    app: &mut App,
-    collection_addr: Addr,
-    share: Decimal,
-    royalty_type: Royalty,
-) {
-    let royalty_contract_code_id = app.store_code(royalty_contract());
-    let msg = TokenExecuteMsg::InitRoyaltyContract {
-        code_id: royalty_contract_code_id,
-        share,
-        royalty_type,
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), collection_addr, &msg, &vec![])
-        .unwrap();
-}
-
 mod initialization {
     use super::*;
 
@@ -463,6 +446,8 @@ mod actions {
                     Collections::Normal,
                     None,
                     None,
+                    None,
+                    None,
                 );
 
                 let collection_addr =
@@ -529,6 +514,8 @@ mod actions {
                     Collections::Normal,
                     None,
                     None,
+                    None,
+                    None,
                 );
 
                 let collection_addr =
@@ -575,6 +562,8 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
+                    None,
                     None,
                     None,
                 );
@@ -704,6 +693,8 @@ mod actions {
                     Collections::Normal,
                     None,
                     None,
+                    None,
+                    None,
                 );
 
                 let collection_addr =
@@ -763,6 +754,8 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
+                    None,
                     None,
                     None,
                 );
@@ -846,6 +839,8 @@ mod actions {
                     Collections::Normal,
                     None,
                     None,
+                    None,
+                    None,
                 );
 
                 let collection_addr =
@@ -911,6 +906,8 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
+                    None,
                     None,
                     None,
                 );
@@ -995,6 +992,8 @@ mod actions {
                     Collections::Normal,
                     None,
                     None,
+                    None,
+                    None,
                 );
 
                 let collection_addr =
@@ -1060,6 +1059,8 @@ mod actions {
                     Collections::Normal,
                     None,
                     None,
+                    None,
+                    None,
                 );
 
                 let collection_addr =
@@ -1113,7 +1114,6 @@ mod actions {
             use std::str::FromStr;
 
             use cosmwasm_std::Decimal;
-            use komple_types::royalty::Royalty;
             use komple_utils::{query_token_locks, FundsError};
 
             use super::*;
@@ -1134,6 +1134,8 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
+                    None,
                     None,
                     None,
                 );
@@ -1211,12 +1213,17 @@ mod actions {
                 assert_eq!(balance.amount, Uint128::new(0));
 
                 // Setup admin royalty for 10 percent
-                setup_royalty_contract(
-                    &mut app,
-                    collection_addr.clone(),
-                    Decimal::from_str("0.1").unwrap(),
-                    Royalty::Admin,
-                );
+                let msg = TokenExecuteMsg::UpdateRoyaltyShare {
+                    royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
 
                 setup_marketplace_listing(
                     &mut app,
@@ -1260,12 +1267,17 @@ mod actions {
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
                 assert_eq!(balance.amount, Uint128::new(100));
 
-                setup_royalty_contract(
-                    &mut app,
-                    collection_addr.clone(),
-                    Decimal::from_str("0.05").unwrap(),
-                    Royalty::Owners,
-                );
+                let msg = TokenExecuteMsg::UpdateRoyaltyShare {
+                    royalty_share: Some(Decimal::from_str("0.05").unwrap()),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
 
                 setup_marketplace_listing(
                     &mut app,
@@ -1296,7 +1308,7 @@ mod actions {
 
                 // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_949_900));
+                assert_eq!(balance.amount, Uint128::new(1_900_000));
 
                 // Marketplace fee
                 let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
@@ -1304,7 +1316,7 @@ mod actions {
 
                 // Admin royalty fee
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(100));
+                assert_eq!(balance.amount, Uint128::new(50_000));
             }
 
             #[test]
@@ -1323,6 +1335,8 @@ mod actions {
                     None,
                     None,
                     Collections::Normal,
+                    None,
+                    None,
                     None,
                     None,
                 );
@@ -1425,6 +1439,8 @@ mod queries {
             Collections::Normal,
             None,
             None,
+            None,
+            None,
         );
         create_collection(
             &mut app,
@@ -1433,6 +1449,8 @@ mod queries {
             None,
             None,
             Collections::Normal,
+            None,
+            None,
             None,
             None,
         );

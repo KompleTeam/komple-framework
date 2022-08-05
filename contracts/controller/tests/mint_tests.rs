@@ -69,11 +69,11 @@ mod permission_mint {
 
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
-    use mint_module::msg::ExecuteMsg as MintExecuteMsg;
-    use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
     use komple_types::{
         collection::Collections, metadata::Metadata, module::Modules, permission::Permissions,
     };
+    use mint_module::msg::ExecuteMsg as MintExecuteMsg;
+    use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
@@ -96,6 +96,8 @@ mod permission_mint {
             Collections::Normal,
             None,
             None,
+            None,
+            None,
         );
         create_collection(
             &mut app,
@@ -104,6 +106,8 @@ mod permission_mint {
             None,
             None,
             Collections::Normal,
+            None,
+            None,
             None,
             None,
         );

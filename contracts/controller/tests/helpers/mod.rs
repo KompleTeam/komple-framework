@@ -1,18 +1,21 @@
 use controller_contract::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::{
+    collection::Collections, metadata::Metadata as MetadataType, module::Modules,
+    permission::Permissions, query::ResponseWrapper,
+};
+use komple_utils::{query_collection_address, query_module_address};
 use marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, module::Modules,
-    permission::Permissions, query::ResponseWrapper, royalty::Royalty,
-};
-use komple_utils::{query_collection_address, query_module_address};
 use token_contract::{
-    msg::{ExecuteMsg as TokenExecuteMsg, QueryMsg as TokenQueryMsg, TokenInfo},
+    msg::{
+        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
+        QueryMsg as TokenQueryMsg, TokenInfo,
+    },
     state::{CollectionInfo, Contracts},
 };
 
@@ -76,15 +79,6 @@ pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
         marketplace_module::contract::execute,
         marketplace_module::contract::instantiate,
         marketplace_module::contract::query,
-    );
-    Box::new(contract)
-}
-
-pub fn royalty_contract() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        royalty_contract::contract::execute,
-        royalty_contract::contract::instantiate,
-        royalty_contract::contract::query,
     );
     Box::new(contract)
 }
@@ -204,23 +198,6 @@ pub fn setup_marketplace_module(app: &mut App, controller_addr: Addr) {
         .unwrap();
 }
 
-pub fn setup_royalty_contract(
-    app: &mut App,
-    collection_addr: Addr,
-    share: Decimal,
-    royalty_type: Royalty,
-) {
-    let royalty_contract_code_id = app.store_code(royalty_contract());
-    let msg = TokenExecuteMsg::InitRoyaltyContract {
-        code_id: royalty_contract_code_id,
-        share,
-        royalty_type,
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), collection_addr, &msg, &vec![])
-        .unwrap();
-}
-
 pub fn setup_all_modules(app: &mut App, controller_addr: Addr) {
     setup_mint_module(app, controller_addr.clone());
     setup_merge_module(app, controller_addr.clone());
@@ -237,6 +214,8 @@ pub fn create_collection(
     collection_type: Collections,
     linked_collections: Option<Vec<u32>>,
     unit_price: Option<Coin>,
+    max_token_limit: Option<u32>,
+    royalty_share: Option<Decimal>,
 ) {
     let collection_info = CollectionInfo {
         collection_type,
@@ -251,13 +230,18 @@ pub fn create_collection(
     };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_contract_code_id,
-        collection_info,
-        token_info,
-        per_address_limit,
-        start_time,
+        token_instantiate_msg: TokenInstantiateMsg {
+            admin: ADMIN.to_string(),
+            collection_info,
+            token_info,
+            per_address_limit,
+            start_time,
+            unit_price,
+            native_denom: NATIVE_DENOM.to_string(),
+            max_token_limit,
+            royalty_share,
+        },
         linked_collections,
-        unit_price,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])

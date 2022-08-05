@@ -51,6 +51,9 @@ pub enum ContractError {
     #[error("Address is not whitelisted")]
     NotWhitelisted {},
 
+    #[error("Invalid royalty share")]
+    InvalidRoyaltyShare {},
+
     #[error("token_id already claimed")]
     Claimed {},
 

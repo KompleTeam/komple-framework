@@ -1,12 +1,12 @@
 use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
-use metadata_contract::state::{MetaInfo, Trait};
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
 use komple_utils::query_token_owner;
+use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
+use metadata_contract::state::{MetaInfo, Trait};
 use token_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
 use token_contract::state::{CollectionInfo, Contracts};
 use token_contract::ContractError;
@@ -126,6 +126,7 @@ fn token_contract_instantiation(app: &mut App) -> Addr {
         max_token_limit: None,
         unit_price: None,
         native_denom: NATIVE_DENOM.to_string(),
+        royalty_share: None,
     };
     let token_contract_addr = app
         .instantiate_contract(

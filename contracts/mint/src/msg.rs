@@ -1,7 +1,7 @@
-use cosmwasm_std::{Binary, Coin, Timestamp};
+use cosmwasm_std::Binary;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use token_contract::{msg::TokenInfo, state::CollectionInfo};
+use token_contract::msg::InstantiateMsg as TokenInstantiateMsg;
 
 use komple_types::collection::Collections;
 
@@ -15,12 +15,7 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     CreateCollection {
         code_id: u64,
-        collection_info: CollectionInfo,
-        token_info: TokenInfo,
-        per_address_limit: Option<u32>,
-        start_time: Option<Timestamp>,
-        unit_price: Option<Coin>,
-        native_denom: String,
+        token_instantiate_msg: TokenInstantiateMsg,
         linked_collections: Option<Vec<u32>>,
     },
     UpdateMintLock {

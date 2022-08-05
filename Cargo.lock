@@ -78,7 +78,6 @@ dependencies = [
  "metadata-contract",
  "mint-module",
  "permission-module",
- "royalty-contract",
  "schemars",
  "serde",
  "thiserror",
@@ -508,7 +507,6 @@ dependencies = [
  "komple-utils",
  "metadata-contract",
  "mint-module",
- "royalty-contract",
  "schemars",
  "serde",
  "thiserror",
@@ -678,24 +676,6 @@ dependencies = [
  "crypto-bigint",
  "hmac",
  "zeroize",
-]
-
-[[package]]
-name = "royalty-contract"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus",
- "cw2",
- "cw721",
- "komple-types",
- "komple-utils",
- "schemars",
- "serde",
- "thiserror",
 ]
 
 [[package]]
@@ -884,7 +864,6 @@ dependencies = [
  "komple-types",
  "komple-utils",
  "metadata-contract",
- "royalty-contract",
  "schemars",
  "serde",
  "thiserror",

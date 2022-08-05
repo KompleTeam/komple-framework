@@ -52,7 +52,6 @@ cw721-base = { version = "0.13.4", features = ["library"] }
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
 metadata-contract = { path = "../metadata", features = ["library"] }
-royalty-contract = { path = "../royalty", features = ["library"] }
 whitelist-contract = { path = "../whitelist", features = ["library"]  }
 cw-utils = "0.13.2"
 

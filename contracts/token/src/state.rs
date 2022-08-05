@@ -5,7 +5,7 @@ use komple_types::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Coin, Timestamp};
+use cosmwasm_std::{Addr, Coin, Decimal, Timestamp};
 use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -22,6 +22,7 @@ pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new("collection_info");
 pub struct Config {
     pub admin: Addr,
     pub native_denom: String,
+    pub royalty_share: Option<Decimal>,
 }
 pub const CONFIG: Item<Config> = Item::new("config");
 
@@ -38,7 +39,6 @@ pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new("collection_conf
 pub struct Contracts {
     pub metadata: Option<Addr>,
     pub whitelist: Option<Addr>,
-    pub royalty: Option<Addr>,
 }
 pub const CONTRACTS: Item<Contracts> = Item::new("contracts");
 

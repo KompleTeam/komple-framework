@@ -1,14 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, MessageInfo,
-    Reply, ReplyOn, Response, StdResult, SubMsg, Timestamp, WasmMsg,
+    to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
+    MessageInfo, Reply, ReplyOn, Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_utils::parse_reply_instantiate_data;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
-use komple_types::royalty::Royalty;
 use komple_types::tokens::Locks;
 use komple_utils::{check_admin_privileges, check_funds};
 
@@ -16,8 +15,8 @@ use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
     CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO,
-    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATION_LOCK, OPERATORS,
-    TOKEN_IDS, TOKEN_LOCKS,
+    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS,
+    TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -26,7 +25,6 @@ use cw721_base::MintMsg;
 use metadata_contract::msg::{
     ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
 };
-use royalty_contract::msg::InstantiateMsg as RoyaltyInstantiateMsg;
 use whitelist_contract::msg::{
     ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
     QueryMsg as WhitelistQueryMsg,
@@ -41,8 +39,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
 
 const METADATA_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 1;
-const ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 2;
-const WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 3;
+const WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 2;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -62,7 +59,6 @@ pub fn instantiate(
 
     let contracts = Contracts {
         whitelist: None,
-        royalty: None,
         metadata: None,
     };
     CONTRACTS.save(deps.storage, &contracts)?;
@@ -87,10 +83,15 @@ pub fn instantiate(
     };
     COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
+    if msg.royalty_share.is_some() && msg.royalty_share.unwrap() > Decimal::one() {
+        return Err(ContractError::InvalidRoyaltyShare {});
+    }
+
     let admin = deps.api.addr_validate(&msg.admin)?;
     let config = Config {
         admin,
         native_denom: msg.native_denom,
+        royalty_share: msg.royalty_share,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -99,8 +100,6 @@ pub fn instantiate(
     TOKEN_IDS.save(deps.storage, &0)?;
 
     MINT_MODULE_ADDR.save(deps.storage, &info.sender)?;
-
-    OPERATION_LOCK.save(deps.storage, &false)?;
 
     if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
@@ -147,9 +146,6 @@ pub fn execute(
         ExecuteMsg::UpdateTokenLock { token_id, locks } => {
             execute_update_token_locks(deps, env, info, token_id, locks)
         }
-        ExecuteMsg::UpdateOperationLock { lock } => {
-            execute_update_operation_lock(deps, env, info, lock)
-        }
 
         // OPERATION MESSAGES
         ExecuteMsg::Mint { owner, metadata_id } => {
@@ -176,7 +172,6 @@ pub fn execute(
         ExecuteMsg::UpdateWhitelist { whitelist } => {
             execute_update_whitelist(deps, env, info, whitelist)
         }
-        ExecuteMsg::UpdateRoyalty { royalty } => execute_update_royalty(deps, env, info, royalty),
         ExecuteMsg::UpdateMetadata { metadata } => {
             execute_update_metadata(deps, env, info, metadata)
         }
@@ -187,17 +182,15 @@ pub fn execute(
             recipient,
             token_id,
         } => execute_admin_transfer(deps, env, info, token_id, recipient),
+        ExecuteMsg::UpdateRoyaltyShare { royalty_share } => {
+            execute_update_royalty_share(deps, env, info, royalty_share)
+        }
 
         // CONTRACT MESSAGES
         ExecuteMsg::InitMetadataContract {
             code_id,
             metadata_type,
         } => execute_init_metadata_contract(deps, env, info, code_id, metadata_type),
-        ExecuteMsg::InitRoyaltyContract {
-            code_id,
-            share,
-            royalty_type,
-        } => execute_init_royalty_contract(deps, env, info, code_id, share, royalty_type),
         ExecuteMsg::InitWhitelistContract {
             code_id,
             instantiate_msg,
@@ -243,6 +236,34 @@ pub fn execute_update_operators(
     OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_operators"))
+}
+
+fn execute_update_royalty_share(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    royalty_share: Option<Decimal>,
+) -> Result<Response, ContractError> {
+    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        mint_module_addr,
+        operators,
+    )?;
+
+    if royalty_share.is_some() && royalty_share.unwrap() > Decimal::one() {
+        return Err(ContractError::InvalidRoyaltyShare {});
+    }
+
+    config.royalty_share = royalty_share;
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_royalty_share"))
 }
 
 pub fn execute_update_locks(
@@ -307,31 +328,6 @@ pub fn execute_update_token_locks(
         .add_attribute("send_lock", locks.send_lock.to_string()))
 }
 
-pub fn execute_update_operation_lock(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    lock: bool,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    OPERATION_LOCK.save(deps.storage, &lock)?;
-
-    Ok(Response::new()
-        .add_attribute("action", "execute_update_operation_lock")
-        .add_attribute("lock", lock.to_string()))
-}
-
 pub fn execute_mint(
     deps: DepsMut,
     env: Env,
@@ -339,11 +335,6 @@ pub fn execute_mint(
     owner: String,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
-    let lock = OPERATION_LOCK.load(deps.storage)?;
-    if lock {
-        return Err(ContractError::MintLocked {});
-    }
-
     let config = CONFIG.load(deps.storage)?;
     let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
 
@@ -385,7 +376,11 @@ pub fn execute_mint(
 
     let mint_price = get_mint_price(&deps)?;
     if mint_price.is_some() {
-        check_funds(&info, &config.native_denom, mint_price.unwrap().amount)?;
+        check_funds(
+            &info,
+            &config.native_denom,
+            mint_price.as_ref().unwrap().amount,
+        )?;
     }
 
     let mint_msg = MintMsg {
@@ -403,7 +398,9 @@ pub fn execute_mint(
         return Err(ContractError::MetadataContractNotFound {});
     };
 
-    let metadata_msg = CosmosMsg::Wasm(WasmMsg::Execute {
+    let res = Cw721Contract::default().mint(deps, env, info, mint_msg);
+
+    let mut msgs: Vec<CosmosMsg> = vec![CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: contracts.metadata.unwrap().to_string(),
         msg: to_binary(&MetadataExecuteMsg::LinkMetadata {
             token_id,
@@ -411,11 +408,17 @@ pub fn execute_mint(
         })
         .unwrap(),
         funds: vec![],
-    });
+    })];
+    if mint_price.is_some() {
+        let payment_msg: CosmosMsg<Empty> = CosmosMsg::Bank(BankMsg::Send {
+            to_address: config.admin.to_string(),
+            amount: vec![mint_price.unwrap()],
+        });
+        msgs.push(payment_msg);
+    }
 
-    let res = Cw721Contract::default().mint(deps, env, info, mint_msg);
     match res {
-        Ok(res) => Ok(res.add_message(metadata_msg)),
+        Ok(res) => Ok(res.add_messages(msgs)),
         Err(e) => Err(e.into()),
     }
 }
@@ -426,11 +429,6 @@ pub fn execute_burn(
     info: MessageInfo,
     token_id: String,
 ) -> Result<Response, ContractError> {
-    let lock = OPERATION_LOCK.load(deps.storage)?;
-    if lock {
-        return Err(ContractError::BurnLocked {});
-    }
-
     let locks = LOCKS.load(deps.storage)?;
     if locks.burn_lock {
         return Err(ContractError::BurnLocked {});
@@ -455,11 +453,6 @@ pub fn execute_transfer(
     token_id: String,
     recipient: String,
 ) -> Result<Response, ContractError> {
-    let lock = OPERATION_LOCK.load(deps.storage)?;
-    if lock {
-        return Err(ContractError::TransferLocked {});
-    }
-
     let locks = LOCKS.load(deps.storage)?;
     if locks.transfer_lock {
         return Err(ContractError::TransferLocked {});
@@ -511,11 +504,6 @@ pub fn execute_send(
     contract: String,
     msg: Binary,
 ) -> Result<Response, ContractError> {
-    let lock = OPERATION_LOCK.load(deps.storage)?;
-    if lock {
-        return Err(ContractError::SendLocked {});
-    }
-
     let locks = LOCKS.load(deps.storage)?;
     if locks.send_lock {
         return Err(ContractError::SendLocked {});
@@ -629,31 +617,6 @@ fn execute_update_whitelist(
     Ok(Response::new().add_attribute("action", "execute_update_whitelist"))
 }
 
-fn execute_update_royalty(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    royalty: Option<String>,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    let mut contracts = CONTRACTS.load(deps.storage)?;
-    contracts.royalty = royalty.and_then(|r| deps.api.addr_validate(r.as_str()).ok());
-    CONTRACTS.save(deps.storage, &contracts)?;
-
-    Ok(Response::new().add_attribute("action", "execute_update_royalty"))
-}
-
 fn execute_update_metadata(
     deps: DepsMut,
     env: Env,
@@ -718,49 +681,6 @@ fn execute_init_metadata_contract(
     Ok(Response::new()
         .add_submessage(sub_msg)
         .add_attribute("action", "execute_init_metadata_contract"))
-}
-
-fn execute_init_royalty_contract(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    code_id: u64,
-    share: Decimal,
-    royalty_type: Royalty,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    let sub_msg: SubMsg = SubMsg {
-        msg: WasmMsg::Instantiate {
-            code_id,
-            msg: to_binary(&RoyaltyInstantiateMsg {
-                admin: config.admin.to_string(),
-                share,
-                royalty_type,
-            })?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
-            label: String::from("komple Framework Royalty Contract"),
-        }
-        .into(),
-        id: ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID,
-        gas_limit: None,
-        reply_on: ReplyOn::Success,
-    };
-
-    Ok(Response::new()
-        .add_submessage(sub_msg)
-        .add_attribute("action", "execute_init_royalty_contract"))
 }
 
 fn execute_init_whitelist_contract(
@@ -885,6 +805,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
             start_time: collection_config.start_time,
             max_token_limit: collection_config.max_token_limit,
             unit_price: collection_config.unit_price,
+            royalty_share: config.royalty_share,
         },
     ))
 }
@@ -927,7 +848,6 @@ fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     if msg.id != METADATA_CONTRACT_INSTANTIATE_REPLY_ID
-        && msg.id != ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID
         && msg.id != WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID
     {
         return Err(ContractError::InvalidReplyID {});
@@ -942,10 +862,6 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
                 METADATA_CONTRACT_INSTANTIATE_REPLY_ID => {
                     contracts.metadata = Some(Addr::unchecked(res.contract_address));
                     contract = "metadata";
-                }
-                ROYALTY_CONTRACT_INSTANTIATE_REPLY_ID => {
-                    contracts.royalty = Some(Addr::unchecked(res.contract_address));
-                    contract = "royalty";
                 }
                 WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID => {
                     contracts.whitelist = Some(Addr::unchecked(res.contract_address));

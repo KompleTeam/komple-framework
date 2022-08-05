@@ -68,12 +68,12 @@ mod normal_merge {
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use helpers::link_collection_to_collections;
+    use komple_types::{collection::Collections, metadata::Metadata};
+    use komple_utils::query_collection_address;
     use merge_module::{
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
     };
-    use komple_types::{collection::Collections, metadata::Metadata};
-    use komple_utils::query_collection_address;
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
@@ -96,14 +96,6 @@ mod normal_merge {
             Collections::Normal,
             None,
             None,
-        );
-        create_collection(
-            &mut app,
-            mint_module_addr.clone(),
-            token_contract_code_id,
-            None,
-            None,
-            Collections::Normal,
             None,
             None,
         );
@@ -114,6 +106,20 @@ mod normal_merge {
             None,
             None,
             Collections::Normal,
+            None,
+            None,
+            None,
+            None,
+        );
+        create_collection(
+            &mut app,
+            mint_module_addr.clone(),
+            token_contract_code_id,
+            None,
+            None,
+            Collections::Normal,
+            None,
+            None,
             None,
             None,
         );
@@ -239,6 +245,8 @@ mod normal_merge {
             Collections::Normal,
             None,
             None,
+            None,
+            None,
         );
         create_collection(
             &mut app,
@@ -247,6 +255,8 @@ mod normal_merge {
             None,
             None,
             Collections::Normal,
+            None,
+            None,
             None,
             None,
         );
@@ -258,6 +268,8 @@ mod normal_merge {
             None,
             Collections::Normal,
             Some(vec![2]),
+            None,
+            None,
             None,
         );
 
@@ -388,19 +400,19 @@ mod permission_merge {
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use helpers::{add_permission_for_module, link_collection_to_collections};
-    use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
-    use permission_module::msg::PermissionCheckMsg;
     use komple_types::collection::Collections;
     use komple_types::module::Modules;
     use komple_types::permission::Permissions;
+    use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
+    use permission_module::msg::PermissionCheckMsg;
     use token_contract::msg::QueryMsg as TokenQueryMsg;
 
     mod ownership_permission {
         use super::*;
 
-        use permission_module::msg::OwnershipMsg;
         use komple_types::metadata::Metadata;
         use komple_utils::query_collection_address;
+        use permission_module::msg::OwnershipMsg;
 
         #[test]
         fn test_happy_path() {
@@ -422,14 +434,6 @@ mod permission_merge {
                 Collections::Normal,
                 None,
                 None,
-            );
-            create_collection(
-                &mut app,
-                mint_module_addr.clone(),
-                token_contract_code_id,
-                None,
-                None,
-                Collections::Normal,
                 None,
                 None,
             );
@@ -440,6 +444,20 @@ mod permission_merge {
                 None,
                 None,
                 Collections::Normal,
+                None,
+                None,
+                None,
+                None,
+            );
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_contract_code_id,
+                None,
+                None,
+                Collections::Normal,
+                None,
+                None,
                 None,
                 None,
             );

@@ -9,19 +9,18 @@ use cw_storage_plus::Bound;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::tokens::{Locks, CONTRACTS_NAMESPACE};
+use komple_types::tokens::Locks;
 use komple_utils::{
     check_funds, query_collection_address, query_collection_locks, query_module_address,
     query_storage, query_token_locks, query_token_owner,
 };
 use std::ops::Mul;
-use token_contract::state::Contracts;
+use token_contract::state::Config as TokenConfig;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, CONTROLLER_ADDR, FIXED_LISTING};
 
-use royalty_contract::msg::{QueryMsg as RoyaltyQueryMsg, RoyaltyResponse};
 use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError};
 
 // version info for migration info
@@ -248,23 +247,13 @@ fn _execute_buy_fixed_listing(
     let mut sub_msgs: Vec<SubMsg> = vec![];
 
     // Get royalty message if it exists
-    let res = query_storage::<Contracts>(&deps.querier, &collection_addr, CONTRACTS_NAMESPACE)?;
-    if let Some(contracts) = res {
-        if let Some(royalty_contract) = contracts.royalty {
-            let msg = RoyaltyQueryMsg::Royalty {
-                owner: fixed_listing.owner.to_string(),
-                collection_id: fixed_listing.collection_id,
-                token_id: fixed_listing.token_id,
-            };
-            let res: ResponseWrapper<RoyaltyResponse> = deps
-                .querier
-                .query_wasm_smart(royalty_contract, &msg)
-                .unwrap();
-
-            royalty_fee = res.data.share.mul(fixed_listing.price);
+    let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, "config")?;
+    if let Some(config) = res {
+        if config.royalty_share.is_some() {
+            royalty_fee = config.royalty_share.unwrap().mul(fixed_listing.price);
 
             let royalty_payout = BankMsg::Send {
-                to_address: res.data.address,
+                to_address: config.admin.to_string(),
                 amount: vec![Coin {
                     denom: config.native_denom.to_string(),
                     amount: royalty_fee,

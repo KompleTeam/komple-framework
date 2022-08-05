@@ -1,15 +1,18 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::{
+    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
+};
 use metadata_contract::{
     msg::ExecuteMsg as MetadataExecuteMsg,
     state::{MetaInfo, Trait},
 };
-use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
-};
 use token_contract::{
-    msg::{ExecuteMsg as TokenExecuteMsg, QueryMsg as TokenQueryMsg, TokenInfo},
+    msg::{
+        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
+        QueryMsg as TokenQueryMsg, TokenInfo,
+    },
     state::{CollectionInfo, Contracts},
 };
 
@@ -99,13 +102,18 @@ fn setup_collection(app: &mut App, minter_addr: &Addr, linked_collections: Optio
     };
     let msg = ExecuteMsg::CreateCollection {
         code_id: token_code_id,
-        collection_info,
-        token_info,
-        per_address_limit: None,
-        start_time: None,
+        token_instantiate_msg: TokenInstantiateMsg {
+            admin: ADMIN.to_string(),
+            collection_info,
+            token_info,
+            per_address_limit: None,
+            start_time: None,
+            unit_price: None,
+            native_denom: NATIVE_DENOM.to_string(),
+            max_token_limit: None,
+            royalty_share: Some(Decimal::new(Uint128::new(5))),
+        },
         linked_collections,
-        unit_price: None,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])

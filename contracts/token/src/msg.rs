@@ -1,7 +1,7 @@
 use cosmwasm_std::{Binary, Coin, Decimal, Empty, Timestamp};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use komple_types::{metadata::Metadata as MetadataType, royalty::Royalty, tokens::Locks};
+use komple_types::{metadata::Metadata as MetadataType, tokens::Locks};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -26,6 +26,7 @@ pub struct InstantiateMsg {
     pub max_token_limit: Option<u32>,
     pub unit_price: Option<Coin>,
     pub native_denom: String,
+    pub royalty_share: Option<Decimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -69,6 +70,9 @@ pub enum ExecuteMsg {
     UpdateOperators {
         addrs: Vec<String>,
     },
+    UpdateRoyaltyShare {
+        royalty_share: Option<Decimal>,
+    },
     AdminTransferNft {
         recipient: String,
         token_id: String,
@@ -93,9 +97,6 @@ pub enum ExecuteMsg {
     UpdateWhitelist {
         whitelist: Option<String>,
     },
-    UpdateRoyalty {
-        royalty: Option<String>,
-    },
     UpdateMetadata {
         metadata: Option<String>,
     },
@@ -104,11 +105,6 @@ pub enum ExecuteMsg {
     InitMetadataContract {
         code_id: u64,
         metadata_type: MetadataType,
-    },
-    InitRoyaltyContract {
-        code_id: u64,
-        share: Decimal,
-        royalty_type: Royalty,
     },
     InitWhitelistContract {
         code_id: u64,
@@ -286,6 +282,7 @@ pub struct ConfigResponse {
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
     pub unit_price: Option<Coin>,
+    pub royalty_share: Option<Decimal>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
