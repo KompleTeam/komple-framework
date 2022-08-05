@@ -497,6 +497,7 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 name = "marketplace-module"
 version = "0.1.0"
 dependencies = [
+ "controller-contract",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
@@ -505,6 +506,8 @@ dependencies = [
  "cw2",
  "komple-types",
  "komple-utils",
+ "metadata-contract",
+ "mint-module",
  "royalty-contract",
  "schemars",
  "serde",
