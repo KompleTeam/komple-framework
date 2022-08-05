@@ -554,6 +554,7 @@ dependencies = [
 name = "mint-module"
 version = "0.1.0"
 dependencies = [
+ "controller-contract",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
