@@ -1,6 +1,6 @@
 use komple_types::{
     collection::Collections,
-    tokens::{Locks, LOCKS_NAMESPACE, OPERATION_LOCK_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
+    tokens::{Locks, LOCKS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -45,8 +45,6 @@ pub const CONTRACTS: Item<Contracts> = Item::new("contracts");
 pub const LOCKS: Item<Locks> = Item::new(LOCKS_NAMESPACE);
 
 pub const TOKEN_LOCKS: Map<&str, Locks> = Map::new(TOKEN_LOCKS_NAMESPACE);
-
-pub const OPERATION_LOCK: Item<bool> = Item::new(OPERATION_LOCK_NAMESPACE);
 
 pub const TOKEN_IDS: Item<u32> = Item::new("token_ids");
 

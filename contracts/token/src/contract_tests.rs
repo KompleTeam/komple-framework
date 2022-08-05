@@ -6,14 +6,14 @@ use crate::{
 };
 use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::query::ResponseWrapper;
+use komple_types::tokens::Locks;
+use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
+use komple_utils::{query_token_owner, FundsError};
 use metadata_contract::{
     msg::ExecuteMsg as MetadataExecuteMsg,
     state::{MetaInfo, Trait},
 };
-use komple_types::query::ResponseWrapper;
-use komple_types::tokens::Locks;
-use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
-use komple_utils::{query_token_operation_lock, query_token_owner, FundsError};
 
 pub fn token_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -470,52 +470,6 @@ mod actions {
 
     mod update_locks {
         use super::*;
-
-        mod operation_lock {
-            use super::*;
-
-            #[test]
-            fn test_happy_path() {
-                let mut app = mock_app();
-                let token_contract_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
-
-                let msg = ExecuteMsg::UpdateOperationLock { lock: true };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let res =
-                    query_token_operation_lock(&app.wrap(), &token_contract_addr.clone()).unwrap();
-                assert_eq!(res, true);
-            }
-
-            #[test]
-            fn test_invalid_admin() {
-                let mut app = mock_app();
-                let token_contract_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None);
-
-                let msg = ExecuteMsg::UpdateOperationLock { lock: true };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(USER),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::Unauthorized {}.to_string()
-                )
-            }
-        }
 
         mod normal_locks {
             use super::*;
@@ -1026,33 +980,6 @@ mod actions {
                     err.source().unwrap().to_string(),
                     ContractError::TransferLocked {}.to_string()
                 );
-
-                let msg = ExecuteMsg::UpdateOperationLock { lock: true };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = ExecuteMsg::TransferNft {
-                    recipient: RANDOM.to_string(),
-                    token_id: "1".to_string(),
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(USER),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::TransferLocked {}.to_string()
-                );
             }
         }
 
@@ -1281,32 +1208,6 @@ mod actions {
                     err.source().unwrap().to_string(),
                     ContractError::BurnLocked {}.to_string()
                 );
-
-                let msg = ExecuteMsg::UpdateOperationLock { lock: true };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = ExecuteMsg::Burn {
-                    token_id: "1".to_string(),
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(USER),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::BurnLocked {}.to_string()
-                );
             }
         }
 
@@ -1366,33 +1267,6 @@ mod actions {
                 let msg = ExecuteMsg::UpdateLocks {
                     locks: locks.clone(),
                 };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::MintLocked {}.to_string()
-                );
-
-                let msg = ExecuteMsg::UpdateOperationLock { lock: true };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),

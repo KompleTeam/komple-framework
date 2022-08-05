@@ -15,6 +15,4 @@ pub const TOKEN_LOCKS_NAMESPACE: &str = "token_locks";
 
 pub const LOCKS_NAMESPACE: &str = "locks";
 
-pub const OPERATION_LOCK_NAMESPACE: &str = "operation_lock";
-
 pub const CONTRACTS_NAMESPACE: &str = "contracts";

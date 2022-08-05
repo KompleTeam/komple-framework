@@ -20,6 +20,12 @@ pub enum ContractError {
     #[error("Token transfer locked")]
     TransferLocked {},
 
+    #[error("Token send locked")]
+    SendLocked {},
+
+    #[error("Token burn locked")]
+    BurnLocked {},
+
     #[error("{0}")]
     Overflow(#[from] OverflowError),
 
@@ -34,6 +40,8 @@ impl From<TokenContractError> for ContractError {
     fn from(err: TokenContractError) -> ContractError {
         match err {
             TokenContractError::TransferLocked {} => ContractError::TransferLocked {},
+            TokenContractError::SendLocked {} => ContractError::SendLocked {},
+            TokenContractError::BurnLocked {} => ContractError::BurnLocked {},
             _ => unreachable!(),
         }
     }

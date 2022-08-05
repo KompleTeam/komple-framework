@@ -2,16 +2,17 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
-    MessageInfo, Response, StdResult, SubMsg, Uint128, WasmMsg,
+    MessageInfo, Order, Response, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw_storage_plus::Bound;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::tokens::CONTRACTS_NAMESPACE;
+use komple_types::tokens::{Locks, CONTRACTS_NAMESPACE};
 use komple_utils::{
     check_funds, query_collection_address, query_collection_locks, query_module_address,
-    query_storage, query_token_locks, query_token_operation_lock, query_token_owner,
+    query_storage, query_token_locks, query_token_owner,
 };
 use std::ops::Mul;
 use token_contract::state::Contracts;
@@ -107,20 +108,11 @@ fn execute_list_fixed_token(
         return Err(ContractError::Unauthorized {});
     }
 
-    let operation_lock = query_token_operation_lock(&deps.querier, &collection_addr)?;
-    if operation_lock {
-        return Err(TokenContractError::TransferLocked {}.into());
-    }
-
     let collection_locks = query_collection_locks(&deps.querier, &collection_addr)?;
-    if collection_locks.transfer_lock {
-        return Err(TokenContractError::TransferLocked {}.into());
-    }
+    check_locks(collection_locks)?;
 
     let token_locks = query_token_locks(&deps.querier, &collection_addr, &token_id)?;
-    if token_locks.transfer_lock {
-        return Err(TokenContractError::TransferLocked {}.into());
-    }
+    check_locks(token_locks)?;
 
     let fixed_listing = FixedListing {
         collection_id,
@@ -132,7 +124,16 @@ fn execute_list_fixed_token(
 
     let lock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
-        msg: to_binary(&TokenExecuteMsg::UpdateOperationLock { lock: true }).unwrap(),
+        msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
+            token_id: token_id.to_string(),
+            locks: Locks {
+                burn_lock: true,
+                mint_lock: false,
+                transfer_lock: true,
+                send_lock: true,
+            },
+        })
+        .unwrap(),
         funds: vec![],
     });
 
@@ -159,7 +160,16 @@ fn execute_delist_fixed_token(
 
     let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
-        msg: to_binary(&TokenExecuteMsg::UpdateOperationLock { lock: false }).unwrap(),
+        msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
+            token_id: token_id.to_string(),
+            locks: Locks {
+                burn_lock: false,
+                mint_lock: false,
+                transfer_lock: false,
+                send_lock: false,
+            },
+        })
+        .unwrap(),
         funds: vec![],
     });
 
@@ -297,7 +307,15 @@ fn _execute_buy_fixed_listing(
     // Lift up the token locks
     let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
-        msg: to_binary(&TokenExecuteMsg::UpdateOperationLock { lock: false })?,
+        msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
+            token_id: token_id.to_string(),
+            locks: Locks {
+                burn_lock: false,
+                mint_lock: false,
+                transfer_lock: false,
+                send_lock: false,
+            },
+        })?,
         funds: vec![],
     });
 
@@ -316,6 +334,19 @@ fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, C
     Ok(collection_addr)
 }
 
+fn check_locks(locks: Locks) -> Result<(), TokenContractError> {
+    if locks.transfer_lock {
+        return Err(TokenContractError::TransferLocked {}.into());
+    };
+    if locks.send_lock {
+        return Err(TokenContractError::SendLocked {}.into());
+    };
+    if locks.burn_lock {
+        return Err(TokenContractError::BurnLocked {}.into());
+    };
+    Ok(())
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -324,6 +355,16 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             collection_id,
             token_id,
         } => to_binary(&query_fixed_listing(deps, collection_id, token_id)?),
+        QueryMsg::FixedListings {
+            collection_id,
+            start_after,
+            limit,
+        } => to_binary(&query_fixed_listings(
+            deps,
+            collection_id,
+            start_after,
+            limit,
+        )?),
     }
 }
 
@@ -339,4 +380,25 @@ fn query_fixed_listing(
 ) -> StdResult<ResponseWrapper<FixedListing>> {
     let listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
     Ok(ResponseWrapper::new("fixed_listing", listing))
+}
+
+fn query_fixed_listings(
+    deps: Deps,
+    collection_id: u32,
+    start_after: Option<u32>,
+    limit: Option<u32>,
+) -> StdResult<ResponseWrapper<Vec<FixedListing>>> {
+    let limit = limit.unwrap_or(30) as usize;
+    let start = start_after.map(Bound::exclusive);
+    let listings = FIXED_LISTING
+        .prefix(collection_id)
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| {
+            let (_, listing) = item.unwrap();
+            listing
+        })
+        .collect::<Vec<FixedListing>>();
+
+    Ok(ResponseWrapper::new("listings", listings))
 }

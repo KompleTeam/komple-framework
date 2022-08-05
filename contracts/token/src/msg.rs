@@ -82,9 +82,6 @@ pub enum ExecuteMsg {
         token_id: String,
         locks: Locks,
     },
-    UpdateOperationLock {
-        lock: bool,
-    },
 
     // CONFIG MESSAGES
     UpdatePerAddressLimit {

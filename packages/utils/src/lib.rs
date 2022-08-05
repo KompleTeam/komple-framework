@@ -9,9 +9,7 @@ use cw_storage_plus::Path;
 use komple_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
-    tokens::{
-        Locks, LOCKS_NAMESPACE, OPERATION_LOCK_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
-    },
+    tokens::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
 };
 use serde::de::DeserializeOwned;
 use thiserror::Error;
@@ -97,19 +95,6 @@ pub fn query_token_owner(
         Some(res) => Ok(Addr::unchecked(res.owner)),
         None => Err(StdError::NotFound {
             kind: "Token".to_string(),
-        }),
-    }
-}
-
-pub fn query_token_operation_lock(
-    querier: &QuerierWrapper,
-    collection_addr: &Addr,
-) -> StdResult<bool> {
-    let res = query_storage::<bool>(&querier, &collection_addr, OPERATION_LOCK_NAMESPACE)?;
-    match res {
-        Some(res) => Ok(res),
-        None => Err(StdError::NotFound {
-            kind: "Operation lock".to_string(),
         }),
     }
 }

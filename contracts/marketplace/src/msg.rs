@@ -38,5 +38,13 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Config {},
-    FixedListing { collection_id: u32, token_id: u32 },
+    FixedListing {
+        collection_id: u32,
+        token_id: u32,
+    },
+    FixedListings {
+        collection_id: u32,
+        start_after: Option<u32>,
+        limit: Option<u32>,
+    },
 }
