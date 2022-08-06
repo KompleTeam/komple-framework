@@ -19,7 +19,7 @@ use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MergeBurnMsg, MergeMsg, QueryMsg};
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, OPERATORS};
 
 // version info for migration info
@@ -138,86 +138,6 @@ fn execute_permission_merge(
         .add_attribute("action", "execute_permission_merge"))
 }
 
-fn make_merge_msg(
-    deps: &DepsMut,
-    info: &MessageInfo,
-    msg: Binary,
-    msgs: &mut Vec<CosmosMsg>,
-) -> Result<(), ContractError> {
-    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
-    let mint_module_addr =
-        query_module_address(&deps.querier, &controller_addr, Modules::MintModule)?;
-
-    let merge_msg: MergeMsg = from_binary(&msg)?;
-
-    if merge_msg.burn.len() == 0 {
-        return Err(ContractError::BurnNotFound {});
-    }
-
-    if merge_msg.metadata_ids.is_some()
-        && merge_msg.metadata_ids.as_ref().unwrap().len() != merge_msg.mint.len()
-    {
-        return Err(ContractError::InvalidMetadataIds {});
-    }
-
-    let mut burn_collection_ids: Vec<u32> = vec![];
-
-    for burn_msg in merge_msg.clone().burn {
-        burn_collection_ids.push(burn_msg.collection_id);
-
-        let collection_addr =
-            query_collection_address(&deps.querier, &mint_module_addr, &burn_msg.collection_id)?;
-
-        let msg = TokenExecuteMsg::Burn {
-            token_id: burn_msg.token_id.to_string(),
-        };
-        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: collection_addr.to_string(),
-            msg: to_binary(&msg)?,
-            funds: info.funds.clone(),
-        }));
-    }
-
-    let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
-
-    for (index, collection_id) in merge_msg.mint.iter().enumerate() {
-        let linked_collections = match linked_collection_map.contains_key(&collection_id) {
-            true => linked_collection_map.get(&collection_id).unwrap().clone(),
-            false => {
-                let collections =
-                    query_linked_collections(&deps.querier, &mint_module_addr, *collection_id)?;
-                linked_collection_map.insert(*collection_id, collections.clone());
-                collections
-            }
-        };
-
-        if linked_collections.len() > 0 {
-            for linked_collection_id in linked_collections {
-                if !burn_collection_ids.contains(&linked_collection_id) {
-                    return Err(ContractError::LinkedCollectionNotFound {});
-                }
-            }
-        }
-
-        let msg = MintModuleExecuteMsg::MintTo {
-            collection_id: *collection_id,
-            recipient: info.sender.to_string(),
-            metadata_id: merge_msg
-                .metadata_ids
-                .as_ref()
-                .as_ref()
-                .and_then(|ids| Some(ids[index])),
-        };
-        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: mint_module_addr.to_string(),
-            msg: to_binary(&msg)?,
-            funds: info.funds.clone(),
-        }));
-    }
-
-    Ok(())
-}
-
 fn execute_update_operators(
     deps: DepsMut,
     env: Env,
@@ -247,6 +167,117 @@ fn execute_update_operators(
     OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_operators"))
+}
+
+/// Constructs the mint and burn messages
+fn make_merge_msg(
+    deps: &DepsMut,
+    info: &MessageInfo,
+    msg: Binary,
+    msgs: &mut Vec<CosmosMsg>,
+) -> Result<(), ContractError> {
+    let controller_addr = CONTROLLER_ADDR.load(deps.storage)?;
+    let mint_module_addr =
+        query_module_address(&deps.querier, &controller_addr, Modules::MintModule)?;
+
+    // MergeMsg contains mint, burn and metadata infos
+    let merge_msg: MergeMsg = from_binary(&msg)?;
+
+    // Throw an error if there are no burn messages
+    if merge_msg.burn.len() == 0 {
+        return Err(ContractError::BurnNotFound {});
+    }
+
+    // Metadata length should be the same as mint messages
+    if merge_msg.metadata_ids.is_some()
+        && merge_msg.metadata_ids.as_ref().unwrap().len() != merge_msg.mint.len()
+    {
+        return Err(ContractError::InvalidMetadataIds {});
+    }
+
+    // Pushes the burn messages inside msgs list
+    make_burn_messages(&deps, &info, &mint_module_addr, &merge_msg, msgs)?;
+
+    // Pushes the mint messages inside msgs list
+    make_mint_messages(deps, info, &mint_module_addr, &merge_msg, msgs)?;
+
+    Ok(())
+}
+
+fn make_burn_messages(
+    deps: &DepsMut,
+    info: &MessageInfo,
+    mint_module_addr: &Addr,
+    merge_msg: &MergeMsg,
+    msgs: &mut Vec<CosmosMsg>,
+) -> Result<(), ContractError> {
+    for burn_msg in &merge_msg.burn {
+        let collection_addr =
+            query_collection_address(&deps.querier, &mint_module_addr, &burn_msg.collection_id)?;
+
+        let msg = TokenExecuteMsg::Burn {
+            token_id: burn_msg.token_id.to_string(),
+        };
+        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: collection_addr.to_string(),
+            msg: to_binary(&msg)?,
+            funds: info.funds.clone(),
+        }));
+    }
+    Ok(())
+}
+
+fn make_mint_messages(
+    deps: &DepsMut,
+    info: &MessageInfo,
+    mint_module_addr: &Addr,
+    merge_msg: &MergeMsg,
+    msgs: &mut Vec<CosmosMsg>,
+) -> Result<(), ContractError> {
+    let burn_collection_ids: Vec<u32> = merge_msg.burn.iter().map(|m| m.collection_id).collect();
+
+    // Keeping the linked collections list inside a hashmap
+    // Used for saving multiple queries on same collection id
+    let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
+
+    for (index, collection_id) in merge_msg.mint.iter().enumerate() {
+        let linked_collections = match linked_collection_map.contains_key(&collection_id) {
+            true => linked_collection_map.get(&collection_id).unwrap().clone(),
+            false => {
+                let collections =
+                    query_linked_collections(&deps.querier, &mint_module_addr, *collection_id)?;
+                linked_collection_map.insert(*collection_id, collections.clone());
+                collections
+            }
+        };
+
+        // If there are some linked collections
+        // They have to be in the burn message
+        if linked_collections.len() > 0 {
+            for linked_collection_id in linked_collections {
+                if !burn_collection_ids.contains(&linked_collection_id) {
+                    return Err(ContractError::LinkedCollectionNotFound {});
+                }
+            }
+        }
+
+        let msg = MintModuleExecuteMsg::MintTo {
+            collection_id: *collection_id,
+            recipient: info.sender.to_string(),
+            metadata_id: merge_msg
+                .metadata_ids
+                .as_ref()
+                .as_ref()
+                .and_then(|ids| Some(ids[index])),
+        };
+        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: mint_module_addr.to_string(),
+            msg: to_binary(&msg)?,
+            funds: info.funds.clone(),
+        }));
+    }
+
+    Ok(())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

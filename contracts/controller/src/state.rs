@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 
+// These info also used for website profile
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ControllerInfo {
     pub name: String,
@@ -26,6 +27,7 @@ pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 pub const MODULE_ADDR: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);
 
+// Contains the configuration for website profile
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WebsiteConfig {
     pub background_color: Option<String>,

@@ -135,7 +135,7 @@ fn execute_check(
     let permissions = MODULE_PERMISSIONS.may_load(deps.storage, module.as_str())?;
     let expected_permissions = match permissions {
         Some(permissions) => permissions,
-        None => return Err(ContractError::NoPermissionsInModule {}),
+        None => return Err(ContractError::NoPermissionsForModule {}),
     };
 
     for permission in data {

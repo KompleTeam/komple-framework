@@ -104,13 +104,16 @@ fn execute_list_fixed_token(
     let collection_addr = get_collection_address(&deps, &collection_id)?;
     let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
+    // Check if the token owner is the same as info.sender
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
+    // Checking the collection locks
     let collection_locks = query_collection_locks(&deps.querier, &collection_addr)?;
     check_locks(collection_locks)?;
 
+    // Checking the token locks
     let token_locks = query_token_locks(&deps.querier, &collection_addr, &token_id)?;
     check_locks(token_locks)?;
 
@@ -122,6 +125,7 @@ fn execute_list_fixed_token(
     };
     FIXED_LISTING.save(deps.storage, (collection_id, token_id), &fixed_listing)?;
 
+    // Locking the token so it will not be available for other actions
     let lock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
@@ -152,12 +156,19 @@ fn execute_delist_fixed_token(
     let collection_addr = get_collection_address(&deps, &collection_id)?;
     let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
+    // Check if the token owner is the same as info.sender
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
+    // Throw an error if token is not listed
+    // This is needed in case users want to unlock a token
+    if !FIXED_LISTING.has(deps.storage, (collection_id, token_id)) {
+        return Err(ContractError::NotListed {});
+    }
     FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
+    // Unlocking token so it can be used again
     let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
@@ -190,6 +201,7 @@ fn execute_update_price(
     let collection_addr = get_collection_address(&deps, &collection_id)?;
     let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
+    // Check if the token owner is the same as info.sender
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
@@ -238,11 +250,11 @@ fn _execute_buy_fixed_listing(
     let collection_addr =
         query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
 
-    // This is the fee for marketplace
+    // This is the fee marketplace takes
     let fee = config.fee_percentage.mul(fixed_listing.price);
 
     // This is the fee for royalty owner
-    // Zero at first because it royalty might not exist
+    // Zero at first because royalty might not exist
     let mut royalty_fee = Uint128::new(0);
 
     let mut sub_msgs: Vec<SubMsg> = vec![];
@@ -253,6 +265,7 @@ fn _execute_buy_fixed_listing(
         if config.royalty_share.is_some() {
             royalty_fee = config.royalty_share.unwrap().mul(fixed_listing.price);
 
+            // Royalty fee message
             let royalty_payout = BankMsg::Send {
                 to_address: config.admin.to_string(),
                 amount: vec![Coin {
@@ -267,6 +280,7 @@ fn _execute_buy_fixed_listing(
     // Add marketplace and royalty fee and subtract from the price
     let payout = fixed_listing.price.checked_sub(fee + royalty_fee)?;
 
+    // Marketplace fee message
     let fee_payout = BankMsg::Send {
         to_address: MARKETPLACE_PAYOUT_ADDR.to_string(),
         amount: vec![Coin {
@@ -274,6 +288,7 @@ fn _execute_buy_fixed_listing(
             amount: fee,
         }],
     };
+    // Owner payout message
     let owner_payout = BankMsg::Send {
         to_address: fixed_listing.owner.to_string(),
         amount: vec![Coin {
@@ -363,6 +378,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     Ok(ResponseWrapper::new("config", config))
 }
 
+/// Gets a single fixed listing
 fn query_fixed_listing(
     deps: Deps,
     collection_id: u32,
@@ -372,6 +388,7 @@ fn query_fixed_listing(
     Ok(ResponseWrapper::new("fixed_listing", listing))
 }
 
+/// Gets a batch of fixed listings under a collection
 fn query_fixed_listings(
     deps: Deps,
     collection_id: u32,

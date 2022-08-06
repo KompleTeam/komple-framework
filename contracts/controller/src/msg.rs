@@ -16,25 +16,31 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
+    // Instantiates a new mint module
     InitMintModule {
         code_id: u64,
     },
+    // Instantiates a new permission module
     InitPermissionModule {
         code_id: u64,
     },
+    // Instantiates a new merge module
     InitMergeModule {
         code_id: u64,
     },
+    // Instantiates a new marketplace module
     InitMarketplaceModule {
         code_id: u64,
         native_denom: String,
     },
+    // Updates the general controller info
     UpdateControllerInfo {
         name: String,
         description: String,
         image: String,
         external_link: Option<String>,
     },
+    // Updates the website profile configuration
     UpdateWebsiteConfig {
         background_color: Option<String>,
         background_image: Option<String>,
@@ -45,8 +51,8 @@ pub enum ExecuteMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
+    // Gets both general and website config
     Config {},
-    ContollerInfo {},
     ModuleAddress(Modules),
 }
 

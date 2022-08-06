@@ -11,6 +11,7 @@ use cw_storage_plus::{Item, Map};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
+    // General marketplace fee from every buy/sell
     pub fee_percentage: Decimal,
     pub native_denom: String,
 }

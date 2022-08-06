@@ -316,7 +316,6 @@ fn execute_update_website_config(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::ContollerInfo {} => unimplemented!(),
         QueryMsg::ModuleAddress(module) => to_binary(&query_module_address(deps, module)?),
     }
 }

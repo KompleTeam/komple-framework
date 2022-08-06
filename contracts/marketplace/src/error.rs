@@ -26,6 +26,9 @@ pub enum ContractError {
     #[error("Token burn locked")]
     BurnLocked {},
 
+    #[error("Token is not listed")]
+    NotListed {},
+
     #[error("{0}")]
     Overflow(#[from] OverflowError),
 
