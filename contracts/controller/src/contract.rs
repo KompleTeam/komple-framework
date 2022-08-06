@@ -18,8 +18,10 @@ use komple_types::{
 use komple_utils::check_admin_privileges;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, ControllerInfo, CONFIG, CONTROLLER_INFO, MODULE_ADDR};
+use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{
+    Config, ControllerInfo, WebsiteConfig, CONFIG, CONTROLLER_INFO, MODULE_ADDR, WEBSITE_CONFIG,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-controller-contract";
@@ -79,6 +81,18 @@ pub fn execute(
             code_id,
             native_denom,
         } => execute_init_marketplace_module(deps, env, info, code_id, native_denom),
+        ExecuteMsg::UpdateWebsiteConfig {
+            background_color,
+            background_image,
+            banner_image,
+        } => execute_update_website_config(
+            deps,
+            env,
+            info,
+            background_color,
+            background_image,
+            banner_image,
+        ),
     }
 }
 
@@ -232,6 +246,35 @@ fn execute_init_marketplace_module(
         .add_attribute("action", "execute_init_marketplace_module"))
 }
 
+fn execute_update_website_config(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    background_color: Option<String>,
+    background_image: Option<String>,
+    banner_image: Option<String>,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        None,
+    )?;
+
+    let website_config = WebsiteConfig {
+        background_color,
+        background_image,
+        banner_image,
+    };
+
+    WEBSITE_CONFIG.save(deps.storage, &website_config)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_website_config"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -241,9 +284,18 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
     let config = CONFIG.load(deps.storage)?;
-    Ok(ResponseWrapper::new("config", config))
+    let controller_info = CONTROLLER_INFO.load(deps.storage)?;
+    let website_config = WEBSITE_CONFIG.may_load(deps.storage)?;
+    Ok(ResponseWrapper::new(
+        "config",
+        ConfigResponse {
+            admin: config.admin.to_string(),
+            controller_info,
+            website_config,
+        },
+    ))
 }
 
 fn query_module_address(deps: Deps, module: Modules) -> StdResult<ResponseWrapper<String>> {
