@@ -81,6 +81,14 @@ pub fn execute(
             code_id,
             native_denom,
         } => execute_init_marketplace_module(deps, env, info, code_id, native_denom),
+        ExecuteMsg::UpdateControllerInfo {
+            name,
+            description,
+            image,
+            external_link,
+        } => {
+            execute_update_controller_info(deps, env, info, name, description, image, external_link)
+        }
         ExecuteMsg::UpdateWebsiteConfig {
             background_color,
             background_image,
@@ -246,6 +254,36 @@ fn execute_init_marketplace_module(
         .add_attribute("action", "execute_init_marketplace_module"))
 }
 
+fn execute_update_controller_info(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    name: String,
+    description: String,
+    image: String,
+    external_link: Option<String>,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        None,
+    )?;
+
+    let controller_info = ControllerInfo {
+        name,
+        description,
+        image,
+        external_link,
+    };
+    CONTROLLER_INFO.save(deps.storage, &controller_info)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_controller_info"))
+}
+
 fn execute_update_website_config(
     deps: DepsMut,
     env: Env,
@@ -269,7 +307,6 @@ fn execute_update_website_config(
         background_image,
         banner_image,
     };
-
     WEBSITE_CONFIG.save(deps.storage, &website_config)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_website_config"))

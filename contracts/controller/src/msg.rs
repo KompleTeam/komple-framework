@@ -29,6 +29,12 @@ pub enum ExecuteMsg {
         code_id: u64,
         native_denom: String,
     },
+    UpdateControllerInfo {
+        name: String,
+        description: String,
+        image: String,
+        external_link: Option<String>,
+    },
     UpdateWebsiteConfig {
         background_color: Option<String>,
         background_image: Option<String>,

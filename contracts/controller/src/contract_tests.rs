@@ -385,4 +385,78 @@ mod actions {
             )
         }
     }
+
+    mod update_controller_info {
+        use crate::state::ControllerInfo;
+
+        use super::*;
+
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let controller_contract_addr = proper_instantiate(&mut app);
+
+            let msg = QueryMsg::Config {};
+            let res: ResponseWrapper<ConfigResponse> = app
+                .wrap()
+                .query_wasm_smart(controller_contract_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data.website_config, None);
+
+            let msg = ExecuteMsg::UpdateControllerInfo {
+                name: "New Name".to_string(),
+                description: "New Description".to_string(),
+                image: "https://new-image.com".to_string(),
+                external_link: Some("https://some-link".to_string()),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    controller_contract_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap();
+
+            let msg = QueryMsg::Config {};
+            let res: ResponseWrapper<ConfigResponse> = app
+                .wrap()
+                .query_wasm_smart(controller_contract_addr, &msg)
+                .unwrap();
+            assert_eq!(
+                res.data.controller_info,
+                ControllerInfo {
+                    name: "New Name".to_string(),
+                    description: "New Description".to_string(),
+                    image: "https://new-image.com".to_string(),
+                    external_link: Some("https://some-link".to_string()),
+                }
+            )
+        }
+
+        #[test]
+        fn test_invalid_admin() {
+            let mut app = mock_app();
+            let controller_contract_addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::UpdateControllerInfo {
+                name: "New Name".to_string(),
+                description: "New Description".to_string(),
+                image: "https://new-image.com".to_string(),
+                external_link: Some("https://some-link".to_string()),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    controller_contract_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            )
+        }
+    }
 }
