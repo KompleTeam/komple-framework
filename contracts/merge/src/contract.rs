@@ -4,7 +4,8 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult, WasmMsg,
 };
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version};
+use semver::Version;
 use std::collections::HashMap;
 
 use komple_types::module::Modules;
@@ -19,7 +20,7 @@ use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MergeBurnMsg, MergeMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, OPERATORS};
 
 // version info for migration info
@@ -299,4 +300,16 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
         "operators",
         addrs.iter().map(|addr| addr.to_string()).collect(),
     ))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    }
+
+    Ok(Response::default())
 }

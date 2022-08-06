@@ -61,3 +61,6 @@ pub struct MintMsg {
     pub owner: String,
     pub metadata_id: Option<u32>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}

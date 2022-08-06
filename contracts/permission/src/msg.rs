@@ -46,3 +46,6 @@ pub struct PermissionCheckMsg {
     pub permission_type: Permissions,
     pub data: Binary,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}

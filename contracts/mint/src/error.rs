@@ -30,4 +30,13 @@ pub enum ContractError {
 
     #[error("{0}")]
     Util(#[from] UtilError),
+
+    #[error("Semver parsing error: {0}")]
+    SemVer(String),
+}
+
+impl From<semver::Error> for ContractError {
+    fn from(err: semver::Error) -> Self {
+        Self::SemVer(err.to_string())
+    }
 }

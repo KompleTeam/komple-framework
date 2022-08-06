@@ -62,3 +62,6 @@ pub struct ConfigResponse {
     pub controller_info: ControllerInfo,
     pub website_config: Option<WebsiteConfig>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}

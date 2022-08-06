@@ -3,14 +3,15 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult,
 };
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
+use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, MigrateMsg, QueryMsg};
 use crate::state::{
     Config, MetaInfo, Metadata, Trait, COLLECTION_ADDR, CONFIG, DYNAMIC_METADATA, METADATA,
     METADATA_ID, STATIC_METADATA,
@@ -507,3 +508,15 @@ fn query_metadatas(
 //     let locked = METADATA_LOCK.load(deps.storage, &token_id)?;
 //     Ok(LockResponse { locked })
 // }
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    }
+
+    Ok(Response::default())
+}

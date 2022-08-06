@@ -68,3 +68,6 @@ pub struct MetadataResponse {
     pub metadata: Metadata,
     pub metadata_id: u32,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}

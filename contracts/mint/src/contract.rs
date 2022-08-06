@@ -4,19 +4,20 @@ use cosmwasm_std::{
     to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
     ReplyOn, Response, StdResult, SubMsg, WasmMsg,
 };
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version};
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_types::collection::Collections;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{check_admin_privileges, query_module_address};
+use semver::Version;
 use token_contract::msg::{ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg};
 
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
     Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, CONTROLLER_ADDR,
     LINKED_COLLECTIONS, OPERATORS,
@@ -486,4 +487,16 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         }
         Err(_) => Err(ContractError::TokenInstantiateError {}),
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    }
+
+    Ok(Response::default())
 }

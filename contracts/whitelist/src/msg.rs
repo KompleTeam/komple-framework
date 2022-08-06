@@ -51,3 +51,6 @@ pub struct ConfigResponse {
     pub member_num: u16,
     pub is_active: bool,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}

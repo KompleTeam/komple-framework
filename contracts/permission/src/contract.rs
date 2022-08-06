@@ -3,17 +3,20 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version};
 use komple_types::module::Modules;
 use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{
     check_admin_privileges, query_collection_address, query_module_address, query_token_owner,
 };
+use semver::Version;
 use std::collections::HashMap;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg};
+use crate::msg::{
+    ExecuteMsg, InstantiateMsg, MigrateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg,
+};
 use crate::state::{Config, CONFIG, CONTROLLER_ADDR, MODULE_PERMISSIONS, OPERATORS};
 
 // version info for migration info
@@ -223,4 +226,16 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
         "operators",
         addrs.iter().map(|a| a.to_string()).collect(),
     ))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    }
+
+    Ok(Response::default())
 }

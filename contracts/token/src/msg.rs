@@ -296,3 +296,6 @@ pub struct LocksReponse {
 pub struct MintedTokenAmountResponse {
     pub amount: u32,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}

@@ -79,6 +79,7 @@ dependencies = [
  "mint-module",
  "permission-module",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
  "token-contract",
@@ -508,6 +509,7 @@ dependencies = [
  "metadata-contract",
  "mint-module",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
  "token-contract",
@@ -528,6 +530,7 @@ dependencies = [
  "mint-module",
  "permission-module",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
  "token-contract",
@@ -546,6 +549,7 @@ dependencies = [
  "komple-types",
  "komple-utils",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
 ]
@@ -568,6 +572,7 @@ dependencies = [
  "metadata-contract",
  "permission-module",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
  "token-contract",
@@ -593,6 +598,7 @@ dependencies = [
  "komple-types",
  "komple-utils",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
  "token-contract",
@@ -721,6 +727,12 @@ dependencies = [
  "subtle",
  "zeroize",
 ]
+
+[[package]]
+name = "semver"
+version = "1.0.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93f6841e709003d68bb2deee8c343572bf446003ec20a583e76f7b15cebf3711"
 
 [[package]]
 name = "serde"
@@ -866,6 +878,7 @@ dependencies = [
  "komple-utils",
  "metadata-contract",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
  "whitelist-contract",
@@ -926,6 +939,7 @@ dependencies = [
  "cw2",
  "komple-types",
  "schemars",
+ "semver",
  "serde",
  "thiserror",
 ]

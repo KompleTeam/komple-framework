@@ -4,7 +4,7 @@ use cosmwasm_std::{
     to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
     MessageInfo, Order, Response, StdResult, SubMsg, Uint128, WasmMsg,
 };
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
@@ -15,11 +15,12 @@ use komple_utils::{
     check_funds, query_collection_address, query_collection_locks, query_module_address,
     query_storage, query_token_locks, query_token_owner,
 };
+use semver::Version;
 use std::ops::Mul;
 use token_contract::state::Config as TokenConfig;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, CONTROLLER_ADDR, FIXED_LISTING};
 
 use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError};
@@ -408,4 +409,16 @@ fn query_fixed_listings(
         .collect::<Vec<FixedListing>>();
 
     Ok(ResponseWrapper::new("listings", listings))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    }
+
+    Ok(Response::default())
 }

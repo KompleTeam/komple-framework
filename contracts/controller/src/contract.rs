@@ -4,7 +4,7 @@ use cosmwasm_std::{
     to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult,
     SubMsg, WasmMsg,
 };
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version};
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_types::module::{
@@ -16,9 +16,10 @@ use komple_types::{
     query::ResponseWrapper,
 };
 use komple_utils::check_admin_privileges;
+use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
     Config, ControllerInfo, WebsiteConfig, CONFIG, CONTROLLER_INFO, MODULE_ADDR, WEBSITE_CONFIG,
 };
@@ -380,4 +381,16 @@ fn handle_module_instantiate_reply(
             module: module.as_str().to_string(),
         }),
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    }
+
+    Ok(Response::default())
 }

@@ -46,3 +46,6 @@ pub struct MergeMsg {
     pub burn: Vec<MergeBurnMsg>,
     pub metadata_ids: Option<Vec<u32>>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}

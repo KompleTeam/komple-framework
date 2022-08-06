@@ -3,13 +3,14 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Timestamp,
 };
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 use komple_types::query::ResponseWrapper;
+use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, WhitelistConfig, CONFIG, WHITELIST, WHITELIST_CONFIG};
 
 // version info for migration info
@@ -350,4 +351,16 @@ fn query_has_member(deps: Deps, member: String) -> StdResult<ResponseWrapper<boo
 fn get_active_status(deps: Deps, env: Env) -> StdResult<bool> {
     let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
     Ok(env.block.time >= whitelist_config.start_time && env.block.time < whitelist_config.end_time)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse()?;
+    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+
+    if storage_version < version {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    }
+
+    Ok(Response::default())
 }

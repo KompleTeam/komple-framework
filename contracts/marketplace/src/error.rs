@@ -37,6 +37,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     Funds(#[from] FundsError),
+
+    #[error("Semver parsing error: {0}")]
+    SemVer(String),
 }
 
 impl From<TokenContractError> for ContractError {
@@ -47,5 +50,11 @@ impl From<TokenContractError> for ContractError {
             TokenContractError::BurnLocked {} => ContractError::BurnLocked {},
             _ => unreachable!(),
         }
+    }
+}
+
+impl From<semver::Error> for ContractError {
+    fn from(err: semver::Error) -> Self {
+        Self::SemVer(err.to_string())
     }
 }
