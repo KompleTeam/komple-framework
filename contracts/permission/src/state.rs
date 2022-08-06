@@ -4,16 +4,19 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 
-use komple_types::permission::Permissions;
+use komple_types::{
+    permission::{Permissions, MODULE_PERMISSIONS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, CONTROLLER_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
 }
-pub const CONFIG: Item<Config> = Item::new("config");
+pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-pub const CONTROLLER_ADDR: Item<Addr> = Item::new("controller_addr");
+pub const CONTROLLER_ADDR: Item<Addr> = Item::new(CONTROLLER_ADDR_NAMESPACE);
 
-pub const MODULE_PERMISSIONS: Map<&str, Vec<Permissions>> = Map::new("module_permissions");
+pub const MODULE_PERMISSIONS: Map<&str, Vec<Permissions>> = Map::new(MODULE_PERMISSIONS_NAMESPACE);
 
-pub const OPERATORS: Item<Vec<Addr>> = Item::new("operators");
+pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

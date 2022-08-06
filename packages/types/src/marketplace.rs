@@ -16,3 +16,5 @@ impl Listing {
         }
     }
 }
+
+pub const FIXED_LISTING_NAMESPACE: &str = "fixed_listing";

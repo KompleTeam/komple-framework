@@ -16,3 +16,5 @@ impl Permissions {
         }
     }
 }
+
+pub const MODULE_PERMISSIONS_NAMESPACE: &str = "module_permissions";

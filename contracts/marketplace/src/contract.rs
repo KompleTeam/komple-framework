@@ -9,6 +9,7 @@ use cw_storage_plus::Bound;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::tokens::Locks;
 use komple_utils::{
     check_funds, query_collection_address, query_collection_locks, query_module_address,
@@ -247,7 +248,7 @@ fn _execute_buy_fixed_listing(
     let mut sub_msgs: Vec<SubMsg> = vec![];
 
     // Get royalty message if it exists
-    let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, "config")?;
+    let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
     if let Some(config) = res {
         if config.royalty_share.is_some() {
             royalty_fee = config.royalty_share.unwrap().mul(fixed_listing.price);

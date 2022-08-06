@@ -1,8 +1,11 @@
 pub mod collection;
+pub mod controller;
 pub mod instantiate;
 pub mod marketplace;
 pub mod metadata;
 pub mod module;
 pub mod permission;
 pub mod query;
+pub mod shared;
 pub mod tokens;
+pub mod whitelist;

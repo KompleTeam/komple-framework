@@ -1,4 +1,6 @@
-use komple_types::module::MODULE_ADDRS_NAMESPACE;
+use komple_types::{
+    controller::CONTROLLER_INFO_NAMESPACE, module::MODULE_ADDRS_NAMESPACE, shared::CONFIG_NAMESPACE,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,12 +14,12 @@ pub struct ControllerInfo {
     pub image: String,
     pub external_link: Option<String>,
 }
-pub const CONTROLLER_INFO: Item<ControllerInfo> = Item::new("controller_info");
+pub const CONTROLLER_INFO: Item<ControllerInfo> = Item::new(CONTROLLER_INFO_NAMESPACE);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
 }
-pub const CONFIG: Item<Config> = Item::new("config");
+pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 pub const MODULE_ADDR: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);

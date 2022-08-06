@@ -18,3 +18,13 @@ impl Metadata {
         }
     }
 }
+
+pub const METADATA_NAMESPACE: &str = "metadata";
+
+pub const METADATA_ID_NAMESPACE: &str = "metadata_id";
+
+pub const STATIC_METADATA_NAMESPACE: &str = "static_metadata";
+
+pub const DYNAMIC_METADATA_NAMESPACE: &str = "dynamic_metadata";
+
+pub const COLLECTION_ADDR_NAMESPACE: &str = "collection_addr";

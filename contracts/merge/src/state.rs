@@ -1,3 +1,4 @@
+use komple_types::shared::{CONFIG_NAMESPACE, CONTROLLER_ADDR_NAMESPACE, OPERATORS_NAMESPACE};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -9,8 +10,8 @@ pub struct Config {
     pub admin: Addr,
     pub merge_lock: bool,
 }
-pub const CONFIG: Item<Config> = Item::new("config");
+pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-pub const CONTROLLER_ADDR: Item<Addr> = Item::new("controller_addr");
+pub const CONTROLLER_ADDR: Item<Addr> = Item::new(CONTROLLER_ADDR_NAMESPACE);
 
-pub const OPERATORS: Item<Vec<Addr>> = Item::new("operators");
+pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
