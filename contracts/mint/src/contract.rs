@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
-    ReplyOn, Response, StdResult, SubMsg, WasmMsg,
+    ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_utils::parse_reply_instantiate_data;
@@ -492,11 +492,21 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     let version: Version = CONTRACT_VERSION.parse()?;
-    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+    let contract_version: cw2::ContractVersion = get_contract_version(deps.storage)?;
+    let storage_version: Version = contract_version.version.parse()?;
 
-    if storage_version < version {
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    if contract_version.contract != CONTRACT_NAME {
+        return Err(
+            StdError::generic_err("New version name should match the current version").into(),
+        );
     }
+    if storage_version >= version {
+        return Err(
+            StdError::generic_err("New version cannot be smaller than current version").into(),
+        );
+    }
+
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     Ok(Response::default())
 }

@@ -1,9 +1,10 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Timestamp,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError, StdResult,
+    Timestamp,
 };
-use cw2::{get_contract_version, set_contract_version};
+use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 use komple_types::query::ResponseWrapper;
@@ -356,11 +357,21 @@ fn get_active_status(deps: Deps, env: Env) -> StdResult<bool> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     let version: Version = CONTRACT_VERSION.parse()?;
-    let storage_version: Version = get_contract_version(deps.storage)?.version.parse()?;
+    let contract_version: ContractVersion = get_contract_version(deps.storage)?;
+    let storage_version: Version = contract_version.version.parse()?;
 
-    if storage_version < version {
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    if contract_version.contract != CONTRACT_NAME {
+        return Err(
+            StdError::generic_err("New version name should match the current version").into(),
+        );
     }
+    if storage_version >= version {
+        return Err(
+            StdError::generic_err("New version cannot be smaller than current version").into(),
+        );
+    }
+
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     Ok(Response::default())
 }
