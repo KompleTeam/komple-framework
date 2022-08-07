@@ -1,11 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
-    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
+    to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo,
+    Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
+use komple_fee_contract::state::Config as FeeContractConfig;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -18,19 +19,17 @@ use komple_utils::{
 use semver::Version;
 use std::ops::Mul;
 use token_contract::state::Config as TokenConfig;
+use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, CONTROLLER_ADDR, FIXED_LISTING};
 
-use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError};
-
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const DEFAULT_MARKETPLACE_FEE_PERCENTAGE: u64 = 5;
-const MARKETPLACE_PAYOUT_ADDR: &str = "juno..xxx";
+const KOMPLE_FEE_CONTRACT_ADDR: &str = "contract0";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -43,9 +42,20 @@ pub fn instantiate(
 
     let admin = deps.api.addr_validate(&msg.admin)?;
 
+    let res = query_storage::<FeeContractConfig>(
+        &deps.querier,
+        &Addr::unchecked(KOMPLE_FEE_CONTRACT_ADDR),
+        CONFIG_NAMESPACE,
+    )?;
+
+    if res.is_none() {
+        return Err(ContractError::NoFeeContract {});
+    }
+    let fee_percentage = res.unwrap().fee_percentage;
+
     let config = Config {
         admin,
-        fee_percentage: Decimal::percent(DEFAULT_MARKETPLACE_FEE_PERCENTAGE),
+        fee_percentage,
         native_denom: msg.native_denom,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -283,7 +293,7 @@ fn _execute_buy_fixed_listing(
 
     // Marketplace fee message
     let fee_payout = BankMsg::Send {
-        to_address: MARKETPLACE_PAYOUT_ADDR.to_string(),
+        to_address: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
         amount: vec![Coin {
             denom: config.native_denom.to_string(),
             amount: fee,

@@ -5,6 +5,7 @@ use crate::{
 };
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
 use komple_types::{module::Modules, query::ResponseWrapper};
 
 pub fn controller_contract() -> Box<dyn Contract<Empty>> {
@@ -54,6 +55,15 @@ pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
+pub fn fee_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        komple_fee_contract::contract::execute,
+        komple_fee_contract::contract::instantiate,
+        komple_fee_contract::contract::query,
+    );
+    Box::new(contract)
+}
+
 const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
 const ADMIN: &str = "juno1qamfln8u5w8d3vlhp5t9mhmylfkgad4jz6t7cv";
 const NATIVE_DENOM: &str = "denom";
@@ -72,6 +82,27 @@ fn mock_app() -> App {
             )
             .unwrap();
     })
+}
+
+fn setup_fee_contract(app: &mut App) -> Addr {
+    let fee_code_id = app.store_code(fee_contract());
+
+    let msg = FeeContractInstantiateMsg {
+        komple_address: ADMIN.to_string(),
+        payment_address: "juno..community".to_string(),
+    };
+    let fee_contract_addr = app
+        .instantiate_contract(
+            fee_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &vec![],
+            "test",
+            None,
+        )
+        .unwrap();
+
+    fee_contract_addr
 }
 
 fn proper_instantiate(app: &mut App) -> Addr {
@@ -267,6 +298,7 @@ mod actions {
             #[test]
             fn test_init_module() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_contract_addr = proper_instantiate(&mut app);
                 let marketplace_module_code_id = app.store_code(marketplace_module());
 
@@ -288,7 +320,7 @@ mod actions {
                     .wrap()
                     .query_wasm_smart(controller_contract_addr, &msg)
                     .unwrap();
-                assert_eq!(res.data, "contract1")
+                assert_eq!(res.data, "contract2")
             }
 
             #[test]

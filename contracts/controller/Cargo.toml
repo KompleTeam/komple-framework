@@ -62,3 +62,4 @@ permission-module = { path = "../permission", features = ["library"]  }
 mint-module = { path = "../mint", features = ["library"] }
 token-contract = { path = "../token", features = ["library"] }
 metadata-contract = { path = "../metadata", features = ["library"]  }
+komple-fee-contract = "0.1.0"

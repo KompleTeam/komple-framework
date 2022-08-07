@@ -5,8 +5,8 @@ use cw_multi_test::Executor;
 pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
-    mock_app, proper_instantiate, setup_all_modules, setup_metadata, setup_metadata_contract,
-    setup_mint_module_operators, token_contract, ADMIN, USER,
+    mock_app, proper_instantiate, setup_all_modules, setup_fee_contract, setup_metadata,
+    setup_metadata_contract, setup_mint_module_operators, token_contract, ADMIN, USER,
 };
 
 mod initialization {
@@ -79,6 +79,7 @@ mod normal_merge {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
+        setup_fee_contract(&mut app);
         let controller_addr = proper_instantiate(&mut app);
 
         setup_all_modules(&mut app, controller_addr.clone());
@@ -228,6 +229,7 @@ mod normal_merge {
     #[test]
     fn test_unhappy_path() {
         let mut app = mock_app();
+        setup_fee_contract(&mut app);
         let controller_addr = proper_instantiate(&mut app);
 
         setup_all_modules(&mut app, controller_addr.clone());
@@ -417,6 +419,7 @@ mod permission_merge {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
+            setup_fee_contract(&mut app);
             let controller_addr = proper_instantiate(&mut app);
 
             setup_all_modules(&mut app, controller_addr.clone());

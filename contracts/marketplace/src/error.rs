@@ -29,6 +29,9 @@ pub enum ContractError {
     #[error("Token is not listed")]
     NotListed {},
 
+    #[error("Fee contract is not initialized")]
+    NoFeeContract {},
+
     #[error("{0}")]
     Overflow(#[from] OverflowError),
 

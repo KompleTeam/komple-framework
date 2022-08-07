@@ -1,6 +1,7 @@
 use controller_contract::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, module::Modules,
     permission::Permissions, query::ResponseWrapper,
@@ -88,6 +89,15 @@ pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
         metadata_contract::contract::execute,
         metadata_contract::contract::instantiate,
         metadata_contract::contract::query,
+    );
+    Box::new(contract)
+}
+
+pub fn fee_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        komple_fee_contract::contract::execute,
+        komple_fee_contract::contract::instantiate,
+        komple_fee_contract::contract::query,
     );
     Box::new(contract)
 }
@@ -196,6 +206,27 @@ pub fn setup_marketplace_module(app: &mut App, controller_addr: Addr) {
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), controller_addr, &msg, &vec![])
         .unwrap();
+}
+
+pub fn setup_fee_contract(app: &mut App) -> Addr {
+    let fee_code_id = app.store_code(fee_contract());
+
+    let msg = FeeContractInstantiateMsg {
+        komple_address: ADMIN.to_string(),
+        payment_address: "juno..community".to_string(),
+    };
+    let fee_contract_addr = app
+        .instantiate_contract(
+            fee_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &vec![],
+            "test",
+            None,
+        )
+        .unwrap();
+
+    fee_contract_addr
 }
 
 pub fn setup_all_modules(app: &mut App, controller_addr: Addr) {

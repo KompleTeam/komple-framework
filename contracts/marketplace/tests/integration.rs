@@ -4,6 +4,7 @@ use controller_contract::msg::{
 };
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
 use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
@@ -76,6 +77,15 @@ pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
+pub fn fee_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        komple_fee_contract::contract::execute,
+        komple_fee_contract::contract::instantiate,
+        komple_fee_contract::contract::query,
+    );
+    Box::new(contract)
+}
+
 pub fn mock_app() -> App {
     AppBuilder::new().build(|router, _, storage| {
         router
@@ -112,6 +122,27 @@ pub fn mock_app() -> App {
             )
             .unwrap();
     })
+}
+
+fn setup_fee_contract(app: &mut App) -> Addr {
+    let fee_code_id = app.store_code(fee_contract());
+
+    let msg = FeeContractInstantiateMsg {
+        komple_address: ADMIN.to_string(),
+        payment_address: "juno..community".to_string(),
+    };
+    let fee_contract_addr = app
+        .instantiate_contract(
+            fee_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &vec![],
+            "test",
+            None,
+        )
+        .unwrap();
+
+    fee_contract_addr
 }
 
 fn setup_controller_contract(app: &mut App) -> Addr {
@@ -360,6 +391,7 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
+        setup_fee_contract(&mut app);
         let controller_addr = setup_controller_contract(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
@@ -376,7 +408,7 @@ mod initialization {
 
         let res = query_module_address(&app.wrap(), &controller_addr, Modules::MarketplaceModule)
             .unwrap();
-        assert_eq!(res, "contract1")
+        assert_eq!(res, "contract2")
     }
 
     #[test]
@@ -431,6 +463,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -499,6 +532,7 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -549,6 +583,7 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -678,6 +713,7 @@ mod actions {
             #[test]
             fn test_invalid_operator() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -741,6 +777,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -824,6 +861,7 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -893,6 +931,7 @@ mod actions {
             #[test]
             fn test_invalid_operator() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -977,6 +1016,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -1044,6 +1084,7 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -1121,6 +1162,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -1202,11 +1244,11 @@ mod actions {
 
                 // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_000_950));
+                assert_eq!(balance.amount, Uint128::new(1_000_930));
 
                 // Marketplace fee
-                let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(50));
+                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(70));
 
                 // Admin royalty fee
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
@@ -1257,11 +1299,11 @@ mod actions {
 
                 // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_001_800));
+                assert_eq!(balance.amount, Uint128::new(1_001_760));
 
                 // Marketplace fee
-                let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(100));
+                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(140));
 
                 // Admin royalty fee
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
@@ -1308,11 +1350,11 @@ mod actions {
 
                 // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_900_000));
+                assert_eq!(balance.amount, Uint128::new(1_880_000));
 
                 // Marketplace fee
-                let balance = app.wrap().query_balance("juno..xxx", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(50_000));
+                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(70_000));
 
                 // Admin royalty fee
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
@@ -1322,6 +1364,7 @@ mod actions {
             #[test]
             fn test_invalid_funds() {
                 let mut app = mock_app();
+                setup_fee_contract(&mut app);
                 let controller_addr = setup_controller_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -1424,6 +1467,7 @@ mod queries {
     #[test]
     fn test_fixed_listings() {
         let mut app = mock_app();
+        setup_fee_contract(&mut app);
         let controller_addr = setup_controller_contract(&mut app);
 
         let (mint_module_addr, marketplace_module_addr) =
