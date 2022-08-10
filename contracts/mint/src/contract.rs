@@ -42,6 +42,7 @@ pub fn instantiate(
 
     let config = Config {
         admin,
+        public_create_collection: false,
         mint_lock: false,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -111,17 +112,20 @@ pub fn execute_create_collection(
     token_instantiate_msg: TokenInstantiateMsg,
     linked_collections: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
-    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        controller_addr,
-        operators,
-    )?;
+    if !config.public_create_collection {
+        let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+        let operators = OPERATORS.may_load(deps.storage)?;
+
+        check_admin_privileges(
+            &info.sender,
+            &env.contract.address,
+            &config.admin,
+            controller_addr,
+            operators,
+        )?;
+    };
 
     let mut msg = token_instantiate_msg.clone();
     msg.admin = config.admin.to_string();

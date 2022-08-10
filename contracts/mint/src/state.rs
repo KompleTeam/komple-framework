@@ -14,6 +14,7 @@ use cw_storage_plus::{Item, Map};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
+    pub public_create_collection: bool,
     pub mint_lock: bool,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
