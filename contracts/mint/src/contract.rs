@@ -42,7 +42,7 @@ pub fn instantiate(
 
     let config = Config {
         admin,
-        public_create_collection: false,
+        public_collection_creation: false,
         mint_lock: false,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -74,6 +74,9 @@ pub fn execute(
             token_instantiate_msg,
             linked_collections,
         ),
+        ExecuteMsg::UpdatePublicCollectionCreation {
+            public_create_collection,
+        } => execute_update_public_collection_creation(deps, env, info, public_create_collection),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
         ExecuteMsg::Mint {
             collection_id,
@@ -114,7 +117,7 @@ pub fn execute_create_collection(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
-    if !config.public_create_collection {
+    if !config.public_collection_creation {
         let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
         let operators = OPERATORS.may_load(deps.storage)?;
 
@@ -174,6 +177,35 @@ pub fn execute_create_collection(
     Ok(Response::new()
         .add_submessage(sub_msg)
         .add_attribute("action", "create_collection"))
+}
+
+pub fn execute_update_public_collection_creation(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    public_collection_creation: bool,
+) -> Result<Response, ContractError> {
+    let controller_addr = CONTROLLER_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        controller_addr,
+        operators,
+    )?;
+
+    config.public_collection_creation = public_collection_creation;
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_public_collection_creation")
+        .add_attribute(
+            "public_collection_creation",
+            public_collection_creation.to_string(),
+        ))
 }
 
 pub fn execute_update_mint_lock(

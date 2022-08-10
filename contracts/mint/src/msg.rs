@@ -18,6 +18,9 @@ pub enum ExecuteMsg {
         token_instantiate_msg: TokenInstantiateMsg,
         linked_collections: Option<Vec<u32>>,
     },
+    UpdatePublicCollectionCreation {
+        public_create_collection: bool,
+    },
     UpdateMintLock {
         lock: bool,
     },
