@@ -75,8 +75,8 @@ pub fn execute(
             linked_collections,
         ),
         ExecuteMsg::UpdatePublicCollectionCreation {
-            public_create_collection,
-        } => execute_update_public_collection_creation(deps, env, info, public_create_collection),
+            public_collection_creation,
+        } => execute_update_public_collection_creation(deps, env, info, public_collection_creation),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
         ExecuteMsg::Mint {
             collection_id,
@@ -132,6 +132,7 @@ pub fn execute_create_collection(
 
     let mut msg = token_instantiate_msg.clone();
     msg.admin = config.admin.to_string();
+    msg.token_info.minter = env.contract.address.to_string();
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {

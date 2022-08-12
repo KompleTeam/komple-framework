@@ -408,7 +408,7 @@ mod actions {
                 let minter_addr = proper_instantiate(&mut app);
 
                 let msg = ExecuteMsg::UpdatePublicCollectionCreation {
-                    public_create_collection: true,
+                    public_collection_creation: true,
                 };
                 let _ = app
                     .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
@@ -432,7 +432,7 @@ mod actions {
                 let minter_addr = proper_instantiate(&mut app);
 
                 let msg = ExecuteMsg::UpdatePublicCollectionCreation {
-                    public_create_collection: true,
+                    public_collection_creation: true,
                 };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])

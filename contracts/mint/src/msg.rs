@@ -19,7 +19,7 @@ pub enum ExecuteMsg {
         linked_collections: Option<Vec<u32>>,
     },
     UpdatePublicCollectionCreation {
-        public_create_collection: bool,
+        public_collection_creation: bool,
     },
     UpdateMintLock {
         lock: bool,

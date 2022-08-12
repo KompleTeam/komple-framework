@@ -20,11 +20,11 @@ pub enum Modules {
 impl Modules {
     pub fn as_str(&self) -> &str {
         match self {
-            Modules::MintModule => "mint",
-            Modules::PermissionModule => "permission",
-            Modules::SwapModule => "swap",
-            Modules::MergeModule => "merge",
-            Modules::MarketplaceModule => "marketplace",
+            Modules::MintModule => "mint_module",
+            Modules::PermissionModule => "permission_module",
+            Modules::SwapModule => "swap_module",
+            Modules::MergeModule => "merge_module",
+            Modules::MarketplaceModule => "marketplace_module",
         }
     }
 }
