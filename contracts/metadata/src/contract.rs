@@ -364,14 +364,13 @@ fn execute_unlink_metadata(
 
     match config.metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
-            if STATIC_METADATA.has(deps.storage, token_id) {
+            if !STATIC_METADATA.has(deps.storage, token_id) {
                 return Err(ContractError::MissingMetadata {});
             }
             STATIC_METADATA.remove(deps.storage, token_id);
         }
         MetadataType::Dynamic => {
-            let metadata = DYNAMIC_METADATA.may_load(deps.storage, token_id)?;
-            if metadata.is_none() {
+            if !DYNAMIC_METADATA.has(deps.storage, token_id) {
                 return Err(ContractError::MissingMetadata {});
             }
             DYNAMIC_METADATA.remove(deps.storage, token_id);
