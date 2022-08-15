@@ -1154,7 +1154,7 @@ mod actions {
         mod fixed_tokens {
             use std::str::FromStr;
 
-            use cosmwasm_std::Decimal;
+            use cosmwasm_std::{Decimal, StdError};
             use komple_utils::{query_token_locks, FundsError};
 
             use super::*;
@@ -1229,6 +1229,15 @@ mod actions {
                         &vec![coin(1_000, NATIVE_DENOM)],
                     )
                     .unwrap();
+
+                let msg = MarketplaceQueryMsg::FixedListing {
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let res: Result<Empty, StdError> = app
+                    .wrap()
+                    .query_wasm_smart(marketplace_module_addr.clone(), &msg);
+                assert!(res.is_err());
 
                 let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, false);

@@ -30,9 +30,9 @@ const CONTRACT_NAME: &str = "crates.io:komple-marketplace-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // This is used for testing the fee contract
-// const KOMPLE_FEE_CONTRACT_ADDR: &str = "contract0";
-const KOMPLE_FEE_CONTRACT_ADDR: &str =
-    "juno1jq7yr7pdgp5khazxtu68fvgkc9ck58jvdezzwnn9ml3a3mlapfzq9d8r3s";
+const KOMPLE_FEE_CONTRACT_ADDR: &str = "contract0";
+// const KOMPLE_FEE_CONTRACT_ADDR: &str =
+//     "juno1jq7yr7pdgp5khazxtu68fvgkc9ck58jvdezzwnn9ml3a3mlapfzq9d8r3s";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -241,13 +241,13 @@ fn execute_buy(
     token_id: u32,
 ) -> Result<Response, ContractError> {
     match listing_type {
-        Listing::Fixed => _execute_buy_fixed_listing(&deps, &info, collection_id, token_id),
+        Listing::Fixed => _execute_buy_fixed_listing(deps, &info, collection_id, token_id),
         Listing::Auction => unimplemented!(),
     }
 }
 
 fn _execute_buy_fixed_listing(
-    deps: &DepsMut,
+    deps: DepsMut,
     info: &MessageInfo,
     collection_id: u32,
     token_id: u32,
@@ -337,6 +337,8 @@ fn _execute_buy_fixed_listing(
         })?,
         funds: vec![],
     });
+
+    FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
     Ok(Response::new()
         .add_submessages(sub_msgs)
