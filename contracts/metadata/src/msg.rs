@@ -14,14 +14,22 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
+    // Add metadata to the contract for linking it to a token
+    // based on metadata type
     AddMetadata {
         meta_info: MetaInfo,
         attributes: Vec<Trait>,
     },
+    // Link metadata to a token on minting
     LinkMetadata {
         token_id: u32,
         metadata_id: Option<u32>,
     },
+    // Unlink metadata from a token
+    UnlinkMetadata {
+        token_id: u32,
+    },
+    // Update the meta info for a metadata
     UpdateMetaInfo {
         token_id: u32,
         meta_info: MetaInfo,

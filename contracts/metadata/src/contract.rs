@@ -63,6 +63,9 @@ pub fn execute(
             token_id,
             metadata_id,
         } => execute_link_metadata(deps, env, info, token_id, metadata_id),
+        ExecuteMsg::UnlinkMetadata { token_id } => {
+            execute_unlink_metadata(deps, env, info, token_id)
+        }
         ExecuteMsg::UpdateMetaInfo {
             token_id,
             meta_info,
@@ -340,6 +343,42 @@ fn execute_remove_attribute(
     };
 
     Ok(Response::new().add_attribute("action", "execute_remove_attribute"))
+}
+
+fn execute_unlink_metadata(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_id: u32,
+) -> Result<Response, ContractError> {
+    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        collection_addr,
+        None,
+    )?;
+
+    match config.metadata_type {
+        MetadataType::OneToOne | MetadataType::Static => {
+            if STATIC_METADATA.has(deps.storage, token_id) {
+                return Err(ContractError::MissingMetadata {});
+            }
+            STATIC_METADATA.remove(deps.storage, token_id);
+        }
+        MetadataType::Dynamic => {
+            let metadata = DYNAMIC_METADATA.may_load(deps.storage, token_id)?;
+            if metadata.is_none() {
+                return Err(ContractError::MissingMetadata {});
+            }
+            DYNAMIC_METADATA.remove(deps.storage, token_id);
+        }
+    }
+
+    Ok(Response::new().add_attribute("action", "execute_unlink_metadata"))
 }
 
 // fn check_metadata_lock(
