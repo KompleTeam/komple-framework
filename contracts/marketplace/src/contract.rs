@@ -26,10 +26,13 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, CONTROLLER_ADDR, FIXED_LISTING};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:minter";
+const CONTRACT_NAME: &str = "crates.io:komple-marketplace-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const KOMPLE_FEE_CONTRACT_ADDR: &str = "contract0";
+// This is used for testing the fee contract
+// const KOMPLE_FEE_CONTRACT_ADDR: &str = "contract0";
+const KOMPLE_FEE_CONTRACT_ADDR: &str =
+    "juno1jq7yr7pdgp5khazxtu68fvgkc9ck58jvdezzwnn9ml3a3mlapfzq9d8r3s";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
