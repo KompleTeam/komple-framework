@@ -11,7 +11,7 @@ use komple_types::tokens::Locks;
 use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
 use komple_utils::{query_token_owner, FundsError};
 use metadata_contract::{
-    msg::ExecuteMsg as MetadataExecuteMsg,
+    msg::{ExecuteMsg as MetadataExecuteMsg, QueryMsg as MetadataQueryMsg},
     state::{MetaInfo, Trait},
 };
 
@@ -1246,7 +1246,7 @@ mod actions {
                     token_contract_addr.clone(),
                     MetadataType::OneToOne,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1274,6 +1274,11 @@ mod actions {
                     .unwrap();
 
                 let res = query_token_owner(&app.wrap(), &token_contract_addr, &1);
+                assert!(res.is_err());
+
+                let msg = MetadataQueryMsg::Metadata { token_id: 1 };
+                let res: Result<Empty, cosmwasm_std::StdError> =
+                    app.wrap().query_wasm_smart(metadata_contract_addr, &msg);
                 assert!(res.is_err());
             }
 

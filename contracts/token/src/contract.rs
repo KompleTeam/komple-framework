@@ -440,9 +440,24 @@ pub fn execute_burn(
         return Err(ContractError::BurnLocked {});
     }
 
+    let contracts = CONTRACTS.load(deps.storage)?;
+    if contracts.metadata.is_none() {
+        return Err(ContractError::MetadataContractNotFound {});
+    };
+
+    let unlink_metadata_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: contracts.metadata.unwrap().to_string(),
+        msg: to_binary(&MetadataExecuteMsg::UnlinkMetadata {
+            token_id: token_id.parse::<u32>().unwrap(),
+        })
+        .unwrap(),
+        funds: vec![],
+    });
+
     let res = Cw721Contract::default().burn(deps, env, info, token_id);
+
     match res {
-        Ok(res) => Ok(res),
+        Ok(res) => Ok(res.add_message(unlink_metadata_msg)),
         Err(e) => Err(e.into()),
     }
 }
