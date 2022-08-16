@@ -54,7 +54,13 @@ pub enum QueryMsg {
     CollectionAddress(u32),
     Operators {},
     CollectionTypes(Collections),
-    LinkedCollections { collection_id: u32 },
+    LinkedCollections {
+        collection_id: u32,
+    },
+    Collections {
+        start_after: Option<u32>,
+        limit: Option<u8>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -67,3 +73,10 @@ pub struct MintMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MigrateMsg {}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct CollectionsResponse {
+    pub collection_id: u32,
+    pub address: String,
+}

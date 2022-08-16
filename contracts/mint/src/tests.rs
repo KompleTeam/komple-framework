@@ -312,7 +312,7 @@ mod actions {
         use super::*;
 
         use crate::{
-            msg::{ExecuteMsg, QueryMsg},
+            msg::{CollectionsResponse, ExecuteMsg, QueryMsg},
             ContractError,
         };
 
@@ -534,6 +534,44 @@ mod actions {
                 err.source().unwrap().to_string(),
                 ContractError::InvalidCollectionId {}.to_string()
             );
+        }
+
+        #[test]
+        fn test_collections_query() {
+            let mut app = mock_app();
+            let minter_addr = proper_instantiate(&mut app);
+
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+
+            let msg = QueryMsg::Collections {
+                start_after: None,
+                limit: None,
+            };
+            let res: ResponseWrapper<Vec<CollectionsResponse>> = app
+                .wrap()
+                .query_wasm_smart(minter_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data.len(), 7);
+            assert_eq!(res.data[3].collection_id, 4);
+            assert_eq!(res.data[3].address, "contract4");
+
+            let msg = QueryMsg::Collections {
+                start_after: Some(2),
+                limit: Some(4),
+            };
+            let res: ResponseWrapper<Vec<CollectionsResponse>> = app
+                .wrap()
+                .query_wasm_smart(minter_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data.len(), 4);
+            assert_eq!(res.data[3].collection_id, 6);
+            assert_eq!(res.data[3].address, "contract6");
         }
     }
 }

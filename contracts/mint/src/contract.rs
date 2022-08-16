@@ -5,6 +5,7 @@ use cosmwasm_std::{
     ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
+use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_types::collection::Collections;
@@ -17,7 +18,7 @@ use token_contract::msg::{ExecuteMsg as TokenExecuteMsg, InstantiateMsg as Token
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
+use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
     Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, CONTROLLER_ADDR,
     LINKED_COLLECTIONS, OPERATORS,
@@ -456,6 +457,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::LinkedCollections { collection_id } => {
             to_binary(&query_linked_collections(deps, collection_id)?)
         }
+        QueryMsg::Collections { start_after, limit } => {
+            to_binary(&query_collections(deps, start_after, limit)?)
+        }
     }
 }
 
@@ -503,6 +507,27 @@ fn query_linked_collections(
         "linked_collections",
         linked_collection_ids,
     ))
+}
+
+fn query_collections(
+    deps: Deps,
+    start_after: Option<u32>,
+    limit: Option<u8>,
+) -> StdResult<ResponseWrapper<Vec<CollectionsResponse>>> {
+    let limit = limit.unwrap_or(30) as usize;
+    let start = start_after.map(Bound::exclusive);
+    let collections = COLLECTION_ADDRS
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| {
+            let (collection_id, address) = item.unwrap();
+            CollectionsResponse {
+                collection_id,
+                address: address.to_string(),
+            }
+        })
+        .collect::<Vec<CollectionsResponse>>();
+    Ok(ResponseWrapper::new("collections", collections))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
