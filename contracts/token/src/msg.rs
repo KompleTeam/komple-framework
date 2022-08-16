@@ -94,12 +94,6 @@ pub enum ExecuteMsg {
     UpdateStartTime {
         start_time: Option<Timestamp>,
     },
-    UpdateWhitelist {
-        whitelist: Option<String>,
-    },
-    UpdateMetadata {
-        metadata: Option<String>,
-    },
 
     // CONTRACT MESSAGES
     InitMetadataContract {

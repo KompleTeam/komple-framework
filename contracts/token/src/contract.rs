@@ -170,12 +170,6 @@ pub fn execute(
         ExecuteMsg::UpdateStartTime { start_time } => {
             execute_update_start_time(deps, env, info, start_time)
         }
-        ExecuteMsg::UpdateWhitelist { whitelist } => {
-            execute_update_whitelist(deps, env, info, whitelist)
-        }
-        ExecuteMsg::UpdateMetadata { metadata } => {
-            execute_update_metadata(deps, env, info, metadata)
-        }
 
         // ADMIN MESSAGES
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
@@ -606,56 +600,6 @@ fn execute_update_start_time(
     COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_start_time"))
-}
-
-fn execute_update_whitelist(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    whitelist: Option<String>,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    let mut contracts = CONTRACTS.load(deps.storage)?;
-    contracts.whitelist = whitelist.and_then(|w| deps.api.addr_validate(w.as_str()).ok());
-    CONTRACTS.save(deps.storage, &contracts)?;
-
-    Ok(Response::new().add_attribute("action", "execute_update_whitelist"))
-}
-
-fn execute_update_metadata(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    metadata: Option<String>,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    let mut contracts = CONTRACTS.load(deps.storage)?;
-    contracts.metadata = metadata.and_then(|m| deps.api.addr_validate(m.as_str()).ok());
-    CONTRACTS.save(deps.storage, &contracts)?;
-
-    Ok(Response::new().add_attribute("action", "execute_update_metadata"))
 }
 
 fn execute_init_metadata_contract(
