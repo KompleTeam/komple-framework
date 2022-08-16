@@ -1464,6 +1464,67 @@ mod actions {
                     .to_string()
                 );
             }
+
+            #[test]
+            fn test_self_purchase() {
+                let mut app = mock_app();
+                setup_fee_contract(&mut app);
+                let controller_addr = setup_controller_contract(&mut app);
+
+                let (mint_module_addr, marketplace_module_addr) =
+                    setup_modules(&mut app, controller_addr.clone());
+
+                let token_contract_code_id = app.store_code(token_contract());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    token_contract_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_contract_addr =
+                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                setup_metadata(&mut app, metadata_contract_addr.clone());
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+
+                setup_marketplace_listing(
+                    &mut app,
+                    &mint_module_addr,
+                    &marketplace_module_addr,
+                    1,
+                    1,
+                    Uint128::new(1_000_000),
+                );
+
+                let buy_msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 1,
+                };
+
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &buy_msg,
+                        &vec![],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    MarketplaceContractError::SelfPurchase {}.to_string()
+                );
+            }
         }
     }
 }

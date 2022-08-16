@@ -32,6 +32,9 @@ pub enum ContractError {
     #[error("Fee contract is not initialized")]
     NoFeeContract {},
 
+    #[error("Cannot make a self purchase")]
+    SelfPurchase {},
+
     #[error("{0}")]
     Overflow(#[from] OverflowError),
 

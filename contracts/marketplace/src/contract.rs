@@ -256,6 +256,10 @@ fn _execute_buy_fixed_listing(
     let config = CONFIG.load(deps.storage)?;
     let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
 
+    if fixed_listing.owner == info.sender {
+        return Err(ContractError::SelfPurchase {});
+    }
+
     // Check for the sent funds
     check_funds(&info, &config.native_denom, fixed_listing.price)?;
 
