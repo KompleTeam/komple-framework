@@ -1612,7 +1612,6 @@ mod queries {
                     .unwrap();
 
                 let msg: QueryMsg = QueryMsg::Metadatas {
-                    metadata_type: MetadataType::OneToOne,
                     start_after: None,
                     limit: None,
                 };
@@ -1697,7 +1696,6 @@ mod queries {
                 }
 
                 let msg: QueryMsg = QueryMsg::Metadatas {
-                    metadata_type: MetadataType::OneToOne,
                     start_after: Some(14),
                     limit: Some(5),
                 };
@@ -1820,7 +1818,6 @@ mod queries {
                     .unwrap();
 
                 let msg: QueryMsg = QueryMsg::Metadatas {
-                    metadata_type: MetadataType::Dynamic,
                     start_after: None,
                     limit: None,
                 };
@@ -1905,7 +1902,6 @@ mod queries {
                 }
 
                 let msg: QueryMsg = QueryMsg::Metadatas {
-                    metadata_type: MetadataType::Dynamic,
                     start_after: Some(14),
                     limit: Some(5),
                 };

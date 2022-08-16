@@ -63,7 +63,6 @@ pub enum QueryMsg {
         limit: Option<u8>,
     },
     Metadatas {
-        metadata_type: MetadataType,
         start_after: Option<u32>,
         limit: Option<u8>,
     },

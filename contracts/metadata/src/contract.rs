@@ -437,11 +437,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::RawMetadatas { start_after, limit } => {
             to_binary(&query_raw_metadatas(deps, start_after, limit)?)
         }
-        QueryMsg::Metadatas {
-            metadata_type,
-            start_after,
-            limit,
-        } => to_binary(&query_metadatas(deps, metadata_type, start_after, limit)?),
+        QueryMsg::Metadatas { start_after, limit } => {
+            to_binary(&query_metadatas(deps, start_after, limit)?)
+        }
         // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
     }
 }
@@ -500,14 +498,15 @@ fn query_raw_metadatas(
 
 fn query_metadatas(
     deps: Deps,
-    metadata_type: MetadataType,
     start_after: Option<u32>,
     limit: Option<u8>,
 ) -> StdResult<ResponseWrapper<Vec<MetadataResponse>>> {
+    let config = CONFIG.load(deps.storage)?;
+
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
 
-    let metadatas = match metadata_type {
+    let metadatas = match config.metadata_type {
         MetadataType::OneToOne | MetadataType::Static => {
             let data = STATIC_METADATA
                 .range(deps.storage, start, None, Order::Ascending)
