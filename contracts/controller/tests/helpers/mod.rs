@@ -244,7 +244,7 @@ pub fn create_collection(
     start_time: Option<Timestamp>,
     collection_type: Collections,
     linked_collections: Option<Vec<u32>>,
-    unit_price: Option<Coin>,
+    unit_price: Option<Uint128>,
     max_token_limit: Option<u32>,
     royalty_share: Option<Decimal>,
 ) {

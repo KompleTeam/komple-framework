@@ -1,4 +1,4 @@
-use cosmwasm_std::{Binary, Coin, Decimal, Empty, Timestamp};
+use cosmwasm_std::{Binary, Decimal, Empty, Timestamp, Uint128};
 use cw721::Expiration;
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use komple_types::{metadata::Metadata as MetadataType, tokens::Locks};
@@ -24,7 +24,7 @@ pub struct InstantiateMsg {
     pub start_time: Option<Timestamp>,
     pub collection_info: CollectionInfo,
     pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Coin>,
+    pub unit_price: Option<Uint128>,
     pub native_denom: String,
     pub royalty_share: Option<Decimal>,
 }
@@ -275,7 +275,7 @@ pub struct ConfigResponse {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Coin>,
+    pub unit_price: Option<Uint128>,
     pub royalty_share: Option<Decimal>,
 }
 

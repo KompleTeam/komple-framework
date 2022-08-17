@@ -91,7 +91,7 @@ fn setup_collection(
     minter_addr: &Addr,
     sender: Addr,
     linked_collections: Option<Vec<u32>>,
-    unit_price: Option<Coin>,
+    unit_price: Option<Uint128>,
 ) {
     let token_code_id = app.store_code(token_contract());
 
@@ -209,7 +209,7 @@ mod actions {
                 &minter_addr,
                 Addr::unchecked(ADMIN),
                 None,
-                Some(coin(50_000, NATIVE_DENOM)),
+                Some(Uint128::new(50_000))
             );
 
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();

@@ -74,7 +74,7 @@ fn proper_instantiate(
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
     max_token_limit: Option<u32>,
-    unit_price: Option<Coin>,
+    unit_price: Option<Uint128>,
     royalty_share: Option<Decimal>,
 ) -> Addr {
     let token_code_id = app.store_code(token_contract());
@@ -200,7 +200,7 @@ mod initialization {
             start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
             max_token_limit: Some(100),
-            unit_price: Some(coin(100, NATIVE_DENOM)),
+            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             royalty_share: None,
         };
@@ -241,7 +241,7 @@ mod initialization {
             start_time: Some(app.block_info().time),
             collection_info: collection_info.clone(),
             max_token_limit: Some(100),
-            unit_price: Some(coin(100, NATIVE_DENOM)),
+            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             royalty_share: None,
         };
@@ -267,7 +267,7 @@ mod initialization {
             start_time: Some(app.block_info().time.minus_seconds(10)),
             collection_info: collection_info.clone(),
             max_token_limit: Some(100),
-            unit_price: Some(coin(100, NATIVE_DENOM)),
+            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             royalty_share: None,
         };
@@ -311,7 +311,7 @@ mod initialization {
             start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
             max_token_limit: Some(0),
-            unit_price: Some(coin(100, NATIVE_DENOM)),
+            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             royalty_share: None,
         };
@@ -355,7 +355,7 @@ mod initialization {
             start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
             max_token_limit: Some(100),
-            unit_price: Some(coin(100, NATIVE_DENOM)),
+            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             royalty_share: None,
         };
@@ -399,7 +399,7 @@ mod initialization {
             start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
             max_token_limit: Some(100),
-            unit_price: Some(coin(100, NATIVE_DENOM)),
+            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             royalty_share: None,
         };
@@ -1386,7 +1386,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    Some(coin(1_000_000, NATIVE_DENOM)),
+                    Some(Uint128::new(1_000_000)),
                     None,
                 );
 
@@ -1645,7 +1645,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    Some(coin(100, NATIVE_DENOM)),
+                    Some(Uint128::new(1_000_000)),
                     None,
                 );
 
@@ -1683,7 +1683,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    Some(coin(100, NATIVE_DENOM)),
+                    Some(Uint128::new(100)),
                     None,
                 );
 

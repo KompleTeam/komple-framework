@@ -5,7 +5,7 @@ use komple_types::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Coin, Timestamp};
+use cosmwasm_std::{Addr, Timestamp, Uint128};
 use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -18,7 +18,7 @@ pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 pub struct WhitelistConfig {
     pub start_time: Timestamp,
     pub end_time: Timestamp,
-    pub unit_price: Coin,
+    pub unit_price: Uint128,
     pub per_address_limit: u8,
     pub member_limit: u16,
     pub member_num: u16,

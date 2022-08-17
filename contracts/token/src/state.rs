@@ -10,7 +10,7 @@ use komple_types::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Coin, Decimal, Timestamp};
+use cosmwasm_std::{Addr, Decimal, Timestamp, Uint128};
 use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -36,7 +36,7 @@ pub struct CollectionConfig {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Coin>,
+    pub unit_price: Option<Uint128>,
 }
 pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new(COLLECTION_CONFIG_NAMESPACE);
 

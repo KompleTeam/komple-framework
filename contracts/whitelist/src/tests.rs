@@ -1,6 +1,5 @@
 use crate::msg::{ConfigResponse, ExecuteMsg, QueryMsg};
 use crate::ContractError;
-use cosmwasm_std::coin;
 use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_types::query::ResponseWrapper;
@@ -44,7 +43,7 @@ fn proper_instantiate(
     members: Vec<String>,
     start_time: Timestamp,
     end_time: Timestamp,
-    unit_price: Coin,
+    unit_price: Uint128,
     per_address_limit: u8,
     member_limit: u16,
 ) -> Addr {
@@ -84,7 +83,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time.plus_seconds(1),
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 10,
         };
@@ -109,7 +108,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time,
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 0,
         };
@@ -138,7 +137,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time,
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 0,
             member_limit: 10,
         };
@@ -167,7 +166,7 @@ mod initialization {
             members: vec![],
             start_time: app.block_info().time,
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 10,
         };
@@ -196,7 +195,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time.minus_seconds(10),
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 10,
         };
@@ -219,7 +218,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time,
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 10,
         };
@@ -242,7 +241,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time.plus_seconds(1),
             end_time: app.block_info().time.minus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 10,
         };
@@ -265,7 +264,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time.plus_seconds(10),
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 10,
         };
@@ -288,7 +287,7 @@ mod initialization {
             members: vec![RANDOM.to_string()],
             start_time: app.block_info().time.plus_seconds(15),
             end_time: app.block_info().time.plus_seconds(10),
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 5,
             member_limit: 10,
         };
@@ -328,7 +327,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -361,7 +360,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -391,7 +390,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -469,7 +468,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -502,7 +501,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -532,7 +531,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -614,7 +613,7 @@ mod actions {
                     vec![RANDOM.to_string(), RANDOM_3.to_string(), RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -657,7 +656,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -687,7 +686,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -719,7 +718,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -749,7 +748,7 @@ mod actions {
                     vec![RANDOM.to_string(), RANDOM_2.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     2,
                 );
@@ -787,7 +786,7 @@ mod actions {
                     ],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -823,7 +822,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -853,7 +852,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -885,7 +884,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -923,7 +922,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -956,7 +955,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -986,7 +985,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -1018,7 +1017,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -1052,7 +1051,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -1085,7 +1084,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -1115,7 +1114,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );
@@ -1147,7 +1146,7 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    coin(100, NATIVE_DENOM),
+                    Uint128::new(100),
                     5,
                     10,
                 );

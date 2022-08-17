@@ -68,7 +68,7 @@ fn setup_whitelist(
     members: Vec<String>,
     start_time: Timestamp,
     end_time: Timestamp,
-    unit_price: Coin,
+    unit_price: Uint128,
     per_address_limit: u8,
 ) -> Addr {
     let whitelist_code_id = app.store_code(whitelist_contract());
@@ -217,7 +217,7 @@ mod initialization {
             start_time,
             end_time,
             members: vec![RANDOM.to_string(), RANDOM_2.to_string()],
-            unit_price: coin(100, NATIVE_DENOM),
+            unit_price: Uint128::new(100),
             per_address_limit: 2,
             member_limit: 10,
         };
@@ -265,7 +265,7 @@ mod actions {
                 vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 start_time,
                 end_time,
-                coin(100, NATIVE_DENOM),
+                Uint128::new(100),
                 2,
             );
 
@@ -346,7 +346,7 @@ mod actions {
                 vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 start_time,
                 end_time,
-                coin(100, NATIVE_DENOM),
+                Uint128::new(100),
                 2,
             );
 
@@ -391,7 +391,7 @@ mod actions {
                 vec![USER.to_string()],
                 start_time,
                 end_time,
-                coin(100, NATIVE_DENOM),
+                Uint128::new(100),
                 2,
             );
 
@@ -455,7 +455,7 @@ mod actions {
                 vec![USER.to_string()],
                 start_time,
                 end_time,
-                coin(100, NATIVE_DENOM),
+                Uint128::new(100),
                 2,
             );
 

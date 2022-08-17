@@ -1,4 +1,4 @@
-use cosmwasm_std::{Coin, Timestamp};
+use cosmwasm_std::{Timestamp, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,7 @@ pub struct InstantiateMsg {
     pub members: Vec<String>,
     pub start_time: Timestamp,
     pub end_time: Timestamp,
-    pub unit_price: Coin,
+    pub unit_price: Uint128,
     pub per_address_limit: u8,
     pub member_limit: u16,
 }
@@ -45,7 +45,7 @@ pub struct ConfigResponse {
     pub admin: String,
     pub start_time: Timestamp,
     pub end_time: Timestamp,
-    pub unit_price: Coin,
+    pub unit_price: Uint128,
     pub per_address_limit: u8,
     pub member_limit: u16,
     pub member_num: u16,

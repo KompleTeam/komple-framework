@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
-    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
+    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg, coin,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -369,7 +369,7 @@ pub fn execute_mint(
         return Err(ContractError::MintingNotStarted {});
     }
 
-    let mint_price = get_mint_price(&deps)?;
+    let mint_price = get_mint_price(&deps, &config, &collection_config)?;
     if mint_price.is_some() {
         check_funds(
             &info,
@@ -716,12 +716,13 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     Ok(())
 }
 
-fn get_mint_price(deps: &DepsMut) -> Result<Option<Coin>, ContractError> {
+fn get_mint_price(deps: &DepsMut, config: &Config, collection_config: &CollectionConfig) -> Result<Option<Coin>, ContractError> {
     let contracts = CONTRACTS.load(deps.storage)?;
-    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+
+    let collection_price = collection_config.unit_price.and_then(|price| Some(coin(price.u128(), &config.native_denom)));
 
     if contracts.whitelist.is_none() {
-        return Ok(collection_config.unit_price);
+        return Ok(collection_price);
     };
 
     let whitelist = contracts.whitelist.unwrap();
@@ -731,9 +732,9 @@ fn get_mint_price(deps: &DepsMut) -> Result<Option<Coin>, ContractError> {
         .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
 
     if res.data.is_active {
-        return Ok(Some(res.data.unit_price));
+        return Ok(Some(coin(res.data.unit_price.u128(), &config.native_denom)));
     } else {
-        return Ok(collection_config.unit_price);
+        return Ok(collection_price);
     }
 }
 
