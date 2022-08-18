@@ -1,4 +1,4 @@
-use controller_contract::msg::ExecuteMsg;
+use collection_contract::msg::ExecuteMsg;
 use cosmwasm_std::Addr;
 use cw_multi_test::Executor;
 
@@ -14,13 +14,13 @@ mod initialization {
 
     use komple_types::module::Modules;
 
-    use controller_contract::ContractError;
+    use collection_contract::ContractError;
     use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let controller_addr = proper_instantiate(&mut app);
+        let collection_addr = proper_instantiate(&mut app);
         let merge_module_code_id = app.store_code(merge_module());
 
         let msg = ExecuteMsg::InitMergeModule {
@@ -28,20 +28,20 @@ mod initialization {
         };
         let _ = app.execute_contract(
             Addr::unchecked(ADMIN),
-            controller_addr.clone(),
+            collection_addr.clone(),
             &msg,
             &vec![],
         );
 
         let res =
-            query_module_address(&app.wrap(), &controller_addr, Modules::MergeModule).unwrap();
+            query_module_address(&app.wrap(), &collection_addr, Modules::MergeModule).unwrap();
         assert_eq!(res, "contract1")
     }
 
     #[test]
     fn test_invalid_sender() {
         let mut app = mock_app();
-        let controller_addr = proper_instantiate(&mut app);
+        let collection_addr = proper_instantiate(&mut app);
         let merge_module_code_id = app.store_code(merge_module());
 
         let msg = ExecuteMsg::InitMergeModule {
@@ -50,7 +50,7 @@ mod initialization {
         let err = app
             .execute_contract(
                 Addr::unchecked(USER),
-                controller_addr.clone(),
+                collection_addr.clone(),
                 &msg,
                 &vec![],
             )
@@ -80,12 +80,12 @@ mod normal_merge {
     fn test_happy_path() {
         let mut app = mock_app();
         setup_fee_contract(&mut app);
-        let controller_addr = proper_instantiate(&mut app);
+        let collection_addr = proper_instantiate(&mut app);
 
-        setup_all_modules(&mut app, controller_addr.clone());
+        setup_all_modules(&mut app, collection_addr.clone());
 
         let (mint_module_addr, merge_module_addr, _, _) =
-            get_modules_addresses(&mut app, &controller_addr);
+            get_modules_addresses(&mut app, &collection_addr);
 
         let token_contract_code_id = app.store_code(token_contract());
         create_bundle(
@@ -230,12 +230,12 @@ mod normal_merge {
     fn test_unhappy_path() {
         let mut app = mock_app();
         setup_fee_contract(&mut app);
-        let controller_addr = proper_instantiate(&mut app);
+        let collection_addr = proper_instantiate(&mut app);
 
-        setup_all_modules(&mut app, controller_addr.clone());
+        setup_all_modules(&mut app, collection_addr.clone());
 
         let (mint_module_addr, merge_module_addr, _, _) =
-            get_modules_addresses(&mut app, &controller_addr);
+            get_modules_addresses(&mut app, &collection_addr);
 
         let token_contract_code_id = app.store_code(token_contract());
         create_bundle(
@@ -420,12 +420,12 @@ mod permission_merge {
         fn test_happy_path() {
             let mut app = mock_app();
             setup_fee_contract(&mut app);
-            let controller_addr = proper_instantiate(&mut app);
+            let collection_addr = proper_instantiate(&mut app);
 
-            setup_all_modules(&mut app, controller_addr.clone());
+            setup_all_modules(&mut app, collection_addr.clone());
 
             let (mint_module_addr, merge_module_addr, permission_module_addr, _) =
-                get_modules_addresses(&mut app, &controller_addr);
+                get_modules_addresses(&mut app, &collection_addr);
 
             let token_contract_code_id = app.store_code(token_contract());
             create_bundle(

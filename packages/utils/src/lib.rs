@@ -43,11 +43,11 @@ pub fn check_admin_privileges(
 
 pub fn query_module_address(
     querier: &QuerierWrapper,
-    controller_addr: &Addr,
+    collection_addr: &Addr,
     module: Modules,
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(MODULE_ADDRS_NAMESPACE, module.as_str().as_bytes())?;
-    let res = query_storage::<Addr>(&querier, &controller_addr, &key)?;
+    let res = query_storage::<Addr>(&querier, &collection_addr, &key)?;
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {
@@ -99,10 +99,7 @@ pub fn query_token_owner(
     }
 }
 
-pub fn query_bundle_locks(
-    querier: &QuerierWrapper,
-    bundle_addr: &Addr,
-) -> StdResult<Locks> {
+pub fn query_bundle_locks(querier: &QuerierWrapper, bundle_addr: &Addr) -> StdResult<Locks> {
     let res = query_storage::<Locks>(&querier, &bundle_addr, LOCKS_NAMESPACE)?;
     match res {
         Some(res) => Ok(res),

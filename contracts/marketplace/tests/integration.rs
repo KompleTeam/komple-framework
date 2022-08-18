@@ -1,6 +1,6 @@
-use controller_contract::msg::{
-    ExecuteMsg as ControllerExecuteMsg, InstantiateMsg as ControllerInstantiateMsg,
-    QueryMsg as ControllerQueryMsg,
+use collection_contract::msg::{
+    ExecuteMsg as CollectionExecuteMsg, InstantiateMsg as CollectionInstantiateMsg,
+    QueryMsg as CollectionQueryMsg,
 };
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -29,13 +29,13 @@ pub const RANDOM_2: &str = "juno..random2";
 pub const NATIVE_DENOM: &str = "denom";
 pub const TEST_DENOM: &str = "test_denom";
 
-pub fn controller_contract() -> Box<dyn Contract<Empty>> {
+pub fn collection_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        controller_contract::contract::execute,
-        controller_contract::contract::instantiate,
-        controller_contract::contract::query,
+        collection_contract::contract::execute,
+        collection_contract::contract::instantiate,
+        collection_contract::contract::query,
     )
-    .with_reply(controller_contract::contract::reply);
+    .with_reply(collection_contract::contract::reply);
     Box::new(contract)
 }
 
@@ -145,18 +145,18 @@ fn setup_fee_contract(app: &mut App) -> Addr {
     fee_contract_addr
 }
 
-fn setup_controller_contract(app: &mut App) -> Addr {
-    let controller_code_id = app.store_code(controller_contract());
+fn setup_collection_contract(app: &mut App) -> Addr {
+    let collection_code_id = app.store_code(collection_contract());
 
-    let msg = ControllerInstantiateMsg {
-        name: "Test Controller".to_string(),
-        description: "Test Controller".to_string(),
+    let msg = CollectionInstantiateMsg {
+        name: "Test Collection".to_string(),
+        description: "Test Collection".to_string(),
         image: "https://example.com/image.png".to_string(),
         external_link: None,
     };
-    let controller_addr = app
+    let collection_addr = app
         .instantiate_contract(
-            controller_code_id,
+            collection_code_id,
             Addr::unchecked(ADMIN),
             &msg,
             &vec![],
@@ -165,46 +165,46 @@ fn setup_controller_contract(app: &mut App) -> Addr {
         )
         .unwrap();
 
-    controller_addr
+    collection_addr
 }
 
-fn setup_modules(app: &mut App, controller_addr: Addr) -> (Addr, Addr) {
+fn setup_modules(app: &mut App, collection_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let marketplace_code_id = app.store_code(marketplace_module());
 
-    let msg = ControllerExecuteMsg::InitMintModule {
+    let msg = CollectionExecuteMsg::InitMintModule {
         code_id: mint_code_id,
     };
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            controller_addr.clone(),
+            collection_addr.clone(),
             &msg,
             &vec![],
         )
         .unwrap();
-    let msg = ControllerExecuteMsg::InitMarketplaceModule {
+    let msg = CollectionExecuteMsg::InitMarketplaceModule {
         code_id: marketplace_code_id,
         native_denom: NATIVE_DENOM.to_string(),
     };
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            controller_addr.clone(),
+            collection_addr.clone(),
             &msg,
             &vec![],
         )
         .unwrap();
 
-    let msg = ControllerQueryMsg::ModuleAddress(Modules::MintModule);
+    let msg = CollectionQueryMsg::ModuleAddress(Modules::MintModule);
     let mint_res: ResponseWrapper<Addr> = app
         .wrap()
-        .query_wasm_smart(controller_addr.clone(), &msg)
+        .query_wasm_smart(collection_addr.clone(), &msg)
         .unwrap();
-    let msg = ControllerQueryMsg::ModuleAddress(Modules::MarketplaceModule);
+    let msg = CollectionQueryMsg::ModuleAddress(Modules::MarketplaceModule);
     let marketplace_res: ResponseWrapper<Addr> = app
         .wrap()
-        .query_wasm_smart(controller_addr.clone(), &msg)
+        .query_wasm_smart(collection_addr.clone(), &msg)
         .unwrap();
 
     (mint_res.data, marketplace_res.data)
@@ -385,28 +385,28 @@ mod initialization {
 
     use komple_types::module::Modules;
 
-    use controller_contract::ContractError;
+    use collection_contract::ContractError;
     use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
         setup_fee_contract(&mut app);
-        let controller_addr = setup_controller_contract(&mut app);
+        let collection_addr = setup_collection_contract(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let msg = ControllerExecuteMsg::InitMarketplaceModule {
+        let msg = CollectionExecuteMsg::InitMarketplaceModule {
             code_id: marketplace_module_code_id,
             native_denom: "test".to_string(),
         };
         let _ = app.execute_contract(
             Addr::unchecked(ADMIN),
-            controller_addr.clone(),
+            collection_addr.clone(),
             &msg,
             &vec![],
         );
 
-        let res = query_module_address(&app.wrap(), &controller_addr, Modules::MarketplaceModule)
+        let res = query_module_address(&app.wrap(), &collection_addr, Modules::MarketplaceModule)
             .unwrap();
         assert_eq!(res, "contract2")
     }
@@ -414,17 +414,17 @@ mod initialization {
     #[test]
     fn test_invalid_sender() {
         let mut app = mock_app();
-        let controller_addr = setup_controller_contract(&mut app);
+        let collection_addr = setup_collection_contract(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let msg = ControllerExecuteMsg::InitMarketplaceModule {
+        let msg = CollectionExecuteMsg::InitMarketplaceModule {
             code_id: marketplace_module_code_id,
             native_denom: "test".to_string(),
         };
         let err = app
             .execute_contract(
                 Addr::unchecked(USER),
-                controller_addr.clone(),
+                collection_addr.clone(),
                 &msg,
                 &vec![],
             )
@@ -464,10 +464,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -533,10 +533,10 @@ mod actions {
             fn test_invalid_owner() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -584,10 +584,10 @@ mod actions {
             fn test_invalid_locks() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -714,10 +714,10 @@ mod actions {
             fn test_invalid_operator() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -778,10 +778,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -862,10 +862,10 @@ mod actions {
             fn test_invalid_owner() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -932,10 +932,10 @@ mod actions {
             fn test_invalid_operator() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1017,10 +1017,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1085,10 +1085,10 @@ mod actions {
             fn test_invalid_owner() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1163,10 +1163,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1374,10 +1374,10 @@ mod actions {
             fn test_invalid_funds() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1469,10 +1469,10 @@ mod actions {
             fn test_self_purchase() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_addr = setup_controller_contract(&mut app);
+                let collection_addr = setup_collection_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, controller_addr.clone());
+                    setup_modules(&mut app, collection_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1538,10 +1538,10 @@ mod queries {
     fn test_fixed_listings() {
         let mut app = mock_app();
         setup_fee_contract(&mut app);
-        let controller_addr = setup_controller_contract(&mut app);
+        let collection_addr = setup_collection_contract(&mut app);
 
         let (mint_module_addr, marketplace_module_addr) =
-            setup_modules(&mut app, controller_addr.clone());
+            setup_modules(&mut app, collection_addr.clone());
 
         let token_contract_code_id = app.store_code(token_contract());
         create_bundle(

@@ -4,7 +4,7 @@ members = [
     "packages/*"
 ]
 
-[profile.release.package.controller]
+[profile.release.package.collection]
 codegen-units = 1
 incremental = false
 
