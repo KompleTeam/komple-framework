@@ -363,16 +363,16 @@ pub fn get_modules_addresses(app: &mut App, collection_addr: &Addr) -> (Addr, Ad
     let permission_module_addr: Addr;
     let marketplace_module_addr: Addr;
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::MintModule);
+    let res = query_module_address(&app.wrap(), collection_addr, Modules::Mint);
     mint_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::MergeModule);
+    let res = query_module_address(&app.wrap(), collection_addr, Modules::Merge);
     merge_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::PermissionModule);
+    let res = query_module_address(&app.wrap(), collection_addr, Modules::Permission);
     permission_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::MarketplaceModule);
+    let res = query_module_address(&app.wrap(), collection_addr, Modules::Marketplace);
     marketplace_module_addr = res.unwrap();
 
     // println!("");

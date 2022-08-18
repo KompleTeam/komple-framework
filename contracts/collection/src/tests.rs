@@ -155,7 +155,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::MintModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Mint);
                 let res: ResponseWrapper<String> = app
                     .wrap()
                     .query_wasm_smart(collection_contract_addr, &msg)
@@ -208,7 +208,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::PermissionModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Permission);
                 let res: ResponseWrapper<String> = app
                     .wrap()
                     .query_wasm_smart(collection_contract_addr, &msg)
@@ -260,7 +260,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::MergeModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Merge);
                 let res: ResponseWrapper<String> = app
                     .wrap()
                     .query_wasm_smart(collection_contract_addr, &msg)
@@ -315,7 +315,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::MarketplaceModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Marketplace);
                 let res: ResponseWrapper<String> = app
                     .wrap()
                     .query_wasm_smart(collection_contract_addr, &msg)

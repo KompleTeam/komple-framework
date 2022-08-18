@@ -264,7 +264,7 @@ fn _execute_buy_fixed_listing(
     check_funds(&info, &config.native_denom, fixed_listing.price)?;
 
     let mint_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::MintModule)?;
+        query_module_address(&deps.querier, &collection_addr, Modules::Mint)?;
     let bundle_addr =
         query_bundle_address(&deps.querier, &mint_module_addr, &bundle_id)?;
 
@@ -353,7 +353,7 @@ fn _execute_buy_fixed_listing(
 fn get_bundle_address(deps: &DepsMut, bundle_id: &u32) -> Result<Addr, ContractError> {
     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
     let mint_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::MintModule)?;
+        query_module_address(&deps.querier, &collection_addr, Modules::Mint)?;
     let bundle_addr =
         query_bundle_address(&deps.querier, &mint_module_addr, bundle_id)?;
     Ok(bundle_addr)

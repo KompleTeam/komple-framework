@@ -10,21 +10,21 @@ pub const MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID: u64 = 5;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Modules {
-    MintModule,
-    PermissionModule,
-    SwapModule,
-    MergeModule,
-    MarketplaceModule,
+    Mint,
+    Permission,
+    Swap,
+    Merge,
+    Marketplace,
 }
 
 impl Modules {
     pub fn as_str(&self) -> &str {
         match self {
-            Modules::MintModule => "mint_module",
-            Modules::PermissionModule => "permission_module",
-            Modules::SwapModule => "swap_module",
-            Modules::MergeModule => "merge_module",
-            Modules::MarketplaceModule => "marketplace_module",
+            Modules::Mint => "mint",
+            Modules::Permission => "permission",
+            Modules::Swap => "swap",
+            Modules::Merge => "merge",
+            Modules::Marketplace => "marketplace",
         }
     }
 }

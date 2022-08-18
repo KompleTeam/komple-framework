@@ -106,7 +106,7 @@ mod initialization {
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
-            metadata_type: MetadataType::Static,
+            metadata_type: MetadataType::Shared,
         };
         let _ = app
             .instantiate_contract(
@@ -130,7 +130,7 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let attributes = vec![
                 Trait {
@@ -178,7 +178,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let attributes = vec![
                 Trait {
@@ -223,13 +223,13 @@ mod actions {
     mod link_metadata {
         use super::*;
 
-        mod one_to_one_metadata {
+        mod standard_metadata {
             use super::*;
 
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
+                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
                 let (attributes, meta_info) =
                     setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -257,13 +257,13 @@ mod actions {
             }
         }
 
-        mod static_metadata {
+        mod shared_metadata {
             use super::*;
 
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let (attributes, meta_info) =
                     setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -293,7 +293,7 @@ mod actions {
             #[test]
             fn test_missing_metadata() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let msg = ExecuteMsg::LinkMetadata {
                     token_id: 1,
@@ -314,7 +314,7 @@ mod actions {
             }
         }
 
-        mod static_dynamic_metadata {
+        mod dynamic_metadata {
             use super::*;
 
             #[test]
@@ -374,7 +374,7 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -397,7 +397,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -421,14 +421,14 @@ mod actions {
     mod update_meta_info {
         use super::*;
 
-        mod one_to_one_and_static_metadata {
+        mod standard_and_shared_metadata {
             use super::*;
 
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-                let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+                let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
 
                 setup_metadata(&mut app, metadata_contract_addr.clone());
                 setup_metadata(&mut app, metadata_contract_addr_2.clone());
@@ -499,8 +499,8 @@ mod actions {
             #[test]
             fn test_missing_metadata() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-                let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+                let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let new_meta_info = MetaInfo {
                     image: Some("https://test".to_string()),
@@ -628,7 +628,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let new_meta_info = MetaInfo {
                 image: Some("https://test".to_string()),
@@ -663,8 +663,8 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -771,8 +771,8 @@ mod actions {
         #[test]
         fn test_existing_attribute() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -857,8 +857,8 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             let attribute = Trait {
@@ -914,8 +914,8 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1021,8 +1021,8 @@ mod actions {
         #[test]
         fn test_existing_attribute() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1107,8 +1107,8 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             let attribute = Trait {
@@ -1164,8 +1164,8 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1262,8 +1262,8 @@ mod actions {
         #[test]
         fn test_existing_attribute() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1344,8 +1344,8 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::OneToOne);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
             let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             let msg = ExecuteMsg::RemoveAttribute {
@@ -1400,7 +1400,7 @@ mod queries {
         #[test]
         fn test_normal() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let meta_info = MetaInfo {
                 image: Some("https://example.com/image.png".to_string()),
@@ -1453,7 +1453,7 @@ mod queries {
         #[test]
         fn test_filters() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let meta_info = MetaInfo {
                 image: Some("https://example.com/image.png".to_string()),
@@ -1527,13 +1527,13 @@ mod queries {
     mod metadatas {
         use super::*;
 
-        mod one_to_one_and_static {
+        mod standard_and_shared {
             use super::*;
 
             #[test]
             fn test_normal() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let meta_info = MetaInfo {
                     image: Some("https://example.com/image.png".to_string()),
@@ -1651,7 +1651,7 @@ mod queries {
             #[test]
             fn test_filters() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Static);
+                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let meta_info = MetaInfo {
                     image: Some("https://example.com/image.png".to_string()),

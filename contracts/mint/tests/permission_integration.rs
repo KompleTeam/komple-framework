@@ -140,12 +140,12 @@ fn setup_modules(app: &mut App, collection_addr: Addr) -> (Addr, Addr) {
         )
         .unwrap();
 
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::MintModule);
+    let msg = CollectionQueryMsg::ModuleAddress(Modules::Mint);
     let mint_res: ResponseWrapper<Addr> = app
         .wrap()
         .query_wasm_smart(collection_addr.clone(), &msg)
         .unwrap();
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::PermissionModule);
+    let msg = CollectionQueryMsg::ModuleAddress(Modules::Permission);
     let permission_res: ResponseWrapper<Addr> = app
         .wrap()
         .query_wasm_smart(collection_addr.clone(), &msg)
@@ -290,7 +290,7 @@ mod initialization {
             &vec![],
         );
 
-        let res = query_module_address(&app.wrap(), &collection_addr, Modules::MintModule).unwrap();
+        let res = query_module_address(&app.wrap(), &collection_addr, Modules::Mint).unwrap();
         assert_eq!(res, "contract1")
     }
 
@@ -372,9 +372,9 @@ mod permission_mint {
             query_bundle_address(&app.wrap(), &mint_module_addr.clone(), &2).unwrap();
 
         let metadata_contract_addr_1 =
-            setup_metadata_contract(&mut app, bundle_addr_1, Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_addr_1, Metadata::Standard);
         let metadata_contract_addr_2 =
-            setup_metadata_contract(&mut app, bundle_addr_2, Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_addr_2, Metadata::Standard);
 
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
@@ -384,7 +384,7 @@ mod permission_mint {
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
         let msg = PermissionExecuteMsg::UpdateModulePermissions {
-            module: Modules::MintModule,
+            module: Modules::Mint,
             permissions: vec![Permissions::Ownership],
         };
         let _ = app

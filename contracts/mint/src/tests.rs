@@ -212,7 +212,7 @@ mod actions {
 
             let bundle_addr = query_bundle_address(&app.wrap(), &minter_addr, &1).unwrap();
             let metadata_contract_addr =
-                setup_metadata_contract(&mut app, bundle_addr, MetadataType::OneToOne);
+                setup_metadata_contract(&mut app, bundle_addr, MetadataType::Standard);
             setup_metadata(&mut app, metadata_contract_addr);
 
             let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
@@ -256,7 +256,7 @@ mod actions {
 
             let bundle_addr = query_bundle_address(&app.wrap(), &minter_addr, &1).unwrap();
             let metadata_contract_addr =
-                setup_metadata_contract(&mut app, bundle_addr, MetadataType::OneToOne);
+                setup_metadata_contract(&mut app, bundle_addr, MetadataType::Standard);
             setup_metadata(&mut app, metadata_contract_addr);
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };

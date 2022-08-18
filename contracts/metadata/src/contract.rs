@@ -13,8 +13,8 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, MetaInfo, Metadata, Trait, BUNDLE_ADDR, CONFIG, DYNAMIC_METADATA, METADATA,
-    METADATA_ID, STATIC_METADATA,
+    Config, MetaInfo, Metadata, Trait, BUNDLE_ADDR, CONFIG, DYNAMIC_LINKED_METADATA, METADATA,
+    METADATA_ID, LINKED_METADATA,
 };
 
 // version info for migration info
@@ -135,8 +135,8 @@ fn execute_link_metadata(
     )?;
 
     let metadata_id = match config.metadata_type {
-        MetadataType::OneToOne => token_id,
-        MetadataType::Static | MetadataType::Dynamic => {
+        MetadataType::Standard => token_id,
+        MetadataType::Shared | MetadataType::Dynamic => {
             if metadata_id.is_none() {
                 return Err(ContractError::MissingMetadata {});
             }
@@ -150,12 +150,12 @@ fn execute_link_metadata(
     }
 
     match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
-            STATIC_METADATA.save(deps.storage, token_id, &metadata_id)?;
+        MetadataType::Standard | MetadataType::Shared => {
+            LINKED_METADATA.save(deps.storage, token_id, &metadata_id)?;
         }
         MetadataType::Dynamic => {
             let metadata = metadata.unwrap();
-            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
+            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
@@ -185,13 +185,13 @@ fn execute_update_meta_info(
         get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
 
     match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
+        MetadataType::Standard | MetadataType::Shared => {
             metadata.meta_info = meta_info;
             METADATA.save(deps.storage, metadata_id, &metadata)?;
         }
         MetadataType::Dynamic => {
             metadata.meta_info = meta_info;
-            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
+            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
@@ -220,7 +220,7 @@ fn execute_add_attribute(
         get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
 
     match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
+        MetadataType::Standard | MetadataType::Shared => {
             if check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeAlreadyExists {});
             }
@@ -232,7 +232,7 @@ fn execute_add_attribute(
                 return Err(ContractError::AttributeAlreadyExists {});
             }
             metadata.attributes.push(attribute);
-            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
+            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
@@ -262,7 +262,7 @@ fn execute_update_attribute(
         get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
 
     match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
+        MetadataType::Standard | MetadataType::Shared => {
             if !check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeNotFound {});
             }
@@ -286,7 +286,7 @@ fn execute_update_attribute(
                     break;
                 }
             }
-            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
+            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
@@ -316,7 +316,7 @@ fn execute_remove_attribute(
         get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
 
     match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
+        MetadataType::Standard | MetadataType::Shared => {
             if !check_attribute_exists(&metadata, &trait_type) {
                 return Err(ContractError::AttributeNotFound {});
             }
@@ -338,7 +338,7 @@ fn execute_remove_attribute(
                 .into_iter()
                 .filter(|a| a.trait_type != trait_type)
                 .collect::<Vec<Trait>>();
-            DYNAMIC_METADATA.save(deps.storage, token_id, &metadata)?;
+            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
@@ -363,17 +363,17 @@ fn execute_unlink_metadata(
     )?;
 
     match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
-            if !STATIC_METADATA.has(deps.storage, token_id) {
+        MetadataType::Standard | MetadataType::Shared => {
+            if !LINKED_METADATA.has(deps.storage, token_id) {
                 return Err(ContractError::MissingMetadata {});
             }
-            STATIC_METADATA.remove(deps.storage, token_id);
+            LINKED_METADATA.remove(deps.storage, token_id);
         }
         MetadataType::Dynamic => {
-            if !DYNAMIC_METADATA.has(deps.storage, token_id) {
+            if !DYNAMIC_LINKED_METADATA.has(deps.storage, token_id) {
                 return Err(ContractError::MissingMetadata {});
             }
-            DYNAMIC_METADATA.remove(deps.storage, token_id);
+            DYNAMIC_LINKED_METADATA.remove(deps.storage, token_id);
         }
     }
 
@@ -398,8 +398,8 @@ fn get_metadata_from_type(
     token_id: u32,
 ) -> Result<(u32, Metadata), ContractError> {
     match metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
-            let metadata_id = STATIC_METADATA.may_load(deps.storage, token_id)?;
+        MetadataType::Standard | MetadataType::Shared => {
+            let metadata_id = LINKED_METADATA.may_load(deps.storage, token_id)?;
             if metadata_id.is_none() {
                 return Err(ContractError::MissingMetadata {});
             }
@@ -411,7 +411,7 @@ fn get_metadata_from_type(
             Ok((metadata_id, metadata.unwrap()))
         }
         MetadataType::Dynamic => {
-            let metadata = DYNAMIC_METADATA.may_load(deps.storage, token_id)?;
+            let metadata = DYNAMIC_LINKED_METADATA.may_load(deps.storage, token_id)?;
             if metadata.is_none() {
                 return Err(ContractError::MissingMetadata {});
             }
@@ -458,13 +458,13 @@ fn query_metadata(deps: Deps, token_id: u32) -> StdResult<ResponseWrapper<Metada
     let config = CONFIG.load(deps.storage)?;
 
     let (metadata_id, metadata) = match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
-            let metadata_id = STATIC_METADATA.load(deps.storage, token_id)?;
+        MetadataType::Standard | MetadataType::Shared => {
+            let metadata_id = LINKED_METADATA.load(deps.storage, token_id)?;
             let metadata = METADATA.load(deps.storage, metadata_id)?;
             (metadata_id, metadata)
         }
         MetadataType::Dynamic => {
-            let metadata = DYNAMIC_METADATA.load(deps.storage, token_id)?;
+            let metadata = DYNAMIC_LINKED_METADATA.load(deps.storage, token_id)?;
             (token_id, metadata)
         }
     };
@@ -507,8 +507,8 @@ fn query_metadatas(
     let start = start_after.map(Bound::exclusive);
 
     let metadatas = match config.metadata_type {
-        MetadataType::OneToOne | MetadataType::Static => {
-            let data = STATIC_METADATA
+        MetadataType::Standard | MetadataType::Shared => {
+            let data = LINKED_METADATA
                 .range(deps.storage, start, None, Order::Ascending)
                 .take(limit)
                 .map(|item| {
@@ -523,7 +523,7 @@ fn query_metadatas(
             data
         }
         MetadataType::Dynamic => {
-            let data = DYNAMIC_METADATA
+            let data = DYNAMIC_LINKED_METADATA
                 .range(deps.storage, start, None, Order::Ascending)
                 .take(limit)
                 .map(|item| {

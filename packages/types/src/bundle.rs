@@ -5,18 +5,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 pub enum Bundles {
     Normal,
-    // Multiple,
     Linked,
-    // OneToOne,
 }
 
 impl Bundles {
     pub fn as_str(&self) -> &'static str {
         match self {
             Bundles::Normal => "normal",
-            // Bundles::Multiple => "multiple",
             Bundles::Linked => "linked",
-            // Bundles::OneToOne => "one_to_one",
         }
     }
 }

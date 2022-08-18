@@ -286,12 +286,12 @@ fn execute_permission_mint(
 ) -> Result<Response, ContractError> {
     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::PermissionModule)?;
+        query_module_address(&deps.querier, &collection_addr, Modules::Permission)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     let permission_msg = PermissionExecuteMsg::Check {
-        module: Modules::MintModule,
+        module: Modules::Mint,
         msg: permission_msg,
     };
     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {

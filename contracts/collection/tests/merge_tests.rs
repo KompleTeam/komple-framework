@@ -34,7 +34,7 @@ mod initialization {
         );
 
         let res =
-            query_module_address(&app.wrap(), &collection_addr, Modules::MergeModule).unwrap();
+            query_module_address(&app.wrap(), &collection_addr, Modules::Merge).unwrap();
         assert_eq!(res, "contract1")
     }
 
@@ -135,11 +135,11 @@ mod normal_merge {
             query_bundle_address(&app.wrap(), &mint_module_addr, &3).unwrap();
 
         let metadata_contract_addr_1 =
-            setup_metadata_contract(&mut app, bundle_1_addr.clone(), Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_1_addr.clone(), Metadata::Standard);
         let metadata_contract_addr_2 =
-            setup_metadata_contract(&mut app, bundle_2_addr.clone(), Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_2_addr.clone(), Metadata::Standard);
         let metadata_contract_addr_3 =
-            setup_metadata_contract(&mut app, bundle_3_addr.clone(), Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_3_addr.clone(), Metadata::Standard);
 
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
@@ -278,7 +278,7 @@ mod normal_merge {
         let bundle_1_addr =
             query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         let metadata_contract_addr_1 =
-            setup_metadata_contract(&mut app, bundle_1_addr.clone(), Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_1_addr.clone(), Metadata::Standard);
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -475,11 +475,11 @@ mod permission_merge {
                 query_bundle_address(&app.wrap(), &mint_module_addr, &3).unwrap();
 
             let metadata_contract_addr_1 =
-                setup_metadata_contract(&mut app, bundle_1_addr.clone(), Metadata::OneToOne);
+                setup_metadata_contract(&mut app, bundle_1_addr.clone(), Metadata::Standard);
             let metadata_contract_addr_2 =
-                setup_metadata_contract(&mut app, bundle_2_addr.clone(), Metadata::OneToOne);
+                setup_metadata_contract(&mut app, bundle_2_addr.clone(), Metadata::Standard);
             let metadata_contract_addr_3 =
-                setup_metadata_contract(&mut app, bundle_3_addr.clone(), Metadata::OneToOne);
+                setup_metadata_contract(&mut app, bundle_3_addr.clone(), Metadata::Standard);
 
             setup_metadata(&mut app, metadata_contract_addr_1.clone());
             setup_metadata(&mut app, metadata_contract_addr_1.clone());
@@ -518,7 +518,7 @@ mod permission_merge {
             add_permission_for_module(
                 &mut app,
                 permission_module_addr,
-                Modules::MergeModule,
+                Modules::Merge,
                 vec![Permissions::Ownership],
             );
 

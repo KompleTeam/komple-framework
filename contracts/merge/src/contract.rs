@@ -118,12 +118,12 @@ fn execute_permission_merge(
 ) -> Result<Response, ContractError> {
     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::PermissionModule)?;
+        query_module_address(&deps.querier, &collection_addr, Modules::Permission)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     let permission_msg = PermissionExecuteMsg::Check {
-        module: Modules::MergeModule,
+        module: Modules::Merge,
         msg: permission_msg,
     };
     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
@@ -179,7 +179,7 @@ fn make_merge_msg(
 ) -> Result<(), ContractError> {
     let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
     let mint_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::MintModule)?;
+        query_module_address(&deps.querier, &collection_addr, Modules::Mint)?;
 
     // MergeMsg contains mint, burn and metadata infos
     let merge_msg: MergeMsg = from_binary(&msg)?;

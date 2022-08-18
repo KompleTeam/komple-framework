@@ -196,12 +196,12 @@ fn setup_modules(app: &mut App, collection_addr: Addr) -> (Addr, Addr) {
         )
         .unwrap();
 
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::MintModule);
+    let msg = CollectionQueryMsg::ModuleAddress(Modules::Mint);
     let mint_res: ResponseWrapper<Addr> = app
         .wrap()
         .query_wasm_smart(collection_addr.clone(), &msg)
         .unwrap();
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::MarketplaceModule);
+    let msg = CollectionQueryMsg::ModuleAddress(Modules::Marketplace);
     let marketplace_res: ResponseWrapper<Addr> = app
         .wrap()
         .query_wasm_smart(collection_addr.clone(), &msg)
@@ -406,7 +406,7 @@ mod initialization {
             &vec![],
         );
 
-        let res = query_module_address(&app.wrap(), &collection_addr, Modules::MarketplaceModule)
+        let res = query_module_address(&app.wrap(), &collection_addr, Modules::Marketplace)
             .unwrap();
         assert_eq!(res, "contract2")
     }
@@ -487,7 +487,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -556,7 +556,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -607,7 +607,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -737,7 +737,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -801,7 +801,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -885,7 +885,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -955,7 +955,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1040,7 +1040,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1108,7 +1108,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1186,7 +1186,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
                 setup_metadata(&mut app, metadata_contract_addr.clone());
                 setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1397,7 +1397,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1492,7 +1492,7 @@ mod actions {
                     query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1572,7 +1572,7 @@ mod queries {
         let bundle_addr_1 =
             query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         let metadata_contract_addr_1 =
-            setup_metadata_contract(&mut app, bundle_addr_1.clone(), MetadataType::OneToOne);
+            setup_metadata_contract(&mut app, bundle_addr_1.clone(), MetadataType::Standard);
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
         setup_metadata(&mut app, metadata_contract_addr_1.clone());

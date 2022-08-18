@@ -705,7 +705,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1013,7 +1013,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1056,7 +1056,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1153,7 +1153,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1209,7 +1209,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1244,7 +1244,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
@@ -1291,7 +1291,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1393,7 +1393,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1426,7 +1426,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1483,7 +1483,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr.clone());
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1548,7 +1548,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr.clone());
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1614,7 +1614,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 
@@ -1652,7 +1652,7 @@ mod actions {
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
                     token_contract_addr.clone(),
-                    MetadataType::OneToOne,
+                    MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
 

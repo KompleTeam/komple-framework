@@ -344,16 +344,16 @@ fn query_module_address(deps: Deps, module: Modules) -> StdResult<ResponseWrappe
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id {
         MINT_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::MintModule)
+            handle_module_instantiate_reply(deps, msg, Modules::Mint)
         }
         PERMISSION_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::PermissionModule)
+            handle_module_instantiate_reply(deps, msg, Modules::Permission)
         }
         MERGE_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::MergeModule)
+            handle_module_instantiate_reply(deps, msg, Modules::Merge)
         }
         MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::MarketplaceModule)
+            handle_module_instantiate_reply(deps, msg, Modules::Marketplace)
         }
         _ => return Err(ContractError::InvalidReplyID {}),
     }
