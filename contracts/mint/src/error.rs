@@ -19,14 +19,14 @@ pub enum ContractError {
     #[error("Error while instantiating token contract")]
     TokenInstantiateError {},
 
-    #[error("Invalid collection ID")]
-    InvalidCollectionId {},
+    #[error("Invalid bundle ID")]
+    InvalidBundleId {},
 
     #[error("Invalid metadata IDs")]
     InvalidMetadataIds {},
 
-    #[error("Collection cannot be linked to itself")]
-    SelfLinkedCollection {},
+    #[error("Bundle cannot be linked to itself")]
+    SelfLinkedBundle {},
 
     #[error("{0}")]
     Util(#[from] UtilError),

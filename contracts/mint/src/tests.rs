@@ -1,9 +1,7 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
-};
+use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
 use metadata_contract::{
     msg::ExecuteMsg as MetadataExecuteMsg,
     state::{MetaInfo, Trait},
@@ -13,7 +11,7 @@ use token_contract::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
         QueryMsg as TokenQueryMsg, TokenInfo,
     },
-    state::{CollectionInfo, Contracts},
+    state::{BundleInfo, Contracts},
 };
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
@@ -86,18 +84,18 @@ fn proper_instantiate(app: &mut App) -> Addr {
     minter_contract_addr
 }
 
-fn setup_collection(
+fn setup_bundle(
     app: &mut App,
     minter_addr: &Addr,
     sender: Addr,
-    linked_collections: Option<Vec<u32>>,
+    linked_bundles: Option<Vec<u32>>,
     unit_price: Option<Uint128>,
 ) {
     let token_code_id = app.store_code(token_contract());
 
-    let collection_info = CollectionInfo {
-        collection_type: Collections::Normal,
-        name: "Test Collection".to_string(),
+    let bundle_info = BundleInfo {
+        bundle_type: Bundles::Normal,
+        name: "Test Bundle".to_string(),
         description: "Test Description".to_string(),
         image: "ipfs://xyz".to_string(),
         external_link: None,
@@ -106,11 +104,11 @@ fn setup_collection(
         symbol: "TEST".to_string(),
         minter: minter_addr.to_string(),
     };
-    let msg = ExecuteMsg::CreateCollection {
+    let msg = ExecuteMsg::CreateBundle {
         code_id: token_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
-            collection_info,
+            bundle_info,
             token_info,
             per_address_limit: None,
             start_time: None,
@@ -119,7 +117,7 @@ fn setup_collection(
             max_token_limit: None,
             royalty_share: Some(Decimal::new(Uint128::new(5))),
         },
-        linked_collections,
+        linked_bundles,
     };
     let _ = app
         .execute_contract(sender, minter_addr.clone(), &msg, &vec![])
@@ -197,31 +195,31 @@ mod actions {
         use cosmwasm_std::coin;
         use cw721::OwnerOfResponse;
         use komple_types::query::ResponseWrapper;
-        use komple_utils::query_collection_address;
+        use komple_utils::query_bundle_address;
         use token_contract::msg::QueryMsg as TokenQueryMsg;
 
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(
+            setup_bundle(
                 &mut app,
                 &minter_addr,
                 Addr::unchecked(ADMIN),
                 None,
-                Some(Uint128::new(50_000))
+                Some(Uint128::new(50_000)),
             );
 
-            let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
+            let bundle_addr = query_bundle_address(&app.wrap(), &minter_addr, &1).unwrap();
             let metadata_contract_addr =
-                setup_metadata_contract(&mut app, collection_addr, MetadataType::OneToOne);
+                setup_metadata_contract(&mut app, bundle_addr, MetadataType::OneToOne);
             setup_metadata(&mut app, metadata_contract_addr);
 
             let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
             assert_eq!(res.amount, Uint128::new(0));
 
             let msg = ExecuteMsg::Mint {
-                collection_id: 1,
+                bundle_id: 1,
                 metadata_id: None,
             };
             let _ = app
@@ -233,7 +231,7 @@ mod actions {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::CollectionAddress(1);
+            let msg = QueryMsg::BundleAddress(1);
             let response: ResponseWrapper<String> =
                 app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
             let token_address = response.data;
@@ -254,11 +252,11 @@ mod actions {
         fn test_locked_minting() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
 
-            let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
+            let bundle_addr = query_bundle_address(&app.wrap(), &minter_addr, &1).unwrap();
             let metadata_contract_addr =
-                setup_metadata_contract(&mut app, collection_addr, MetadataType::OneToOne);
+                setup_metadata_contract(&mut app, bundle_addr, MetadataType::OneToOne);
             setup_metadata(&mut app, metadata_contract_addr);
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
@@ -267,7 +265,7 @@ mod actions {
                 .unwrap();
 
             let msg = ExecuteMsg::Mint {
-                collection_id: 1,
+                bundle_id: 1,
                 metadata_id: None,
             };
             let err = app
@@ -306,13 +304,13 @@ mod actions {
         }
     }
 
-    mod collections {
+    mod bundles {
         use komple_types::query::ResponseWrapper;
 
         use super::*;
 
         use crate::{
-            msg::{CollectionsResponse, ExecuteMsg, QueryMsg},
+            msg::{BundlesResponse, ExecuteMsg, QueryMsg},
             ContractError,
         };
 
@@ -320,14 +318,14 @@ mod actions {
             use super::*;
 
             #[test]
-            fn test_collection_creation() {
+            fn test_bundle_creation() {
                 let mut app = mock_app();
                 let minter_addr = proper_instantiate(&mut app);
                 let token_code_id = app.store_code(token_contract());
 
-                let collection_info = CollectionInfo {
-                    collection_type: Collections::Normal,
-                    name: "Test Collection".to_string(),
+                let bundle_info = BundleInfo {
+                    bundle_type: Bundles::Normal,
+                    name: "Test Bundle".to_string(),
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
@@ -336,11 +334,11 @@ mod actions {
                     symbol: "TEST".to_string(),
                     minter: minter_addr.to_string(),
                 };
-                let msg = ExecuteMsg::CreateCollection {
+                let msg = ExecuteMsg::CreateBundle {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
                         admin: ADMIN.to_string(),
-                        collection_info,
+                        bundle_info,
                         token_info,
                         per_address_limit: None,
                         start_time: None,
@@ -349,13 +347,13 @@ mod actions {
                         max_token_limit: None,
                         royalty_share: Some(Decimal::new(Uint128::new(5))),
                     },
-                    linked_collections: None,
+                    linked_bundles: None,
                 };
                 let _ = app
                     .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
                     .unwrap();
 
-                let msg = QueryMsg::CollectionAddress(1);
+                let msg = QueryMsg::BundleAddress(1);
                 let res: ResponseWrapper<String> =
                     app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
                 assert_eq!(res.data, "contract1");
@@ -367,9 +365,9 @@ mod actions {
                 let minter_addr = proper_instantiate(&mut app);
                 let token_code_id = app.store_code(token_contract());
 
-                let collection_info = CollectionInfo {
-                    collection_type: Collections::Normal,
-                    name: "Test Collection".to_string(),
+                let bundle_info = BundleInfo {
+                    bundle_type: Bundles::Normal,
+                    name: "Test Bundle".to_string(),
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
@@ -378,11 +376,11 @@ mod actions {
                     symbol: "TEST".to_string(),
                     minter: minter_addr.to_string(),
                 };
-                let msg = ExecuteMsg::CreateCollection {
+                let msg = ExecuteMsg::CreateBundle {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
                         admin: ADMIN.to_string(),
-                        collection_info,
+                        bundle_info,
                         token_info,
                         per_address_limit: None,
                         start_time: None,
@@ -391,7 +389,7 @@ mod actions {
                         max_token_limit: None,
                         royalty_share: Some(Decimal::new(Uint128::new(5))),
                     },
-                    linked_collections: None,
+                    linked_bundles: None,
                 };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
@@ -407,23 +405,23 @@ mod actions {
                 let mut app = mock_app();
                 let minter_addr = proper_instantiate(&mut app);
 
-                let msg = ExecuteMsg::UpdatePublicCollectionCreation {
-                    public_collection_creation: true,
+                let msg = ExecuteMsg::UpdatePublicBundleCreation {
+                    public_bundle_creation: true,
                 };
                 let _ = app
                     .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
                     .unwrap();
 
-                setup_collection(&mut app, &minter_addr, Addr::unchecked(USER), None, None);
+                setup_bundle(&mut app, &minter_addr, Addr::unchecked(USER), None, None);
 
-                let msg = QueryMsg::CollectionAddress(1);
+                let msg = QueryMsg::BundleAddress(1);
                 let res: ResponseWrapper<String> =
                     app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
                 assert_eq!(res.data, "contract1");
             }
         }
 
-        mod update_public_collection_creation {
+        mod update_public_bundle_creation {
             use super::*;
 
             #[test]
@@ -431,8 +429,8 @@ mod actions {
                 let mut app = mock_app();
                 let minter_addr = proper_instantiate(&mut app);
 
-                let msg = ExecuteMsg::UpdatePublicCollectionCreation {
-                    public_collection_creation: true,
+                let msg = ExecuteMsg::UpdatePublicBundleCreation {
+                    public_bundle_creation: true,
                 };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
@@ -445,55 +443,55 @@ mod actions {
         }
 
         #[test]
-        fn test_linked_collections_happy_path() {
+        fn test_linked_bundles_happy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(
                 &mut app,
                 &minter_addr,
                 Addr::unchecked(ADMIN),
                 Some(vec![1]),
                 None,
             );
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
 
-            let msg = ExecuteMsg::UpdateLinkedCollections {
-                collection_id: 4,
-                linked_collections: vec![1, 3],
+            let msg = ExecuteMsg::UpdateLinkedBundles {
+                bundle_id: 4,
+                linked_bundles: vec![1, 3],
             };
             let _ = app
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
                 .unwrap();
 
-            let msg = QueryMsg::LinkedCollections { collection_id: 2 };
+            let msg = QueryMsg::LinkedBundles { bundle_id: 2 };
             let res: ResponseWrapper<Vec<u32>> = app
                 .wrap()
                 .query_wasm_smart(minter_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data, vec![1]);
 
-            let msg = QueryMsg::LinkedCollections { collection_id: 4 };
+            let msg = QueryMsg::LinkedBundles { bundle_id: 4 };
             let res: ResponseWrapper<Vec<u32>> =
                 app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
             assert_eq!(res.data, vec![1, 3]);
         }
 
         #[test]
-        fn test_linked_collections_unhappy_path() {
+        fn test_linked_bundles_unhappy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
 
-            let msg = ExecuteMsg::UpdateLinkedCollections {
-                collection_id: 5,
-                linked_collections: vec![10],
+            let msg = ExecuteMsg::UpdateLinkedBundles {
+                bundle_id: 5,
+                linked_bundles: vec![10],
             };
             let err = app
                 .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
@@ -508,69 +506,69 @@ mod actions {
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
-                ContractError::InvalidCollectionId {}.to_string()
+                ContractError::InvalidBundleId {}.to_string()
             );
 
-            let msg = ExecuteMsg::UpdateLinkedCollections {
-                collection_id: 2,
-                linked_collections: vec![2],
+            let msg = ExecuteMsg::UpdateLinkedBundles {
+                bundle_id: 2,
+                linked_bundles: vec![2],
             };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
-                ContractError::SelfLinkedCollection {}.to_string()
+                ContractError::SelfLinkedBundle {}.to_string()
             );
 
-            let msg = ExecuteMsg::UpdateLinkedCollections {
-                collection_id: 2,
-                linked_collections: vec![10],
+            let msg = ExecuteMsg::UpdateLinkedBundles {
+                bundle_id: 2,
+                linked_bundles: vec![10],
             };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr, &msg, &vec![])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
-                ContractError::InvalidCollectionId {}.to_string()
+                ContractError::InvalidBundleId {}.to_string()
             );
         }
 
         #[test]
-        fn test_collections_query() {
+        fn test_bundles_query() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
 
-            let msg = QueryMsg::Collections {
+            let msg = QueryMsg::Bundles {
                 start_after: None,
                 limit: None,
             };
-            let res: ResponseWrapper<Vec<CollectionsResponse>> = app
+            let res: ResponseWrapper<Vec<BundlesResponse>> = app
                 .wrap()
                 .query_wasm_smart(minter_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 7);
-            assert_eq!(res.data[3].collection_id, 4);
+            assert_eq!(res.data[3].bundle_id, 4);
             assert_eq!(res.data[3].address, "contract4");
 
-            let msg = QueryMsg::Collections {
+            let msg = QueryMsg::Bundles {
                 start_after: Some(2),
                 limit: Some(4),
             };
-            let res: ResponseWrapper<Vec<CollectionsResponse>> = app
+            let res: ResponseWrapper<Vec<BundlesResponse>> = app
                 .wrap()
                 .query_wasm_smart(minter_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 4);
-            assert_eq!(res.data[3].collection_id, 6);
+            assert_eq!(res.data[3].bundle_id, 6);
             assert_eq!(res.data[3].address, "contract6");
         }
     }

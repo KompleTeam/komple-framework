@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{
-    check_admin_privileges, query_collection_address, query_linked_collections,
+    check_admin_privileges, query_bundle_address, query_linked_bundles,
     query_module_address,
 };
 
@@ -213,14 +213,14 @@ fn make_burn_messages(
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
     for burn_msg in &merge_msg.burn {
-        let collection_addr =
-            query_collection_address(&deps.querier, &mint_module_addr, &burn_msg.collection_id)?;
+        let bundle_addr =
+            query_bundle_address(&deps.querier, &mint_module_addr, &burn_msg.bundle_id)?;
 
         let msg = TokenExecuteMsg::Burn {
             token_id: burn_msg.token_id.to_string(),
         };
         msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: collection_addr.to_string(),
+            contract_addr: bundle_addr.to_string(),
             msg: to_binary(&msg)?,
             funds: info.funds.clone(),
         }));
@@ -235,35 +235,35 @@ fn make_mint_messages(
     merge_msg: &MergeMsg,
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
-    let burn_collection_ids: Vec<u32> = merge_msg.burn.iter().map(|m| m.collection_id).collect();
+    let burn_bundle_ids: Vec<u32> = merge_msg.burn.iter().map(|m| m.bundle_id).collect();
 
-    // Keeping the linked collections list inside a hashmap
-    // Used for saving multiple queries on same collection id
-    let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
+    // Keeping the linked bundles list inside a hashmap
+    // Used for saving multiple queries on same bundle id
+    let mut linked_bundle_map: HashMap<u32, Vec<u32>> = HashMap::new();
 
-    for (index, collection_id) in merge_msg.mint.iter().enumerate() {
-        let linked_collections = match linked_collection_map.contains_key(&collection_id) {
-            true => linked_collection_map.get(&collection_id).unwrap().clone(),
+    for (index, bundle_id) in merge_msg.mint.iter().enumerate() {
+        let linked_bundles = match linked_bundle_map.contains_key(&bundle_id) {
+            true => linked_bundle_map.get(&bundle_id).unwrap().clone(),
             false => {
-                let collections =
-                    query_linked_collections(&deps.querier, &mint_module_addr, *collection_id)?;
-                linked_collection_map.insert(*collection_id, collections.clone());
-                collections
+                let bundles =
+                    query_linked_bundles(&deps.querier, &mint_module_addr, *bundle_id)?;
+                linked_bundle_map.insert(*bundle_id, bundles.clone());
+                bundles
             }
         };
 
-        // If there are some linked collections
+        // If there are some linked bundles
         // They have to be in the burn message
-        if linked_collections.len() > 0 {
-            for linked_collection_id in linked_collections {
-                if !burn_collection_ids.contains(&linked_collection_id) {
-                    return Err(ContractError::LinkedCollectionNotFound {});
+        if linked_bundles.len() > 0 {
+            for linked_bundle_id in linked_bundles {
+                if !burn_bundle_ids.contains(&linked_bundle_id) {
+                    return Err(ContractError::LinkedBundleNotFound {});
                 }
             }
         }
 
         let msg = MintModuleExecuteMsg::MintTo {
-            collection_id: *collection_id,
+            bundle_id: *bundle_id,
             recipient: info.sender.to_string(),
             metadata_id: merge_msg
                 .metadata_ids

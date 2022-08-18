@@ -27,4 +27,4 @@ pub const STATIC_METADATA_NAMESPACE: &str = "static_metadata";
 
 pub const DYNAMIC_METADATA_NAMESPACE: &str = "dynamic_metadata";
 
-pub const COLLECTION_ADDR_NAMESPACE: &str = "collection_addr";
+pub const BUNDLE_ADDR_NAMESPACE: &str = "bundle_addr";

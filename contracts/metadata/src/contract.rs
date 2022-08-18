@@ -13,7 +13,7 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, MetaInfo, Metadata, Trait, COLLECTION_ADDR, CONFIG, DYNAMIC_METADATA, METADATA,
+    Config, MetaInfo, Metadata, Trait, BUNDLE_ADDR, CONFIG, DYNAMIC_METADATA, METADATA,
     METADATA_ID, STATIC_METADATA,
 };
 
@@ -40,7 +40,7 @@ pub fn instantiate(
 
     CONFIG.save(deps.storage, &config)?;
 
-    COLLECTION_ADDR.save(deps.storage, &info.sender)?;
+    BUNDLE_ADDR.save(deps.storage, &info.sender)?;
 
     METADATA_ID.save(deps.storage, &0)?;
 
@@ -92,14 +92,14 @@ fn execute_add_metadata(
     meta_info: MetaInfo,
     attributes: Vec<Trait>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let bundle_addr = BUNDLE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        bundle_addr,
         None,
     )?;
 
@@ -123,14 +123,14 @@ fn execute_link_metadata(
     token_id: u32,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let bundle_addr = BUNDLE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        bundle_addr,
         None,
     )?;
 
@@ -169,14 +169,14 @@ fn execute_update_meta_info(
     token_id: u32,
     meta_info: MetaInfo,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let bundle_addr = BUNDLE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        bundle_addr,
         None,
     )?;
     // check_metadata_lock(&deps, &config, &token_id)?;
@@ -205,14 +205,14 @@ fn execute_add_attribute(
     token_id: u32,
     attribute: Trait,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let bundle_addr = BUNDLE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        bundle_addr,
         None,
     )?;
 
@@ -246,14 +246,14 @@ fn execute_update_attribute(
     token_id: u32,
     attribute: Trait,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let bundle_addr = BUNDLE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        bundle_addr,
         None,
     )?;
     // check_metadata_lock(&deps, &config, &token_id)?;
@@ -300,14 +300,14 @@ fn execute_remove_attribute(
     token_id: u32,
     trait_type: String,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let bundle_addr = BUNDLE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        bundle_addr,
         None,
     )?;
     // check_metadata_lock(&deps, &config, &token_id)?;
@@ -351,14 +351,14 @@ fn execute_unlink_metadata(
     info: MessageInfo,
     token_id: u32,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let bundle_addr = BUNDLE_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        bundle_addr,
         None,
     )?;
 

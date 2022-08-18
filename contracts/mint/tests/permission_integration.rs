@@ -4,7 +4,7 @@ use controller_contract::msg::{
 };
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::collection::Collections;
+use komple_types::bundle::Bundles;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -17,7 +17,7 @@ use token_contract::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
         QueryMsg as TokenQueryMsg, TokenInfo,
     },
-    state::{CollectionInfo, Contracts},
+    state::{BundleInfo, Contracts},
 };
 
 pub const USER: &str = "juno..user";
@@ -154,22 +154,22 @@ fn setup_modules(app: &mut App, controller_addr: Addr) -> (Addr, Addr) {
     (mint_res.data, permission_res.data)
 }
 
-pub fn create_collection(
+pub fn create_bundle(
     app: &mut App,
     mint_module_addr: Addr,
     token_contract_code_id: u64,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
-    collection_type: Collections,
-    linked_collections: Option<Vec<u32>>,
+    bundle_type: Bundles,
+    linked_bundles: Option<Vec<u32>>,
     unit_price: Option<Uint128>,
     max_token_limit: Option<u32>,
     royalty_share: Option<Decimal>,
 ) {
-    let collection_info = CollectionInfo {
-        collection_type,
-        name: "Test Collection".to_string(),
-        description: "Test Collection".to_string(),
+    let bundle_info = BundleInfo {
+        bundle_type,
+        name: "Test Bundle".to_string(),
+        description: "Test Bundle".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
     };
@@ -177,11 +177,11 @@ pub fn create_collection(
         symbol: "TEST".to_string(),
         minter: mint_module_addr.to_string(),
     };
-    let msg = ExecuteMsg::CreateCollection {
+    let msg = ExecuteMsg::CreateBundle {
         code_id: token_contract_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
-            collection_info,
+            bundle_info,
             token_info,
             per_address_limit,
             start_time,
@@ -190,7 +190,7 @@ pub fn create_collection(
             max_token_limit,
             royalty_share,
         },
-        linked_collections,
+        linked_bundles,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
@@ -256,9 +256,9 @@ pub fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
         .unwrap();
 }
 
-pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
+pub fn mint_token(app: &mut App, mint_module_addr: Addr, bundle_id: u32, sender: &str) {
     let msg = ExecuteMsg::Mint {
-        collection_id,
+        bundle_id,
         metadata_id: None,
     };
     let _ = app
@@ -319,14 +319,14 @@ mod initialization {
 }
 
 mod permission_mint {
-    use komple_utils::query_collection_address;
+    use komple_utils::query_bundle_address;
 
     use super::*;
 
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use komple_types::{
-        collection::Collections, metadata::Metadata, module::Modules, permission::Permissions,
+        bundle::Bundles, metadata::Metadata, module::Modules, permission::Permissions,
     };
     use mint_module::msg::ExecuteMsg as MintExecuteMsg;
     use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
@@ -341,40 +341,40 @@ mod permission_mint {
             setup_modules(&mut app, controller_addr.clone());
 
         let token_contract_code_id = app.store_code(token_contract());
-        create_collection(
+        create_bundle(
             &mut app,
             mint_module_addr.clone(),
             token_contract_code_id,
             None,
             None,
-            Collections::Normal,
+            Bundles::Normal,
             None,
             None,
             None,
             None,
         );
-        create_collection(
+        create_bundle(
             &mut app,
             mint_module_addr.clone(),
             token_contract_code_id,
             None,
             None,
-            Collections::Normal,
+            Bundles::Normal,
             None,
             None,
             None,
             None,
         );
 
-        let collection_addr_1 =
-            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
-        let collection_addr_2 =
-            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &2).unwrap();
+        let bundle_addr_1 =
+            query_bundle_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
+        let bundle_addr_2 =
+            query_bundle_address(&app.wrap(), &mint_module_addr.clone(), &2).unwrap();
 
         let metadata_contract_addr_1 =
-            setup_metadata_contract(&mut app, collection_addr_1, Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_addr_1, Metadata::OneToOne);
         let metadata_contract_addr_2 =
-            setup_metadata_contract(&mut app, collection_addr_2, Metadata::OneToOne);
+            setup_metadata_contract(&mut app, bundle_addr_2, Metadata::OneToOne);
 
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
@@ -400,12 +400,12 @@ mod permission_mint {
             permission_type: Permissions::Ownership,
             data: to_binary(&vec![
                 OwnershipMsg {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     owner: USER.to_string(),
                 },
                 OwnershipMsg {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 2,
                     owner: USER.to_string(),
                 },
@@ -413,10 +413,10 @@ mod permission_mint {
             .unwrap(),
         }])
         .unwrap();
-        let collection_ids = vec![2];
+        let bundle_ids = vec![2];
         let msg = MintExecuteMsg::PermissionMint {
             permission_msg,
-            collection_ids,
+            bundle_ids,
             metadata_ids: None,
         };
         let _ = app
@@ -428,8 +428,8 @@ mod permission_mint {
             )
             .unwrap();
 
-        let collection_2_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+        let bundle_2_addr =
+            query_bundle_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
         let msg = TokenQueryMsg::OwnerOf {
             token_id: "1".to_string(),
@@ -437,7 +437,7 @@ mod permission_mint {
         };
         let res: OwnerOfResponse = app
             .wrap()
-            .query_wasm_smart(collection_2_addr, &msg)
+            .query_wasm_smart(bundle_2_addr, &msg)
             .unwrap();
         assert_eq!(res.owner, USER);
     }

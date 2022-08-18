@@ -5,11 +5,11 @@ use controller_contract::msg::{
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
-use komple_types::collection::Collections;
+use komple_types::bundle::Bundles;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::query_collection_address;
+use komple_utils::query_bundle_address;
 use marketplace_module::msg::ExecuteMsg;
 use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
@@ -19,7 +19,7 @@ use token_contract::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
         QueryMsg as TokenQueryMsg, TokenInfo,
     },
-    state::{CollectionInfo, Contracts},
+    state::{BundleInfo, Contracts},
 };
 
 pub const USER: &str = "juno..user";
@@ -210,22 +210,22 @@ fn setup_modules(app: &mut App, controller_addr: Addr) -> (Addr, Addr) {
     (mint_res.data, marketplace_res.data)
 }
 
-pub fn create_collection(
+pub fn create_bundle(
     app: &mut App,
     mint_module_addr: Addr,
     token_contract_code_id: u64,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
-    collection_type: Collections,
-    linked_collections: Option<Vec<u32>>,
+    bundle_type: Bundles,
+    linked_bundles: Option<Vec<u32>>,
     unit_price: Option<Uint128>,
     max_token_limit: Option<u32>,
     royalty_share: Option<Decimal>,
 ) {
-    let collection_info = CollectionInfo {
-        collection_type,
-        name: "Test Collection".to_string(),
-        description: "Test Collection".to_string(),
+    let bundle_info = BundleInfo {
+        bundle_type,
+        name: "Test Bundle".to_string(),
+        description: "Test Bundle".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
     };
@@ -233,11 +233,11 @@ pub fn create_collection(
         symbol: "TEST".to_string(),
         minter: mint_module_addr.to_string(),
     };
-    let msg = MintExecuteMsg::CreateCollection {
+    let msg = MintExecuteMsg::CreateBundle {
         code_id: token_contract_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
-            collection_info,
+            bundle_info,
             token_info,
             per_address_limit,
             start_time,
@@ -246,7 +246,7 @@ pub fn create_collection(
             max_token_limit,
             royalty_share,
         },
-        linked_collections,
+        linked_bundles,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
@@ -312,9 +312,9 @@ pub fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
         .unwrap();
 }
 
-pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
+pub fn mint_token(app: &mut App, mint_module_addr: Addr, bundle_id: u32, sender: &str) {
     let msg = MintExecuteMsg::Mint {
-        collection_id,
+        bundle_id,
         metadata_id: None,
     };
     let _ = app
@@ -352,21 +352,21 @@ pub fn setup_marketplace_listing(
     app: &mut App,
     mint_module_addr: &Addr,
     marketplace_module_addr: &Addr,
-    collection_id: u32,
+    bundle_id: u32,
     token_id: u32,
     price: Uint128,
 ) {
-    let collection_addr =
-        query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
+    let bundle_addr =
+        query_bundle_address(&app.wrap(), &mint_module_addr, &bundle_id).unwrap();
 
     setup_token_contract_operators(
         app,
-        collection_addr.clone(),
+        bundle_addr.clone(),
         vec![marketplace_module_addr.to_string()],
     );
 
     let msg = ExecuteMsg::ListFixedToken {
-        collection_id,
+        bundle_id,
         token_id,
         price,
     };
@@ -440,7 +440,7 @@ mod actions {
     use super::*;
 
     use cosmwasm_std::Uint128;
-    use komple_types::collection::Collections;
+    use komple_types::bundle::Bundles;
     use marketplace_module::{
         msg::{ExecuteMsg as MarketplaceExecuteMsg, QueryMsg as MarketplaceQueryMsg},
         ContractError as MarketplaceContractError,
@@ -457,7 +457,7 @@ mod actions {
             use super::*;
 
             use komple_types::{metadata::Metadata, query::ResponseWrapper, tokens::Locks};
-            use komple_utils::{query_collection_address, query_token_locks};
+            use komple_utils::{query_bundle_address, query_token_locks};
             use marketplace_module::state::FixedListing;
 
             #[test]
@@ -470,36 +470,36 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
-                    collection_addr.clone(),
+                    bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
                 );
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(1_000_000),
                 };
@@ -513,7 +513,7 @@ mod actions {
                     .unwrap();
 
                 let msg = MarketplaceQueryMsg::FixedListing {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let res: ResponseWrapper<FixedListing> = app
@@ -523,7 +523,7 @@ mod actions {
                 assert_eq!(res.data.owner, USER.to_string());
                 assert_eq!(res.data.price, Uint128::new(1_000_000));
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks = query_token_locks(&app.wrap(), &bundle_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, true);
                 assert_eq!(locks.send_lock, true);
                 assert_eq!(locks.burn_lock, true);
@@ -539,30 +539,30 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(1_000_000),
                 };
@@ -590,36 +590,36 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 let listing_msg = MarketplaceExecuteMsg::ListFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(1_000_000),
                 };
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let unlock = Locks {
                     mint_lock: false,
@@ -640,7 +640,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
+                        bundle_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -666,7 +666,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
+                        bundle_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -678,7 +678,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
+                        bundle_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -703,7 +703,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
+                        bundle_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -720,30 +720,30 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(1_000_000),
                 };
@@ -767,7 +767,7 @@ mod actions {
         use super::*;
 
         use cosmwasm_std::Empty;
-        use komple_utils::query_collection_address;
+        use komple_utils::query_bundle_address;
 
         mod fixed_tokens {
             use komple_utils::query_token_locks;
@@ -784,36 +784,36 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
-                    collection_addr.clone(),
+                    bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
                 );
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(1_000_000),
                 };
@@ -826,13 +826,13 @@ mod actions {
                     )
                     .unwrap();
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks = query_token_locks(&app.wrap(), &bundle_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, true);
                 assert_eq!(locks.send_lock, true);
                 assert_eq!(locks.burn_lock, true);
 
                 let msg = MarketplaceExecuteMsg::DelistFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let _ = app
@@ -844,13 +844,13 @@ mod actions {
                     )
                     .unwrap();
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks = query_token_locks(&app.wrap(), &bundle_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, false);
                 assert_eq!(locks.send_lock, false);
                 assert_eq!(locks.burn_lock, false);
 
                 let msg = MarketplaceQueryMsg::FixedListing {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let res: Result<Empty, cosmwasm_std::StdError> =
@@ -868,36 +868,36 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
-                    collection_addr.clone(),
+                    bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
                 );
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(1_000_000),
                 };
@@ -911,7 +911,7 @@ mod actions {
                     .unwrap();
 
                 let msg = MarketplaceExecuteMsg::DelistFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let err = app
@@ -938,36 +938,36 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_contract_operators(
                     &mut app,
-                    collection_addr.clone(),
+                    bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
                 );
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(1_000_000),
                 };
@@ -980,10 +980,10 @@ mod actions {
                     )
                     .unwrap();
 
-                setup_token_contract_operators(&mut app, collection_addr.clone(), vec![]);
+                setup_token_contract_operators(&mut app, bundle_addr.clone(), vec![]);
 
                 let msg = MarketplaceExecuteMsg::DelistFixedToken {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let err = app
@@ -1009,7 +1009,7 @@ mod actions {
         use super::*;
 
         mod fixed_tokens {
-            use komple_utils::query_collection_address;
+            use komple_utils::query_bundle_address;
 
             use super::*;
 
@@ -1023,24 +1023,24 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1056,7 +1056,7 @@ mod actions {
 
                 let msg = MarketplaceExecuteMsg::UpdatePrice {
                     listing_type: Listing::Fixed,
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(200_000_000),
                 };
@@ -1070,7 +1070,7 @@ mod actions {
                     .unwrap();
 
                 let msg = MarketplaceQueryMsg::FixedListing {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let res: ResponseWrapper<FixedListing> = app
@@ -1091,24 +1091,24 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1124,7 +1124,7 @@ mod actions {
 
                 let msg = MarketplaceExecuteMsg::UpdatePrice {
                     listing_type: Listing::Fixed,
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                     price: Uint128::new(200_000_000),
                 };
@@ -1149,7 +1149,7 @@ mod actions {
 
         use cosmwasm_std::coin;
         use komple_types::marketplace::Listing;
-        use komple_utils::{query_collection_address, query_token_owner};
+        use komple_utils::{query_bundle_address, query_token_owner};
 
         mod fixed_tokens {
             use std::str::FromStr;
@@ -1169,24 +1169,24 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
                 setup_metadata(&mut app, metadata_contract_addr.clone());
                 setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1197,7 +1197,7 @@ mod actions {
 
                 give_approval_to_module(
                     &mut app,
-                    collection_addr.clone(),
+                    bundle_addr.clone(),
                     USER,
                     &marketplace_module_addr,
                 );
@@ -1211,14 +1211,14 @@ mod actions {
                     Uint128::new(1_000),
                 );
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks = query_token_locks(&app.wrap(), &bundle_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, true);
                 assert_eq!(locks.send_lock, true);
                 assert_eq!(locks.burn_lock, true);
 
                 let msg = MarketplaceExecuteMsg::Buy {
                     listing_type: Listing::Fixed,
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let _ = app
@@ -1231,7 +1231,7 @@ mod actions {
                     .unwrap();
 
                 let msg = MarketplaceQueryMsg::FixedListing {
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
                 let res: Result<Empty, StdError> = app
@@ -1239,12 +1239,12 @@ mod actions {
                     .query_wasm_smart(marketplace_module_addr.clone(), &msg);
                 assert!(res.is_err());
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks = query_token_locks(&app.wrap(), &bundle_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, false);
                 assert_eq!(locks.send_lock, false);
                 assert_eq!(locks.burn_lock, false);
 
-                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                let owner = query_token_owner(&app.wrap(), &bundle_addr, &1).unwrap();
                 assert_eq!(owner, Addr::unchecked(RANDOM));
 
                 // Buyer balance
@@ -1270,7 +1270,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
+                        bundle_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1287,7 +1287,7 @@ mod actions {
 
                 let msg = MarketplaceExecuteMsg::Buy {
                     listing_type: Listing::Fixed,
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 2,
                 };
                 let _ = app
@@ -1299,7 +1299,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                let owner = query_token_owner(&app.wrap(), &bundle_addr, &1).unwrap();
                 assert_eq!(owner, Addr::unchecked(RANDOM));
 
                 // Buyer balance
@@ -1324,7 +1324,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
+                        bundle_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1341,7 +1341,7 @@ mod actions {
 
                 let msg = MarketplaceExecuteMsg::Buy {
                     listing_type: Listing::Fixed,
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 3,
                 };
                 let _ = app
@@ -1380,24 +1380,24 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1413,7 +1413,7 @@ mod actions {
 
                 let buy_msg = MarketplaceExecuteMsg::Buy {
                     listing_type: Listing::Fixed,
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
 
@@ -1475,24 +1475,24 @@ mod actions {
                     setup_modules(&mut app, controller_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
-                create_collection(
+                create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
                     token_contract_code_id,
                     None,
                     None,
-                    Collections::Normal,
+                    Bundles::Normal,
                     None,
                     None,
                     None,
                     None,
                 );
 
-                let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr =
+                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
-                    setup_metadata_contract(&mut app, collection_addr.clone(), Metadata::OneToOne);
+                    setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::OneToOne);
                 setup_metadata(&mut app, metadata_contract_addr.clone());
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1508,7 +1508,7 @@ mod actions {
 
                 let buy_msg = MarketplaceExecuteMsg::Buy {
                     listing_type: Listing::Fixed,
-                    collection_id: 1,
+                    bundle_id: 1,
                     token_id: 1,
                 };
 
@@ -1544,35 +1544,35 @@ mod queries {
             setup_modules(&mut app, controller_addr.clone());
 
         let token_contract_code_id = app.store_code(token_contract());
-        create_collection(
+        create_bundle(
             &mut app,
             mint_module_addr.clone(),
             token_contract_code_id,
             None,
             None,
-            Collections::Normal,
+            Bundles::Normal,
             None,
             None,
             None,
             None,
         );
-        create_collection(
+        create_bundle(
             &mut app,
             mint_module_addr.clone(),
             token_contract_code_id,
             None,
             None,
-            Collections::Normal,
+            Bundles::Normal,
             None,
             None,
             None,
             None,
         );
 
-        let collection_addr_1 =
-            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        let bundle_addr_1 =
+            query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         let metadata_contract_addr_1 =
-            setup_metadata_contract(&mut app, collection_addr_1.clone(), MetadataType::OneToOne);
+            setup_metadata_contract(&mut app, bundle_addr_1.clone(), MetadataType::OneToOne);
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
@@ -1619,7 +1619,7 @@ mod queries {
         );
 
         let msg = QueryMsg::FixedListings {
-            collection_id: 1,
+            bundle_id: 1,
             start_after: None,
             limit: None,
         };
@@ -1628,15 +1628,15 @@ mod queries {
             .query_wasm_smart(marketplace_module_addr.clone(), &msg)
             .unwrap();
         assert_eq!(res.data.len(), 3);
-        assert_eq!(res.data[0].collection_id, 1);
+        assert_eq!(res.data[0].bundle_id, 1);
         assert_eq!(res.data[0].token_id, 1);
-        assert_eq!(res.data[1].collection_id, 1);
+        assert_eq!(res.data[1].bundle_id, 1);
         assert_eq!(res.data[1].token_id, 4);
-        assert_eq!(res.data[2].collection_id, 1);
+        assert_eq!(res.data[2].bundle_id, 1);
         assert_eq!(res.data[2].token_id, 7);
 
         let msg = QueryMsg::FixedListings {
-            collection_id: 1,
+            bundle_id: 1,
             start_after: Some(4),
             limit: Some(2),
         };
@@ -1645,7 +1645,7 @@ mod queries {
             .query_wasm_smart(marketplace_module_addr.clone(), &msg)
             .unwrap();
         assert_eq!(res.data.len(), 1);
-        assert_eq!(res.data[0].collection_id, 1);
+        assert_eq!(res.data[0].bundle_id, 1);
         assert_eq!(res.data[0].token_id, 7);
     }
 }
