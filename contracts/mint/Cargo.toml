@@ -59,4 +59,4 @@ komple-utils = { path = "../../packages/utils" }
 cosmwasm-schema = "1.0.0"
 cw-multi-test = "0.13.2"
 metadata-contract = { path = "../metadata", features = ["library"] }
-controller-contract = { path = "../controller", features = ["library"] }
+collection-contract = { path = "../collection", features = ["library"] }

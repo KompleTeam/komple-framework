@@ -1,14 +1,12 @@
 use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
-};
+use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
 use komple_utils::query_token_owner;
 use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
 use token_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
-use token_contract::state::{CollectionInfo, Contracts};
+use token_contract::state::{BundleInfo, Contracts};
 use token_contract::ContractError;
 use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
@@ -106,10 +104,10 @@ fn setup_whitelist(
 fn token_contract_instantiation(app: &mut App) -> Addr {
     let token_code_id = app.store_code(token_contract());
 
-    let collection_info = CollectionInfo {
-        collection_type: Collections::Normal,
-        name: "Test Collection".to_string(),
-        description: "Test Collection".to_string(),
+    let bundle_info = BundleInfo {
+        bundle_type: Bundles::Normal,
+        name: "Test Bundle".to_string(),
+        description: "Test Bundle".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
     };
@@ -122,7 +120,7 @@ fn token_contract_instantiation(app: &mut App) -> Addr {
         token_info,
         per_address_limit: None,
         start_time: None,
-        collection_info,
+        bundle_info: bundle_info,
         max_token_limit: None,
         unit_price: None,
         native_denom: NATIVE_DENOM.to_string(),
@@ -272,7 +270,7 @@ mod actions {
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
                 token_contract_addr.clone(),
-                MetadataType::OneToOne,
+                MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -353,7 +351,7 @@ mod actions {
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
                 token_contract_addr.clone(),
-                MetadataType::OneToOne,
+                MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
 
@@ -398,7 +396,7 @@ mod actions {
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
                 token_contract_addr.clone(),
-                MetadataType::OneToOne,
+                MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -462,7 +460,7 @@ mod actions {
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
                 token_contract_addr.clone(),
-                MetadataType::OneToOne,
+                MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
 

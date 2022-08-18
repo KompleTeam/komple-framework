@@ -70,7 +70,7 @@ mod tests {
             let permission_module_addr = proper_instantiate(&mut app);
 
             let msg = ExecuteMsg::UpdateModulePermissions {
-                module: Modules::MintModule,
+                module: Modules::Mint,
                 permissions: vec![Permissions::Ownership],
             };
             let _ = app
@@ -82,7 +82,7 @@ mod tests {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::ModulePermissions(Modules::MintModule);
+            let msg = QueryMsg::ModulePermissions(Modules::Mint);
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr.clone(), &msg)
@@ -90,7 +90,7 @@ mod tests {
             assert_eq!(res.data, vec![Permissions::Ownership.as_str()]);
 
             let msg = ExecuteMsg::UpdateModulePermissions {
-                module: Modules::PermissionModule,
+                module: Modules::Permission,
                 permissions: vec![Permissions::Attribute, Permissions::Ownership],
             };
             let _ = app
@@ -102,7 +102,7 @@ mod tests {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::ModulePermissions(Modules::PermissionModule);
+            let msg = QueryMsg::ModulePermissions(Modules::Permission);
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr.clone(), &msg)
@@ -128,7 +128,7 @@ mod tests {
                 .unwrap();
 
             let msg = ExecuteMsg::UpdateModulePermissions {
-                module: Modules::MintModule,
+                module: Modules::Mint,
                 permissions: vec![Permissions::Attribute],
             };
             let _ = app
@@ -140,7 +140,7 @@ mod tests {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::ModulePermissions(Modules::MintModule);
+            let msg = QueryMsg::ModulePermissions(Modules::Mint);
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(permission_module_addr, &msg)
@@ -154,7 +154,7 @@ mod tests {
             let permission_module_addr = proper_instantiate(&mut app);
 
             let msg = ExecuteMsg::UpdateModulePermissions {
-                module: Modules::MintModule,
+                module: Modules::Mint,
                 permissions: vec![Permissions::Ownership],
             };
             let err = app

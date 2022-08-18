@@ -6,8 +6,8 @@ use cw_storage_plus::{Item, Map};
 
 use komple_types::{
     metadata::{
-        Metadata as MetadataType, COLLECTION_ADDR_NAMESPACE, DYNAMIC_METADATA_NAMESPACE,
-        METADATA_ID_NAMESPACE, METADATA_NAMESPACE, STATIC_METADATA_NAMESPACE,
+        Metadata as MetadataType, BUNDLE_ADDR_NAMESPACE, DYNAMIC_LINKED_METADATA_NAMESPACE,
+        METADATA_ID_NAMESPACE, METADATA_NAMESPACE, LINKED_METADATA_NAMESPACE,
     },
     shared::CONFIG_NAMESPACE,
 };
@@ -22,7 +22,7 @@ pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 // pub const METADATA_LOCK: Map<&str, bool> = Map::new("metadata_lock");
 
-pub const COLLECTION_ADDR: Item<Addr> = Item::new(COLLECTION_ADDR_NAMESPACE);
+pub const BUNDLE_ADDR: Item<Addr> = Item::new(BUNDLE_ADDR_NAMESPACE);
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct Trait {
@@ -47,6 +47,6 @@ pub const METADATA: Map<u32, Metadata> = Map::new(METADATA_NAMESPACE);
 
 pub const METADATA_ID: Item<u32> = Item::new(METADATA_ID_NAMESPACE);
 
-pub const STATIC_METADATA: Map<u32, u32> = Map::new(STATIC_METADATA_NAMESPACE);
+pub const LINKED_METADATA: Map<u32, u32> = Map::new(LINKED_METADATA_NAMESPACE);
 
-pub const DYNAMIC_METADATA: Map<u32, Metadata> = Map::new(DYNAMIC_METADATA_NAMESPACE);
+pub const DYNAMIC_LINKED_METADATA: Map<u32, Metadata> = Map::new(DYNAMIC_LINKED_METADATA_NAMESPACE);

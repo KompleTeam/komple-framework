@@ -15,7 +15,7 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO,
+    BundleConfig, BundleInfo, Config, Contracts, BUNDLE_CONFIG, BUNDLE_INFO,
     CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS,
     TOKEN_LOCKS,
 };
@@ -76,13 +76,13 @@ pub fn instantiate(
         return Err(ContractError::InvalidPerAddressLimit {});
     };
 
-    let collection_config = CollectionConfig {
+    let bundle_config = BundleConfig {
         per_address_limit: msg.per_address_limit,
         start_time: msg.start_time,
         max_token_limit: msg.max_token_limit,
         unit_price: msg.unit_price,
     };
-    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
+    BUNDLE_CONFIG.save(deps.storage, &bundle_config)?;
 
     if msg.royalty_share.is_some() && msg.royalty_share.unwrap() > Decimal::one() {
         return Err(ContractError::InvalidRoyaltyShare {});
@@ -102,21 +102,21 @@ pub fn instantiate(
 
     MINT_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
+    if msg.bundle_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
     }
 
-    let collection_info = CollectionInfo {
-        collection_type: msg.collection_info.collection_type,
-        name: msg.collection_info.name.clone(),
-        description: msg.collection_info.description,
-        image: msg.collection_info.image,
-        external_link: msg.collection_info.external_link,
+    let bundle_info = BundleInfo {
+        bundle_type: msg.bundle_info.bundle_type,
+        name: msg.bundle_info.name.clone(),
+        description: msg.bundle_info.description,
+        image: msg.bundle_info.image,
+        external_link: msg.bundle_info.external_link,
     };
-    COLLECTION_INFO.save(deps.storage, &collection_info)?;
+    BUNDLE_INFO.save(deps.storage, &bundle_info)?;
 
     let contract_info = ContractInfoResponse {
-        name: msg.collection_info.name.clone(),
+        name: msg.bundle_info.name.clone(),
         symbol: msg.token_info.symbol,
     };
     Cw721Contract::default()
@@ -131,7 +131,7 @@ pub fn instantiate(
     Ok(Response::new()
         .add_attribute("action", "instantiate")
         .add_attribute("minter", msg.token_info.minter)
-        .add_attribute("collection_name", msg.collection_info.name))
+        .add_attribute("bundle_name", msg.bundle_info.name))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -331,7 +331,7 @@ pub fn execute_mint(
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+    let bundle_config = BUNDLE_CONFIG.load(deps.storage)?;
 
     let locks = LOCKS.load(deps.storage)?;
     if locks.mint_lock {
@@ -345,8 +345,8 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
-    if collection_config.max_token_limit.is_some()
-        && token_id > collection_config.max_token_limit.unwrap()
+    if bundle_config.max_token_limit.is_some()
+        && token_id > bundle_config.max_token_limit.unwrap()
     {
         return Err(ContractError::TokenLimitReached {});
     }
@@ -357,19 +357,19 @@ pub fn execute_mint(
         .may_load(deps.storage, &owner)?
         .unwrap_or(0);
 
-    if collection_config.per_address_limit.is_some()
-        && total_minted + 1 > collection_config.per_address_limit.unwrap()
+    if bundle_config.per_address_limit.is_some()
+        && total_minted + 1 > bundle_config.per_address_limit.unwrap()
     {
         return Err(ContractError::TokenLimitReached {});
     }
 
-    if collection_config.start_time.is_some()
-        && env.block.time < collection_config.start_time.unwrap()
+    if bundle_config.start_time.is_some()
+        && env.block.time < bundle_config.start_time.unwrap()
     {
         return Err(ContractError::MintingNotStarted {});
     }
 
-    let mint_price = get_mint_price(&deps, &config, &collection_config)?;
+    let mint_price = get_mint_price(&deps, &config, &bundle_config)?;
     if mint_price.is_some() {
         check_funds(
             &info,
@@ -549,14 +549,14 @@ pub fn execute_update_per_address_limit(
         operators,
     )?;
 
-    let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+    let mut bundle_config = BUNDLE_CONFIG.load(deps.storage)?;
 
     if per_address_limit.is_some() && per_address_limit.unwrap() == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
-    collection_config.per_address_limit = per_address_limit;
-    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
+    bundle_config.per_address_limit = per_address_limit;
+    BUNDLE_CONFIG.save(deps.storage, &bundle_config)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_per_address_limit"))
 }
@@ -579,10 +579,10 @@ fn execute_update_start_time(
         operators,
     )?;
 
-    let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+    let mut bundle_config = BUNDLE_CONFIG.load(deps.storage)?;
 
-    if collection_config.start_time.is_some()
-        && env.block.time >= collection_config.start_time.unwrap()
+    if bundle_config.start_time.is_some()
+        && env.block.time >= bundle_config.start_time.unwrap()
     {
         return Err(ContractError::AlreadyStarted {});
     }
@@ -592,12 +592,12 @@ fn execute_update_start_time(
             if env.block.time >= time {
                 return Err(ContractError::InvalidStartTime {});
             }
-            collection_config.start_time = start_time;
+            bundle_config.start_time = start_time;
         }
-        None => collection_config.start_time = None,
+        None => bundle_config.start_time = None,
     }
 
-    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
+    BUNDLE_CONFIG.save(deps.storage, &bundle_config)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_start_time"))
 }
@@ -716,13 +716,13 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     Ok(())
 }
 
-fn get_mint_price(deps: &DepsMut, config: &Config, collection_config: &CollectionConfig) -> Result<Option<Coin>, ContractError> {
+fn get_mint_price(deps: &DepsMut, config: &Config, bundle_config: &BundleConfig) -> Result<Option<Coin>, ContractError> {
     let contracts = CONTRACTS.load(deps.storage)?;
 
-    let collection_price = collection_config.unit_price.and_then(|price| Some(coin(price.u128(), &config.native_denom)));
+    let bundle_price = bundle_config.unit_price.and_then(|price| Some(coin(price.u128(), &config.native_denom)));
 
     if contracts.whitelist.is_none() {
-        return Ok(collection_price);
+        return Ok(bundle_price);
     };
 
     let whitelist = contracts.whitelist.unwrap();
@@ -734,7 +734,7 @@ fn get_mint_price(deps: &DepsMut, config: &Config, collection_config: &Collectio
     if res.data.is_active {
         return Ok(Some(coin(res.data.unit_price.u128(), &config.native_denom)));
     } else {
-        return Ok(collection_price);
+        return Ok(bundle_price);
     }
 }
 
@@ -747,7 +747,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::MintedTokensPerAddress { address } => {
             to_binary(&query_minted_tokens_per_address(deps, address)?)
         }
-        QueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
+        QueryMsg::BundleInfo {} => to_binary(&query_bundle_info(deps)?),
         QueryMsg::Contracts {} => to_binary(&query_contracts(deps)?),
         QueryMsg::ContractOperators {} => to_binary(&query_contract_operators(deps)?),
         _ => Cw721Contract::default().query(deps, env, msg.into()),
@@ -756,16 +756,16 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
     let config = CONFIG.load(deps.storage)?;
-    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+    let bundle_config = BUNDLE_CONFIG.load(deps.storage)?;
     Ok(ResponseWrapper::new(
         "locks",
         ConfigResponse {
             admin: config.admin.to_string(),
             native_denom: config.native_denom,
-            per_address_limit: collection_config.per_address_limit,
-            start_time: collection_config.start_time,
-            max_token_limit: collection_config.max_token_limit,
-            unit_price: collection_config.unit_price,
+            per_address_limit: bundle_config.per_address_limit,
+            start_time: bundle_config.start_time,
+            max_token_limit: bundle_config.max_token_limit,
+            unit_price: bundle_config.unit_price,
             royalty_share: config.royalty_share,
         },
     ))
@@ -788,9 +788,9 @@ fn query_minted_tokens_per_address(deps: Deps, address: String) -> StdResult<Res
     Ok(ResponseWrapper::new("minted_tokens_per_address", amount))
 }
 
-fn query_collection_info(deps: Deps) -> StdResult<ResponseWrapper<CollectionInfo>> {
-    let collection_info = COLLECTION_INFO.load(deps.storage)?;
-    Ok(ResponseWrapper::new("collection_info", collection_info))
+fn query_bundle_info(deps: Deps) -> StdResult<ResponseWrapper<BundleInfo>> {
+    let bundle_info = BUNDLE_INFO.load(deps.storage)?;
+    Ok(ResponseWrapper::new("bundle_info", bundle_info))
 }
 
 fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<Contracts>> {

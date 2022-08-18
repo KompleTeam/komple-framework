@@ -35,7 +35,7 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct MergeBurnMsg {
-    pub collection_id: u32,
+    pub bundle_id: u32,
     pub token_id: u32,
 }
 

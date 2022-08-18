@@ -54,13 +54,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "const-oid"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4c78c047431fee22c1a7bb92e00ad095a02a983affe4d8a72e2a2c62c1b94f3"
-
-[[package]]
-name = "controller-contract"
+name = "collection-contract"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
@@ -85,6 +79,12 @@ dependencies = [
  "thiserror",
  "token-contract",
 ]
+
+[[package]]
+name = "const-oid"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4c78c047431fee22c1a7bb92e00ad095a02a983affe4d8a72e2a2c62c1b94f3"
 
 [[package]]
 name = "cosmwasm-crypto"
@@ -536,7 +536,7 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 name = "marketplace-module"
 version = "0.1.0"
 dependencies = [
- "controller-contract",
+ "collection-contract",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
@@ -598,7 +598,7 @@ dependencies = [
 name = "mint-module"
 version = "0.1.0"
 dependencies = [
- "controller-contract",
+ "collection-contract",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",

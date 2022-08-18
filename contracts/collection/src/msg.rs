@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use komple_types::module::Modules;
 
-use crate::state::{ControllerInfo, WebsiteConfig};
+use crate::state::{CollectionInfo, WebsiteConfig};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -33,8 +33,8 @@ pub enum ExecuteMsg {
         code_id: u64,
         native_denom: String,
     },
-    // Updates the general controller info
-    UpdateControllerInfo {
+    // Updates the general collection info
+    UpdateCollectionInfo {
         name: String,
         description: String,
         image: String,
@@ -59,7 +59,7 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
     pub admin: String,
-    pub controller_info: ControllerInfo,
+    pub collection_info: CollectionInfo,
     pub website_config: Option<WebsiteConfig>,
 }
 

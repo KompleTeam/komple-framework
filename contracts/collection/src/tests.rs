@@ -8,7 +8,7 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
 use komple_types::{module::Modules, query::ResponseWrapper};
 
-pub fn controller_contract() -> Box<dyn Contract<Empty>> {
+pub fn collection_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
@@ -106,17 +106,17 @@ fn setup_fee_contract(app: &mut App) -> Addr {
 }
 
 fn proper_instantiate(app: &mut App) -> Addr {
-    let controller_code_id = app.store_code(controller_contract());
+    let collection_code_id = app.store_code(collection_contract());
 
     let msg = InstantiateMsg {
-        name: "Test Controller".to_string(),
-        description: "Test Controller".to_string(),
+        name: "Test Collection".to_string(),
+        description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
     };
-    let controller_contract_addr = app
+    let collection_contract_addr = app
         .instantiate_contract(
-            controller_code_id,
+            collection_code_id,
             Addr::unchecked(ADMIN),
             &msg,
             &[],
@@ -125,7 +125,7 @@ fn proper_instantiate(app: &mut App) -> Addr {
         )
         .unwrap();
 
-    controller_contract_addr
+    collection_contract_addr
 }
 
 mod actions {
@@ -140,7 +140,7 @@ mod actions {
             #[test]
             fn test_init_happy_path() {
                 let mut app = mock_app();
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let mint_module_code_id = app.store_code(mint_module());
 
                 let msg = ExecuteMsg::InitMintModule {
@@ -149,16 +149,16 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::MintModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Mint);
                 let res: ResponseWrapper<String> = app
                     .wrap()
-                    .query_wasm_smart(controller_contract_addr, &msg)
+                    .query_wasm_smart(collection_contract_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data, "contract1")
             }
@@ -166,7 +166,7 @@ mod actions {
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let mint_module_code_id = app.store_code(mint_module());
 
                 let msg = ExecuteMsg::InitMintModule {
@@ -175,7 +175,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -193,7 +193,7 @@ mod actions {
             #[test]
             fn test_init_module() {
                 let mut app = mock_app();
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let permission_module_code_id = app.store_code(permission_module());
 
                 let msg = ExecuteMsg::InitPermissionModule {
@@ -202,16 +202,16 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::PermissionModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Permission);
                 let res: ResponseWrapper<String> = app
                     .wrap()
-                    .query_wasm_smart(controller_contract_addr, &msg)
+                    .query_wasm_smart(collection_contract_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data, "contract1")
             }
@@ -219,7 +219,7 @@ mod actions {
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let permission_module_code_id = app.store_code(permission_module());
 
                 let msg = ExecuteMsg::InitPermissionModule {
@@ -228,7 +228,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -245,7 +245,7 @@ mod actions {
             #[test]
             fn test_init_module() {
                 let mut app = mock_app();
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let merge_module_code_id = app.store_code(merge_module());
 
                 let msg = ExecuteMsg::InitMergeModule {
@@ -254,16 +254,16 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::MergeModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Merge);
                 let res: ResponseWrapper<String> = app
                     .wrap()
-                    .query_wasm_smart(controller_contract_addr, &msg)
+                    .query_wasm_smart(collection_contract_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data, "contract1")
             }
@@ -271,7 +271,7 @@ mod actions {
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let merge_module_code_id = app.store_code(merge_module());
 
                 let msg = ExecuteMsg::InitMergeModule {
@@ -280,7 +280,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -299,7 +299,7 @@ mod actions {
             fn test_init_module() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let marketplace_module_code_id = app.store_code(marketplace_module());
 
                 let msg = ExecuteMsg::InitMarketplaceModule {
@@ -309,16 +309,16 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::MarketplaceModule);
+                let msg = QueryMsg::ModuleAddress(Modules::Marketplace);
                 let res: ResponseWrapper<String> = app
                     .wrap()
-                    .query_wasm_smart(controller_contract_addr, &msg)
+                    .query_wasm_smart(collection_contract_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data, "contract2")
             }
@@ -326,7 +326,7 @@ mod actions {
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let controller_contract_addr = proper_instantiate(&mut app);
+                let collection_contract_addr = proper_instantiate(&mut app);
                 let marketplace_module_code_id = app.store_code(marketplace_module());
 
                 let msg = ExecuteMsg::InitMarketplaceModule {
@@ -336,7 +336,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        controller_contract_addr.clone(),
+                        collection_contract_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -355,12 +355,12 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let controller_contract_addr = proper_instantiate(&mut app);
+            let collection_contract_addr = proper_instantiate(&mut app);
 
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(controller_contract_addr.clone(), &msg)
+                .query_wasm_smart(collection_contract_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.website_config, None);
 
@@ -372,7 +372,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    controller_contract_addr.clone(),
+                    collection_contract_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -381,7 +381,7 @@ mod actions {
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(controller_contract_addr, &msg)
+                .query_wasm_smart(collection_contract_addr, &msg)
                 .unwrap();
             assert_eq!(
                 res.data.website_config,
@@ -396,7 +396,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let controller_contract_addr = proper_instantiate(&mut app);
+            let collection_contract_addr = proper_instantiate(&mut app);
 
             let msg = ExecuteMsg::UpdateWebsiteConfig {
                 background_color: Some("#00FFEE".to_string()),
@@ -406,7 +406,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    controller_contract_addr.clone(),
+                    collection_contract_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -418,24 +418,24 @@ mod actions {
         }
     }
 
-    mod update_controller_info {
-        use crate::state::ControllerInfo;
+    mod update_collection_info {
+        use crate::state::CollectionInfo;
 
         use super::*;
 
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let controller_contract_addr = proper_instantiate(&mut app);
+            let collection_contract_addr = proper_instantiate(&mut app);
 
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(controller_contract_addr.clone(), &msg)
+                .query_wasm_smart(collection_contract_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.website_config, None);
 
-            let msg = ExecuteMsg::UpdateControllerInfo {
+            let msg = ExecuteMsg::UpdateCollectionInfo {
                 name: "New Name".to_string(),
                 description: "New Description".to_string(),
                 image: "https://new-image.com".to_string(),
@@ -444,7 +444,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    controller_contract_addr.clone(),
+                    collection_contract_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -453,11 +453,11 @@ mod actions {
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(controller_contract_addr, &msg)
+                .query_wasm_smart(collection_contract_addr, &msg)
                 .unwrap();
             assert_eq!(
-                res.data.controller_info,
-                ControllerInfo {
+                res.data.collection_info,
+                CollectionInfo {
                     name: "New Name".to_string(),
                     description: "New Description".to_string(),
                     image: "https://new-image.com".to_string(),
@@ -469,9 +469,9 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let controller_contract_addr = proper_instantiate(&mut app);
+            let collection_contract_addr = proper_instantiate(&mut app);
 
-            let msg = ExecuteMsg::UpdateControllerInfo {
+            let msg = ExecuteMsg::UpdateCollectionInfo {
                 name: "New Name".to_string(),
                 description: "New Description".to_string(),
                 image: "https://new-image.com".to_string(),
@@ -480,7 +480,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    controller_contract_addr.clone(),
+                    collection_contract_addr.clone(),
                     &msg,
                     &vec![],
                 )

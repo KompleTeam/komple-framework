@@ -1,5 +1,5 @@
 use komple_types::{
-    controller::{CONTROLLER_INFO_NAMESPACE, WEBSITE_CONFIG_NAMESPACE},
+    collection::{COLLECTION_INFO_NAMESPACE, WEBSITE_CONFIG_NAMESPACE},
     module::MODULE_ADDRS_NAMESPACE,
     shared::CONFIG_NAMESPACE,
 };
@@ -11,13 +11,13 @@ use cw_storage_plus::{Item, Map};
 
 // These info also used for website profile
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct ControllerInfo {
+pub struct CollectionInfo {
     pub name: String,
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
 }
-pub const CONTROLLER_INFO: Item<ControllerInfo> = Item::new(CONTROLLER_INFO_NAMESPACE);
+pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new(COLLECTION_INFO_NAMESPACE);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {

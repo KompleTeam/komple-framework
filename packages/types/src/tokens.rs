@@ -19,10 +19,10 @@ pub const LOCKS_NAMESPACE: &str = "locks";
 
 pub const CONTRACTS_NAMESPACE: &str = "contracts";
 
-pub const COLLECTION_CONFIG_NAMESPACE: &str = "collection_config";
+pub const BUNDLE_CONFIG_NAMESPACE: &str = "bundle_config";
 
 pub const MINT_MODULE_ADDR_NAMESPACE: &str = "mint_module_addr";
 
 pub const MINTED_TOKENS_PER_ADDR_NAMESPACE: &str = "minted_tokens_per_addr";
 
-pub const COLLECTION_INFO_NAMESPACE: &str = "collection_info";
+pub const BUNDLE_INFO_NAMESPACE: &str = "bundle_info";
