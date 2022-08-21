@@ -20,7 +20,7 @@ use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use crate::error::ContractError;
 use crate::msg::{BundlesResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
-    Config, BUNDLE_ADDRS, BUNDLE_ID, BUNDLE_TYPES, CONFIG, COLLECTION_ADDR, LINKED_BUNDLES,
+    Config, BUNDLE_ADDRS, BUNDLE_ID, BUNDLE_TYPES, CONFIG, HUB_ADDR, LINKED_BUNDLES,
     OPERATORS,
 };
 
@@ -50,7 +50,7 @@ pub fn instantiate(
 
     BUNDLE_ID.save(deps.storage, &0)?;
 
-    COLLECTION_ADDR.save(deps.storage, &info.sender)?;
+    HUB_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
@@ -112,14 +112,14 @@ pub fn execute_create_bundle(
     let config = CONFIG.load(deps.storage)?;
 
     if !config.public_bundle_creation {
-        let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+        let hub_addr = HUB_ADDR.may_load(deps.storage)?;
         let operators = OPERATORS.may_load(deps.storage)?;
 
         check_admin_privileges(
             &info.sender,
             &env.contract.address,
             &config.admin,
-            collection_addr,
+            hub_addr,
             operators,
         )?;
     };
@@ -177,7 +177,7 @@ pub fn execute_update_public_bundle_creation(
     info: MessageInfo,
     public_bundle_creation: bool,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -185,7 +185,7 @@ pub fn execute_update_public_bundle_creation(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -203,7 +203,7 @@ pub fn execute_update_mint_lock(
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -211,7 +211,7 @@ pub fn execute_update_mint_lock(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -253,7 +253,7 @@ fn execute_mint_to(
     recipient: String,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -261,7 +261,7 @@ fn execute_mint_to(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -284,9 +284,9 @@ fn execute_permission_mint(
     bundle_ids: Vec<u32>,
     metadata_ids: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::Permission)?;
+        query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
@@ -355,7 +355,7 @@ fn execute_update_operators(
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -363,7 +363,7 @@ fn execute_update_operators(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -387,7 +387,7 @@ fn execute_update_linked_bundles(
     bundle_id: u32,
     linked_bundles: Vec<u32>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -395,7 +395,7 @@ fn execute_update_linked_bundles(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 

@@ -43,11 +43,11 @@ pub fn check_admin_privileges(
 
 pub fn query_module_address(
     querier: &QuerierWrapper,
-    collection_addr: &Addr,
+    hub_addr: &Addr,
     module: Modules,
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(MODULE_ADDRS_NAMESPACE, module.as_str().as_bytes())?;
-    let res = query_storage::<Addr>(&querier, &collection_addr, &key)?;
+    let res = query_storage::<Addr>(&querier, &hub_addr, &key)?;
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {

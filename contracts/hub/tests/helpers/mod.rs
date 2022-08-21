@@ -1,6 +1,6 @@
-use collection_contract::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use hub_contract::msg::{ExecuteMsg, InstantiateMsg};
 use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
 use komple_types::{
     bundle::Bundles, metadata::Metadata as MetadataType, module::Modules, permission::Permissions,
@@ -27,13 +27,13 @@ pub const RANDOM_2: &str = "juno..random2";
 pub const NATIVE_DENOM: &str = "denom";
 pub const TEST_DENOM: &str = "test_denom";
 
-pub fn collection_contract() -> Box<dyn Contract<Empty>> {
+pub fn hub_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        collection_contract::contract::execute,
-        collection_contract::contract::instantiate,
-        collection_contract::contract::query,
+        hub_contract::contract::execute,
+        hub_contract::contract::instantiate,
+        hub_contract::contract::query,
     )
-    .with_reply(collection_contract::contract::reply);
+    .with_reply(hub_contract::contract::reply);
     Box::new(contract)
 }
 
@@ -141,62 +141,55 @@ pub fn mock_app() -> App {
 }
 
 pub fn proper_instantiate(app: &mut App) -> Addr {
-    let collection_code_id = app.store_code(collection_contract());
+    let hub_code_id = app.store_code(hub_contract());
 
     let msg = InstantiateMsg {
-        name: "Test Collection".to_string(),
-        description: "Test Collection".to_string(),
+        name: "Test Hub".to_string(),
+        description: "Test Hub".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
     };
-    let collection_contract_addr = app
-        .instantiate_contract(
-            collection_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[],
-            "test",
-            None,
-        )
+    let hub_contract_addr = app
+        .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
         .unwrap();
 
-    collection_contract_addr
+    hub_contract_addr
 }
 
-pub fn setup_mint_module(app: &mut App, collection_addr: Addr) {
+pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
     let mint_module_code_id = app.store_code(mint_module());
 
     let msg = ExecuteMsg::InitMintModule {
         code_id: mint_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), collection_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
         .unwrap();
 }
 
-pub fn setup_merge_module(app: &mut App, collection_addr: Addr) {
+pub fn setup_merge_module(app: &mut App, hub_addr: Addr) {
     let merge_module_code_id = app.store_code(merge_module());
 
     let msg = ExecuteMsg::InitMergeModule {
         code_id: merge_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), collection_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
         .unwrap();
 }
 
-pub fn setup_permission_module(app: &mut App, collection_addr: Addr) {
+pub fn setup_permission_module(app: &mut App, hub_addr: Addr) {
     let permission_module_code_id = app.store_code(permission_module());
 
     let msg = ExecuteMsg::InitPermissionModule {
         code_id: permission_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), collection_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
         .unwrap();
 }
 
-pub fn setup_marketplace_module(app: &mut App, collection_addr: Addr) {
+pub fn setup_marketplace_module(app: &mut App, hub_addr: Addr) {
     let marketplace_module_code_id = app.store_code(marketplace_module());
 
     let msg = ExecuteMsg::InitMarketplaceModule {
@@ -204,7 +197,7 @@ pub fn setup_marketplace_module(app: &mut App, collection_addr: Addr) {
         native_denom: NATIVE_DENOM.to_string(),
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), collection_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
         .unwrap();
 }
 
@@ -229,11 +222,11 @@ pub fn setup_fee_contract(app: &mut App) -> Addr {
     fee_contract_addr
 }
 
-pub fn setup_all_modules(app: &mut App, collection_addr: Addr) {
-    setup_mint_module(app, collection_addr.clone());
-    setup_merge_module(app, collection_addr.clone());
-    setup_permission_module(app, collection_addr.clone());
-    setup_marketplace_module(app, collection_addr.clone());
+pub fn setup_all_modules(app: &mut App, hub_addr: Addr) {
+    setup_mint_module(app, hub_addr.clone());
+    setup_merge_module(app, hub_addr.clone());
+    setup_permission_module(app, hub_addr.clone());
+    setup_marketplace_module(app, hub_addr.clone());
 }
 
 pub fn create_bundle(
@@ -357,22 +350,22 @@ pub fn link_bundles(
         .unwrap();
 }
 
-pub fn get_modules_addresses(app: &mut App, collection_addr: &Addr) -> (Addr, Addr, Addr, Addr) {
+pub fn get_modules_addresses(app: &mut App, hub_addr: &Addr) -> (Addr, Addr, Addr, Addr) {
     let mint_module_addr: Addr;
     let merge_module_addr: Addr;
     let permission_module_addr: Addr;
     let marketplace_module_addr: Addr;
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::Mint);
+    let res = query_module_address(&app.wrap(), hub_addr, Modules::Mint);
     mint_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::Merge);
+    let res = query_module_address(&app.wrap(), hub_addr, Modules::Merge);
     merge_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::Permission);
+    let res = query_module_address(&app.wrap(), hub_addr, Modules::Permission);
     permission_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), collection_addr, Modules::Marketplace);
+    let res = query_module_address(&app.wrap(), hub_addr, Modules::Marketplace);
     marketplace_module_addr = res.unwrap();
 
     // println!("");
@@ -391,13 +384,12 @@ pub fn get_modules_addresses(app: &mut App, collection_addr: &Addr) -> (Addr, Ad
 
 pub fn setup_marketplace_listing(
     app: &mut App,
-    collection_addr: &Addr,
+    hub_addr: &Addr,
     bundle_id: u32,
     token_id: u32,
     price: Uint128,
 ) {
-    let (mint_module_addr, _, _, marketplace_module_addr) =
-        get_modules_addresses(app, &collection_addr);
+    let (mint_module_addr, _, _, marketplace_module_addr) = get_modules_addresses(app, &hub_addr);
 
     let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &bundle_id).unwrap();
 

@@ -54,33 +54,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "collection-contract"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 0.13.4",
- "cw-utils",
- "cw2 0.13.4",
- "cw721",
- "komple-fee-contract",
- "komple-types",
- "komple-utils",
- "marketplace-module",
- "merge-module",
- "metadata-contract",
- "mint-module",
- "permission-module",
- "schemars",
- "semver",
- "serde",
- "thiserror",
- "token-contract",
-]
-
-[[package]]
 name = "const-oid"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -462,6 +435,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "hub-contract"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 0.13.4",
+ "cw-utils",
+ "cw2 0.13.4",
+ "cw721",
+ "komple-fee-contract",
+ "komple-types",
+ "komple-utils",
+ "marketplace-module",
+ "merge-module",
+ "metadata-contract",
+ "mint-module",
+ "permission-module",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+ "token-contract",
+]
+
+[[package]]
 name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -536,13 +536,13 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 name = "marketplace-module"
 version = "0.1.0"
 dependencies = [
- "collection-contract",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-multi-test",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
+ "hub-contract",
  "komple-fee-contract",
  "komple-types",
  "komple-utils",
@@ -598,7 +598,6 @@ dependencies = [
 name = "mint-module"
 version = "0.1.0"
 dependencies = [
- "collection-contract",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
@@ -607,6 +606,7 @@ dependencies = [
  "cw-utils",
  "cw2 0.13.4",
  "cw721",
+ "hub-contract",
  "komple-types",
  "komple-utils",
  "metadata-contract",

@@ -3,7 +3,7 @@ use komple_types::{
         BUNDLE_ADDRS_NAMESPACE, BUNDLE_ID_NAMESPACE, BUNDLE_TYPES_NAMESPACE,
         LINKED_BUNDLES_NAMESPACE,
     },
-    shared::{CONFIG_NAMESPACE, COLLECTION_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ pub const BUNDLE_ADDRS: Map<u32, Addr> = Map::new(BUNDLE_ADDRS_NAMESPACE);
 
 pub const BUNDLE_ID: Item<u32> = Item::new(BUNDLE_ID_NAMESPACE);
 
-pub const COLLECTION_ADDR: Item<Addr> = Item::new(COLLECTION_ADDR_NAMESPACE);
+pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
 
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
 

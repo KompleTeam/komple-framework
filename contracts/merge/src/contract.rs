@@ -21,7 +21,7 @@ use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, COLLECTION_ADDR, OPERATORS};
+use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
@@ -44,7 +44,7 @@ pub fn instantiate(
     };
     CONFIG.save(deps.storage, &config)?;
 
-    COLLECTION_ADDR.save(deps.storage, &info.sender)?;
+    HUB_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
@@ -73,7 +73,7 @@ fn execute_update_merge_lock(
     info: MessageInfo,
     lock: bool,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -81,7 +81,7 @@ fn execute_update_merge_lock(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -116,9 +116,9 @@ fn execute_permission_merge(
     permission_msg: Binary,
     merge_msg: Binary,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::Permission)?;
+        query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
@@ -145,7 +145,7 @@ fn execute_update_operators(
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -153,7 +153,7 @@ fn execute_update_operators(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -177,9 +177,9 @@ fn make_merge_msg(
     msg: Binary,
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::Mint)?;
+        query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
 
     // MergeMsg contains mint, burn and metadata infos
     let merge_msg: MergeMsg = from_binary(&msg)?;

@@ -18,7 +18,7 @@ use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, MigrateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg,
 };
-use crate::state::{Config, CONFIG, COLLECTION_ADDR, MODULE_PERMISSIONS, OPERATORS};
+use crate::state::{Config, CONFIG, HUB_ADDR, MODULE_PERMISSIONS, OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-permission-module";
@@ -38,7 +38,7 @@ pub fn instantiate(
     let config = Config { admin };
     CONFIG.save(deps.storage, &config)?;
 
-    COLLECTION_ADDR.save(deps.storage, &info.sender)?;
+    HUB_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
@@ -67,7 +67,7 @@ fn execute_update_module_permissions(
     module: Modules,
     permissions: Vec<Permissions>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -75,7 +75,7 @@ fn execute_update_module_permissions(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -97,7 +97,7 @@ fn execute_update_operators(
     info: MessageInfo,
     addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -105,7 +105,7 @@ fn execute_update_operators(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        collection_addr,
+        hub_addr,
         operators,
     )?;
 
@@ -129,7 +129,7 @@ fn execute_check(
     module: Modules,
     msg: Binary,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
 
     let data: Vec<PermissionCheckMsg> = from_binary(&msg)?;
     if data.len() == 0 {
@@ -148,7 +148,7 @@ fn execute_check(
         }
         let _ = match permission.permission_type {
             Permissions::Ownership => {
-                check_ownership_permission(&deps, &collection_addr, permission.data)
+                check_ownership_permission(&deps, &hub_addr, permission.data)
             }
             Permissions::Attribute => unimplemented!(),
         };
@@ -166,11 +166,11 @@ fn execute_check(
 
 fn check_ownership_permission(
     deps: &DepsMut,
-    collection_addr: &Addr,
+    hub_addr: &Addr,
     data: Binary,
 ) -> Result<bool, ContractError> {
     let mint_module_addr =
-        query_module_address(&deps.querier, collection_addr, Modules::Mint)?;
+        query_module_address(&deps.querier, hub_addr, Modules::Mint)?;
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 

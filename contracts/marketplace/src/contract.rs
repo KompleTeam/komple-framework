@@ -23,7 +23,7 @@ use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenC
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, FixedListing, CONFIG, COLLECTION_ADDR, FIXED_LISTING};
+use crate::state::{Config, FixedListing, CONFIG, HUB_ADDR, FIXED_LISTING};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-marketplace-module";
@@ -63,7 +63,7 @@ pub fn instantiate(
     };
     CONFIG.save(deps.storage, &config)?;
 
-    COLLECTION_ADDR.save(deps.storage, &info.sender)?;
+    HUB_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
@@ -252,7 +252,7 @@ fn _execute_buy_fixed_listing(
     bundle_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
     let fixed_listing = FIXED_LISTING.load(deps.storage, (bundle_id, token_id))?;
 
@@ -264,7 +264,7 @@ fn _execute_buy_fixed_listing(
     check_funds(&info, &config.native_denom, fixed_listing.price)?;
 
     let mint_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::Mint)?;
+        query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
     let bundle_addr =
         query_bundle_address(&deps.querier, &mint_module_addr, &bundle_id)?;
 
@@ -351,9 +351,9 @@ fn _execute_buy_fixed_listing(
 }
 
 fn get_bundle_address(deps: &DepsMut, bundle_id: &u32) -> Result<Addr, ContractError> {
-    let collection_addr = COLLECTION_ADDR.load(deps.storage)?;
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr =
-        query_module_address(&deps.querier, &collection_addr, Modules::Mint)?;
+        query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
     let bundle_addr =
         query_bundle_address(&deps.querier, &mint_module_addr, bundle_id)?;
     Ok(bundle_addr)

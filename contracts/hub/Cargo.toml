@@ -1,5 +1,5 @@
 [package]
-name = "collection-contract"
+name = "hub-contract"
 version = "0.1.0"
 authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
 edition = "2018"

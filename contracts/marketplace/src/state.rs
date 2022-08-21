@@ -1,6 +1,6 @@
 use komple_types::{
     marketplace::FIXED_LISTING_NAMESPACE,
-    shared::{CONFIG_NAMESPACE, COLLECTION_ADDR_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-pub const COLLECTION_ADDR: Item<Addr> = Item::new(COLLECTION_ADDR_NAMESPACE);
+pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FixedListing {

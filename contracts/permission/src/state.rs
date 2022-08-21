@@ -6,7 +6,7 @@ use cw_storage_plus::{Item, Map};
 
 use komple_types::{
     permission::{Permissions, MODULE_PERMISSIONS_NAMESPACE},
-    shared::{CONFIG_NAMESPACE, COLLECTION_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -15,7 +15,7 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-pub const COLLECTION_ADDR: Item<Addr> = Item::new(COLLECTION_ADDR_NAMESPACE);
+pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
 
 pub const MODULE_PERMISSIONS: Map<&str, Vec<Permissions>> = Map::new(MODULE_PERMISSIONS_NAMESPACE);
 

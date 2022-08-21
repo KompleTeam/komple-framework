@@ -21,11 +21,11 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, CollectionInfo, WebsiteConfig, CONFIG, COLLECTION_INFO, MODULE_ADDR, WEBSITE_CONFIG,
+    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDR, WEBSITE_CONFIG,
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-collection-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-hub-contract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
@@ -48,13 +48,13 @@ pub fn instantiate(
         return Err(ContractError::DescriptionTooLong {});
     }
 
-    let collection_info = CollectionInfo {
+    let hub_info = HubInfo {
         name: msg.name,
         description: msg.description,
         image: msg.image,
         external_link: msg.external_link,
     };
-    COLLECTION_INFO.save(deps.storage, &collection_info)?;
+    HUB_INFO.save(deps.storage, &hub_info)?;
 
     Ok(Response::new()
         .add_attribute("action", "instantiate")
@@ -82,13 +82,13 @@ pub fn execute(
             code_id,
             native_denom,
         } => execute_init_marketplace_module(deps, env, info, code_id, native_denom),
-        ExecuteMsg::UpdateCollectionInfo {
+        ExecuteMsg::UpdateHubInfo {
             name,
             description,
             image,
             external_link,
         } => {
-            execute_update_collection_info(deps, env, info, name, description, image, external_link)
+            execute_update_hub_info(deps, env, info, name, description, image, external_link)
         }
         ExecuteMsg::UpdateWebsiteConfig {
             background_color,
@@ -255,7 +255,7 @@ fn execute_init_marketplace_module(
         .add_attribute("action", "execute_init_marketplace_module"))
 }
 
-fn execute_update_collection_info(
+fn execute_update_hub_info(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -274,15 +274,15 @@ fn execute_update_collection_info(
         None,
     )?;
 
-    let collection_info = CollectionInfo {
+    let hub_info = HubInfo {
         name,
         description,
         image,
         external_link,
     };
-    COLLECTION_INFO.save(deps.storage, &collection_info)?;
+    HUB_INFO.save(deps.storage, &hub_info)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_collection_info"))
+    Ok(Response::new().add_attribute("action", "execute_update_hub_info"))
 }
 
 fn execute_update_website_config(
@@ -323,13 +323,13 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
     let config = CONFIG.load(deps.storage)?;
-    let collection_info = COLLECTION_INFO.load(deps.storage)?;
+    let hub_info = HUB_INFO.load(deps.storage)?;
     let website_config = WEBSITE_CONFIG.may_load(deps.storage)?;
     Ok(ResponseWrapper::new(
         "config",
         ConfigResponse {
             admin: config.admin.to_string(),
-            collection_info,
+            hub_info,
             website_config,
         },
     ))

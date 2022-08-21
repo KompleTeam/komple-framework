@@ -1,9 +1,8 @@
-use collection_contract::msg::{
-    ExecuteMsg as CollectionExecuteMsg, InstantiateMsg as CollectionInstantiateMsg,
-    QueryMsg as CollectionQueryMsg,
-};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use hub_contract::msg::{
+    ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
+};
 use komple_types::bundle::Bundles;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
@@ -26,13 +25,13 @@ pub const ADMIN: &str = "juno..admin";
 pub const NATIVE_DENOM: &str = "denom";
 pub const TEST_DENOM: &str = "test_denom";
 
-pub fn collection_contract() -> Box<dyn Contract<Empty>> {
+pub fn hub_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        collection_contract::contract::execute,
-        collection_contract::contract::instantiate,
-        collection_contract::contract::query,
+        hub_contract::contract::execute,
+        hub_contract::contract::instantiate,
+        hub_contract::contract::query,
     )
-    .with_reply(collection_contract::contract::reply);
+    .with_reply(hub_contract::contract::reply);
     Box::new(contract)
 }
 
@@ -90,18 +89,18 @@ pub fn mock_app() -> App {
     })
 }
 
-fn setup_collection_contract(app: &mut App) -> Addr {
-    let collection_code_id = app.store_code(collection_contract());
+fn setup_hub_contract(app: &mut App) -> Addr {
+    let hub_code_id = app.store_code(hub_contract());
 
-    let msg = CollectionInstantiateMsg {
-        name: "Test Collection".to_string(),
-        description: "Test Collection".to_string(),
+    let msg = HubInstantiateMsg {
+        name: "Test Hub".to_string(),
+        description: "Test Hub".to_string(),
         image: "https://example.com/image.png".to_string(),
         external_link: None,
     };
-    let collection_addr = app
+    let hub_addr = app
         .instantiate_contract(
-            collection_code_id,
+            hub_code_id,
             Addr::unchecked(ADMIN),
             &msg,
             &vec![],
@@ -110,46 +109,32 @@ fn setup_collection_contract(app: &mut App) -> Addr {
         )
         .unwrap();
 
-    collection_addr
+    hub_addr
 }
 
-fn setup_modules(app: &mut App, collection_addr: Addr) -> (Addr, Addr) {
+fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let permission_code_id = app.store_code(permission_module());
 
-    let msg = CollectionExecuteMsg::InitMintModule {
+    let msg = HubExecuteMsg::InitMintModule {
         code_id: mint_code_id,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            collection_addr.clone(),
-            &msg,
-            &vec![],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
-    let msg = CollectionExecuteMsg::InitPermissionModule {
+    let msg = HubExecuteMsg::InitPermissionModule {
         code_id: permission_code_id,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            collection_addr.clone(),
-            &msg,
-            &vec![],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
 
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::Mint);
-    let mint_res: ResponseWrapper<Addr> = app
-        .wrap()
-        .query_wasm_smart(collection_addr.clone(), &msg)
-        .unwrap();
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::Permission);
-    let permission_res: ResponseWrapper<Addr> = app
-        .wrap()
-        .query_wasm_smart(collection_addr.clone(), &msg)
-        .unwrap();
+    let msg = HubQueryMsg::ModuleAddress(Modules::Mint);
+    let mint_res: ResponseWrapper<Addr> =
+        app.wrap().query_wasm_smart(hub_addr.clone(), &msg).unwrap();
+    let msg = HubQueryMsg::ModuleAddress(Modules::Permission);
+    let permission_res: ResponseWrapper<Addr> =
+        app.wrap().query_wasm_smart(hub_addr.clone(), &msg).unwrap();
 
     (mint_res.data, permission_res.data)
 }
@@ -271,45 +256,35 @@ mod initialization {
 
     use komple_types::module::Modules;
 
-    use collection_contract::ContractError;
+    use hub_contract::ContractError;
     use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let collection_addr = setup_collection_contract(&mut app);
+        let hub_addr = setup_hub_contract(&mut app);
         let mint_module_code_id = app.store_code(mint_module());
 
-        let msg = CollectionExecuteMsg::InitMintModule {
+        let msg = HubExecuteMsg::InitMintModule {
             code_id: mint_module_code_id,
         };
-        let _ = app.execute_contract(
-            Addr::unchecked(ADMIN),
-            collection_addr.clone(),
-            &msg,
-            &vec![],
-        );
+        let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
-        let res = query_module_address(&app.wrap(), &collection_addr, Modules::Mint).unwrap();
+        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
         assert_eq!(res, "contract1")
     }
 
     #[test]
     fn test_invalid_sender() {
         let mut app = mock_app();
-        let collection_addr = setup_collection_contract(&mut app);
+        let hub_addr = setup_hub_contract(&mut app);
         let mint_module_code_id = app.store_code(mint_module());
 
-        let msg = CollectionExecuteMsg::InitMergeModule {
+        let msg = HubExecuteMsg::InitMergeModule {
             code_id: mint_module_code_id,
         };
         let err = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                collection_addr.clone(),
-                &msg,
-                &vec![],
-            )
+            .execute_contract(Addr::unchecked(USER), hub_addr.clone(), &msg, &vec![])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -335,10 +310,9 @@ mod permission_mint {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let collection_addr = setup_collection_contract(&mut app);
+        let hub_addr = setup_hub_contract(&mut app);
 
-        let (mint_module_addr, permission_module_addr) =
-            setup_modules(&mut app, collection_addr.clone());
+        let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
 
         let token_contract_code_id = app.store_code(token_contract());
         create_bundle(

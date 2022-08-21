@@ -1,9 +1,8 @@
-use collection_contract::msg::{
-    ExecuteMsg as CollectionExecuteMsg, InstantiateMsg as CollectionInstantiateMsg,
-    QueryMsg as CollectionQueryMsg,
-};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use hub_contract::msg::{
+    ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
+};
 use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
 use komple_types::bundle::Bundles;
 use komple_types::metadata::Metadata as MetadataType;
@@ -29,13 +28,13 @@ pub const RANDOM_2: &str = "juno..random2";
 pub const NATIVE_DENOM: &str = "denom";
 pub const TEST_DENOM: &str = "test_denom";
 
-pub fn collection_contract() -> Box<dyn Contract<Empty>> {
+pub fn hub_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        collection_contract::contract::execute,
-        collection_contract::contract::instantiate,
-        collection_contract::contract::query,
+        hub_contract::contract::execute,
+        hub_contract::contract::instantiate,
+        hub_contract::contract::query,
     )
-    .with_reply(collection_contract::contract::reply);
+    .with_reply(hub_contract::contract::reply);
     Box::new(contract)
 }
 
@@ -145,18 +144,18 @@ fn setup_fee_contract(app: &mut App) -> Addr {
     fee_contract_addr
 }
 
-fn setup_collection_contract(app: &mut App) -> Addr {
-    let collection_code_id = app.store_code(collection_contract());
+fn setup_hub_contract(app: &mut App) -> Addr {
+    let hub_code_id = app.store_code(hub_contract());
 
-    let msg = CollectionInstantiateMsg {
-        name: "Test Collection".to_string(),
-        description: "Test Collection".to_string(),
+    let msg = HubInstantiateMsg {
+        name: "Test Hub".to_string(),
+        description: "Test Hub".to_string(),
         image: "https://example.com/image.png".to_string(),
         external_link: None,
     };
-    let collection_addr = app
+    let hub_addr = app
         .instantiate_contract(
-            collection_code_id,
+            hub_code_id,
             Addr::unchecked(ADMIN),
             &msg,
             &vec![],
@@ -165,47 +164,33 @@ fn setup_collection_contract(app: &mut App) -> Addr {
         )
         .unwrap();
 
-    collection_addr
+    hub_addr
 }
 
-fn setup_modules(app: &mut App, collection_addr: Addr) -> (Addr, Addr) {
+fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let marketplace_code_id = app.store_code(marketplace_module());
 
-    let msg = CollectionExecuteMsg::InitMintModule {
+    let msg = HubExecuteMsg::InitMintModule {
         code_id: mint_code_id,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            collection_addr.clone(),
-            &msg,
-            &vec![],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
-    let msg = CollectionExecuteMsg::InitMarketplaceModule {
+    let msg = HubExecuteMsg::InitMarketplaceModule {
         code_id: marketplace_code_id,
         native_denom: NATIVE_DENOM.to_string(),
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            collection_addr.clone(),
-            &msg,
-            &vec![],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
 
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::Mint);
-    let mint_res: ResponseWrapper<Addr> = app
-        .wrap()
-        .query_wasm_smart(collection_addr.clone(), &msg)
-        .unwrap();
-    let msg = CollectionQueryMsg::ModuleAddress(Modules::Marketplace);
-    let marketplace_res: ResponseWrapper<Addr> = app
-        .wrap()
-        .query_wasm_smart(collection_addr.clone(), &msg)
-        .unwrap();
+    let msg = HubQueryMsg::ModuleAddress(Modules::Mint);
+    let mint_res: ResponseWrapper<Addr> =
+        app.wrap().query_wasm_smart(hub_addr.clone(), &msg).unwrap();
+    let msg = HubQueryMsg::ModuleAddress(Modules::Marketplace);
+    let marketplace_res: ResponseWrapper<Addr> =
+        app.wrap().query_wasm_smart(hub_addr.clone(), &msg).unwrap();
 
     (mint_res.data, marketplace_res.data)
 }
@@ -356,8 +341,7 @@ pub fn setup_marketplace_listing(
     token_id: u32,
     price: Uint128,
 ) {
-    let bundle_addr =
-        query_bundle_address(&app.wrap(), &mint_module_addr, &bundle_id).unwrap();
+    let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &bundle_id).unwrap();
 
     setup_token_contract_operators(
         app,
@@ -385,49 +369,38 @@ mod initialization {
 
     use komple_types::module::Modules;
 
-    use collection_contract::ContractError;
+    use hub_contract::ContractError;
     use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
         setup_fee_contract(&mut app);
-        let collection_addr = setup_collection_contract(&mut app);
+        let hub_addr = setup_hub_contract(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let msg = CollectionExecuteMsg::InitMarketplaceModule {
+        let msg = HubExecuteMsg::InitMarketplaceModule {
             code_id: marketplace_module_code_id,
             native_denom: "test".to_string(),
         };
-        let _ = app.execute_contract(
-            Addr::unchecked(ADMIN),
-            collection_addr.clone(),
-            &msg,
-            &vec![],
-        );
+        let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
-        let res = query_module_address(&app.wrap(), &collection_addr, Modules::Marketplace)
-            .unwrap();
+        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace).unwrap();
         assert_eq!(res, "contract2")
     }
 
     #[test]
     fn test_invalid_sender() {
         let mut app = mock_app();
-        let collection_addr = setup_collection_contract(&mut app);
+        let hub_addr = setup_hub_contract(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let msg = CollectionExecuteMsg::InitMarketplaceModule {
+        let msg = HubExecuteMsg::InitMarketplaceModule {
             code_id: marketplace_module_code_id,
             native_denom: "test".to_string(),
         };
         let err = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                collection_addr.clone(),
-                &msg,
-                &vec![],
-            )
+            .execute_contract(Addr::unchecked(USER), hub_addr.clone(), &msg, &vec![])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -464,10 +437,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -483,8 +456,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -533,10 +505,10 @@ mod actions {
             fn test_invalid_owner() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -552,8 +524,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -584,10 +555,10 @@ mod actions {
             fn test_invalid_locks() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -603,8 +574,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -618,8 +588,7 @@ mod actions {
                     price: Uint128::new(1_000_000),
                 };
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let unlock = Locks {
                     mint_lock: false,
@@ -638,12 +607,7 @@ mod actions {
                     locks: transfer_lock.clone(),
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        bundle_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), bundle_addr.clone(), &msg, &vec![])
                     .unwrap();
 
                 let err = app
@@ -664,24 +628,14 @@ mod actions {
                     locks: unlock.clone(),
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        bundle_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), bundle_addr.clone(), &msg, &vec![])
                     .unwrap();
 
                 let msg = TokenExecuteMsg::UpdateLocks {
                     locks: transfer_lock.clone(),
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        bundle_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), bundle_addr.clone(), &msg, &vec![])
                     .unwrap();
 
                 let err = app
@@ -701,12 +655,7 @@ mod actions {
                     locks: unlock.clone(),
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        bundle_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), bundle_addr.clone(), &msg, &vec![])
                     .unwrap();
             }
 
@@ -714,10 +663,10 @@ mod actions {
             fn test_invalid_operator() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -733,8 +682,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -778,10 +726,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -797,8 +745,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -862,10 +809,10 @@ mod actions {
             fn test_invalid_owner() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -881,8 +828,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -932,10 +878,10 @@ mod actions {
             fn test_invalid_operator() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -951,8 +897,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -1017,10 +962,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1036,8 +981,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -1085,10 +1029,10 @@ mod actions {
             fn test_invalid_owner() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1104,8 +1048,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -1163,10 +1106,10 @@ mod actions {
             fn test_happy_path() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1182,8 +1125,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -1268,12 +1210,7 @@ mod actions {
                     royalty_share: Some(Decimal::from_str("0.1").unwrap()),
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        bundle_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), bundle_addr.clone(), &msg, &vec![])
                     .unwrap();
 
                 setup_marketplace_listing(
@@ -1322,12 +1259,7 @@ mod actions {
                     royalty_share: Some(Decimal::from_str("0.05").unwrap()),
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        bundle_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), bundle_addr.clone(), &msg, &vec![])
                     .unwrap();
 
                 setup_marketplace_listing(
@@ -1374,10 +1306,10 @@ mod actions {
             fn test_invalid_funds() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1393,8 +1325,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -1469,10 +1400,10 @@ mod actions {
             fn test_self_purchase() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let collection_addr = setup_collection_contract(&mut app);
+                let hub_addr = setup_hub_contract(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, collection_addr.clone());
+                    setup_modules(&mut app, hub_addr.clone());
 
                 let token_contract_code_id = app.store_code(token_contract());
                 create_bundle(
@@ -1488,8 +1419,7 @@ mod actions {
                     None,
                 );
 
-                let bundle_addr =
-                    query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_contract_addr =
                     setup_metadata_contract(&mut app, bundle_addr.clone(), Metadata::Standard);
@@ -1538,10 +1468,9 @@ mod queries {
     fn test_fixed_listings() {
         let mut app = mock_app();
         setup_fee_contract(&mut app);
-        let collection_addr = setup_collection_contract(&mut app);
+        let hub_addr = setup_hub_contract(&mut app);
 
-        let (mint_module_addr, marketplace_module_addr) =
-            setup_modules(&mut app, collection_addr.clone());
+        let (mint_module_addr, marketplace_module_addr) = setup_modules(&mut app, hub_addr.clone());
 
         let token_contract_code_id = app.store_code(token_contract());
         create_bundle(
@@ -1569,8 +1498,7 @@ mod queries {
             None,
         );
 
-        let bundle_addr_1 =
-            query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        let bundle_addr_1 = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         let metadata_contract_addr_1 =
             setup_metadata_contract(&mut app, bundle_addr_1.clone(), MetadataType::Standard);
         setup_metadata(&mut app, metadata_contract_addr_1.clone());
