@@ -21,7 +21,7 @@ pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FixedListing {
-    pub bundle_id: u32,
+    pub collection_id: u32,
     pub token_id: u32,
     pub price: Uint128,
     pub owner: Addr,

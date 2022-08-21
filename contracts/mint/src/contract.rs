@@ -11,7 +11,7 @@ use cw_utils::parse_reply_instantiate_data;
 use komple_token_module::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
 };
-use komple_types::bundle::Bundles;
+use komple_types::collection::Collections;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{check_admin_privileges, query_module_address};
@@ -20,9 +20,9 @@ use semver::Version;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{BundlesResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
+use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
-    Config, BUNDLE_ADDRS, BUNDLE_ID, BUNDLE_TYPES, CONFIG, HUB_ADDR, LINKED_BUNDLES, OPERATORS,
+    Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
 };
 
 // version info for migration info
@@ -44,12 +44,12 @@ pub fn instantiate(
 
     let config = Config {
         admin,
-        public_bundle_creation: false,
+        public_collection_creation: false,
         mint_lock: false,
     };
     CONFIG.save(deps.storage, &config)?;
 
-    BUNDLE_ID.save(deps.storage, &0)?;
+    COLLECTION_ID.save(deps.storage, &0)?;
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
@@ -64,55 +64,55 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateBundle {
+        ExecuteMsg::CreateCollection {
             code_id,
             token_instantiate_msg,
-            linked_bundles,
-        } => execute_create_bundle(
+            linked_collections,
+        } => execute_create_collection(
             deps,
             env,
             info,
             code_id,
             token_instantiate_msg,
-            linked_bundles,
+            linked_collections,
         ),
-        ExecuteMsg::UpdatePublicBundleCreation {
-            public_bundle_creation,
-        } => execute_update_public_bundle_creation(deps, env, info, public_bundle_creation),
+        ExecuteMsg::UpdatePublicCollectionCreation {
+            public_collection_creation,
+        } => execute_update_public_collection_creation(deps, env, info, public_collection_creation),
         ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
         ExecuteMsg::Mint {
-            bundle_id,
+            collection_id,
             metadata_id,
-        } => execute_mint(deps, env, info, bundle_id, metadata_id),
+        } => execute_mint(deps, env, info, collection_id, metadata_id),
         ExecuteMsg::MintTo {
-            bundle_id,
+            collection_id,
             recipient,
             metadata_id,
-        } => execute_mint_to(deps, env, info, bundle_id, recipient, metadata_id),
+        } => execute_mint_to(deps, env, info, collection_id, recipient, metadata_id),
         ExecuteMsg::PermissionMint {
             permission_msg,
-            bundle_ids,
+            collection_ids,
             metadata_ids,
-        } => execute_permission_mint(deps, env, info, permission_msg, bundle_ids, metadata_ids),
+        } => execute_permission_mint(deps, env, info, permission_msg, collection_ids, metadata_ids),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
-        ExecuteMsg::UpdateLinkedBundles {
-            bundle_id,
-            linked_bundles,
-        } => execute_update_linked_bundles(deps, env, info, bundle_id, linked_bundles),
+        ExecuteMsg::UpdateLinkedCollections {
+            collection_id,
+            linked_collections,
+        } => execute_update_linked_collections(deps, env, info, collection_id, linked_collections),
     }
 }
 
-pub fn execute_create_bundle(
+pub fn execute_create_collection(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     code_id: u64,
     token_instantiate_msg: TokenInstantiateMsg,
-    linked_bundles: Option<Vec<u32>>,
+    linked_collections: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
-    if !config.public_bundle_creation {
+    if !config.public_collection_creation {
         let hub_addr = HUB_ADDR.may_load(deps.storage)?;
         let operators = OPERATORS.may_load(deps.storage)?;
 
@@ -144,39 +144,39 @@ pub fn execute_create_bundle(
         reply_on: ReplyOn::Success,
     };
 
-    let bundle_id = (BUNDLE_ID.load(deps.storage)?) + 1;
+    let collection_id = (COLLECTION_ID.load(deps.storage)?) + 1;
 
-    if linked_bundles.is_some() {
-        check_bundle_ids_exists(&deps, &linked_bundles.clone().unwrap())?;
+    if linked_collections.is_some() {
+        check_collection_ids_exists(&deps, &linked_collections.clone().unwrap())?;
 
-        LINKED_BUNDLES.save(deps.storage, bundle_id, &linked_bundles.unwrap())?;
+        LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collections.unwrap())?;
     }
 
-    BUNDLE_TYPES.update(
+    COLLECTION_TYPES.update(
         deps.storage,
-        token_instantiate_msg.bundle_info.bundle_type.as_str(),
+        token_instantiate_msg.collection_info.collection_type.as_str(),
         |value| -> StdResult<Vec<u32>> {
             match value {
                 Some(mut id_list) => {
-                    id_list.push(bundle_id);
+                    id_list.push(collection_id);
                     Ok(id_list)
                 }
-                None => Ok(vec![bundle_id]),
+                None => Ok(vec![collection_id]),
             }
         },
     )?;
-    BUNDLE_ID.save(deps.storage, &bundle_id)?;
+    COLLECTION_ID.save(deps.storage, &collection_id)?;
 
     Ok(Response::new()
         .add_submessage(sub_msg)
-        .add_attribute("action", "create_bundle"))
+        .add_attribute("action", "create_collection"))
 }
 
-pub fn execute_update_public_bundle_creation(
+pub fn execute_update_public_collection_creation(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    public_bundle_creation: bool,
+    public_collection_creation: bool,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -190,12 +190,12 @@ pub fn execute_update_public_bundle_creation(
         operators,
     )?;
 
-    config.public_bundle_creation = public_bundle_creation;
+    config.public_collection_creation = public_collection_creation;
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new()
-        .add_attribute("action", "update_public_bundle_creation")
-        .add_attribute("public_bundle_creation", public_bundle_creation.to_string()))
+        .add_attribute("action", "update_public_collection_creation")
+        .add_attribute("public_collection_creation", public_collection_creation.to_string()))
 }
 
 pub fn execute_update_mint_lock(
@@ -229,7 +229,7 @@ fn execute_mint(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    bundle_id: u32,
+    collection_id: u32,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
@@ -238,7 +238,7 @@ fn execute_mint(
     }
 
     let mint_msg = vec![MintMsg {
-        bundle_id,
+        collection_id,
         owner: info.sender.to_string(),
         metadata_id,
     }];
@@ -250,7 +250,7 @@ fn execute_mint_to(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    bundle_id: u32,
+    collection_id: u32,
     recipient: String,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
@@ -269,7 +269,7 @@ fn execute_mint_to(
     let owner = deps.api.addr_validate(&recipient)?;
 
     let mint_msg = vec![MintMsg {
-        bundle_id,
+        collection_id,
         owner: owner.to_string(),
         metadata_id,
     }];
@@ -282,7 +282,7 @@ fn execute_permission_mint(
     env: Env,
     info: MessageInfo,
     permission_msg: Binary,
-    bundle_ids: Vec<u32>,
+    collection_ids: Vec<u32>,
     metadata_ids: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
@@ -301,15 +301,15 @@ fn execute_permission_mint(
         funds: info.funds.clone(),
     }));
 
-    if metadata_ids.is_some() && metadata_ids.as_ref().unwrap().len() != bundle_ids.len() {
+    if metadata_ids.is_some() && metadata_ids.as_ref().unwrap().len() != collection_ids.len() {
         return Err(ContractError::InvalidMetadataIds {});
     }
 
-    for (index, bundle_id) in bundle_ids.iter().enumerate() {
+    for (index, collection_id) in collection_ids.iter().enumerate() {
         msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: env.contract.address.to_string(),
             msg: to_binary(&ExecuteMsg::MintTo {
-                bundle_id: *bundle_id,
+                collection_id: *collection_id,
                 recipient: info.sender.to_string(),
                 metadata_id: metadata_ids.as_ref().and_then(|ids| Some(ids[index])),
             })?,
@@ -331,14 +331,14 @@ fn _execute_mint(
     let mut mint_msgs: Vec<CosmosMsg> = vec![];
 
     for msg in msgs {
-        let bundle_addr = BUNDLE_ADDRS.load(deps.storage, msg.bundle_id)?;
+        let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
 
         let mint_msg = TokenExecuteMsg::Mint {
             owner: msg.owner.clone(),
             metadata_id: msg.metadata_id,
         };
         let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: bundle_addr.to_string(),
+            contract_addr: collection_addr.to_string(),
             msg: to_binary(&mint_msg)?,
             funds: info.funds.clone(),
         });
@@ -381,12 +381,12 @@ fn execute_update_operators(
     Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
-fn execute_update_linked_bundles(
+fn execute_update_linked_collections(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    bundle_id: u32,
-    linked_bundles: Vec<u32>,
+    collection_id: u32,
+    linked_collections: Vec<u32>,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -400,28 +400,28 @@ fn execute_update_linked_bundles(
         operators,
     )?;
 
-    if linked_bundles.contains(&bundle_id) {
-        return Err(ContractError::SelfLinkedBundle {});
+    if linked_collections.contains(&collection_id) {
+        return Err(ContractError::SelfLinkedCollection {});
     };
 
-    let mut ids_to_check = vec![bundle_id];
-    ids_to_check.extend(&linked_bundles);
-    check_bundle_ids_exists(&deps, &ids_to_check)?;
+    let mut ids_to_check = vec![collection_id];
+    ids_to_check.extend(&linked_collections);
+    check_collection_ids_exists(&deps, &ids_to_check)?;
 
-    LINKED_BUNDLES.save(deps.storage, bundle_id, &linked_bundles)?;
+    LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collections)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_linked_bundles"))
+    Ok(Response::new().add_attribute("action", "execute_update_linked_collections"))
 }
 
-fn check_bundle_ids_exists(deps: &DepsMut, bundle_ids: &Vec<u32>) -> Result<(), ContractError> {
-    let existing_ids = BUNDLE_ADDRS
+fn check_collection_ids_exists(deps: &DepsMut, collection_ids: &Vec<u32>) -> Result<(), ContractError> {
+    let existing_ids = COLLECTION_ADDRS
         .keys(deps.storage, None, None, Order::Ascending)
         .map(|id| id.unwrap())
         .collect::<Vec<u32>>();
 
-    for bundle_id in bundle_ids {
-        if !existing_ids.contains(bundle_id) {
-            return Err(ContractError::InvalidBundleId {});
+    for collection_id in collection_ids {
+        if !existing_ids.contains(collection_id) {
+            return Err(ContractError::InvalidCollectionId {});
         }
     }
 
@@ -432,12 +432,12 @@ fn check_bundle_ids_exists(deps: &DepsMut, bundle_ids: &Vec<u32>) -> Result<(), 
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::BundleAddress(bundle_id) => to_binary(&query_bundle_address(deps, bundle_id)?),
+        QueryMsg::CollectionAddress(collection_id) => to_binary(&query_collection_address(deps, collection_id)?),
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
-        QueryMsg::BundleTypes(bundle_type) => to_binary(&query_bundle_types(deps, bundle_type)?),
-        QueryMsg::LinkedBundles { bundle_id } => to_binary(&query_linked_bundles(deps, bundle_id)?),
-        QueryMsg::Bundles { start_after, limit } => {
-            to_binary(&query_bundles(deps, start_after, limit)?)
+        QueryMsg::CollectionTypes(collection_type) => to_binary(&query_collection_types(deps, collection_type)?),
+        QueryMsg::LinkedCollections { collection_id } => to_binary(&query_linked_collections(deps, collection_id)?),
+        QueryMsg::Collections { start_after, limit } => {
+            to_binary(&query_collections(deps, start_after, limit)?)
         }
     }
 }
@@ -447,9 +447,9 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     Ok(ResponseWrapper::new("config", config))
 }
 
-fn query_bundle_address(deps: Deps, bundle_id: u32) -> StdResult<ResponseWrapper<String>> {
-    let addr = BUNDLE_ADDRS.load(deps.storage, bundle_id)?;
-    Ok(ResponseWrapper::new("bundle_address", addr.to_string()))
+fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<ResponseWrapper<String>> {
+    let addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
+    Ok(ResponseWrapper::new("collection_address", addr.to_string()))
 }
 
 fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
@@ -461,43 +461,43 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
     Ok(ResponseWrapper::new("operators", addrs))
 }
 
-fn query_bundle_types(deps: Deps, bundle_type: Bundles) -> StdResult<ResponseWrapper<Vec<u32>>> {
-    let bundle_ids = BUNDLE_TYPES.may_load(deps.storage, bundle_type.as_str())?;
-    let bundle_ids = match bundle_ids {
+fn query_collection_types(deps: Deps, collection_type: Collections) -> StdResult<ResponseWrapper<Vec<u32>>> {
+    let collection_ids = COLLECTION_TYPES.may_load(deps.storage, collection_type.as_str())?;
+    let collection_ids = match collection_ids {
         Some(ids) => ids,
         None => vec![],
     };
-    Ok(ResponseWrapper::new("bundle_types", bundle_ids))
+    Ok(ResponseWrapper::new("collection_types", collection_ids))
 }
 
-fn query_linked_bundles(deps: Deps, bundle_id: u32) -> StdResult<ResponseWrapper<Vec<u32>>> {
-    let linked_bundle_ids = LINKED_BUNDLES.may_load(deps.storage, bundle_id)?;
-    let linked_bundle_ids = match linked_bundle_ids {
-        Some(linked_bundle_ids) => linked_bundle_ids,
+fn query_linked_collections(deps: Deps, collection_id: u32) -> StdResult<ResponseWrapper<Vec<u32>>> {
+    let linked_collection_ids = LINKED_COLLECTIONS.may_load(deps.storage, collection_id)?;
+    let linked_collection_ids = match linked_collection_ids {
+        Some(linked_collection_ids) => linked_collection_ids,
         None => vec![],
     };
-    Ok(ResponseWrapper::new("linked_bundles", linked_bundle_ids))
+    Ok(ResponseWrapper::new("linked_collections", linked_collection_ids))
 }
 
-fn query_bundles(
+fn query_collections(
     deps: Deps,
     start_after: Option<u32>,
     limit: Option<u8>,
-) -> StdResult<ResponseWrapper<Vec<BundlesResponse>>> {
+) -> StdResult<ResponseWrapper<Vec<CollectionsResponse>>> {
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
-    let bundles = BUNDLE_ADDRS
+    let collections = COLLECTION_ADDRS
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {
-            let (bundle_id, address) = item.unwrap();
-            BundlesResponse {
-                bundle_id,
+            let (collection_id, address) = item.unwrap();
+            CollectionsResponse {
+                collection_id,
                 address: address.to_string(),
             }
         })
-        .collect::<Vec<BundlesResponse>>();
-    Ok(ResponseWrapper::new("bundles", bundles))
+        .collect::<Vec<CollectionsResponse>>();
+    Ok(ResponseWrapper::new("collections", collections))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -509,10 +509,10 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
     let reply = parse_reply_instantiate_data(msg);
     match reply {
         Ok(res) => {
-            let bundle_id = BUNDLE_ID.load(deps.storage)?;
-            BUNDLE_ADDRS.save(
+            let collection_id = COLLECTION_ID.load(deps.storage)?;
+            COLLECTION_ADDRS.save(
                 deps.storage,
-                bundle_id,
+                collection_id,
                 &Addr::unchecked(res.contract_address),
             )?;
             Ok(Response::default().add_attribute("action", "instantiate_token_reply"))

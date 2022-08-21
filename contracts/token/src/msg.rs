@@ -5,7 +5,7 @@ use komple_types::{metadata::Metadata as MetadataType, tokens::Locks};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::BundleInfo;
+use crate::state::CollectionInfo;
 
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -22,7 +22,7 @@ pub struct InstantiateMsg {
     pub token_info: TokenInfo,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
-    pub bundle_info: BundleInfo,
+    pub collection_info: CollectionInfo,
     pub max_token_limit: Option<u32>,
     pub unit_price: Option<Uint128>,
     pub native_denom: String,
@@ -196,7 +196,7 @@ pub enum QueryMsg {
     MintedTokensPerAddress {
         address: String,
     },
-    BundleInfo {},
+    CollectionInfo {},
     Contracts {},
     Config {},
     ContractOperators {},

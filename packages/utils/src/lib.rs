@@ -7,7 +7,7 @@ use cosmwasm_std::{from_slice, Addr, MessageInfo, QuerierWrapper, StdError, StdR
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
 use komple_types::{
-    bundle::{BUNDLE_ADDRS_NAMESPACE, LINKED_BUNDLES_NAMESPACE},
+    collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
     tokens::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
 };
@@ -56,27 +56,27 @@ pub fn query_module_address(
     }
 }
 
-pub fn query_bundle_address(
+pub fn query_collection_address(
     querier: &QuerierWrapper,
     mint_module_address: &Addr,
-    bundle_id: &u32,
+    collection_id: &u32,
 ) -> StdResult<Addr> {
-    let key = get_map_storage_key(BUNDLE_ADDRS_NAMESPACE, &bundle_id.to_be_bytes())?;
+    let key = get_map_storage_key(COLLECTION_ADDRS_NAMESPACE, &collection_id.to_be_bytes())?;
     let res = query_storage::<Addr>(&querier, &mint_module_address, &key)?;
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {
-            kind: "Bundle".to_string(),
+            kind: "Collection".to_string(),
         }),
     }
 }
 
-pub fn query_linked_bundles(
+pub fn query_linked_collections(
     querier: &QuerierWrapper,
     mint_module_address: &Addr,
-    bundle_id: u32,
+    collection_id: u32,
 ) -> StdResult<Vec<u32>> {
-    let key = get_map_storage_key(LINKED_BUNDLES_NAMESPACE, &bundle_id.to_be_bytes())?;
+    let key = get_map_storage_key(LINKED_COLLECTIONS_NAMESPACE, &collection_id.to_be_bytes())?;
     let res = query_storage::<Vec<u32>>(&querier, &mint_module_address, &key)?;
     match res {
         Some(res) => Ok(res),
@@ -86,11 +86,11 @@ pub fn query_linked_bundles(
 
 pub fn query_token_owner(
     querier: &QuerierWrapper,
-    bundle_addr: &Addr,
+    collection_addr: &Addr,
     token_id: &u32,
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(TOKENS_NAMESPACE, token_id.to_string().as_bytes())?;
-    let res = query_storage::<OwnerOfResponse>(&querier, &bundle_addr, &key)?;
+    let res = query_storage::<OwnerOfResponse>(&querier, &collection_addr, &key)?;
     match res {
         Some(res) => Ok(Addr::unchecked(res.owner)),
         None => Err(StdError::NotFound {
@@ -99,8 +99,8 @@ pub fn query_token_owner(
     }
 }
 
-pub fn query_bundle_locks(querier: &QuerierWrapper, bundle_addr: &Addr) -> StdResult<Locks> {
-    let res = query_storage::<Locks>(&querier, &bundle_addr, LOCKS_NAMESPACE)?;
+pub fn query_collection_locks(querier: &QuerierWrapper, collection_addr: &Addr) -> StdResult<Locks> {
+    let res = query_storage::<Locks>(&querier, &collection_addr, LOCKS_NAMESPACE)?;
     match res {
         Some(res) => Ok(res),
         None => Err(StdError::NotFound {
@@ -111,11 +111,11 @@ pub fn query_bundle_locks(querier: &QuerierWrapper, bundle_addr: &Addr) -> StdRe
 
 pub fn query_token_locks(
     querier: &QuerierWrapper,
-    bundle_addr: &Addr,
+    collection_addr: &Addr,
     token_id: &u32,
 ) -> StdResult<Locks> {
     let key = get_map_storage_key(TOKEN_LOCKS_NAMESPACE, token_id.to_string().as_bytes())?;
-    let res = query_storage::<Locks>(&querier, &bundle_addr, &key)?;
+    let res = query_storage::<Locks>(&querier, &collection_addr, &key)?;
     match res {
         Some(res) => Ok(res),
         None => Ok(Locks {

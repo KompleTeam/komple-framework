@@ -13,23 +13,23 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     ListFixedToken {
-        bundle_id: u32,
+        collection_id: u32,
         token_id: u32,
         price: Uint128,
     },
     DelistFixedToken {
-        bundle_id: u32,
+        collection_id: u32,
         token_id: u32,
     },
     UpdatePrice {
         listing_type: Listing,
-        bundle_id: u32,
+        collection_id: u32,
         token_id: u32,
         price: Uint128,
     },
     Buy {
         listing_type: Listing,
-        bundle_id: u32,
+        collection_id: u32,
         token_id: u32,
     },
 }
@@ -39,11 +39,11 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     Config {},
     FixedListing {
-        bundle_id: u32,
+        collection_id: u32,
         token_id: u32,
     },
     FixedListings {
-        bundle_id: u32,
+        collection_id: u32,
         start_after: Option<u32>,
         limit: Option<u32>,
     },

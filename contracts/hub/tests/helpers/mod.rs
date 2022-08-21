@@ -9,13 +9,13 @@ use komple_token_module::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
         QueryMsg as TokenQueryMsg, TokenInfo,
     },
-    state::{BundleInfo, Contracts},
+    state::{CollectionInfo, Contracts},
 };
 use komple_types::{
-    bundle::Bundles, metadata::Metadata as MetadataType, module::Modules, permission::Permissions,
+    collection::Collections, metadata::Metadata as MetadataType, module::Modules, permission::Permissions,
     query::ResponseWrapper,
 };
-use komple_utils::{query_bundle_address, query_module_address};
+use komple_utils::{query_collection_address, query_module_address};
 use marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
@@ -229,22 +229,22 @@ pub fn setup_all_modules(app: &mut App, hub_addr: Addr) {
     setup_marketplace_module(app, hub_addr.clone());
 }
 
-pub fn create_bundle(
+pub fn create_collection(
     app: &mut App,
     mint_module_addr: Addr,
     token_module_code_id: u64,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
-    bundle_type: Bundles,
-    linked_bundles: Option<Vec<u32>>,
+    collection_type: Collections,
+    linked_collections: Option<Vec<u32>>,
     unit_price: Option<Uint128>,
     max_token_limit: Option<u32>,
     royalty_share: Option<Decimal>,
 ) {
-    let bundle_info = BundleInfo {
-        bundle_type,
-        name: "Test Bundle".to_string(),
-        description: "Test Bundle".to_string(),
+    let collection_info = CollectionInfo {
+        collection_type,
+        name: "Test Collection".to_string(),
+        description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
     };
@@ -252,11 +252,11 @@ pub fn create_bundle(
         symbol: "TEST".to_string(),
         minter: mint_module_addr.to_string(),
     };
-    let msg = MintExecuteMsg::CreateBundle {
+    let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
-            bundle_info,
+            collection_info,
             token_info,
             per_address_limit,
             start_time,
@@ -265,16 +265,16 @@ pub fn create_bundle(
             max_token_limit,
             royalty_share,
         },
-        linked_bundles,
+        linked_collections,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
         .unwrap();
 }
 
-pub fn mint_token(app: &mut App, mint_module_addr: Addr, bundle_id: u32, sender: &str) {
+pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
     let msg = MintExecuteMsg::Mint {
-        bundle_id,
+        collection_id,
         metadata_id: None,
     };
     let _ = app
@@ -331,15 +331,15 @@ pub fn add_permission_for_module(
         .unwrap();
 }
 
-pub fn link_bundles(
+pub fn link_collections(
     app: &mut App,
     mint_module_addr: Addr,
-    bundle_id: u32,
-    linked_bundles: Vec<u32>,
+    collection_id: u32,
+    linked_collections: Vec<u32>,
 ) {
-    let msg = MintExecuteMsg::UpdateLinkedBundles {
-        bundle_id,
-        linked_bundles,
+    let msg = MintExecuteMsg::UpdateLinkedCollections {
+        collection_id,
+        linked_collections,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
@@ -381,22 +381,22 @@ pub fn get_modules_addresses(app: &mut App, hub_addr: &Addr) -> (Addr, Addr, Add
 pub fn setup_marketplace_listing(
     app: &mut App,
     hub_addr: &Addr,
-    bundle_id: u32,
+    collection_id: u32,
     token_id: u32,
     price: Uint128,
 ) {
     let (mint_module_addr, _, _, marketplace_module_addr) = get_modules_addresses(app, &hub_addr);
 
-    let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &bundle_id).unwrap();
+    let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
 
     setup_token_module_operators(
         app,
-        bundle_addr.clone(),
+        collection_addr.clone(),
         vec![marketplace_module_addr.to_string()],
     );
 
     let msg = MarketplaceExecuteMsg::ListFixedToken {
-        bundle_id,
+        collection_id,
         token_id,
         price,
     };

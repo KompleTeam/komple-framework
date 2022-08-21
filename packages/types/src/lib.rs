@@ -1,4 +1,4 @@
-pub mod bundle;
+pub mod collection;
 pub mod hub;
 pub mod instantiate;
 pub mod marketplace;

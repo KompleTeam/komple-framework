@@ -27,4 +27,4 @@ pub const LINKED_METADATA_NAMESPACE: &str = "linked_metadata";
 
 pub const DYNAMIC_LINKED_METADATA_NAMESPACE: &str = "dynamic_linked_metadata";
 
-pub const BUNDLE_ADDR_NAMESPACE: &str = "bundle_addr";
+pub const COLLECTION_ADDR_NAMESPACE: &str = "collection_addr";

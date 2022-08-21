@@ -9,7 +9,7 @@ use komple_types::module::Modules;
 use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{
-    check_admin_privileges, query_bundle_address, query_module_address, query_token_owner,
+    check_admin_privileges, query_collection_address, query_module_address, query_token_owner,
 };
 use semver::Version;
 use std::collections::HashMap;
@@ -174,27 +174,27 @@ fn check_ownership_permission(
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
-    let mut bundle_map: HashMap<u32, Addr> = HashMap::new();
+    let mut collection_map: HashMap<u32, Addr> = HashMap::new();
 
     for ownership_msg in msgs {
-        let bundle_addr = match bundle_map.contains_key(&ownership_msg.bundle_id) {
-            true => bundle_map
-                .get(&ownership_msg.bundle_id)
+        let collection_addr = match collection_map.contains_key(&ownership_msg.collection_id) {
+            true => collection_map
+                .get(&ownership_msg.collection_id)
                 .unwrap()
                 .clone(),
             false => {
-                let bundle_addr = query_bundle_address(
+                let collection_addr = query_collection_address(
                     &deps.querier,
                     &mint_module_addr,
-                    &ownership_msg.bundle_id,
+                    &ownership_msg.collection_id,
                 )?;
-                bundle_map.insert(ownership_msg.bundle_id, bundle_addr.clone());
-                bundle_addr
+                collection_map.insert(ownership_msg.collection_id, collection_addr.clone());
+                collection_addr
             }
         };
 
         let owner =
-            query_token_owner(&deps.querier, &bundle_addr, &ownership_msg.token_id).unwrap();
+            query_token_owner(&deps.querier, &collection_addr, &ownership_msg.token_id).unwrap();
         if owner != ownership_msg.owner {
             return Err(ContractError::InvalidOwnership {});
         }

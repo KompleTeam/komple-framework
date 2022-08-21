@@ -4,7 +4,7 @@ use komple_hub_module::msg::ExecuteMsg;
 
 pub mod helpers;
 use helpers::{
-    create_bundle, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
+    create_collection, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
     mock_app, proper_instantiate, setup_all_modules, setup_fee_contract, setup_metadata,
     setup_metadata_module, setup_mint_module_operators, token_module, ADMIN, USER,
 };
@@ -56,10 +56,10 @@ mod normal_merge {
 
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
-    use helpers::link_bundles;
+    use helpers::link_collections;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::{bundle::Bundles, metadata::Metadata};
-    use komple_utils::query_bundle_address;
+    use komple_types::{collection::Collections, metadata::Metadata};
+    use komple_utils::query_collection_address;
     use merge_module::{
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
@@ -77,55 +77,55 @@ mod normal_merge {
             get_modules_addresses(&mut app, &hub_addr);
 
         let token_module_code_id = app.store_code(token_module());
-        create_bundle(
+        create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
             None,
-            Bundles::Normal,
+            Collections::Normal,
             None,
             None,
             None,
             None,
         );
-        create_bundle(
+        create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
             None,
-            Bundles::Normal,
+            Collections::Normal,
             None,
             None,
             None,
             None,
         );
-        create_bundle(
+        create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
             None,
-            Bundles::Normal,
+            Collections::Normal,
             None,
             None,
             None,
             None,
         );
 
-        link_bundles(&mut app, mint_module_addr.clone(), 2, vec![3]);
+        link_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
 
-        let bundle_1_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-        let bundle_2_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &2).unwrap();
-        let bundle_3_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+        let collection_1_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        let collection_2_addr = query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+        let collection_3_addr = query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
 
         let metadata_module_addr_1 =
-            setup_metadata_module(&mut app, bundle_1_addr.clone(), Metadata::Standard);
+            setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
         let metadata_module_addr_2 =
-            setup_metadata_module(&mut app, bundle_2_addr.clone(), Metadata::Standard);
+            setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
         let metadata_module_addr_3 =
-            setup_metadata_module(&mut app, bundle_3_addr.clone(), Metadata::Standard);
+            setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
 
         setup_metadata(&mut app, metadata_module_addr_1.clone());
         setup_metadata(&mut app, metadata_module_addr_1.clone());
@@ -144,22 +144,22 @@ mod normal_merge {
             vec![merge_module_addr.to_string()],
         );
 
-        give_approval_to_module(&mut app, bundle_1_addr.clone(), USER, &merge_module_addr);
-        give_approval_to_module(&mut app, bundle_3_addr.clone(), USER, &merge_module_addr);
+        give_approval_to_module(&mut app, collection_1_addr.clone(), USER, &merge_module_addr);
+        give_approval_to_module(&mut app, collection_3_addr.clone(), USER, &merge_module_addr);
 
         let merge_msg = MergeMsg {
             mint: vec![2],
             burn: vec![
                 MergeBurnMsg {
-                    bundle_id: 1,
+                    collection_id: 1,
                     token_id: 1,
                 },
                 MergeBurnMsg {
-                    bundle_id: 1,
+                    collection_id: 1,
                     token_id: 3,
                 },
                 MergeBurnMsg {
-                    bundle_id: 3,
+                    collection_id: 3,
                     token_id: 1,
                 },
             ],
@@ -177,7 +177,7 @@ mod normal_merge {
             include_expired: None,
         };
         let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
-            app.wrap().query_wasm_smart(bundle_1_addr.clone(), &msg);
+            app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
         assert!(res.is_err());
 
         let msg = TokenQueryMsg::OwnerOf {
@@ -185,10 +185,10 @@ mod normal_merge {
             include_expired: None,
         };
         let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
-            app.wrap().query_wasm_smart(bundle_1_addr.clone(), &msg);
+            app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
         assert!(res.is_err());
 
-        let bundle_2_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+        let collection_2_addr = query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
         let msg = TokenQueryMsg::OwnerOf {
             token_id: "1".to_string(),
@@ -196,7 +196,7 @@ mod normal_merge {
         };
         let res: OwnerOfResponse = app
             .wrap()
-            .query_wasm_smart(bundle_2_addr.clone(), &msg)
+            .query_wasm_smart(collection_2_addr.clone(), &msg)
             .unwrap();
         assert_eq!(res.owner, USER);
     }
@@ -213,46 +213,46 @@ mod normal_merge {
             get_modules_addresses(&mut app, &hub_addr);
 
         let token_module_code_id = app.store_code(token_module());
-        create_bundle(
+        create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
             None,
-            Bundles::Normal,
+            Collections::Normal,
             None,
             None,
             None,
             None,
         );
-        create_bundle(
+        create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
             None,
-            Bundles::Normal,
+            Collections::Normal,
             None,
             None,
             None,
             None,
         );
-        create_bundle(
+        create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
             None,
-            Bundles::Normal,
+            Collections::Normal,
             Some(vec![2]),
             None,
             None,
             None,
         );
 
-        let bundle_1_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        let collection_1_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         let metadata_module_addr_1 =
-            setup_metadata_module(&mut app, bundle_1_addr.clone(), Metadata::Standard);
+            setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
         setup_metadata(&mut app, metadata_module_addr_1.clone());
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -281,7 +281,7 @@ mod normal_merge {
         let merge_msg = MergeMsg {
             mint: vec![3],
             burn: vec![MergeBurnMsg {
-                bundle_id: 1,
+                collection_id: 1,
                 token_id: 1,
             }],
             metadata_ids: None,
@@ -299,13 +299,13 @@ mod normal_merge {
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
-            MergeContractError::LinkedBundleNotFound {}.to_string()
+            MergeContractError::LinkedCollectionNotFound {}.to_string()
         );
 
         let merge_msg = MergeMsg {
             mint: vec![2],
             burn: vec![MergeBurnMsg {
-                bundle_id: 1,
+                collection_id: 1,
                 token_id: 1,
             }],
             metadata_ids: None,
@@ -346,8 +346,8 @@ mod normal_merge {
         );
 
         setup_mint_module_operators(&mut app, mint_module_addr.clone(), vec![]);
-        let bundle_1_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-        give_approval_to_module(&mut app, bundle_1_addr.clone(), USER, &merge_module_addr);
+        let collection_1_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        give_approval_to_module(&mut app, collection_1_addr.clone(), USER, &merge_module_addr);
 
         let err = app
             .execute_contract(
@@ -369,9 +369,9 @@ mod permission_merge {
 
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
-    use helpers::{add_permission_for_module, link_bundles};
+    use helpers::{add_permission_for_module, link_collections};
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::bundle::Bundles;
+    use komple_types::collection::Collections;
     use komple_types::module::Modules;
     use komple_types::permission::Permissions;
     use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
@@ -381,7 +381,7 @@ mod permission_merge {
         use super::*;
 
         use komple_types::metadata::Metadata;
-        use komple_utils::query_bundle_address;
+        use komple_utils::query_collection_address;
         use permission_module::msg::OwnershipMsg;
 
         #[test]
@@ -396,55 +396,55 @@ mod permission_merge {
                 get_modules_addresses(&mut app, &hub_addr);
 
             let token_module_code_id = app.store_code(token_module());
-            create_bundle(
+            create_collection(
                 &mut app,
                 mint_module_addr.clone(),
                 token_module_code_id,
                 None,
                 None,
-                Bundles::Normal,
+                Collections::Normal,
                 None,
                 None,
                 None,
                 None,
             );
-            create_bundle(
+            create_collection(
                 &mut app,
                 mint_module_addr.clone(),
                 token_module_code_id,
                 None,
                 None,
-                Bundles::Normal,
+                Collections::Normal,
                 None,
                 None,
                 None,
                 None,
             );
-            create_bundle(
+            create_collection(
                 &mut app,
                 mint_module_addr.clone(),
                 token_module_code_id,
                 None,
                 None,
-                Bundles::Normal,
+                Collections::Normal,
                 None,
                 None,
                 None,
                 None,
             );
 
-            link_bundles(&mut app, mint_module_addr.clone(), 2, vec![3]);
+            link_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
 
-            let bundle_1_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-            let bundle_2_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &2).unwrap();
-            let bundle_3_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+            let collection_1_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+            let collection_2_addr = query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+            let collection_3_addr = query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
 
             let metadata_module_addr_1 =
-                setup_metadata_module(&mut app, bundle_1_addr.clone(), Metadata::Standard);
+                setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
             let metadata_module_addr_2 =
-                setup_metadata_module(&mut app, bundle_2_addr.clone(), Metadata::Standard);
+                setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
             let metadata_module_addr_3 =
-                setup_metadata_module(&mut app, bundle_3_addr.clone(), Metadata::Standard);
+                setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
 
             setup_metadata(&mut app, metadata_module_addr_1.clone());
             setup_metadata(&mut app, metadata_module_addr_1.clone());
@@ -463,10 +463,10 @@ mod permission_merge {
                 vec![merge_module_addr.to_string()],
             );
 
-            let bundle_1_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-            give_approval_to_module(&mut app, bundle_1_addr.clone(), USER, &merge_module_addr);
-            let bundle_3_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &3).unwrap();
-            give_approval_to_module(&mut app, bundle_3_addr.clone(), USER, &merge_module_addr);
+            let collection_1_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+            give_approval_to_module(&mut app, collection_1_addr.clone(), USER, &merge_module_addr);
+            let collection_3_addr = query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+            give_approval_to_module(&mut app, collection_3_addr.clone(), USER, &merge_module_addr);
 
             add_permission_for_module(
                 &mut app,
@@ -479,12 +479,12 @@ mod permission_merge {
                 permission_type: Permissions::Ownership,
                 data: to_binary(&vec![
                     OwnershipMsg {
-                        bundle_id: 1,
+                        collection_id: 1,
                         token_id: 1,
                         owner: USER.to_string(),
                     },
                     OwnershipMsg {
-                        bundle_id: 1,
+                        collection_id: 1,
                         token_id: 2,
                         owner: USER.to_string(),
                     },
@@ -496,15 +496,15 @@ mod permission_merge {
                 mint: vec![2],
                 burn: vec![
                     MergeBurnMsg {
-                        bundle_id: 1,
+                        collection_id: 1,
                         token_id: 1,
                     },
                     MergeBurnMsg {
-                        bundle_id: 1,
+                        collection_id: 1,
                         token_id: 3,
                     },
                     MergeBurnMsg {
-                        bundle_id: 3,
+                        collection_id: 3,
                         token_id: 1,
                     },
                 ],
@@ -524,7 +524,7 @@ mod permission_merge {
                 include_expired: None,
             };
             let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
-                app.wrap().query_wasm_smart(bundle_1_addr.clone(), &msg);
+                app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
             assert!(res.is_err());
 
             let msg = TokenQueryMsg::OwnerOf {
@@ -532,10 +532,10 @@ mod permission_merge {
                 include_expired: None,
             };
             let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
-                app.wrap().query_wasm_smart(bundle_1_addr.clone(), &msg);
+                app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
             assert!(res.is_err());
 
-            let bundle_2_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+            let collection_2_addr = query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
             let msg = TokenQueryMsg::OwnerOf {
                 token_id: "1".to_string(),
@@ -543,7 +543,7 @@ mod permission_merge {
             };
             let res: OwnerOfResponse = app
                 .wrap()
-                .query_wasm_smart(bundle_2_addr.clone(), &msg)
+                .query_wasm_smart(collection_2_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.owner, USER);
         }

@@ -17,7 +17,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::tokens::Locks;
 use komple_utils::{
-    check_funds, query_bundle_address, query_bundle_locks, query_module_address, query_storage,
+    check_funds, query_collection_address, query_collection_locks, query_module_address, query_storage,
     query_token_locks, query_token_owner,
 };
 use semver::Version;
@@ -79,25 +79,25 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::ListFixedToken {
-            bundle_id,
+            collection_id,
             token_id,
             price,
-        } => execute_list_fixed_token(deps, env, info, bundle_id, token_id, price),
+        } => execute_list_fixed_token(deps, env, info, collection_id, token_id, price),
         ExecuteMsg::DelistFixedToken {
-            bundle_id,
+            collection_id,
             token_id,
-        } => execute_delist_fixed_token(deps, env, info, bundle_id, token_id),
+        } => execute_delist_fixed_token(deps, env, info, collection_id, token_id),
         ExecuteMsg::UpdatePrice {
             listing_type,
-            bundle_id,
+            collection_id,
             token_id,
             price,
-        } => execute_update_price(deps, env, info, listing_type, bundle_id, token_id, price),
+        } => execute_update_price(deps, env, info, listing_type, collection_id, token_id, price),
         ExecuteMsg::Buy {
             listing_type,
-            bundle_id,
+            collection_id,
             token_id,
-        } => execute_buy(deps, env, info, listing_type, bundle_id, token_id),
+        } => execute_buy(deps, env, info, listing_type, collection_id, token_id),
     }
 }
 
@@ -105,37 +105,37 @@ fn execute_list_fixed_token(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    bundle_id: u32,
+    collection_id: u32,
     token_id: u32,
     price: Uint128,
 ) -> Result<Response, ContractError> {
-    let bundle_addr = get_bundle_address(&deps, &bundle_id)?;
-    let owner = query_token_owner(&deps.querier, &bundle_addr, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id)?;
+    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     // Check if the token owner is the same as info.sender
     if owner != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    // Checking the bundle locks
-    let bundle_locks = query_bundle_locks(&deps.querier, &bundle_addr)?;
-    check_locks(bundle_locks)?;
+    // Checking the collection locks
+    let collection_locks = query_collection_locks(&deps.querier, &collection_addr)?;
+    check_locks(collection_locks)?;
 
     // Checking the token locks
-    let token_locks = query_token_locks(&deps.querier, &bundle_addr, &token_id)?;
+    let token_locks = query_token_locks(&deps.querier, &collection_addr, &token_id)?;
     check_locks(token_locks)?;
 
     let fixed_listing = FixedListing {
-        bundle_id,
+        collection_id,
         token_id,
         price,
         owner,
     };
-    FIXED_LISTING.save(deps.storage, (bundle_id, token_id), &fixed_listing)?;
+    FIXED_LISTING.save(deps.storage, (collection_id, token_id), &fixed_listing)?;
 
     // Locking the token so it will not be available for other actions
     let lock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: bundle_addr.to_string(),
+        contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
             token_id: token_id.to_string(),
             locks: Locks {
@@ -158,11 +158,11 @@ fn execute_delist_fixed_token(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    bundle_id: u32,
+    collection_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
-    let bundle_addr = get_bundle_address(&deps, &bundle_id)?;
-    let owner = query_token_owner(&deps.querier, &bundle_addr, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id)?;
+    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     // Check if the token owner is the same as info.sender
     if owner != info.sender {
@@ -171,14 +171,14 @@ fn execute_delist_fixed_token(
 
     // Throw an error if token is not listed
     // This is needed in case users want to unlock a token
-    if !FIXED_LISTING.has(deps.storage, (bundle_id, token_id)) {
+    if !FIXED_LISTING.has(deps.storage, (collection_id, token_id)) {
         return Err(ContractError::NotListed {});
     }
-    FIXED_LISTING.remove(deps.storage, (bundle_id, token_id));
+    FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
     // Unlocking token so it can be used again
     let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: bundle_addr.to_string(),
+        contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
             token_id: token_id.to_string(),
             locks: Locks {
@@ -202,12 +202,12 @@ fn execute_update_price(
     _env: Env,
     info: MessageInfo,
     listing_type: Listing,
-    bundle_id: u32,
+    collection_id: u32,
     token_id: u32,
     price: Uint128,
 ) -> Result<Response, ContractError> {
-    let bundle_addr = get_bundle_address(&deps, &bundle_id)?;
-    let owner = query_token_owner(&deps.querier, &bundle_addr, &token_id)?;
+    let collection_addr = get_collection_address(&deps, &collection_id)?;
+    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     // Check if the token owner is the same as info.sender
     if owner != info.sender {
@@ -216,9 +216,9 @@ fn execute_update_price(
 
     match listing_type {
         Listing::Fixed => {
-            let mut fixed_listing = FIXED_LISTING.load(deps.storage, (bundle_id, token_id))?;
+            let mut fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
             fixed_listing.price = price;
-            FIXED_LISTING.save(deps.storage, (bundle_id, token_id), &fixed_listing)?;
+            FIXED_LISTING.save(deps.storage, (collection_id, token_id), &fixed_listing)?;
         }
         Listing::Auction => unimplemented!(),
     }
@@ -231,11 +231,11 @@ fn execute_buy(
     _env: Env,
     info: MessageInfo,
     listing_type: Listing,
-    bundle_id: u32,
+    collection_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
     match listing_type {
-        Listing::Fixed => _execute_buy_fixed_listing(deps, &info, bundle_id, token_id),
+        Listing::Fixed => _execute_buy_fixed_listing(deps, &info, collection_id, token_id),
         Listing::Auction => unimplemented!(),
     }
 }
@@ -243,12 +243,12 @@ fn execute_buy(
 fn _execute_buy_fixed_listing(
     deps: DepsMut,
     info: &MessageInfo,
-    bundle_id: u32,
+    collection_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
-    let fixed_listing = FIXED_LISTING.load(deps.storage, (bundle_id, token_id))?;
+    let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
 
     if fixed_listing.owner == info.sender {
         return Err(ContractError::SelfPurchase {});
@@ -258,7 +258,7 @@ fn _execute_buy_fixed_listing(
     check_funds(&info, &config.native_denom, fixed_listing.price)?;
 
     let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-    let bundle_addr = query_bundle_address(&deps.querier, &mint_module_addr, &bundle_id)?;
+    let collection_addr = query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
 
     // This is the fee marketplace takes
     let fee = config.fee_percentage.mul(fixed_listing.price);
@@ -270,7 +270,7 @@ fn _execute_buy_fixed_listing(
     let mut sub_msgs: Vec<SubMsg> = vec![];
 
     // Get royalty message if it exists
-    let res = query_storage::<TokenConfig>(&deps.querier, &bundle_addr, CONFIG_NAMESPACE)?;
+    let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
     if let Some(config) = res {
         if config.royalty_share.is_some() {
             royalty_fee = config.royalty_share.unwrap().mul(fixed_listing.price);
@@ -311,7 +311,7 @@ fn _execute_buy_fixed_listing(
 
     // Transfer token ownership to the new address
     let transfer_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: bundle_addr.to_string(),
+        contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::AdminTransferNft {
             recipient: info.sender.to_string(),
             token_id: token_id.to_string(),
@@ -321,7 +321,7 @@ fn _execute_buy_fixed_listing(
 
     // Lift up the token locks
     let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: bundle_addr.to_string(),
+        contract_addr: collection_addr.to_string(),
         msg: to_binary(&TokenExecuteMsg::UpdateTokenLock {
             token_id: token_id.to_string(),
             locks: Locks {
@@ -334,7 +334,7 @@ fn _execute_buy_fixed_listing(
         funds: vec![],
     });
 
-    FIXED_LISTING.remove(deps.storage, (bundle_id, token_id));
+    FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
     Ok(Response::new()
         .add_submessages(sub_msgs)
@@ -342,11 +342,11 @@ fn _execute_buy_fixed_listing(
         .add_attribute("action", "execute_buy"))
 }
 
-fn get_bundle_address(deps: &DepsMut, bundle_id: &u32) -> Result<Addr, ContractError> {
+fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-    let bundle_addr = query_bundle_address(&deps.querier, &mint_module_addr, bundle_id)?;
-    Ok(bundle_addr)
+    let collection_addr = query_collection_address(&deps.querier, &mint_module_addr, collection_id)?;
+    Ok(collection_addr)
 }
 
 fn check_locks(locks: Locks) -> Result<(), TokenContractError> {
@@ -367,14 +367,14 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::FixedListing {
-            bundle_id,
+            collection_id,
             token_id,
-        } => to_binary(&query_fixed_listing(deps, bundle_id, token_id)?),
+        } => to_binary(&query_fixed_listing(deps, collection_id, token_id)?),
         QueryMsg::FixedListings {
-            bundle_id,
+            collection_id,
             start_after,
             limit,
-        } => to_binary(&query_fixed_listings(deps, bundle_id, start_after, limit)?),
+        } => to_binary(&query_fixed_listings(deps, collection_id, start_after, limit)?),
     }
 }
 
@@ -386,24 +386,24 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
 /// Gets a single fixed listing
 fn query_fixed_listing(
     deps: Deps,
-    bundle_id: u32,
+    collection_id: u32,
     token_id: u32,
 ) -> StdResult<ResponseWrapper<FixedListing>> {
-    let listing = FIXED_LISTING.load(deps.storage, (bundle_id, token_id))?;
+    let listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
     Ok(ResponseWrapper::new("fixed_listing", listing))
 }
 
-/// Gets a batch of fixed listings under a bundle
+/// Gets a batch of fixed listings under a collection
 fn query_fixed_listings(
     deps: Deps,
-    bundle_id: u32,
+    collection_id: u32,
     start_after: Option<u32>,
     limit: Option<u32>,
 ) -> StdResult<ResponseWrapper<Vec<FixedListing>>> {
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
     let listings = FIXED_LISTING
-        .prefix(bundle_id)
+        .prefix(collection_id)
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {

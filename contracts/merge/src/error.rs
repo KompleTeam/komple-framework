@@ -13,8 +13,8 @@ pub enum ContractError {
     #[error("No burn messages found")]
     BurnNotFound {},
 
-    #[error("No linked bundles found in burn message")]
-    LinkedBundleNotFound {},
+    #[error("No linked collections found in burn message")]
+    LinkedCollectionNotFound {},
 
     #[error("Invalid metadata IDs")]
     InvalidMetadataIds {},

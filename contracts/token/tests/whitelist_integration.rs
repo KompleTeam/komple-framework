@@ -4,9 +4,9 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
-use komple_token_module::state::{BundleInfo, Contracts};
+use komple_token_module::state::{CollectionInfo, Contracts};
 use komple_token_module::ContractError;
-use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
+use komple_types::{collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper};
 use komple_utils::query_token_owner;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
@@ -104,10 +104,10 @@ fn setup_whitelist(
 fn token_module_instantiation(app: &mut App) -> Addr {
     let token_code_id = app.store_code(token_module());
 
-    let bundle_info = BundleInfo {
-        bundle_type: Bundles::Normal,
-        name: "Test Bundle".to_string(),
-        description: "Test Bundle".to_string(),
+    let collection_info = CollectionInfo {
+        collection_type: Collections::Normal,
+        name: "Test Collection".to_string(),
+        description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
     };
@@ -120,7 +120,7 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         token_info,
         per_address_limit: None,
         start_time: None,
-        bundle_info: bundle_info,
+        collection_info,
         max_token_limit: None,
         unit_price: None,
         native_denom: NATIVE_DENOM.to_string(),

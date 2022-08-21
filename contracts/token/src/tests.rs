@@ -2,7 +2,7 @@ use crate::state::Contracts;
 use crate::{msg::ConfigResponse, ContractError};
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo},
-    state::BundleInfo,
+    state::CollectionInfo,
 };
 use cosmwasm_std::{coin, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -12,7 +12,7 @@ use komple_metadata_module::{
 };
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
-use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType};
+use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
 use komple_utils::{query_token_owner, FundsError};
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
@@ -79,9 +79,9 @@ fn proper_instantiate(
 ) -> Addr {
     let token_code_id = app.store_code(token_module());
 
-    let bundle_info = BundleInfo {
-        bundle_type: Bundles::Normal,
-        name: "Test Bundle".to_string(),
+    let collection_info = CollectionInfo {
+        collection_type: Collections::Normal,
+        name: "Test Collection".to_string(),
         description: "Test Description".to_string(),
         image: "https://some-image.com".to_string(),
         external_link: None,
@@ -95,7 +95,7 @@ fn proper_instantiate(
         token_info,
         per_address_limit,
         start_time,
-        bundle_info,
+        collection_info,
         max_token_limit,
         unit_price,
         native_denom: NATIVE_DENOM.to_string(),
@@ -177,9 +177,9 @@ mod initialization {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
 
-        let bundle_info = BundleInfo {
-            bundle_type: Bundles::Normal,
-            name: "Test Bundle".to_string(),
+        let collection_info = CollectionInfo {
+            collection_type: Collections::Normal,
+            name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
             external_link: None,
@@ -193,7 +193,7 @@ mod initialization {
             token_info,
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
-            bundle_info,
+            collection_info,
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
@@ -217,9 +217,9 @@ mod initialization {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
 
-        let bundle_info = BundleInfo {
-            bundle_type: Bundles::Normal,
-            name: "Test Bundle".to_string(),
+        let collection_info = CollectionInfo {
+            collection_type: Collections::Normal,
+            name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
             external_link: None,
@@ -234,7 +234,7 @@ mod initialization {
             token_info: token_info.clone(),
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time),
-            bundle_info: bundle_info.clone(),
+            collection_info: collection_info.clone(),
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
@@ -260,7 +260,7 @@ mod initialization {
             token_info: token_info.clone(),
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.minus_seconds(10)),
-            bundle_info: bundle_info.clone(),
+            collection_info: collection_info.clone(),
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
@@ -287,9 +287,9 @@ mod initialization {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
 
-        let bundle_info = BundleInfo {
-            bundle_type: Bundles::Normal,
-            name: "Test Bundle".to_string(),
+        let collection_info = CollectionInfo {
+            collection_type: Collections::Normal,
+            name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
             external_link: None,
@@ -304,7 +304,7 @@ mod initialization {
             token_info,
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
-            bundle_info,
+            collection_info,
             max_token_limit: Some(0),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
@@ -331,9 +331,9 @@ mod initialization {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
 
-        let bundle_info = BundleInfo {
-            bundle_type: Bundles::Normal,
-            name: "Test Bundle".to_string(),
+        let collection_info = CollectionInfo {
+            collection_type: Collections::Normal,
+            name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
             external_link: None,
@@ -348,7 +348,7 @@ mod initialization {
             token_info,
             per_address_limit: Some(0),
             start_time: Some(app.block_info().time.plus_seconds(1)),
-            bundle_info,
+            collection_info,
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
@@ -375,9 +375,9 @@ mod initialization {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
 
-        let bundle_info = BundleInfo {
-            bundle_type: Bundles::Normal,
-            name: "Test Bundle".to_string(),
+        let collection_info = CollectionInfo {
+            collection_type: Collections::Normal,
+            name: "Test Collection".to_string(),
             description: "Test DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest Description".to_string(),
             image: "https://some-image.com".to_string(),
             external_link: None,
@@ -392,7 +392,7 @@ mod initialization {
             token_info,
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
-            bundle_info,
+            collection_info,
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
@@ -555,9 +555,9 @@ mod actions {
         fn test_invalid_share() {
             let mut app = mock_app();
             let token_code_id = app.store_code(token_module());
-            let bundle_info = BundleInfo {
-                bundle_type: Bundles::Normal,
-                name: "Test Bundle".to_string(),
+            let collection_info = CollectionInfo {
+                collection_type: Collections::Normal,
+                name: "Test Collection".to_string(),
                 description: "Test Description".to_string(),
                 image: "https://some-image.com".to_string(),
                 external_link: None,
@@ -571,7 +571,7 @@ mod actions {
                 token_info,
                 per_address_limit: None,
                 start_time: None,
-                bundle_info,
+                collection_info,
                 max_token_limit: None,
                 unit_price: None,
                 native_denom: NATIVE_DENOM.to_string(),
