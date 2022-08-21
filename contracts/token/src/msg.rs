@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::state::BundleInfo;
 
-use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct TokenInfo {

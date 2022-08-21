@@ -8,7 +8,7 @@ use komple_token_module::state::{BundleInfo, Contracts};
 use komple_token_module::ContractError;
 use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
 use komple_utils::query_token_owner;
-use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -29,11 +29,11 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn whitelist_contract() -> Box<dyn Contract<Empty>> {
+pub fn whitelist_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        whitelist_contract::contract::execute,
-        whitelist_contract::contract::instantiate,
-        whitelist_contract::contract::query,
+        komple_whitelist_module::contract::execute,
+        komple_whitelist_module::contract::instantiate,
+        komple_whitelist_module::contract::query,
     );
     Box::new(contract)
 }
@@ -69,7 +69,7 @@ fn setup_whitelist(
     unit_price: Uint128,
     per_address_limit: u8,
 ) -> Addr {
-    let whitelist_code_id = app.store_code(whitelist_contract());
+    let whitelist_code_id = app.store_code(whitelist_module());
 
     let instantiate_msg = WhitelistInstantiateMsg {
         start_time,
@@ -201,7 +201,7 @@ mod initialization {
     fn test_happy_path() {
         let mut app = mock_app();
         let token_module_addr = token_module_instantiation(&mut app);
-        let whitelist_code_id = app.store_code(whitelist_contract());
+        let whitelist_code_id = app.store_code(whitelist_module());
 
         let start_time = app.block_info().time.plus_seconds(1);
         let end_time = app.block_info().time.plus_seconds(10);

@@ -538,11 +538,11 @@ dependencies = [
  "komple-metadata-module",
  "komple-types",
  "komple-utils",
+ "komple-whitelist-module",
  "schemars",
  "semver",
  "serde",
  "thiserror",
- "whitelist-contract",
 ]
 
 [[package]]
@@ -563,6 +563,24 @@ dependencies = [
  "cw721",
  "komple-types",
  "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-whitelist-module"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 0.13.4",
+ "cw-utils",
+ "cw2 0.13.4",
+ "komple-types",
+ "schemars",
+ "semver",
  "serde",
  "thiserror",
 ]
@@ -965,24 +983,6 @@ name = "wasi"
 version = "0.11.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
-
-[[package]]
-name = "whitelist-contract"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 0.13.4",
- "cw-utils",
- "cw2 0.13.4",
- "komple-types",
- "schemars",
- "semver",
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "zeroize"

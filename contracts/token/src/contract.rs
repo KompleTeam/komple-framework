@@ -25,7 +25,7 @@ use cw721_base::MintMsg;
 use komple_metadata_module::msg::{
     ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
 };
-use whitelist_contract::msg::{
+use komple_whitelist_module::msg::{
     ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
     QueryMsg as WhitelistQueryMsg,
 };
@@ -39,7 +39,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
 
 const METADATA_MODULE_INSTANTIATE_REPLY_ID: u64 = 1;
-const WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 2;
+const WHITELIST_MODULE_INSTANTIATE_REPLY_ID: u64 = 2;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -188,7 +188,7 @@ pub fn execute(
         ExecuteMsg::InitWhitelistContract {
             code_id,
             instantiate_msg,
-        } => execute_init_whitelist_contract(deps, env, info, code_id, instantiate_msg),
+        } => execute_init_whitelist_module(deps, env, info, code_id, instantiate_msg),
 
         // CW721 MESSAGES
         _ => {
@@ -637,7 +637,7 @@ fn execute_init_metadata_module(
         .add_attribute("action", "execute_init_metadata_module"))
 }
 
-fn execute_init_whitelist_contract(
+fn execute_init_whitelist_module(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -665,14 +665,14 @@ fn execute_init_whitelist_contract(
             label: String::from("komple Framework Whitelist Contract"),
         }
         .into(),
-        id: WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID,
+        id: WHITELIST_MODULE_INSTANTIATE_REPLY_ID,
         gas_limit: None,
         reply_on: ReplyOn::Success,
     };
 
     Ok(Response::new()
         .add_submessage(sub_msg)
-        .add_attribute("action", "execute_init_whitelist_contract"))
+        .add_attribute("action", "execute_init_whitelist_module"))
 }
 
 fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
@@ -809,7 +809,7 @@ fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     if msg.id != METADATA_MODULE_INSTANTIATE_REPLY_ID
-        && msg.id != WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID
+        && msg.id != WHITELIST_MODULE_INSTANTIATE_REPLY_ID
     {
         return Err(ContractError::InvalidReplyID {});
     }
@@ -824,7 +824,7 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
                     contracts.metadata = Some(Addr::unchecked(res.contract_address));
                     contract = "metadata";
                 }
-                WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID => {
+                WHITELIST_MODULE_INSTANTIATE_REPLY_ID => {
                     contracts.whitelist = Some(Addr::unchecked(res.contract_address));
                     contract = "whitelist";
                 }

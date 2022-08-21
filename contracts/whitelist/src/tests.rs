@@ -6,7 +6,7 @@ use komple_types::query::ResponseWrapper;
 
 use crate::msg::InstantiateMsg;
 
-pub fn whitelist_contract() -> Box<dyn Contract<Empty>> {
+pub fn whitelist_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
@@ -47,7 +47,7 @@ fn proper_instantiate(
     per_address_limit: u8,
     member_limit: u16,
 ) -> Addr {
-    let whitelist_code_id = app.store_code(whitelist_contract());
+    let whitelist_code_id = app.store_code(whitelist_module());
 
     let msg = InstantiateMsg {
         members,
@@ -57,7 +57,7 @@ fn proper_instantiate(
         per_address_limit,
         member_limit,
     };
-    let whitelist_contract_addr = app
+    let whitelist_module_addr = app
         .instantiate_contract(
             whitelist_code_id,
             Addr::unchecked(ADMIN),
@@ -68,7 +68,7 @@ fn proper_instantiate(
         )
         .unwrap();
 
-    whitelist_contract_addr
+    whitelist_module_addr
 }
 
 mod initialization {
@@ -77,7 +77,7 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let whitelist_code_id = app.store_code(whitelist_contract());
+        let whitelist_code_id = app.store_code(whitelist_module());
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
@@ -102,7 +102,7 @@ mod initialization {
     #[test]
     fn test_invalid_member_limit() {
         let mut app = mock_app();
-        let whitelist_code_id = app.store_code(whitelist_contract());
+        let whitelist_code_id = app.store_code(whitelist_module());
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
@@ -131,7 +131,7 @@ mod initialization {
     #[test]
     fn test_invalid_per_address_limit() {
         let mut app = mock_app();
-        let whitelist_code_id = app.store_code(whitelist_contract());
+        let whitelist_code_id = app.store_code(whitelist_module());
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
@@ -160,7 +160,7 @@ mod initialization {
     #[test]
     fn test_invalid_member_list() {
         let mut app = mock_app();
-        let whitelist_code_id = app.store_code(whitelist_contract());
+        let whitelist_code_id = app.store_code(whitelist_module());
 
         let msg = InstantiateMsg {
             members: vec![],
@@ -189,7 +189,7 @@ mod initialization {
     #[test]
     fn test_invalid_times() {
         let mut app = mock_app();
-        let whitelist_code_id = app.store_code(whitelist_contract());
+        let whitelist_code_id = app.store_code(whitelist_module());
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
@@ -322,7 +322,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -336,7 +336,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -345,7 +345,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_contract_addr.clone(), &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.start_time, app.block_info().time.plus_seconds(5));
             }
@@ -355,7 +355,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -369,7 +369,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -385,7 +385,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -399,7 +399,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -413,7 +413,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -427,7 +427,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -443,7 +443,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -463,7 +463,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -477,7 +477,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -486,7 +486,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_contract_addr.clone(), &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.end_time, app.block_info().time.plus_seconds(5));
             }
@@ -496,7 +496,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(5);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -510,7 +510,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -526,7 +526,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -540,7 +540,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -554,7 +554,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -568,7 +568,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -584,7 +584,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -608,7 +608,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string(), RANDOM_3.to_string(), RANDOM.to_string()],
                     start_time,
@@ -622,7 +622,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -634,7 +634,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<Vec<String>> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_contract_addr.clone(), &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(
                     res.data,
@@ -651,7 +651,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -665,7 +665,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -681,7 +681,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -697,7 +697,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -713,7 +713,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -727,7 +727,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -743,7 +743,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string(), RANDOM_2.to_string()],
                     start_time,
@@ -757,7 +757,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -777,7 +777,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![
                         RANDOM.to_string(),
@@ -795,7 +795,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -807,7 +807,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<Vec<String>> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_contract_addr.clone(), &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data, vec![RANDOM.to_string(), RANDOM_3.to_string()]);
             }
@@ -817,7 +817,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -831,7 +831,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -847,7 +847,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -863,7 +863,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -879,7 +879,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -893,7 +893,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -917,7 +917,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -931,7 +931,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -940,7 +940,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_contract_addr.clone(), &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.per_address_limit, 10);
             }
@@ -950,7 +950,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -964,7 +964,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -980,7 +980,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -996,7 +996,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -1012,7 +1012,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -1026,7 +1026,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -1046,7 +1046,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -1060,7 +1060,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -1069,7 +1069,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_contract_addr.clone(), &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.member_limit, 20);
             }
@@ -1079,7 +1079,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -1093,7 +1093,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -1109,7 +1109,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -1125,7 +1125,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
@@ -1141,7 +1141,7 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
-                let whitelist_contract_addr = proper_instantiate(
+                let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
                     start_time,
@@ -1155,7 +1155,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        whitelist_contract_addr.clone(),
+                        whitelist_module_addr.clone(),
                         &msg,
                         &[],
                     )
