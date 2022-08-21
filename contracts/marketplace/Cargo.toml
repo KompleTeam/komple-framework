@@ -50,7 +50,7 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
-token-contract = { path = "../token", features = ["library"] }
+komple-token-module = { path = "../token", features = ["library"] }
 komple-fee-contract = "0.1.0"
 
 [dev-dependencies]

@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
-    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg, coin,
+    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
+    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -15,9 +15,8 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    BundleConfig, BundleInfo, Config, Contracts, BUNDLE_CONFIG, BUNDLE_INFO,
-    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS,
-    TOKEN_LOCKS,
+    BundleConfig, BundleInfo, Config, Contracts, BUNDLE_CONFIG, BUNDLE_INFO, CONFIG, CONTRACTS,
+    LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -34,7 +33,7 @@ use whitelist_contract::msg::{
 pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-token-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-token-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
@@ -345,8 +344,7 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
-    if bundle_config.max_token_limit.is_some()
-        && token_id > bundle_config.max_token_limit.unwrap()
+    if bundle_config.max_token_limit.is_some() && token_id > bundle_config.max_token_limit.unwrap()
     {
         return Err(ContractError::TokenLimitReached {});
     }
@@ -363,9 +361,7 @@ pub fn execute_mint(
         return Err(ContractError::TokenLimitReached {});
     }
 
-    if bundle_config.start_time.is_some()
-        && env.block.time < bundle_config.start_time.unwrap()
-    {
+    if bundle_config.start_time.is_some() && env.block.time < bundle_config.start_time.unwrap() {
         return Err(ContractError::MintingNotStarted {});
     }
 
@@ -581,9 +577,7 @@ fn execute_update_start_time(
 
     let mut bundle_config = BUNDLE_CONFIG.load(deps.storage)?;
 
-    if bundle_config.start_time.is_some()
-        && env.block.time >= bundle_config.start_time.unwrap()
-    {
+    if bundle_config.start_time.is_some() && env.block.time >= bundle_config.start_time.unwrap() {
         return Err(ContractError::AlreadyStarted {});
     }
 
@@ -716,10 +710,16 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     Ok(())
 }
 
-fn get_mint_price(deps: &DepsMut, config: &Config, bundle_config: &BundleConfig) -> Result<Option<Coin>, ContractError> {
+fn get_mint_price(
+    deps: &DepsMut,
+    config: &Config,
+    bundle_config: &BundleConfig,
+) -> Result<Option<Coin>, ContractError> {
     let contracts = CONTRACTS.load(deps.storage)?;
 
-    let bundle_price = bundle_config.unit_price.and_then(|price| Some(coin(price.u128(), &config.native_denom)));
+    let bundle_price = bundle_config
+        .unit_price
+        .and_then(|price| Some(coin(price.u128(), &config.native_denom)));
 
     if contracts.whitelist.is_none() {
         return Ok(bundle_price);

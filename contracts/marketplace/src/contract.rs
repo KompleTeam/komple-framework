@@ -7,23 +7,25 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use komple_fee_contract::state::Config as FeeContractConfig;
+use komple_token_module::state::Config as TokenConfig;
+use komple_token_module::{
+    msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError,
+};
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::tokens::Locks;
 use komple_utils::{
-    check_funds, query_bundle_address, query_bundle_locks, query_module_address,
-    query_storage, query_token_locks, query_token_owner,
+    check_funds, query_bundle_address, query_bundle_locks, query_module_address, query_storage,
+    query_token_locks, query_token_owner,
 };
 use semver::Version;
 use std::ops::Mul;
-use token_contract::state::Config as TokenConfig;
-use token_contract::{msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, FixedListing, CONFIG, HUB_ADDR, FIXED_LISTING};
+use crate::state::{Config, FixedListing, CONFIG, FIXED_LISTING, HUB_ADDR};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-marketplace-module";
@@ -90,15 +92,7 @@ pub fn execute(
             bundle_id,
             token_id,
             price,
-        } => execute_update_price(
-            deps,
-            env,
-            info,
-            listing_type,
-            bundle_id,
-            token_id,
-            price,
-        ),
+        } => execute_update_price(deps, env, info, listing_type, bundle_id, token_id, price),
         ExecuteMsg::Buy {
             listing_type,
             bundle_id,
@@ -263,10 +257,8 @@ fn _execute_buy_fixed_listing(
     // Check for the sent funds
     check_funds(&info, &config.native_denom, fixed_listing.price)?;
 
-    let mint_module_addr =
-        query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-    let bundle_addr =
-        query_bundle_address(&deps.querier, &mint_module_addr, &bundle_id)?;
+    let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+    let bundle_addr = query_bundle_address(&deps.querier, &mint_module_addr, &bundle_id)?;
 
     // This is the fee marketplace takes
     let fee = config.fee_percentage.mul(fixed_listing.price);
@@ -352,10 +344,8 @@ fn _execute_buy_fixed_listing(
 
 fn get_bundle_address(deps: &DepsMut, bundle_id: &u32) -> Result<Addr, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
-    let mint_module_addr =
-        query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-    let bundle_addr =
-        query_bundle_address(&deps.querier, &mint_module_addr, bundle_id)?;
+    let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+    let bundle_addr = query_bundle_address(&deps.querier, &mint_module_addr, bundle_id)?;
     Ok(bundle_addr)
 }
 
@@ -384,12 +374,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             bundle_id,
             start_after,
             limit,
-        } => to_binary(&query_fixed_listings(
-            deps,
-            bundle_id,
-            start_after,
-            limit,
-        )?),
+        } => to_binary(&query_fixed_listings(deps, bundle_id, start_after, limit)?),
     }
 }
 

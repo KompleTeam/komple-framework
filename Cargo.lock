@@ -447,6 +447,7 @@ dependencies = [
  "cw2 0.13.4",
  "cw721",
  "komple-fee-contract",
+ "komple-token-module",
  "komple-types",
  "komple-utils",
  "marketplace-module",
@@ -458,7 +459,6 @@ dependencies = [
  "semver",
  "serde",
  "thiserror",
- "token-contract",
 ]
 
 [[package]]
@@ -505,6 +505,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "komple-token-module"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 0.13.4",
+ "cw-utils",
+ "cw2 0.13.4",
+ "cw721",
+ "cw721-base",
+ "komple-types",
+ "komple-utils",
+ "metadata-contract",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+ "whitelist-contract",
+]
+
+[[package]]
 name = "komple-types"
 version = "0.1.0"
 dependencies = [
@@ -544,6 +567,7 @@ dependencies = [
  "cw2 0.13.4",
  "hub-contract",
  "komple-fee-contract",
+ "komple-token-module",
  "komple-types",
  "komple-utils",
  "metadata-contract",
@@ -552,7 +576,6 @@ dependencies = [
  "semver",
  "serde",
  "thiserror",
- "token-contract",
 ]
 
 [[package]]
@@ -565,6 +588,7 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
+ "komple-token-module",
  "komple-types",
  "komple-utils",
  "mint-module",
@@ -573,7 +597,6 @@ dependencies = [
  "semver",
  "serde",
  "thiserror",
- "token-contract",
 ]
 
 [[package]]
@@ -607,6 +630,7 @@ dependencies = [
  "cw2 0.13.4",
  "cw721",
  "hub-contract",
+ "komple-token-module",
  "komple-types",
  "komple-utils",
  "metadata-contract",
@@ -615,7 +639,6 @@ dependencies = [
  "semver",
  "serde",
  "thiserror",
- "token-contract",
 ]
 
 [[package]]
@@ -635,13 +658,13 @@ dependencies = [
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
  "cw721",
+ "komple-token-module",
  "komple-types",
  "komple-utils",
  "schemars",
  "semver",
  "serde",
  "thiserror",
- "token-contract",
 ]
 
 [[package]]
@@ -899,29 +922,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "token-contract"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 0.13.4",
- "cw-utils",
- "cw2 0.13.4",
- "cw721",
- "cw721-base",
- "komple-types",
- "komple-utils",
- "metadata-contract",
- "schemars",
- "semver",
- "serde",
- "thiserror",
- "whitelist-contract",
 ]
 
 [[package]]

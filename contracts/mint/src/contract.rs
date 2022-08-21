@@ -8,20 +8,21 @@ use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
+use komple_token_module::msg::{
+    ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
+};
 use komple_types::bundle::Bundles;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{check_admin_privileges, query_module_address};
 use semver::Version;
-use token_contract::msg::{ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg};
 
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{BundlesResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
-    Config, BUNDLE_ADDRS, BUNDLE_ID, BUNDLE_TYPES, CONFIG, HUB_ADDR, LINKED_BUNDLES,
-    OPERATORS,
+    Config, BUNDLE_ADDRS, BUNDLE_ID, BUNDLE_TYPES, CONFIG, HUB_ADDR, LINKED_BUNDLES, OPERATORS,
 };
 
 // version info for migration info
@@ -475,10 +476,7 @@ fn query_linked_bundles(deps: Deps, bundle_id: u32) -> StdResult<ResponseWrapper
         Some(linked_bundle_ids) => linked_bundle_ids,
         None => vec![],
     };
-    Ok(ResponseWrapper::new(
-        "linked_bundles",
-        linked_bundle_ids,
-    ))
+    Ok(ResponseWrapper::new("linked_bundles", linked_bundle_ids))
 }
 
 fn query_bundles(

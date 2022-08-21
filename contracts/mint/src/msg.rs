@@ -1,7 +1,7 @@
 use cosmwasm_std::Binary;
+use komple_token_module::msg::InstantiateMsg as TokenInstantiateMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use token_contract::msg::InstantiateMsg as TokenInstantiateMsg;
 
 use komple_types::bundle::Bundles;
 

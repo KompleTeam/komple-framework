@@ -12,7 +12,7 @@ use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use token_contract::{
+use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
         QueryMsg as TokenQueryMsg, TokenInfo,
@@ -56,13 +56,13 @@ pub fn permission_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn token_contract() -> Box<dyn Contract<Empty>> {
+pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        token_contract::contract::execute,
-        token_contract::contract::instantiate,
-        token_contract::contract::query,
+        komple_token_module::contract::execute,
+        komple_token_module::contract::instantiate,
+        komple_token_module::contract::query,
     )
-    .with_reply(token_contract::contract::reply);
+    .with_reply(komple_token_module::contract::reply);
     Box::new(contract)
 }
 
@@ -232,7 +232,7 @@ pub fn setup_all_modules(app: &mut App, hub_addr: Addr) {
 pub fn create_bundle(
     app: &mut App,
     mint_module_addr: Addr,
-    token_contract_code_id: u64,
+    token_module_code_id: u64,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
     bundle_type: Bundles,
@@ -253,7 +253,7 @@ pub fn create_bundle(
         minter: mint_module_addr.to_string(),
     };
     let msg = MintExecuteMsg::CreateBundle {
-        code_id: token_contract_code_id,
+        code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
             bundle_info,
@@ -289,20 +289,20 @@ pub fn setup_mint_module_operators(app: &mut App, mint_module_addr: Addr, addrs:
         .unwrap();
 }
 
-pub fn setup_token_contract_operators(
+pub fn setup_token_module_operators(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     addrs: Vec<String>,
 ) {
     let msg = TokenExecuteMsg::UpdateOperators { addrs };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_contract_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &vec![])
         .unwrap();
 }
 
 pub fn give_approval_to_module(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     owner: &str,
     operator_addr: &Addr,
 ) {
@@ -311,7 +311,7 @@ pub fn give_approval_to_module(
         expires: None,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(owner), token_contract_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(owner), token_module_addr, &msg, &vec![])
         .unwrap();
 }
 
@@ -393,7 +393,7 @@ pub fn setup_marketplace_listing(
 
     let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &bundle_id).unwrap();
 
-    setup_token_contract_operators(
+    setup_token_module_operators(
         app,
         bundle_addr.clone(),
         vec![marketplace_module_addr.to_string()],
@@ -416,7 +416,7 @@ pub fn setup_marketplace_listing(
 
 pub fn setup_metadata_contract(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_contract());
@@ -428,7 +428,7 @@ pub fn setup_metadata_contract(
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            token_contract_addr.clone(),
+            token_module_addr.clone(),
             &msg,
             &[],
         )
@@ -436,7 +436,7 @@ pub fn setup_metadata_contract(
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_contract_addr.clone(), &TokenQueryMsg::Contracts {})
+        .query_wasm_smart(token_module_addr.clone(), &TokenQueryMsg::Contracts {})
         .unwrap();
     res.data.metadata.unwrap()
 }

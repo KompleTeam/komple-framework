@@ -1,7 +1,7 @@
 use cosmwasm_std::{OverflowError, StdError};
+use komple_token_module::ContractError as TokenContractError;
 use komple_utils::{FundsError, UtilError};
 use thiserror::Error;
-use token_contract::ContractError as TokenContractError;
 
 #[derive(Error, Debug)]
 pub enum ContractError {

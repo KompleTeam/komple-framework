@@ -11,13 +11,12 @@ use std::collections::HashMap;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{
-    check_admin_privileges, query_bundle_address, query_linked_bundles,
-    query_module_address,
+    check_admin_privileges, query_bundle_address, query_linked_bundles, query_module_address,
 };
 
+use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
 use mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
@@ -178,8 +177,7 @@ fn make_merge_msg(
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
-    let mint_module_addr =
-        query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+    let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
 
     // MergeMsg contains mint, burn and metadata infos
     let merge_msg: MergeMsg = from_binary(&msg)?;
@@ -245,8 +243,7 @@ fn make_mint_messages(
         let linked_bundles = match linked_bundle_map.contains_key(&bundle_id) {
             true => linked_bundle_map.get(&bundle_id).unwrap().clone(),
             false => {
-                let bundles =
-                    query_linked_bundles(&deps.querier, &mint_module_addr, *bundle_id)?;
+                let bundles = query_linked_bundles(&deps.querier, &mint_module_addr, *bundle_id)?;
                 linked_bundle_map.insert(*bundle_id, bundles.clone());
                 bundles
             }

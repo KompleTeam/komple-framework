@@ -15,7 +15,7 @@ use metadata_contract::{
     state::{MetaInfo, Trait},
 };
 
-pub fn token_contract() -> Box<dyn Contract<Empty>> {
+pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
@@ -77,7 +77,7 @@ fn proper_instantiate(
     unit_price: Option<Uint128>,
     royalty_share: Option<Decimal>,
 ) -> Addr {
-    let token_code_id = app.store_code(token_contract());
+    let token_code_id = app.store_code(token_module());
 
     let bundle_info = BundleInfo {
         bundle_type: Bundles::Normal,
@@ -101,7 +101,7 @@ fn proper_instantiate(
         native_denom: NATIVE_DENOM.to_string(),
         royalty_share,
     };
-    let token_contract_addr = app
+    let token_module_addr = app
         .instantiate_contract(
             token_code_id,
             Addr::unchecked(ADMIN),
@@ -112,12 +112,12 @@ fn proper_instantiate(
         )
         .unwrap();
 
-    token_contract_addr
+    token_module_addr
 }
 
 fn setup_metadata_contract(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_contract());
@@ -127,17 +127,12 @@ fn setup_metadata_contract(
         metadata_type,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            token_contract_addr.clone(),
-            &msg,
-            &[],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
         .unwrap();
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_contract_addr.clone(), &QueryMsg::Contracts {})
+        .query_wasm_smart(token_module_addr.clone(), &QueryMsg::Contracts {})
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -180,7 +175,7 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let token_code_id = app.store_code(token_contract());
+        let token_code_id = app.store_code(token_module());
 
         let bundle_info = BundleInfo {
             bundle_type: Bundles::Normal,
@@ -204,7 +199,7 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             royalty_share: None,
         };
-        let token_contract_addr = app
+        let token_module_addr = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
@@ -214,13 +209,13 @@ mod initialization {
                 None,
             )
             .unwrap();
-        assert_eq!(token_contract_addr, "contract0");
+        assert_eq!(token_module_addr, "contract0");
     }
 
     #[test]
     fn test_invalid_time() {
         let mut app = mock_app();
-        let token_code_id = app.store_code(token_contract());
+        let token_code_id = app.store_code(token_module());
 
         let bundle_info = BundleInfo {
             bundle_type: Bundles::Normal,
@@ -290,7 +285,7 @@ mod initialization {
     #[test]
     fn test_invalid_max_token_limit() {
         let mut app = mock_app();
-        let token_code_id = app.store_code(token_contract());
+        let token_code_id = app.store_code(token_module());
 
         let bundle_info = BundleInfo {
             bundle_type: Bundles::Normal,
@@ -334,7 +329,7 @@ mod initialization {
     #[test]
     fn test_invalid_per_address_limit() {
         let mut app = mock_app();
-        let token_code_id = app.store_code(token_contract());
+        let token_code_id = app.store_code(token_module());
 
         let bundle_info = BundleInfo {
             bundle_type: Bundles::Normal,
@@ -378,7 +373,7 @@ mod initialization {
     #[test]
     fn test_invalid_description() {
         let mut app = mock_app();
-        let token_code_id = app.store_code(token_contract());
+        let token_code_id = app.store_code(token_module());
 
         let bundle_info = BundleInfo {
             bundle_type: Bundles::Normal,
@@ -429,7 +424,7 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let token_contract_addr =
+            let token_module_addr =
                 proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
             let msg = ExecuteMsg::UpdateOperators {
@@ -438,7 +433,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -447,7 +442,7 @@ mod actions {
             let msg = QueryMsg::ContractOperators {};
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
-                .query_wasm_smart(token_contract_addr.clone(), &msg)
+                .query_wasm_smart(token_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data, vec![RANDOM.to_string(), RANDOM_2.to_string()]);
         }
@@ -455,7 +450,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let token_contract_addr =
+            let token_module_addr =
                 proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
             let msg = ExecuteMsg::UpdateOperators {
@@ -464,7 +459,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -483,7 +478,7 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let token_contract_addr = proper_instantiate(
+            let token_module_addr = proper_instantiate(
                 &mut app,
                 ADMIN.to_string(),
                 None,
@@ -496,7 +491,7 @@ mod actions {
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(token_contract_addr.clone(), &msg)
+                .query_wasm_smart(token_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(
                 res.data.royalty_share,
@@ -509,7 +504,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -518,7 +513,7 @@ mod actions {
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(token_contract_addr.clone(), &msg)
+                .query_wasm_smart(token_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(
                 res.data.royalty_share,
@@ -529,7 +524,7 @@ mod actions {
         #[test]
         fn test_invalid_owner() {
             let mut app = mock_app();
-            let token_contract_addr = proper_instantiate(
+            let token_module_addr = proper_instantiate(
                 &mut app,
                 ADMIN.to_string(),
                 None,
@@ -545,7 +540,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -559,7 +554,7 @@ mod actions {
         #[test]
         fn test_invalid_share() {
             let mut app = mock_app();
-            let token_code_id = app.store_code(token_contract());
+            let token_code_id = app.store_code(token_module());
             let bundle_info = BundleInfo {
                 bundle_type: Bundles::Normal,
                 name: "Test Bundle".to_string(),
@@ -597,7 +592,7 @@ mod actions {
                 ContractError::InvalidRoyaltyShare {}.to_string()
             );
 
-            let token_contract_addr = proper_instantiate(
+            let token_module_addr = proper_instantiate(
                 &mut app,
                 ADMIN.to_string(),
                 None,
@@ -613,7 +608,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -634,7 +629,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let locks = Locks {
@@ -649,7 +644,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -658,7 +653,7 @@ mod actions {
                 let msg = QueryMsg::Locks {};
                 let res: ResponseWrapper<Locks> = app
                     .wrap()
-                    .query_wasm_smart(token_contract_addr.clone(), &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data, locks);
             }
@@ -666,7 +661,7 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let locks = Locks {
@@ -681,7 +676,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -699,12 +694,12 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -716,7 +711,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -735,7 +730,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -746,7 +741,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<Locks> = app
                     .wrap()
-                    .query_wasm_smart(token_contract_addr.clone(), &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data, locks);
             }
@@ -754,7 +749,7 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let locks = Locks {
@@ -770,7 +765,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -784,7 +779,7 @@ mod actions {
             #[test]
             fn test_invalid_token_id() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let locks = Locks {
@@ -800,7 +795,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -818,7 +813,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let msg = ExecuteMsg::UpdatePerAddressLimit {
@@ -827,7 +822,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -836,7 +831,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(token_contract_addr.clone(), &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.per_address_limit, Some(5));
             }
@@ -844,7 +839,7 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let msg = ExecuteMsg::UpdatePerAddressLimit {
@@ -853,7 +848,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -867,7 +862,7 @@ mod actions {
             #[test]
             fn test_invalid_per_address_limit() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let msg = ExecuteMsg::UpdatePerAddressLimit {
@@ -876,7 +871,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -894,7 +889,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let msg = ExecuteMsg::UpdateStartTime {
@@ -903,7 +898,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -912,7 +907,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(token_contract_addr.clone(), &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(
                     res.data.start_time,
@@ -923,7 +918,7 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let msg = ExecuteMsg::UpdateStartTime {
@@ -932,7 +927,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -947,7 +942,7 @@ mod actions {
             fn test_invalid_time() {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(5);
-                let token_contract_addr = proper_instantiate(
+                let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
                     None,
@@ -967,7 +962,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -985,7 +980,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1007,12 +1002,12 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1024,7 +1019,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1037,25 +1032,25 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_contract_addr, &1).unwrap();
+                let res = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
                 assert_eq!(res, Addr::unchecked(RANDOM));
             }
 
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1067,7 +1062,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1087,7 +1082,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1100,7 +1095,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1116,7 +1111,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1129,7 +1124,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1147,12 +1142,12 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1164,7 +1159,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1177,7 +1172,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1190,25 +1185,25 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_contract_addr, &1).unwrap();
+                let res = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
                 assert_eq!(res, Addr::unchecked(RANDOM));
             }
 
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1220,7 +1215,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1238,12 +1233,12 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1255,7 +1250,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1267,13 +1262,13 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_contract_addr, &1);
+                let res = query_token_owner(&app.wrap(), &token_module_addr, &1);
                 assert!(res.is_err());
 
                 let msg = MetadataQueryMsg::Metadata { token_id: 1 };
@@ -1285,12 +1280,12 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1302,7 +1297,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1322,7 +1317,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1334,7 +1329,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1350,7 +1345,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1362,7 +1357,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1380,7 +1375,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_contract_addr = proper_instantiate(
+                let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
                     None,
@@ -1392,7 +1387,7 @@ mod actions {
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1404,13 +1399,13 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![coin(1_000_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_contract_addr, &1).unwrap();
+                let res = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
                 assert_eq!(res, Addr::unchecked(USER));
 
                 let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
@@ -1420,12 +1415,12 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_contract_addr =
+                let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1443,7 +1438,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1456,7 +1451,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1470,7 +1465,7 @@ mod actions {
             #[test]
             fn test_max_token_limit() {
                 let mut app = mock_app();
-                let token_contract_addr = proper_instantiate(
+                let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
                     None,
@@ -1482,7 +1477,7 @@ mod actions {
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1495,7 +1490,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1508,7 +1503,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1521,7 +1516,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1535,7 +1530,7 @@ mod actions {
             #[test]
             fn test_per_address_limit() {
                 let mut app = mock_app();
-                let token_contract_addr = proper_instantiate(
+                let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
                     Some(2),
@@ -1547,7 +1542,7 @@ mod actions {
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -1560,7 +1555,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1573,7 +1568,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1586,7 +1581,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1601,7 +1596,7 @@ mod actions {
             fn test_invalid_time() {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(5);
-                let token_contract_addr = proper_instantiate(
+                let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
                     None,
@@ -1613,7 +1608,7 @@ mod actions {
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1625,7 +1620,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1639,7 +1634,7 @@ mod actions {
             #[test]
             fn test_invalid_funds() {
                 let mut app = mock_app();
-                let token_contract_addr = proper_instantiate(
+                let token_module_addr = proper_instantiate(
                     &mut app,
                     RANDOM.to_string(),
                     None,
@@ -1651,7 +1646,7 @@ mod actions {
 
                 let metadata_contract_addr = setup_metadata_contract(
                     &mut app,
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     MetadataType::Standard,
                 );
                 setup_metadata(&mut app, metadata_contract_addr);
@@ -1663,7 +1658,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(RANDOM),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![coin(100, TEST_DENOM)],
                     )
@@ -1677,7 +1672,7 @@ mod actions {
                     .to_string()
                 );
 
-                let token_contract_addr = proper_instantiate(
+                let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
                     None,
@@ -1694,7 +1689,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1711,7 +1706,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_contract_addr.clone(),
+                        token_module_addr.clone(),
                         &msg,
                         &vec![coin(50, NATIVE_DENOM)],
                     )

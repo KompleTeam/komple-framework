@@ -6,7 +6,7 @@ pub mod helpers;
 use helpers::{
     create_bundle, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
     mock_app, proper_instantiate, setup_all_modules, setup_fee_contract, setup_metadata,
-    setup_metadata_contract, setup_mint_module_operators, token_contract, ADMIN, USER,
+    setup_metadata_contract, setup_mint_module_operators, token_module, ADMIN, USER,
 };
 
 mod initialization {
@@ -63,7 +63,7 @@ mod normal_merge {
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
     };
-    use token_contract::msg::QueryMsg as TokenQueryMsg;
+    use komple_token_module::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
     fn test_happy_path() {
@@ -76,11 +76,11 @@ mod normal_merge {
         let (mint_module_addr, merge_module_addr, _, _) =
             get_modules_addresses(&mut app, &hub_addr);
 
-        let token_contract_code_id = app.store_code(token_contract());
+        let token_module_code_id = app.store_code(token_module());
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,
@@ -92,7 +92,7 @@ mod normal_merge {
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,
@@ -104,7 +104,7 @@ mod normal_merge {
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,
@@ -212,11 +212,11 @@ mod normal_merge {
         let (mint_module_addr, merge_module_addr, _, _) =
             get_modules_addresses(&mut app, &hub_addr);
 
-        let token_contract_code_id = app.store_code(token_contract());
+        let token_module_code_id = app.store_code(token_module());
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,
@@ -228,7 +228,7 @@ mod normal_merge {
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,
@@ -240,7 +240,7 @@ mod normal_merge {
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,
@@ -375,7 +375,7 @@ mod permission_merge {
     use komple_types::permission::Permissions;
     use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
     use permission_module::msg::PermissionCheckMsg;
-    use token_contract::msg::QueryMsg as TokenQueryMsg;
+    use komple_token_module::msg::QueryMsg as TokenQueryMsg;
 
     mod ownership_permission {
         use super::*;
@@ -395,11 +395,11 @@ mod permission_merge {
             let (mint_module_addr, merge_module_addr, permission_module_addr, _) =
                 get_modules_addresses(&mut app, &hub_addr);
 
-            let token_contract_code_id = app.store_code(token_contract());
+            let token_module_code_id = app.store_code(token_module());
             create_bundle(
                 &mut app,
                 mint_module_addr.clone(),
-                token_contract_code_id,
+                token_module_code_id,
                 None,
                 None,
                 Bundles::Normal,
@@ -411,7 +411,7 @@ mod permission_merge {
             create_bundle(
                 &mut app,
                 mint_module_addr.clone(),
-                token_contract_code_id,
+                token_module_code_id,
                 None,
                 None,
                 Bundles::Normal,
@@ -423,7 +423,7 @@ mod permission_merge {
             create_bundle(
                 &mut app,
                 mint_module_addr.clone(),
-                token_contract_code_id,
+                token_module_code_id,
                 None,
                 None,
                 Bundles::Normal,

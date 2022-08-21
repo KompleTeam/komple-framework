@@ -1,22 +1,22 @@
 use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
+use komple_token_module::state::{BundleInfo, Contracts};
+use komple_token_module::ContractError;
 use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
 use komple_utils::query_token_owner;
 use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
-use token_contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
-use token_contract::state::{BundleInfo, Contracts};
-use token_contract::ContractError;
 use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
-pub fn token_contract() -> Box<dyn Contract<Empty>> {
+pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        token_contract::contract::execute,
-        token_contract::contract::instantiate,
-        token_contract::contract::query,
+        komple_token_module::contract::execute,
+        komple_token_module::contract::instantiate,
+        komple_token_module::contract::query,
     )
-    .with_reply(token_contract::contract::reply);
+    .with_reply(komple_token_module::contract::reply);
     Box::new(contract)
 }
 
@@ -62,7 +62,7 @@ fn mock_app() -> App {
 
 fn setup_whitelist(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     members: Vec<String>,
     start_time: Timestamp,
     end_time: Timestamp,
@@ -86,7 +86,7 @@ fn setup_whitelist(
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            token_contract_addr.clone(),
+            token_module_addr.clone(),
             &msg,
             &vec![],
         )
@@ -95,14 +95,14 @@ fn setup_whitelist(
     let msg = QueryMsg::Contracts {};
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_contract_addr.clone(), &msg)
+        .query_wasm_smart(token_module_addr.clone(), &msg)
         .unwrap();
 
     res.data.whitelist.unwrap()
 }
 
-fn token_contract_instantiation(app: &mut App) -> Addr {
-    let token_code_id = app.store_code(token_contract());
+fn token_module_instantiation(app: &mut App) -> Addr {
+    let token_code_id = app.store_code(token_module());
 
     let bundle_info = BundleInfo {
         bundle_type: Bundles::Normal,
@@ -126,7 +126,7 @@ fn token_contract_instantiation(app: &mut App) -> Addr {
         native_denom: NATIVE_DENOM.to_string(),
         royalty_share: None,
     };
-    let token_contract_addr = app
+    let token_module_addr = app
         .instantiate_contract(
             token_code_id,
             Addr::unchecked(ADMIN),
@@ -137,12 +137,12 @@ fn token_contract_instantiation(app: &mut App) -> Addr {
         )
         .unwrap();
 
-    token_contract_addr
+    token_module_addr
 }
 
 fn setup_metadata_contract(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_contract());
@@ -152,17 +152,12 @@ fn setup_metadata_contract(
         metadata_type,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            token_contract_addr.clone(),
-            &msg,
-            &[],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
         .unwrap();
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_contract_addr.clone(), &QueryMsg::Contracts {})
+        .query_wasm_smart(token_module_addr.clone(), &QueryMsg::Contracts {})
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -205,7 +200,7 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let token_contract_addr = token_contract_instantiation(&mut app);
+        let token_module_addr = token_module_instantiation(&mut app);
         let whitelist_code_id = app.store_code(whitelist_contract());
 
         let start_time = app.block_info().time.plus_seconds(1);
@@ -226,7 +221,7 @@ mod initialization {
         let _ = app
             .execute_contract(
                 Addr::unchecked(ADMIN),
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 &msg,
                 &vec![],
             )
@@ -235,7 +230,7 @@ mod initialization {
         let msg = QueryMsg::Contracts {};
         let res: ResponseWrapper<Contracts> = app
             .wrap()
-            .query_wasm_smart(token_contract_addr.clone(), &msg)
+            .query_wasm_smart(token_module_addr.clone(), &msg)
             .unwrap();
         assert_eq!(res.data.whitelist.unwrap(), "contract1")
     }
@@ -252,14 +247,14 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let token_contract_addr = token_contract_instantiation(&mut app);
+            let token_module_addr = token_module_instantiation(&mut app);
 
             let start_time = app.block_info().time.plus_seconds(1);
             let end_time = app.block_info().time.plus_seconds(10);
 
             setup_whitelist(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 start_time,
                 end_time,
@@ -269,7 +264,7 @@ mod actions {
 
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -289,7 +284,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &random_mint,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
@@ -297,7 +292,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &random_2_mint,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
@@ -305,7 +300,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &random_mint,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
@@ -313,16 +308,16 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &random_2_mint,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
 
-            let token_1_owner = query_token_owner(&app.wrap(), &token_contract_addr, &1).unwrap();
-            let token_2_owner = query_token_owner(&app.wrap(), &token_contract_addr, &2).unwrap();
-            let token_3_owner = query_token_owner(&app.wrap(), &token_contract_addr, &3).unwrap();
-            let token_4_owner = query_token_owner(&app.wrap(), &token_contract_addr, &4).unwrap();
+            let token_1_owner = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
+            let token_2_owner = query_token_owner(&app.wrap(), &token_module_addr, &2).unwrap();
+            let token_3_owner = query_token_owner(&app.wrap(), &token_module_addr, &3).unwrap();
+            let token_4_owner = query_token_owner(&app.wrap(), &token_module_addr, &4).unwrap();
 
             assert_eq!(token_1_owner, RANDOM.to_string());
             assert_eq!(token_2_owner, RANDOM_2.to_string());
@@ -333,14 +328,14 @@ mod actions {
         #[test]
         fn test_invalid_member() {
             let mut app = mock_app();
-            let token_contract_addr = token_contract_instantiation(&mut app);
+            let token_module_addr = token_module_instantiation(&mut app);
 
             let start_time = app.block_info().time.plus_seconds(1);
             let end_time = app.block_info().time.plus_seconds(10);
 
             setup_whitelist(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 start_time,
                 end_time,
@@ -350,7 +345,7 @@ mod actions {
 
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -364,7 +359,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr,
+                    token_module_addr,
                     &msg,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
@@ -378,14 +373,14 @@ mod actions {
         #[test]
         fn test_token_limit_reached() {
             let mut app = mock_app();
-            let token_contract_addr = token_contract_instantiation(&mut app);
+            let token_module_addr = token_module_instantiation(&mut app);
 
             let start_time = app.block_info().time.plus_seconds(1);
             let end_time = app.block_info().time.plus_seconds(10);
 
             setup_whitelist(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 vec![USER.to_string()],
                 start_time,
                 end_time,
@@ -395,7 +390,7 @@ mod actions {
 
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -411,7 +406,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
@@ -419,7 +414,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
@@ -428,7 +423,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![coin(100, NATIVE_DENOM)],
                 )
@@ -442,14 +437,14 @@ mod actions {
         #[test]
         fn test_token_price() {
             let mut app = mock_app();
-            let token_contract_addr = token_contract_instantiation(&mut app);
+            let token_module_addr = token_module_instantiation(&mut app);
 
             let start_time = app.block_info().time.plus_seconds(1);
             let end_time = app.block_info().time.plus_seconds(10);
 
             setup_whitelist(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 vec![USER.to_string()],
                 start_time,
                 end_time,
@@ -459,7 +454,7 @@ mod actions {
 
             let metadata_contract_addr = setup_metadata_contract(
                 &mut app,
-                token_contract_addr.clone(),
+                token_module_addr.clone(),
                 MetadataType::Standard,
             );
             setup_metadata(&mut app, metadata_contract_addr.clone());
@@ -471,7 +466,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -482,7 +477,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -495,7 +490,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_contract_addr.clone(),
+                    token_module_addr.clone(),
                     &msg,
                     &vec![coin(50, NATIVE_DENOM)],
                 )

@@ -4,6 +4,13 @@ use hub_contract::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
+use komple_token_module::{
+    msg::{
+        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
+        QueryMsg as TokenQueryMsg, TokenInfo,
+    },
+    state::{BundleInfo, Contracts},
+};
 use komple_types::bundle::Bundles;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
@@ -13,13 +20,6 @@ use marketplace_module::msg::ExecuteMsg;
 use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use token_contract::{
-    msg::{
-        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
-        QueryMsg as TokenQueryMsg, TokenInfo,
-    },
-    state::{BundleInfo, Contracts},
-};
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -48,13 +48,13 @@ pub fn mint_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn token_contract() -> Box<dyn Contract<Empty>> {
+pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        token_contract::contract::execute,
-        token_contract::contract::instantiate,
-        token_contract::contract::query,
+        komple_token_module::contract::execute,
+        komple_token_module::contract::instantiate,
+        komple_token_module::contract::query,
     )
-    .with_reply(token_contract::contract::reply);
+    .with_reply(komple_token_module::contract::reply);
     Box::new(contract)
 }
 
@@ -198,7 +198,7 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
 pub fn create_bundle(
     app: &mut App,
     mint_module_addr: Addr,
-    token_contract_code_id: u64,
+    token_module_code_id: u64,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
     bundle_type: Bundles,
@@ -219,7 +219,7 @@ pub fn create_bundle(
         minter: mint_module_addr.to_string(),
     };
     let msg = MintExecuteMsg::CreateBundle {
-        code_id: token_contract_code_id,
+        code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
             bundle_info,
@@ -240,7 +240,7 @@ pub fn create_bundle(
 
 pub fn setup_metadata_contract(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_contract());
@@ -250,17 +250,12 @@ pub fn setup_metadata_contract(
         metadata_type,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            token_contract_addr.clone(),
-            &msg,
-            &[],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
         .unwrap();
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_contract_addr.clone(), &TokenQueryMsg::Contracts {})
+        .query_wasm_smart(token_module_addr.clone(), &TokenQueryMsg::Contracts {})
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -307,20 +302,16 @@ pub fn mint_token(app: &mut App, mint_module_addr: Addr, bundle_id: u32, sender:
         .unwrap();
 }
 
-pub fn setup_token_contract_operators(
-    app: &mut App,
-    token_contract_addr: Addr,
-    addrs: Vec<String>,
-) {
+pub fn setup_token_module_operators(app: &mut App, token_module_addr: Addr, addrs: Vec<String>) {
     let msg = TokenExecuteMsg::UpdateOperators { addrs };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_contract_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &vec![])
         .unwrap();
 }
 
 pub fn give_approval_to_module(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     owner: &str,
     operator_addr: &Addr,
 ) {
@@ -329,7 +320,7 @@ pub fn give_approval_to_module(
         expires: None,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(owner), token_contract_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(owner), token_module_addr, &msg, &vec![])
         .unwrap();
 }
 
@@ -343,7 +334,7 @@ pub fn setup_marketplace_listing(
 ) {
     let bundle_addr = query_bundle_address(&app.wrap(), &mint_module_addr, &bundle_id).unwrap();
 
-    setup_token_contract_operators(
+    setup_token_module_operators(
         app,
         bundle_addr.clone(),
         vec![marketplace_module_addr.to_string()],
@@ -413,13 +404,13 @@ mod actions {
     use super::*;
 
     use cosmwasm_std::Uint128;
+    use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
+    use komple_token_module::ContractError as TokenContractError;
     use komple_types::bundle::Bundles;
     use marketplace_module::{
         msg::{ExecuteMsg as MarketplaceExecuteMsg, QueryMsg as MarketplaceQueryMsg},
         ContractError as MarketplaceContractError,
     };
-    use token_contract::msg::ExecuteMsg as TokenExecuteMsg;
-    use token_contract::ContractError as TokenContractError;
 
     use komple_types::metadata::Metadata;
 
@@ -442,11 +433,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -464,7 +455,7 @@ mod actions {
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-                setup_token_contract_operators(
+                setup_token_module_operators(
                     &mut app,
                     bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
@@ -510,11 +501,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -560,11 +551,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -668,11 +659,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -731,11 +722,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -753,7 +744,7 @@ mod actions {
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-                setup_token_contract_operators(
+                setup_token_module_operators(
                     &mut app,
                     bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
@@ -814,11 +805,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -836,7 +827,7 @@ mod actions {
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-                setup_token_contract_operators(
+                setup_token_module_operators(
                     &mut app,
                     bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
@@ -883,11 +874,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -905,7 +896,7 @@ mod actions {
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-                setup_token_contract_operators(
+                setup_token_module_operators(
                     &mut app,
                     bundle_addr.clone(),
                     vec![marketplace_module_addr.to_string()],
@@ -925,7 +916,7 @@ mod actions {
                     )
                     .unwrap();
 
-                setup_token_contract_operators(&mut app, bundle_addr.clone(), vec![]);
+                setup_token_module_operators(&mut app, bundle_addr.clone(), vec![]);
 
                 let msg = MarketplaceExecuteMsg::DelistFixedToken {
                     bundle_id: 1,
@@ -967,11 +958,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -1034,11 +1025,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -1111,11 +1102,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -1311,11 +1302,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -1405,11 +1396,11 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
-                let token_contract_code_id = app.store_code(token_contract());
+                let token_module_code_id = app.store_code(token_module());
                 create_bundle(
                     &mut app,
                     mint_module_addr.clone(),
-                    token_contract_code_id,
+                    token_module_code_id,
                     None,
                     None,
                     Bundles::Normal,
@@ -1472,11 +1463,11 @@ mod queries {
 
         let (mint_module_addr, marketplace_module_addr) = setup_modules(&mut app, hub_addr.clone());
 
-        let token_contract_code_id = app.store_code(token_contract());
+        let token_module_code_id = app.store_code(token_module());
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,
@@ -1488,7 +1479,7 @@ mod queries {
         create_bundle(
             &mut app,
             mint_module_addr.clone(),
-            token_contract_code_id,
+            token_module_code_id,
             None,
             None,
             Bundles::Normal,

@@ -3,7 +3,7 @@ use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
-use token_contract::msg::{ExecuteMsg, QueryMsg};
+use komple_token_module::msg::{ExecuteMsg, QueryMsg};
 
 use cw721_base::InstantiateMsg;
 

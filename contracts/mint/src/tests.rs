@@ -1,17 +1,17 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
-use metadata_contract::{
-    msg::ExecuteMsg as MetadataExecuteMsg,
-    state::{MetaInfo, Trait},
-};
-use token_contract::{
+use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
         QueryMsg as TokenQueryMsg, TokenInfo,
     },
     state::{BundleInfo, Contracts},
+};
+use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
+use metadata_contract::{
+    msg::ExecuteMsg as MetadataExecuteMsg,
+    state::{MetaInfo, Trait},
 };
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
@@ -24,13 +24,13 @@ pub fn minter_contract() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn token_contract() -> Box<dyn Contract<Empty>> {
+pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        token_contract::contract::execute,
-        token_contract::contract::instantiate,
-        token_contract::contract::query,
+        komple_token_module::contract::execute,
+        komple_token_module::contract::instantiate,
+        komple_token_module::contract::query,
     )
-    .with_reply(token_contract::contract::reply);
+    .with_reply(komple_token_module::contract::reply);
     Box::new(contract)
 }
 
@@ -91,7 +91,7 @@ fn setup_bundle(
     linked_bundles: Option<Vec<u32>>,
     unit_price: Option<Uint128>,
 ) {
-    let token_code_id = app.store_code(token_contract());
+    let token_code_id = app.store_code(token_module());
 
     let bundle_info = BundleInfo {
         bundle_type: Bundles::Normal,
@@ -126,7 +126,7 @@ fn setup_bundle(
 
 fn setup_metadata_contract(
     app: &mut App,
-    token_contract_addr: Addr,
+    token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_contract());
@@ -136,17 +136,12 @@ fn setup_metadata_contract(
         metadata_type,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            token_contract_addr.clone(),
-            &msg,
-            &[],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
         .unwrap();
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_contract_addr.clone(), &TokenQueryMsg::Contracts {})
+        .query_wasm_smart(token_module_addr.clone(), &TokenQueryMsg::Contracts {})
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -194,9 +189,9 @@ mod actions {
         };
         use cosmwasm_std::coin;
         use cw721::OwnerOfResponse;
+        use komple_token_module::msg::QueryMsg as TokenQueryMsg;
         use komple_types::query::ResponseWrapper;
         use komple_utils::query_bundle_address;
-        use token_contract::msg::QueryMsg as TokenQueryMsg;
 
         #[test]
         fn test_happy_path() {
@@ -321,7 +316,7 @@ mod actions {
             fn test_bundle_creation() {
                 let mut app = mock_app();
                 let minter_addr = proper_instantiate(&mut app);
-                let token_code_id = app.store_code(token_contract());
+                let token_code_id = app.store_code(token_module());
 
                 let bundle_info = BundleInfo {
                     bundle_type: Bundles::Normal,
@@ -363,7 +358,7 @@ mod actions {
             fn test_invalid_admin() {
                 let mut app = mock_app();
                 let minter_addr = proper_instantiate(&mut app);
-                let token_code_id = app.store_code(token_contract());
+                let token_code_id = app.store_code(token_module());
 
                 let bundle_info = BundleInfo {
                     bundle_type: Bundles::Normal,
