@@ -8,7 +8,7 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
 use komple_types::{module::Modules, query::ResponseWrapper};
 
-pub fn hub_contract() -> Box<dyn Contract<Empty>> {
+pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
@@ -106,7 +106,7 @@ fn setup_fee_contract(app: &mut App) -> Addr {
 }
 
 fn proper_instantiate(app: &mut App) -> Addr {
-    let hub_code_id = app.store_code(hub_contract());
+    let hub_code_id = app.store_code(hub_module());
 
     let msg = InstantiateMsg {
         name: "Test Hub".to_string(),
@@ -114,18 +114,11 @@ fn proper_instantiate(app: &mut App) -> Addr {
         image: "https://image.com".to_string(),
         external_link: None,
     };
-    let hub_contract_addr = app
-        .instantiate_contract(
-            hub_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[],
-            "test",
-            None,
-        )
+    let hub_module_addr = app
+        .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
         .unwrap();
 
-    hub_contract_addr
+    hub_module_addr
 }
 
 mod actions {
@@ -140,7 +133,7 @@ mod actions {
             #[test]
             fn test_init_happy_path() {
                 let mut app = mock_app();
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let mint_module_code_id = app.store_code(mint_module());
 
                 let msg = ExecuteMsg::InitMintModule {
@@ -149,24 +142,22 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::ModuleAddress(Modules::Mint);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_contract_addr, &msg)
-                    .unwrap();
+                let res: ResponseWrapper<String> =
+                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
                 assert_eq!(res.data, "contract1")
             }
 
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let mint_module_code_id = app.store_code(mint_module());
 
                 let msg = ExecuteMsg::InitMintModule {
@@ -175,7 +166,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -193,7 +184,7 @@ mod actions {
             #[test]
             fn test_init_module() {
                 let mut app = mock_app();
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let permission_module_code_id = app.store_code(permission_module());
 
                 let msg = ExecuteMsg::InitPermissionModule {
@@ -202,24 +193,22 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::ModuleAddress(Modules::Permission);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_contract_addr, &msg)
-                    .unwrap();
+                let res: ResponseWrapper<String> =
+                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
                 assert_eq!(res.data, "contract1")
             }
 
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let permission_module_code_id = app.store_code(permission_module());
 
                 let msg = ExecuteMsg::InitPermissionModule {
@@ -228,7 +217,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -245,7 +234,7 @@ mod actions {
             #[test]
             fn test_init_module() {
                 let mut app = mock_app();
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let merge_module_code_id = app.store_code(merge_module());
 
                 let msg = ExecuteMsg::InitMergeModule {
@@ -254,24 +243,22 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::ModuleAddress(Modules::Merge);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_contract_addr, &msg)
-                    .unwrap();
+                let res: ResponseWrapper<String> =
+                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
                 assert_eq!(res.data, "contract1")
             }
 
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let merge_module_code_id = app.store_code(merge_module());
 
                 let msg = ExecuteMsg::InitMergeModule {
@@ -280,7 +267,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -299,7 +286,7 @@ mod actions {
             fn test_init_module() {
                 let mut app = mock_app();
                 setup_fee_contract(&mut app);
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let marketplace_module_code_id = app.store_code(marketplace_module());
 
                 let msg = ExecuteMsg::InitMarketplaceModule {
@@ -309,24 +296,22 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::ModuleAddress(Modules::Marketplace);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_contract_addr, &msg)
-                    .unwrap();
+                let res: ResponseWrapper<String> =
+                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
                 assert_eq!(res.data, "contract2")
             }
 
             #[test]
             fn test_init_unhappy_path() {
                 let mut app = mock_app();
-                let hub_contract_addr = proper_instantiate(&mut app);
+                let hub_module_addr = proper_instantiate(&mut app);
                 let marketplace_module_code_id = app.store_code(marketplace_module());
 
                 let msg = ExecuteMsg::InitMarketplaceModule {
@@ -336,7 +321,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(USER),
-                        hub_contract_addr.clone(),
+                        hub_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -355,12 +340,12 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let hub_contract_addr = proper_instantiate(&mut app);
+            let hub_module_addr = proper_instantiate(&mut app);
 
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(hub_contract_addr.clone(), &msg)
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.website_config, None);
 
@@ -372,17 +357,15 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    hub_contract_addr.clone(),
+                    hub_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
                 .unwrap();
 
             let msg = QueryMsg::Config {};
-            let res: ResponseWrapper<ConfigResponse> = app
-                .wrap()
-                .query_wasm_smart(hub_contract_addr, &msg)
-                .unwrap();
+            let res: ResponseWrapper<ConfigResponse> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
             assert_eq!(
                 res.data.website_config,
                 Some(WebsiteConfig {
@@ -396,7 +379,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let hub_contract_addr = proper_instantiate(&mut app);
+            let hub_module_addr = proper_instantiate(&mut app);
 
             let msg = ExecuteMsg::UpdateWebsiteConfig {
                 background_color: Some("#00FFEE".to_string()),
@@ -406,7 +389,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    hub_contract_addr.clone(),
+                    hub_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -426,12 +409,12 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let hub_contract_addr = proper_instantiate(&mut app);
+            let hub_module_addr = proper_instantiate(&mut app);
 
             let msg = QueryMsg::Config {};
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
-                .query_wasm_smart(hub_contract_addr.clone(), &msg)
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.website_config, None);
 
@@ -444,17 +427,15 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    hub_contract_addr.clone(),
+                    hub_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
                 .unwrap();
 
             let msg = QueryMsg::Config {};
-            let res: ResponseWrapper<ConfigResponse> = app
-                .wrap()
-                .query_wasm_smart(hub_contract_addr, &msg)
-                .unwrap();
+            let res: ResponseWrapper<ConfigResponse> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
             assert_eq!(
                 res.data.hub_info,
                 HubInfo {
@@ -469,7 +450,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let hub_contract_addr = proper_instantiate(&mut app);
+            let hub_module_addr = proper_instantiate(&mut app);
 
             let msg = ExecuteMsg::UpdateHubInfo {
                 name: "New Name".to_string(),
@@ -480,7 +461,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    hub_contract_addr.clone(),
+                    hub_module_addr.clone(),
                     &msg,
                     &vec![],
                 )

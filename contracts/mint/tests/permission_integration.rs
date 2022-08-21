@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use hub_contract::msg::{
+use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_token_module::{
@@ -25,13 +25,13 @@ pub const ADMIN: &str = "juno..admin";
 pub const NATIVE_DENOM: &str = "denom";
 pub const TEST_DENOM: &str = "test_denom";
 
-pub fn hub_contract() -> Box<dyn Contract<Empty>> {
+pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        hub_contract::contract::execute,
-        hub_contract::contract::instantiate,
-        hub_contract::contract::query,
+        komple_hub_module::contract::execute,
+        komple_hub_module::contract::instantiate,
+        komple_hub_module::contract::query,
     )
-    .with_reply(hub_contract::contract::reply);
+    .with_reply(komple_hub_module::contract::reply);
     Box::new(contract)
 }
 
@@ -89,8 +89,8 @@ pub fn mock_app() -> App {
     })
 }
 
-fn setup_hub_contract(app: &mut App) -> Addr {
-    let hub_code_id = app.store_code(hub_contract());
+fn setup_hub_module(app: &mut App) -> Addr {
+    let hub_code_id = app.store_code(hub_module());
 
     let msg = HubInstantiateMsg {
         name: "Test Hub".to_string(),
@@ -251,13 +251,13 @@ mod initialization {
 
     use komple_types::module::Modules;
 
-    use hub_contract::ContractError;
+    use komple_hub_module::ContractError;
     use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let hub_addr = setup_hub_contract(&mut app);
+        let hub_addr = setup_hub_module(&mut app);
         let mint_module_code_id = app.store_code(mint_module());
 
         let msg = HubExecuteMsg::InitMintModule {
@@ -272,7 +272,7 @@ mod initialization {
     #[test]
     fn test_invalid_sender() {
         let mut app = mock_app();
-        let hub_addr = setup_hub_contract(&mut app);
+        let hub_addr = setup_hub_module(&mut app);
         let mint_module_code_id = app.store_code(mint_module());
 
         let msg = HubExecuteMsg::InitMergeModule {
@@ -305,7 +305,7 @@ mod permission_mint {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let hub_addr = setup_hub_contract(&mut app);
+        let hub_addr = setup_hub_module(&mut app);
 
         let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
 

@@ -20,12 +20,10 @@ use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{
-    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDR, WEBSITE_CONFIG,
-};
+use crate::state::{Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDR, WEBSITE_CONFIG};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-hub-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-hub-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
@@ -87,9 +85,7 @@ pub fn execute(
             description,
             image,
             external_link,
-        } => {
-            execute_update_hub_info(deps, env, info, name, description, image, external_link)
-        }
+        } => execute_update_hub_info(deps, env, info, name, description, image, external_link),
         ExecuteMsg::UpdateWebsiteConfig {
             background_color,
             background_image,

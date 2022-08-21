@@ -1,6 +1,6 @@
 use cosmwasm_std::Addr;
 use cw_multi_test::Executor;
-use hub_contract::msg::ExecuteMsg;
+use komple_hub_module::msg::ExecuteMsg;
 
 pub mod helpers;
 use helpers::{
@@ -14,7 +14,7 @@ mod initialization {
 
     use komple_types::module::Modules;
 
-    use hub_contract::ContractError;
+    use komple_hub_module::ContractError;
     use komple_utils::query_module_address;
 
     #[test]
@@ -57,13 +57,13 @@ mod normal_merge {
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use helpers::link_bundles;
+    use komple_token_module::msg::QueryMsg as TokenQueryMsg;
     use komple_types::{bundle::Bundles, metadata::Metadata};
     use komple_utils::query_bundle_address;
     use merge_module::{
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
         ContractError as MergeContractError,
     };
-    use komple_token_module::msg::QueryMsg as TokenQueryMsg;
 
     #[test]
     fn test_happy_path() {
@@ -370,12 +370,12 @@ mod permission_merge {
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use helpers::{add_permission_for_module, link_bundles};
+    use komple_token_module::msg::QueryMsg as TokenQueryMsg;
     use komple_types::bundle::Bundles;
     use komple_types::module::Modules;
     use komple_types::permission::Permissions;
     use merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
     use permission_module::msg::PermissionCheckMsg;
-    use komple_token_module::msg::QueryMsg as TokenQueryMsg;
 
     mod ownership_permission {
         use super::*;

@@ -435,33 +435,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hub-contract"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 0.13.4",
- "cw-utils",
- "cw2 0.13.4",
- "cw721",
- "komple-fee-contract",
- "komple-token-module",
- "komple-types",
- "komple-utils",
- "marketplace-module",
- "merge-module",
- "metadata-contract",
- "mint-module",
- "permission-module",
- "schemars",
- "semver",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -500,6 +473,33 @@ dependencies = [
  "cw-storage-plus 0.14.0",
  "cw2 0.14.0",
  "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-hub-module"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 0.13.4",
+ "cw-utils",
+ "cw2 0.13.4",
+ "cw721",
+ "komple-fee-contract",
+ "komple-token-module",
+ "komple-types",
+ "komple-utils",
+ "marketplace-module",
+ "merge-module",
+ "metadata-contract",
+ "mint-module",
+ "permission-module",
+ "schemars",
+ "semver",
  "serde",
  "thiserror",
 ]
@@ -565,8 +565,8 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
- "hub-contract",
  "komple-fee-contract",
+ "komple-hub-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
@@ -629,7 +629,7 @@ dependencies = [
  "cw-utils",
  "cw2 0.13.4",
  "cw721",
- "hub-contract",
+ "komple-hub-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",

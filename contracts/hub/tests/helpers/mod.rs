@@ -1,7 +1,14 @@
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use hub_contract::msg::{ExecuteMsg, InstantiateMsg};
 use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
+use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_token_module::{
+    msg::{
+        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
+        QueryMsg as TokenQueryMsg, TokenInfo,
+    },
+    state::{BundleInfo, Contracts},
+};
 use komple_types::{
     bundle::Bundles, metadata::Metadata as MetadataType, module::Modules, permission::Permissions,
     query::ResponseWrapper,
@@ -12,13 +19,6 @@ use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
 use metadata_contract::state::{MetaInfo, Trait};
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use komple_token_module::{
-    msg::{
-        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
-        QueryMsg as TokenQueryMsg, TokenInfo,
-    },
-    state::{BundleInfo, Contracts},
-};
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -27,13 +27,13 @@ pub const RANDOM_2: &str = "juno..random2";
 pub const NATIVE_DENOM: &str = "denom";
 pub const TEST_DENOM: &str = "test_denom";
 
-pub fn hub_contract() -> Box<dyn Contract<Empty>> {
+pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        hub_contract::contract::execute,
-        hub_contract::contract::instantiate,
-        hub_contract::contract::query,
+        komple_hub_module::contract::execute,
+        komple_hub_module::contract::instantiate,
+        komple_hub_module::contract::query,
     )
-    .with_reply(hub_contract::contract::reply);
+    .with_reply(komple_hub_module::contract::reply);
     Box::new(contract)
 }
 
@@ -141,7 +141,7 @@ pub fn mock_app() -> App {
 }
 
 pub fn proper_instantiate(app: &mut App) -> Addr {
-    let hub_code_id = app.store_code(hub_contract());
+    let hub_code_id = app.store_code(hub_module());
 
     let msg = InstantiateMsg {
         name: "Test Hub".to_string(),
@@ -149,11 +149,11 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
         image: "https://image.com".to_string(),
         external_link: None,
     };
-    let hub_contract_addr = app
+    let hub_module_addr = app
         .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
         .unwrap();
 
-    hub_contract_addr
+    hub_module_addr
 }
 
 pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
@@ -289,11 +289,7 @@ pub fn setup_mint_module_operators(app: &mut App, mint_module_addr: Addr, addrs:
         .unwrap();
 }
 
-pub fn setup_token_module_operators(
-    app: &mut App,
-    token_module_addr: Addr,
-    addrs: Vec<String>,
-) {
+pub fn setup_token_module_operators(app: &mut App, token_module_addr: Addr, addrs: Vec<String>) {
     let msg = TokenExecuteMsg::UpdateOperators { addrs };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &vec![])
@@ -426,12 +422,7 @@ pub fn setup_metadata_contract(
         metadata_type,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            token_module_addr.clone(),
-            &msg,
-            &[],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
         .unwrap();
 
     let res: ResponseWrapper<Contracts> = app
