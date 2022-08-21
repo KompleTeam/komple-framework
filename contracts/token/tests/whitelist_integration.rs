@@ -1,13 +1,13 @@
 use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
+use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
 use komple_token_module::state::{BundleInfo, Contracts};
 use komple_token_module::ContractError;
 use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
 use komple_utils::query_token_owner;
-use metadata_contract::msg::ExecuteMsg as MetadataExecuteMsg;
-use metadata_contract::state::{MetaInfo, Trait};
 use whitelist_contract::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
@@ -20,11 +20,11 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
+pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        metadata_contract::contract::execute,
-        metadata_contract::contract::instantiate,
-        metadata_contract::contract::query,
+        komple_metadata_module::contract::execute,
+        komple_metadata_module::contract::instantiate,
+        komple_metadata_module::contract::query,
     );
     Box::new(contract)
 }
@@ -140,12 +140,12 @@ fn token_module_instantiation(app: &mut App) -> Addr {
     token_module_addr
 }
 
-fn setup_metadata_contract(
+fn setup_metadata_module(
     app: &mut App,
     token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
-    let metadata_code_id = app.store_code(metadata_contract());
+    let metadata_code_id = app.store_code(metadata_module());
 
     let msg = ExecuteMsg::InitMetadataContract {
         code_id: metadata_code_id,
@@ -162,7 +162,7 @@ fn setup_metadata_contract(
     res.data.metadata.unwrap()
 }
 
-fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
+fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
     let meta_info = MetaInfo {
         image: Some("https://some-image.com".to_string()),
         external_url: None,
@@ -187,7 +187,7 @@ fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            metadata_contract_addr.clone(),
+            metadata_module_addr.clone(),
             &msg,
             &vec![],
         )
@@ -262,15 +262,12 @@ mod actions {
                 2,
             );
 
-            let metadata_contract_addr = setup_metadata_contract(
-                &mut app,
-                token_module_addr.clone(),
-                MetadataType::Standard,
-            );
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr);
+            let metadata_module_addr =
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr);
 
             let random_mint = ExecuteMsg::Mint {
                 owner: RANDOM.to_string(),
@@ -343,12 +340,9 @@ mod actions {
                 2,
             );
 
-            let metadata_contract_addr = setup_metadata_contract(
-                &mut app,
-                token_module_addr.clone(),
-                MetadataType::Standard,
-            );
-            setup_metadata(&mut app, metadata_contract_addr.clone());
+            let metadata_module_addr =
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
+            setup_metadata(&mut app, metadata_module_addr.clone());
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
@@ -388,13 +382,10 @@ mod actions {
                 2,
             );
 
-            let metadata_contract_addr = setup_metadata_contract(
-                &mut app,
-                token_module_addr.clone(),
-                MetadataType::Standard,
-            );
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr.clone());
+            let metadata_module_addr =
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
@@ -452,12 +443,9 @@ mod actions {
                 2,
             );
 
-            let metadata_contract_addr = setup_metadata_contract(
-                &mut app,
-                token_module_addr.clone(),
-                MetadataType::Standard,
-            );
-            setup_metadata(&mut app, metadata_contract_addr.clone());
+            let metadata_module_addr =
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
+            setup_metadata(&mut app, metadata_module_addr.clone());
 
             let msg = ExecuteMsg::Mint {
                 owner: USER.to_string(),

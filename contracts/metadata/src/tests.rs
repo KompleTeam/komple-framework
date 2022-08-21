@@ -9,7 +9,7 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 
-pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
+pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
@@ -39,13 +39,13 @@ fn mock_app() -> App {
 }
 
 fn proper_instantiate(app: &mut App, metadata_type: MetadataType) -> Addr {
-    let metadata_code_id = app.store_code(metadata_contract());
+    let metadata_code_id = app.store_code(metadata_module());
 
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
         metadata_type,
     };
-    let metadata_contract_addr = app
+    let metadata_module_addr = app
         .instantiate_contract(
             metadata_code_id,
             Addr::unchecked(ADMIN),
@@ -56,10 +56,10 @@ fn proper_instantiate(app: &mut App, metadata_type: MetadataType) -> Addr {
         )
         .unwrap();
 
-    metadata_contract_addr
+    metadata_module_addr
 }
 
-fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) -> (Vec<Trait>, MetaInfo) {
+fn setup_metadata(app: &mut App, metadata_module_addr: Addr) -> (Vec<Trait>, MetaInfo) {
     let attributes = vec![
         Trait {
             trait_type: "type_1".to_string(),
@@ -88,7 +88,7 @@ fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) -> (Vec<Trait>, M
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            metadata_contract_addr.clone(),
+            metadata_module_addr.clone(),
             &msg,
             &vec![],
         )
@@ -102,7 +102,7 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let metadata_code_id = app.store_code(metadata_contract());
+        let metadata_code_id = app.store_code(metadata_module());
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
@@ -130,7 +130,7 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let attributes = vec![
                 Trait {
@@ -160,7 +160,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -169,7 +169,7 @@ mod actions {
             let msg = QueryMsg::RawMetadata { metadata_id: 1 };
             let res: ResponseWrapper<Metadata> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.attributes, attributes);
             assert_eq!(res.data.meta_info, meta_info);
@@ -178,7 +178,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let attributes = vec![
                 Trait {
@@ -208,7 +208,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -229,10 +229,10 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
                 let (attributes, meta_info) =
-                    setup_metadata(&mut app, metadata_contract_addr.clone());
+                    setup_metadata(&mut app, metadata_module_addr.clone());
 
                 let msg = ExecuteMsg::LinkMetadata {
                     token_id: 1,
@@ -241,7 +241,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -250,7 +250,7 @@ mod actions {
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.attributes, attributes);
                 assert_eq!(res.data.metadata.meta_info, meta_info);
@@ -263,10 +263,10 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let (attributes, meta_info) =
-                    setup_metadata(&mut app, metadata_contract_addr.clone());
+                    setup_metadata(&mut app, metadata_module_addr.clone());
 
                 let msg = ExecuteMsg::LinkMetadata {
                     token_id: 1,
@@ -275,7 +275,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -284,7 +284,7 @@ mod actions {
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.attributes, attributes);
                 assert_eq!(res.data.metadata.meta_info, meta_info);
@@ -293,7 +293,7 @@ mod actions {
             #[test]
             fn test_missing_metadata() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let msg = ExecuteMsg::LinkMetadata {
                     token_id: 1,
@@ -302,7 +302,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -320,10 +320,10 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let (attributes, meta_info) =
-                    setup_metadata(&mut app, metadata_contract_addr.clone());
+                    setup_metadata(&mut app, metadata_module_addr.clone());
 
                 let msg = ExecuteMsg::LinkMetadata {
                     token_id: 1,
@@ -332,7 +332,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -341,7 +341,7 @@ mod actions {
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.attributes, attributes);
                 assert_eq!(res.data.metadata.meta_info, meta_info);
@@ -350,7 +350,7 @@ mod actions {
             #[test]
             fn test_missing_metadata() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let msg = ExecuteMsg::LinkMetadata {
                     token_id: 1,
@@ -359,7 +359,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -374,7 +374,7 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -383,7 +383,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -397,7 +397,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -406,7 +406,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -427,11 +427,11 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-                let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+                let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
 
-                setup_metadata(&mut app, metadata_contract_addr.clone());
-                setup_metadata(&mut app, metadata_contract_addr_2.clone());
+                setup_metadata(&mut app, metadata_module_addr.clone());
+                setup_metadata(&mut app, metadata_module_addr_2.clone());
 
                 let new_meta_info = MetaInfo {
                     image: Some("https://test".to_string()),
@@ -448,7 +448,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -456,7 +456,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr_2.clone(),
+                        metadata_module_addr_2.clone(),
                         &msg,
                         &vec![],
                     )
@@ -469,7 +469,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -477,7 +477,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr_2.clone(),
+                        metadata_module_addr_2.clone(),
                         &msg,
                         &vec![],
                     )
@@ -486,12 +486,12 @@ mod actions {
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.meta_info, new_meta_info);
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr_2.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.meta_info, new_meta_info);
             }
@@ -499,8 +499,8 @@ mod actions {
             #[test]
             fn test_missing_metadata() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-                let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+                let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let new_meta_info = MetaInfo {
                     image: Some("https://test".to_string()),
@@ -517,7 +517,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -529,7 +529,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr_2.clone(),
+                        metadata_module_addr_2.clone(),
                         &msg,
                         &vec![],
                     )
@@ -547,9 +547,9 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
-                setup_metadata(&mut app, metadata_contract_addr.clone());
+                setup_metadata(&mut app, metadata_module_addr.clone());
 
                 let new_meta_info = MetaInfo {
                     image: Some("https://test".to_string()),
@@ -566,7 +566,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -579,7 +579,7 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -588,7 +588,7 @@ mod actions {
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.meta_info, new_meta_info);
             }
@@ -596,7 +596,7 @@ mod actions {
             #[test]
             fn test_missing_metadata() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let new_meta_info = MetaInfo {
                     image: Some("https://test".to_string()),
@@ -613,7 +613,7 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -628,7 +628,7 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let new_meta_info = MetaInfo {
                 image: Some("https://test".to_string()),
@@ -645,7 +645,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(USER),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -663,13 +663,13 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr_2.clone());
-            setup_metadata(&mut app, metadata_contract_addr_3.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr_2.clone());
+            setup_metadata(&mut app, metadata_module_addr_3.clone());
 
             let attribute = Trait {
                 trait_type: "new_trait".to_string(),
@@ -683,7 +683,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -691,7 +691,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -699,7 +699,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -712,7 +712,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -720,7 +720,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -728,7 +728,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -753,17 +753,17 @@ mod actions {
             let msg = QueryMsg::Metadata { token_id: 1 };
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr_2.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr_3.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_3.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
         }
@@ -771,13 +771,13 @@ mod actions {
         #[test]
         fn test_existing_attribute() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr_2.clone());
-            setup_metadata(&mut app, metadata_contract_addr_3.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr_2.clone());
+            setup_metadata(&mut app, metadata_module_addr_3.clone());
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -786,7 +786,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -794,7 +794,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -802,7 +802,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -819,7 +819,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -831,7 +831,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -843,7 +843,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -857,9 +857,9 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             let attribute = Trait {
                 trait_type: "new_trait".to_string(),
@@ -872,7 +872,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -884,7 +884,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -896,7 +896,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -914,13 +914,13 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr_2.clone());
-            setup_metadata(&mut app, metadata_contract_addr_3.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr_2.clone());
+            setup_metadata(&mut app, metadata_module_addr_3.clone());
 
             let attribute = Trait {
                 trait_type: "type_2".to_string(),
@@ -934,7 +934,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -942,7 +942,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -950,7 +950,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -963,7 +963,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -971,7 +971,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -979,7 +979,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1003,17 +1003,17 @@ mod actions {
             let msg = QueryMsg::Metadata { token_id: 1 };
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr_2.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr_3.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_3.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
         }
@@ -1021,13 +1021,13 @@ mod actions {
         #[test]
         fn test_existing_attribute() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr_2.clone());
-            setup_metadata(&mut app, metadata_contract_addr_3.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr_2.clone());
+            setup_metadata(&mut app, metadata_module_addr_3.clone());
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -1036,7 +1036,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1044,7 +1044,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1052,7 +1052,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1069,7 +1069,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1081,7 +1081,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1093,7 +1093,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1107,9 +1107,9 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             let attribute = Trait {
                 trait_type: "new_trait".to_string(),
@@ -1122,7 +1122,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1134,7 +1134,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1146,7 +1146,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1164,13 +1164,13 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr_2.clone());
-            setup_metadata(&mut app, metadata_contract_addr_3.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr_2.clone());
+            setup_metadata(&mut app, metadata_module_addr_3.clone());
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -1179,7 +1179,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1187,7 +1187,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1195,7 +1195,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1208,7 +1208,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1216,7 +1216,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1224,7 +1224,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1244,17 +1244,17 @@ mod actions {
             let msg = QueryMsg::Metadata { token_id: 1 };
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr_2.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr_3.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_3.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
         }
@@ -1262,13 +1262,13 @@ mod actions {
         #[test]
         fn test_existing_attribute() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
-            setup_metadata(&mut app, metadata_contract_addr.clone());
-            setup_metadata(&mut app, metadata_contract_addr_2.clone());
-            setup_metadata(&mut app, metadata_contract_addr_3.clone());
+            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata(&mut app, metadata_module_addr_2.clone());
+            setup_metadata(&mut app, metadata_module_addr_3.clone());
 
             let msg = ExecuteMsg::LinkMetadata {
                 token_id: 1,
@@ -1277,7 +1277,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1285,7 +1285,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1293,7 +1293,7 @@ mod actions {
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1306,7 +1306,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1318,7 +1318,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1330,7 +1330,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1344,9 +1344,9 @@ mod actions {
         #[test]
         fn test_missing_metadata() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Standard);
-            let metadata_contract_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
-            let metadata_contract_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
+            let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             let msg = ExecuteMsg::RemoveAttribute {
                 token_id: 1,
@@ -1355,7 +1355,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr.clone(),
+                    metadata_module_addr.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1367,7 +1367,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_2.clone(),
+                    metadata_module_addr_2.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1379,7 +1379,7 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    metadata_contract_addr_3.clone(),
+                    metadata_module_addr_3.clone(),
                     &msg,
                     &vec![],
                 )
@@ -1400,7 +1400,7 @@ mod queries {
         #[test]
         fn test_normal() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let meta_info = MetaInfo {
                 image: Some("https://example.com/image.png".to_string()),
@@ -1422,7 +1422,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1435,7 +1435,7 @@ mod queries {
             };
             let res: ResponseWrapper<Vec<Metadata>> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 30);
             assert_eq!(
@@ -1453,7 +1453,7 @@ mod queries {
         #[test]
         fn test_filters() {
             let mut app = mock_app();
-            let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
+            let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let meta_info = MetaInfo {
                 image: Some("https://example.com/image.png".to_string()),
@@ -1475,7 +1475,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1488,7 +1488,7 @@ mod queries {
             };
             let res: ResponseWrapper<Vec<Metadata>> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 15);
             assert_eq!(
@@ -1508,7 +1508,7 @@ mod queries {
             };
             let res: ResponseWrapper<Vec<Metadata>> = app
                 .wrap()
-                .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 7);
             assert_eq!(
@@ -1533,7 +1533,7 @@ mod queries {
             #[test]
             fn test_normal() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let meta_info = MetaInfo {
                     image: Some("https://example.com/image.png".to_string()),
@@ -1555,7 +1555,7 @@ mod queries {
                     let _ = app
                         .execute_contract(
                             Addr::unchecked(ADMIN),
-                            metadata_contract_addr.clone(),
+                            metadata_module_addr.clone(),
                             &msg,
                             &vec![],
                         )
@@ -1569,7 +1569,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1581,7 +1581,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1593,7 +1593,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1605,7 +1605,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1617,7 +1617,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 4);
                 assert_eq!(
@@ -1651,7 +1651,7 @@ mod queries {
             #[test]
             fn test_filters() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Shared);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let meta_info = MetaInfo {
                     image: Some("https://example.com/image.png".to_string()),
@@ -1673,7 +1673,7 @@ mod queries {
                     let _ = app
                         .execute_contract(
                             Addr::unchecked(ADMIN),
-                            metadata_contract_addr.clone(),
+                            metadata_module_addr.clone(),
                             &msg,
                             &vec![],
                         )
@@ -1688,7 +1688,7 @@ mod queries {
                     let _ = app
                         .execute_contract(
                             Addr::unchecked(ADMIN),
-                            metadata_contract_addr.clone(),
+                            metadata_module_addr.clone(),
                             &msg,
                             &vec![],
                         )
@@ -1701,7 +1701,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 5);
                 assert_eq!(
@@ -1739,7 +1739,7 @@ mod queries {
             #[test]
             fn test_normal() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let meta_info = MetaInfo {
                     image: Some("https://example.com/image.png".to_string()),
@@ -1761,7 +1761,7 @@ mod queries {
                     let _ = app
                         .execute_contract(
                             Addr::unchecked(ADMIN),
-                            metadata_contract_addr.clone(),
+                            metadata_module_addr.clone(),
                             &msg,
                             &vec![],
                         )
@@ -1775,7 +1775,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1787,7 +1787,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1799,7 +1799,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1811,7 +1811,7 @@ mod queries {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        metadata_contract_addr.clone(),
+                        metadata_module_addr.clone(),
                         &msg,
                         &vec![],
                     )
@@ -1823,7 +1823,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 4);
                 assert_eq!(
@@ -1857,7 +1857,7 @@ mod queries {
             #[test]
             fn test_filters() {
                 let mut app = mock_app();
-                let metadata_contract_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
+                let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let meta_info = MetaInfo {
                     image: Some("https://example.com/image.png".to_string()),
@@ -1879,7 +1879,7 @@ mod queries {
                     let _ = app
                         .execute_contract(
                             Addr::unchecked(ADMIN),
-                            metadata_contract_addr.clone(),
+                            metadata_module_addr.clone(),
                             &msg,
                             &vec![],
                         )
@@ -1894,7 +1894,7 @@ mod queries {
                     let _ = app
                         .execute_contract(
                             Addr::unchecked(ADMIN),
-                            metadata_contract_addr.clone(),
+                            metadata_module_addr.clone(),
                             &msg,
                             &vec![],
                         )
@@ -1907,7 +1907,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_contract_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 5);
                 assert_eq!(

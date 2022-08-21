@@ -1,6 +1,10 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_metadata_module::{
+    msg::ExecuteMsg as MetadataExecuteMsg,
+    state::{MetaInfo, Trait},
+};
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -9,10 +13,6 @@ use komple_token_module::{
     state::{BundleInfo, Contracts},
 };
 use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType, query::ResponseWrapper};
-use metadata_contract::{
-    msg::ExecuteMsg as MetadataExecuteMsg,
-    state::{MetaInfo, Trait},
-};
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -34,11 +34,11 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
+pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        metadata_contract::contract::execute,
-        metadata_contract::contract::instantiate,
-        metadata_contract::contract::query,
+        komple_metadata_module::contract::execute,
+        komple_metadata_module::contract::instantiate,
+        komple_metadata_module::contract::query,
     );
     Box::new(contract)
 }
@@ -124,12 +124,12 @@ fn setup_bundle(
         .unwrap();
 }
 
-fn setup_metadata_contract(
+fn setup_metadata_module(
     app: &mut App,
     token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
-    let metadata_code_id = app.store_code(metadata_contract());
+    let metadata_code_id = app.store_code(metadata_module());
 
     let msg = TokenExecuteMsg::InitMetadataContract {
         code_id: metadata_code_id,
@@ -146,7 +146,7 @@ fn setup_metadata_contract(
     res.data.metadata.unwrap()
 }
 
-fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
+fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
     let meta_info = MetaInfo {
         image: Some("https://some-image.com".to_string()),
         external_url: None,
@@ -171,7 +171,7 @@ fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            metadata_contract_addr.clone(),
+            metadata_module_addr.clone(),
             &msg,
             &vec![],
         )
@@ -206,9 +206,9 @@ mod actions {
             );
 
             let bundle_addr = query_bundle_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_contract_addr =
-                setup_metadata_contract(&mut app, bundle_addr, MetadataType::Standard);
-            setup_metadata(&mut app, metadata_contract_addr);
+            let metadata_module_addr =
+                setup_metadata_module(&mut app, bundle_addr, MetadataType::Standard);
+            setup_metadata(&mut app, metadata_module_addr);
 
             let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
             assert_eq!(res.amount, Uint128::new(0));
@@ -250,9 +250,9 @@ mod actions {
             setup_bundle(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
 
             let bundle_addr = query_bundle_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_contract_addr =
-                setup_metadata_contract(&mut app, bundle_addr, MetadataType::Standard);
-            setup_metadata(&mut app, metadata_contract_addr);
+            let metadata_module_addr =
+                setup_metadata_module(&mut app, bundle_addr, MetadataType::Standard);
+            setup_metadata(&mut app, metadata_module_addr);
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
             let _ = app

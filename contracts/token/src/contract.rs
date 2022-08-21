@@ -22,7 +22,7 @@ use crate::state::{
 use cw721::{ContractInfoResponse, Cw721Execute};
 use cw721_base::MintMsg;
 
-use metadata_contract::msg::{
+use komple_metadata_module::msg::{
     ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
 };
 use whitelist_contract::msg::{
@@ -38,7 +38,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
 
-const METADATA_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 1;
+const METADATA_MODULE_INSTANTIATE_REPLY_ID: u64 = 1;
 const WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID: u64 = 2;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -184,7 +184,7 @@ pub fn execute(
         ExecuteMsg::InitMetadataContract {
             code_id,
             metadata_type,
-        } => execute_init_metadata_contract(deps, env, info, code_id, metadata_type),
+        } => execute_init_metadata_module(deps, env, info, code_id, metadata_type),
         ExecuteMsg::InitWhitelistContract {
             code_id,
             instantiate_msg,
@@ -596,7 +596,7 @@ fn execute_update_start_time(
     Ok(Response::new().add_attribute("action", "execute_update_start_time"))
 }
 
-fn execute_init_metadata_contract(
+fn execute_init_metadata_module(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -627,14 +627,14 @@ fn execute_init_metadata_contract(
             label: String::from("komple Framework Metadata Contract"),
         }
         .into(),
-        id: METADATA_CONTRACT_INSTANTIATE_REPLY_ID,
+        id: METADATA_MODULE_INSTANTIATE_REPLY_ID,
         gas_limit: None,
         reply_on: ReplyOn::Success,
     };
 
     Ok(Response::new()
         .add_submessage(sub_msg)
-        .add_attribute("action", "execute_init_metadata_contract"))
+        .add_attribute("action", "execute_init_metadata_module"))
 }
 
 fn execute_init_whitelist_contract(
@@ -808,7 +808,7 @@ fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    if msg.id != METADATA_CONTRACT_INSTANTIATE_REPLY_ID
+    if msg.id != METADATA_MODULE_INSTANTIATE_REPLY_ID
         && msg.id != WHITELIST_CONTRACT_INSTANTIATE_REPLY_ID
     {
         return Err(ContractError::InvalidReplyID {});
@@ -820,7 +820,7 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
             let mut contracts = CONTRACTS.load(deps.storage)?;
             let contract: &str;
             match msg.id {
-                METADATA_CONTRACT_INSTANTIATE_REPLY_ID => {
+                METADATA_MODULE_INSTANTIATE_REPLY_ID => {
                     contracts.metadata = Some(Addr::unchecked(res.contract_address));
                     contract = "metadata";
                 }

@@ -13,12 +13,12 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, MetaInfo, Metadata, Trait, BUNDLE_ADDR, CONFIG, DYNAMIC_LINKED_METADATA, METADATA,
-    METADATA_ID, LINKED_METADATA,
+    Config, MetaInfo, Metadata, Trait, BUNDLE_ADDR, CONFIG, DYNAMIC_LINKED_METADATA,
+    LINKED_METADATA, METADATA, METADATA_ID,
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-metadata-contract";
+const CONTRACT_NAME: &str = "crates.io:komple-metadata-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -439,8 +439,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
         QueryMsg::Metadatas { start_after, limit } => {
             to_binary(&query_metadatas(deps, start_after, limit)?)
-        }
-        // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
+        } // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
     }
 }
 

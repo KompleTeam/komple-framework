@@ -6,14 +6,14 @@ use crate::{
 };
 use cosmwasm_std::{coin, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_metadata_module::{
+    msg::{ExecuteMsg as MetadataExecuteMsg, QueryMsg as MetadataQueryMsg},
+    state::{MetaInfo, Trait},
+};
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{bundle::Bundles, metadata::Metadata as MetadataType};
 use komple_utils::{query_token_owner, FundsError};
-use metadata_contract::{
-    msg::{ExecuteMsg as MetadataExecuteMsg, QueryMsg as MetadataQueryMsg},
-    state::{MetaInfo, Trait},
-};
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -25,11 +25,11 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn metadata_contract() -> Box<dyn Contract<Empty>> {
+pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        metadata_contract::contract::execute,
-        metadata_contract::contract::instantiate,
-        metadata_contract::contract::query,
+        komple_metadata_module::contract::execute,
+        komple_metadata_module::contract::instantiate,
+        komple_metadata_module::contract::query,
     );
     Box::new(contract)
 }
@@ -115,12 +115,12 @@ fn proper_instantiate(
     token_module_addr
 }
 
-fn setup_metadata_contract(
+fn setup_metadata_module(
     app: &mut App,
     token_module_addr: Addr,
     metadata_type: MetadataType,
 ) -> Addr {
-    let metadata_code_id = app.store_code(metadata_contract());
+    let metadata_code_id = app.store_code(metadata_module());
 
     let msg = ExecuteMsg::InitMetadataContract {
         code_id: metadata_code_id,
@@ -137,7 +137,7 @@ fn setup_metadata_contract(
     res.data.metadata.unwrap()
 }
 
-fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
+fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
     let meta_info = MetaInfo {
         image: Some("https://some-image.com".to_string()),
         external_url: None,
@@ -162,7 +162,7 @@ fn setup_metadata(app: &mut App, metadata_contract_addr: Addr) {
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            metadata_contract_addr.clone(),
+            metadata_module_addr.clone(),
             &msg,
             &vec![],
         )
@@ -697,12 +697,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1005,12 +1005,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1048,12 +1048,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1145,12 +1145,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1201,12 +1201,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1236,12 +1236,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr.clone());
+                setup_metadata(&mut app, metadata_module_addr.clone());
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1273,7 +1273,7 @@ mod actions {
 
                 let msg = MetadataQueryMsg::Metadata { token_id: 1 };
                 let res: Result<Empty, cosmwasm_std::StdError> =
-                    app.wrap().query_wasm_smart(metadata_contract_addr, &msg);
+                    app.wrap().query_wasm_smart(metadata_module_addr, &msg);
                 assert!(res.is_err());
             }
 
@@ -1283,12 +1283,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1385,12 +1385,12 @@ mod actions {
                     None,
                 );
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1418,12 +1418,12 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let locks = Locks {
                     mint_lock: true,
@@ -1475,13 +1475,13 @@ mod actions {
                     None,
                 );
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr.clone());
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr.clone());
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1540,13 +1540,13 @@ mod actions {
                     None,
                 );
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr.clone());
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr.clone());
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1606,12 +1606,12 @@ mod actions {
                     None,
                 );
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
@@ -1644,12 +1644,12 @@ mod actions {
                     None,
                 );
 
-                let metadata_contract_addr = setup_metadata_contract(
+                let metadata_module_addr = setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_contract_addr);
+                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg = ExecuteMsg::Mint {
                     owner: USER.to_string(),
