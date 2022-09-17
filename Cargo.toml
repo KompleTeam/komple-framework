@@ -24,6 +24,10 @@ incremental = false
 codegen-units = 1
 incremental = false
 
+[profile.release.package.fee]
+codegen-units = 1
+incremental = false
+
 [profile.release.package.merge]
 codegen-units = 1
 incremental = false

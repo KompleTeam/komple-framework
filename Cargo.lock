@@ -178,7 +178,26 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-storage-plus 0.13.4",
- "cw-utils",
+ "cw-utils 0.13.4",
+ "derivative",
+ "itertools",
+ "prost",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw-multi-test"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca153120cf5b91af88be106b0c6c0263423d959bc813b1592982c02c4691a4ae"
+dependencies = [
+ "anyhow",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.14.0",
+ "cw-utils 0.14.0",
  "derivative",
  "itertools",
  "prost",
@@ -222,6 +241,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-utils"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "414b91f3d7a619bb26c835119d7095804596a1382ddc1d184c33c1d2c17f6c5e"
+dependencies = [
+ "cosmwasm-std",
+ "cw2 0.14.0",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cw2"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -252,7 +285,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "035818368a74c07dd9ed5c5a93340199ba251530162010b9f34c3809e3b97df1"
 dependencies = [
  "cosmwasm-std",
- "cw-utils",
+ "cw-utils 0.13.4",
  "schemars",
  "serde",
 ]
@@ -265,7 +298,7 @@ checksum = "423d4efe8b649d228d1533e141c238415f49aa8a9ee4e40fce192d7a93ffd057"
 dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 0.13.4",
- "cw-utils",
+ "cw-utils 0.13.4",
  "cw2 0.13.4",
  "cw721",
  "schemars",
@@ -463,13 +496,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "komple-fee-contract"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af72dd2a10988b7f491d70e79b241128b6a4ac8ce1c4517289dc256e6ac05bf2"
+name = "komple-fee-module"
+version = "0.2.0"
 dependencies = [
+ "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
+ "cw-multi-test 0.14.0",
  "cw-storage-plus 0.14.0",
  "cw2 0.14.0",
  "schemars",
@@ -484,12 +517,12 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
- "cw-utils",
+ "cw-utils 0.13.4",
  "cw2 0.13.4",
  "cw721",
- "komple-fee-contract",
+ "komple-fee-module",
  "komple-metadata-module",
  "komple-token-module",
  "komple-types",
@@ -511,7 +544,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
  "komple-types",
@@ -529,9 +562,9 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
- "cw-utils",
+ "cw-utils 0.13.4",
  "cw2 0.13.4",
  "cw721",
  "cw721-base",
@@ -574,9 +607,9 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
- "cw-utils",
+ "cw-utils 0.13.4",
  "cw2 0.13.4",
  "komple-types",
  "schemars",
@@ -598,10 +631,10 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
- "komple-fee-contract",
+ "komple-fee-module",
  "komple-hub-module",
  "komple-metadata-module",
  "komple-token-module",
@@ -621,7 +654,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
  "komple-token-module",
@@ -642,9 +675,9 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
- "cw-utils",
+ "cw-utils 0.13.4",
  "cw2 0.13.4",
  "cw721",
  "komple-hub-module",
@@ -672,7 +705,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-multi-test",
+ "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
  "cw721",
