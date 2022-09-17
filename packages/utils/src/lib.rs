@@ -99,7 +99,10 @@ pub fn query_token_owner(
     }
 }
 
-pub fn query_collection_locks(querier: &QuerierWrapper, collection_addr: &Addr) -> StdResult<Locks> {
+pub fn query_collection_locks(
+    querier: &QuerierWrapper,
+    collection_addr: &Addr,
+) -> StdResult<Locks> {
     let res = query_storage::<Locks>(&querier, &collection_addr, LOCKS_NAMESPACE)?;
     match res {
         Some(res) => Ok(res),
