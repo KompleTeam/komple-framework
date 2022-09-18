@@ -5,7 +5,7 @@ use crate::{
 };
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
+use komple_fee_module::msg::InstantiateMsg as FeeModuleInstantiateMsg;
 use komple_types::{module::Modules, query::ResponseWrapper};
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
@@ -57,9 +57,9 @@ pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
 
 pub fn fee_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_contract::contract::execute,
-        komple_fee_contract::contract::instantiate,
-        komple_fee_contract::contract::query,
+        komple_fee_module::contract::execute,
+        komple_fee_module::contract::instantiate,
+        komple_fee_module::contract::query,
     );
     Box::new(contract)
 }
@@ -87,10 +87,7 @@ fn mock_app() -> App {
 fn setup_fee_contract(app: &mut App) -> Addr {
     let fee_code_id = app.store_code(fee_contract());
 
-    let msg = FeeContractInstantiateMsg {
-        komple_address: ADMIN.to_string(),
-        payment_address: "juno..community".to_string(),
-    };
+    let msg = FeeModuleInstantiateMsg {};
     let fee_contract_addr = app
         .instantiate_contract(
             fee_code_id,

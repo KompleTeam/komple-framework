@@ -51,7 +51,7 @@ thiserror = { version = "1.0.31" }
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
 komple-token-module = { path = "../token", features = ["library"] }
-komple-fee-contract = "0.1.0"
+komple-fee-module = { path = "../fee", features = ["library"] }
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"

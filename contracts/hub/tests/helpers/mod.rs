@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
+use komple_fee_module::msg::InstantiateMsg as FeeModuleInstantiateMsg;
 use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
@@ -12,8 +12,8 @@ use komple_token_module::{
     state::{CollectionInfo, Contracts},
 };
 use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, module::Modules, permission::Permissions,
-    query::ResponseWrapper,
+    collection::Collections, metadata::Metadata as MetadataType, module::Modules,
+    permission::Permissions, query::ResponseWrapper,
 };
 use komple_utils::{query_collection_address, query_module_address};
 use marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
@@ -95,9 +95,9 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
 
 pub fn fee_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_contract::contract::execute,
-        komple_fee_contract::contract::instantiate,
-        komple_fee_contract::contract::query,
+        komple_fee_module::contract::execute,
+        komple_fee_module::contract::instantiate,
+        komple_fee_module::contract::query,
     );
     Box::new(contract)
 }
@@ -204,10 +204,7 @@ pub fn setup_marketplace_module(app: &mut App, hub_addr: Addr) {
 pub fn setup_fee_contract(app: &mut App) -> Addr {
     let fee_code_id = app.store_code(fee_contract());
 
-    let msg = FeeContractInstantiateMsg {
-        komple_address: ADMIN.to_string(),
-        payment_address: "juno..community".to_string(),
-    };
+    let msg = FeeModuleInstantiateMsg {};
     let fee_contract_addr = app
         .instantiate_contract(
             fee_code_id,
@@ -387,7 +384,8 @@ pub fn setup_marketplace_listing(
 ) {
     let (mint_module_addr, _, _, marketplace_module_addr) = get_modules_addresses(app, &hub_addr);
 
-    let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
+    let collection_addr =
+        query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
 
     setup_token_module_operators(
         app,

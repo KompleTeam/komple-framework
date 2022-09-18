@@ -1,6 +1,8 @@
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_contract::msg::InstantiateMsg as FeeContractInstantiateMsg;
+use komple_fee_module::msg::{
+    ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
+};
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
@@ -20,6 +22,7 @@ use komple_types::query::ResponseWrapper;
 use komple_utils::query_collection_address;
 use marketplace_module::msg::ExecuteMsg;
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use std::str::FromStr;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -78,9 +81,9 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
 
 pub fn fee_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_contract::contract::execute,
-        komple_fee_contract::contract::instantiate,
-        komple_fee_contract::contract::query,
+        komple_fee_module::contract::execute,
+        komple_fee_module::contract::instantiate,
+        komple_fee_module::contract::query,
     );
     Box::new(contract)
 }
@@ -126,10 +129,7 @@ pub fn mock_app() -> App {
 fn setup_fee_contract(app: &mut App) -> Addr {
     let fee_code_id = app.store_code(fee_contract());
 
-    let msg = FeeContractInstantiateMsg {
-        komple_address: ADMIN.to_string(),
-        payment_address: "juno..community".to_string(),
-    };
+    let msg = FeeModuleInstantiateMsg {};
     let fee_contract_addr = app
         .instantiate_contract(
             fee_code_id,
@@ -138,6 +138,49 @@ fn setup_fee_contract(app: &mut App) -> Addr {
             &vec![],
             "test",
             None,
+        )
+        .unwrap();
+
+    // Komple is 4%
+    let msg = FeeModuleExecuteMsg::AddShare {
+        name: "komple".to_string(),
+        address: Some("contract0".to_string()),
+        percentage: Decimal::from_str("0.04").unwrap(),
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            fee_contract_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap();
+    // Community pool is 2%
+    let msg = FeeModuleExecuteMsg::AddShare {
+        name: "community".to_string(),
+        address: Some("juno..community".to_string()),
+        percentage: Decimal::from_str("0.02").unwrap(),
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            fee_contract_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap();
+    // Hub owner is 2%
+    let msg = FeeModuleExecuteMsg::AddShare {
+        name: "hub_owner".to_string(),
+        address: None,
+        percentage: Decimal::from_str("0.02").unwrap(),
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            fee_contract_addr.clone(),
+            &msg,
+            &vec![],
         )
         .unwrap();
 
@@ -332,7 +375,8 @@ pub fn setup_marketplace_listing(
     token_id: u32,
     price: Uint128,
 ) {
-    let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
+    let collection_addr =
+        query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
 
     setup_token_module_operators(
         app,
@@ -447,7 +491,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -515,7 +560,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -565,7 +611,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -579,7 +626,8 @@ mod actions {
                     price: Uint128::new(1_000_000),
                 };
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let unlock = Locks {
                     mint_lock: false,
@@ -598,7 +646,12 @@ mod actions {
                     locks: transfer_lock.clone(),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), collection_addr.clone(), &msg, &vec![])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let err = app
@@ -619,14 +672,24 @@ mod actions {
                     locks: unlock.clone(),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), collection_addr.clone(), &msg, &vec![])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg = TokenExecuteMsg::UpdateLocks {
                     locks: transfer_lock.clone(),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), collection_addr.clone(), &msg, &vec![])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let err = app
@@ -646,7 +709,12 @@ mod actions {
                     locks: unlock.clone(),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), collection_addr.clone(), &msg, &vec![])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
             }
 
@@ -673,7 +741,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -736,7 +805,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -819,7 +889,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -888,7 +959,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -972,7 +1044,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -1039,7 +1112,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -1116,7 +1190,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -1186,22 +1261,34 @@ mod actions {
 
                 // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_000_930));
+                assert_eq!(balance.amount, Uint128::new(1_000_920));
 
-                // Marketplace fee
+                // Komple fee
                 let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(70));
+                assert_eq!(balance.amount, Uint128::new(40));
 
-                // Admin royalty fee
+                // Community fee
+                let balance = app
+                    .wrap()
+                    .query_balance("juno..community", NATIVE_DENOM)
+                    .unwrap();
+                assert_eq!(balance.amount, Uint128::new(20));
+
+                // Marketplace owner fee
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(0));
+                assert_eq!(balance.amount, Uint128::new(20));
 
                 // Setup admin royalty for 10 percent
                 let msg = TokenExecuteMsg::UpdateRoyaltyShare {
                     royalty_share: Some(Decimal::from_str("0.1").unwrap()),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), collection_addr.clone(), &msg, &vec![])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 setup_marketplace_listing(
@@ -1236,21 +1323,33 @@ mod actions {
 
                 // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_001_760));
+                assert_eq!(balance.amount, Uint128::new(1_001_740));
 
-                // Marketplace fee
+                // Komple fee
                 let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(140));
+                assert_eq!(balance.amount, Uint128::new(80));
 
-                // Admin royalty fee
+                // Community fee
+                let balance = app
+                    .wrap()
+                    .query_balance("juno..community", NATIVE_DENOM)
+                    .unwrap();
+                assert_eq!(balance.amount, Uint128::new(40));
+
+                // Marketplace owner + admin royalty fee
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(100));
+                assert_eq!(balance.amount, Uint128::new(140));
 
                 let msg = TokenExecuteMsg::UpdateRoyaltyShare {
                     royalty_share: Some(Decimal::from_str("0.05").unwrap()),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), collection_addr.clone(), &msg, &vec![])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 setup_marketplace_listing(
@@ -1282,15 +1381,22 @@ mod actions {
 
                 // Owner balance
                 let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_880_000));
+                assert_eq!(balance.amount, Uint128::new(1_870_000));
 
-                // Marketplace fee
+                // Komple fee
                 let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(70_000));
+                assert_eq!(balance.amount, Uint128::new(40_000));
 
-                // Admin royalty fee
+                // Community fee
+                let balance = app
+                    .wrap()
+                    .query_balance("juno..community", NATIVE_DENOM)
+                    .unwrap();
+                assert_eq!(balance.amount, Uint128::new(20_000));
+
+                // Marketplace owner + admin royalty fee
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(50_000));
+                assert_eq!(balance.amount, Uint128::new(70_000));
             }
 
             #[test]
@@ -1316,7 +1422,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -1410,7 +1517,8 @@ mod actions {
                     None,
                 );
 
-                let collection_addr = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
 
                 let metadata_module_addr =
                     setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
@@ -1489,7 +1597,8 @@ mod queries {
             None,
         );
 
-        let collection_addr_1 = query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+        let collection_addr_1 =
+            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         let metadata_module_addr_1 =
             setup_metadata_module(&mut app, collection_addr_1.clone(), MetadataType::Standard);
         setup_metadata(&mut app, metadata_module_addr_1.clone());

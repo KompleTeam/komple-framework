@@ -1,12 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo,
-    Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
+    to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
+    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
-use komple_fee_contract::state::Config as FeeContractConfig;
+use komple_fee_module::msg::{
+    CustomAddress as FeeModuleCustomAddress, ExecuteMsg as FeeModuleExecuteMsg,
+    QueryMsg as FeeModuleQueryMsg,
+};
 use komple_token_module::state::Config as TokenConfig;
 use komple_token_module::{
     msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError,
@@ -17,8 +20,8 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::tokens::Locks;
 use komple_utils::{
-    check_funds, query_collection_address, query_collection_locks, query_module_address, query_storage,
-    query_token_locks, query_token_owner,
+    check_funds, query_collection_address, query_collection_locks, query_module_address,
+    query_storage, query_token_locks, query_token_owner,
 };
 use semver::Version;
 use std::ops::Mul;
@@ -47,20 +50,14 @@ pub fn instantiate(
 
     let admin = deps.api.addr_validate(&msg.admin)?;
 
-    let res = query_storage::<FeeContractConfig>(
-        &deps.querier,
-        &Addr::unchecked(KOMPLE_FEE_CONTRACT_ADDR),
-        CONFIG_NAMESPACE,
-    )?;
-
-    if res.is_none() {
-        return Err(ContractError::NoFeeContract {});
-    }
-    let fee_percentage = res.unwrap().fee_percentage;
+    let query = FeeModuleQueryMsg::TotalFee {};
+    let total_fee: Decimal = deps
+        .querier
+        .query_wasm_smart(KOMPLE_FEE_CONTRACT_ADDR, &query)?;
 
     let config = Config {
         admin,
-        fee_percentage,
+        fee_percentage: total_fee,
         native_denom: msg.native_denom,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -92,7 +89,15 @@ pub fn execute(
             collection_id,
             token_id,
             price,
-        } => execute_update_price(deps, env, info, listing_type, collection_id, token_id, price),
+        } => execute_update_price(
+            deps,
+            env,
+            info,
+            listing_type,
+            collection_id,
+            token_id,
+            price,
+        ),
         ExecuteMsg::Buy {
             listing_type,
             collection_id,
@@ -258,7 +263,8 @@ fn _execute_buy_fixed_listing(
     check_funds(&info, &config.native_denom, fixed_listing.price)?;
 
     let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-    let collection_addr = query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
+    let collection_addr =
+        query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
 
     // This is the fee marketplace takes
     let fee = config.fee_percentage.mul(fixed_listing.price);
@@ -272,8 +278,8 @@ fn _execute_buy_fixed_listing(
     // Get royalty message if it exists
     let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
     if let Some(config) = res {
-        if config.royalty_share.is_some() {
-            royalty_fee = config.royalty_share.unwrap().mul(fixed_listing.price);
+        if let Some(royalty_share) = config.royalty_share {
+            royalty_fee = royalty_share.mul(fixed_listing.price);
 
             // Royalty fee message
             let royalty_payout = BankMsg::Send {
@@ -290,14 +296,29 @@ fn _execute_buy_fixed_listing(
     // Add marketplace and royalty fee and subtract from the price
     let payout = fixed_listing.price.checked_sub(fee + royalty_fee)?;
 
-    // Marketplace fee message
-    let fee_payout = BankMsg::Send {
-        to_address: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
-        amount: vec![Coin {
+    // Fee distribution message
+    let fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
+        msg: to_binary(&FeeModuleExecuteMsg::Distribute {
+            custom_addresses: Some(vec![FeeModuleCustomAddress {
+                name: "hub_owner".to_string(),
+                payment_address: config.admin.to_string(),
+            }]),
+        })?,
+        funds: vec![Coin {
             denom: config.native_denom.to_string(),
             amount: fee,
         }],
-    };
+    });
+
+    // Marketplace fee message
+    // let fee_payout = BankMsg::Send {
+    //     to_address: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
+    //     amount: vec![Coin {
+    //         denom: config.native_denom.to_string(),
+    //         amount: fee,
+    //     }],
+    // };
     // Owner payout message
     let owner_payout = BankMsg::Send {
         to_address: fixed_listing.owner.to_string(),
@@ -307,7 +328,7 @@ fn _execute_buy_fixed_listing(
         }],
     };
     sub_msgs.push(SubMsg::new(owner_payout));
-    sub_msgs.push(SubMsg::new(fee_payout));
+    sub_msgs.push(SubMsg::new(fee_distribution));
 
     // Transfer token ownership to the new address
     let transfer_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
@@ -345,7 +366,8 @@ fn _execute_buy_fixed_listing(
 fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-    let collection_addr = query_collection_address(&deps.querier, &mint_module_addr, collection_id)?;
+    let collection_addr =
+        query_collection_address(&deps.querier, &mint_module_addr, collection_id)?;
     Ok(collection_addr)
 }
 
@@ -374,7 +396,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             collection_id,
             start_after,
             limit,
-        } => to_binary(&query_fixed_listings(deps, collection_id, start_after, limit)?),
+        } => to_binary(&query_fixed_listings(
+            deps,
+            collection_id,
+            start_after,
+            limit,
+        )?),
     }
 }
 
