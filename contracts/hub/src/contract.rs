@@ -98,6 +98,9 @@ pub fn execute(
             background_image,
             banner_image,
         ),
+        ExecuteMsg::RemoveNativeModule { module } => {
+            execute_remove_native_module(deps, env, info, module)
+        }
     }
 }
 
@@ -307,6 +310,33 @@ fn execute_update_website_config(
     WEBSITE_CONFIG.save(deps.storage, &website_config)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_website_config"))
+}
+
+fn execute_remove_native_module(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    module: Modules,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        None,
+    )?;
+
+    if !MODULE_ADDR.has(deps.storage, &module.as_str()) {
+        return Err(ContractError::InvalidModule {});
+    }
+
+    MODULE_ADDR.remove(deps.storage, module.as_str());
+
+    Ok(Response::new()
+        .add_attribute("action", "execute_remove_native_module")
+        .add_attribute("module", module.as_str()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
