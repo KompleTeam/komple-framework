@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdError,
-    StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
+    StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -20,7 +20,9 @@ use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDR, WEBSITE_CONFIG};
+use crate::state::{
+    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDR, OPERATORS, WEBSITE_CONFIG,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-hub-module";
@@ -101,6 +103,7 @@ pub fn execute(
         ExecuteMsg::RemoveNativeModule { module } => {
             execute_remove_native_module(deps, env, info, module)
         }
+        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
     }
 }
 
@@ -110,6 +113,7 @@ fn execute_init_mint_module(
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -117,7 +121,7 @@ fn execute_init_mint_module(
         &env.contract.address,
         &config.admin,
         None,
-        None,
+        operators,
     )?;
 
     let msg: SubMsg = SubMsg {
@@ -128,7 +132,7 @@ fn execute_init_mint_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Komple Framework mint module"),
+            label: String::from("Komple Framework Mint module"),
         }
         .into(),
         id: MINT_MODULE_INSTANTIATE_REPLY_ID,
@@ -147,6 +151,7 @@ fn execute_init_permission_module(
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -154,7 +159,7 @@ fn execute_init_permission_module(
         &env.contract.address,
         &config.admin,
         None,
-        None,
+        operators,
     )?;
 
     let msg: SubMsg = SubMsg {
@@ -165,7 +170,7 @@ fn execute_init_permission_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Komple Framework permission module"),
+            label: String::from("Komple Framework Permission module"),
         }
         .into(),
         id: PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
@@ -184,6 +189,7 @@ fn execute_init_merge_module(
     info: MessageInfo,
     code_id: u64,
 ) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -191,7 +197,7 @@ fn execute_init_merge_module(
         &env.contract.address,
         &config.admin,
         None,
-        None,
+        operators,
     )?;
 
     let msg: SubMsg = SubMsg {
@@ -202,7 +208,7 @@ fn execute_init_merge_module(
             })?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Komple Framework merge module"),
+            label: String::from("Komple Framework Merge module"),
         }
         .into(),
         id: MERGE_MODULE_INSTANTIATE_REPLY_ID,
@@ -222,6 +228,7 @@ fn execute_init_marketplace_module(
     code_id: u64,
     native_denom: String,
 ) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -229,7 +236,7 @@ fn execute_init_marketplace_module(
         &env.contract.address,
         &config.admin,
         None,
-        None,
+        operators,
     )?;
 
     let msg: SubMsg = SubMsg {
@@ -263,6 +270,7 @@ fn execute_update_hub_info(
     image: String,
     external_link: Option<String>,
 ) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -270,7 +278,7 @@ fn execute_update_hub_info(
         &env.contract.address,
         &config.admin,
         None,
-        None,
+        operators,
     )?;
 
     let hub_info = HubInfo {
@@ -292,6 +300,7 @@ fn execute_update_website_config(
     background_image: Option<String>,
     banner_image: Option<String>,
 ) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
@@ -299,7 +308,7 @@ fn execute_update_website_config(
         &env.contract.address,
         &config.admin,
         None,
-        None,
+        operators,
     )?;
 
     let website_config = WebsiteConfig {
@@ -318,14 +327,14 @@ fn execute_remove_native_module(
     info: MessageInfo,
     module: Modules,
 ) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
-
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
         None,
-        None,
+        operators,
     )?;
 
     if !MODULE_ADDR.has(deps.storage, &module.as_str()) {
@@ -339,11 +348,49 @@ fn execute_remove_native_module(
         .add_attribute("module", module.as_str()))
 }
 
+fn execute_update_operators(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    addrs: Vec<String>,
+) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        operators,
+    )?;
+
+    let response: Response<Empty> =
+        Response::new().add_attribute("action", "execute_update_operators");
+
+    let addrs = addrs
+        .iter()
+        .enumerate()
+        .map(|(index, addr)| -> StdResult<Addr> {
+            response
+                .clone()
+                .add_attribute(format!("operator_{}", index.to_string()), addr);
+            let addr = deps.api.addr_validate(addr)?;
+            Ok(addr)
+        })
+        .collect::<StdResult<Vec<Addr>>>()?;
+
+    OPERATORS.save(deps.storage, &addrs)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::ModuleAddress(module) => to_binary(&query_module_address(deps, module)?),
+        QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
 
@@ -364,6 +411,15 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
 fn query_module_address(deps: Deps, module: Modules) -> StdResult<ResponseWrapper<String>> {
     let addr = MODULE_ADDR.load(deps.storage, module.as_str())?;
     Ok(ResponseWrapper::new("module_address", addr.to_string()))
+}
+
+fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = OPERATORS.may_load(deps.storage)?;
+    let addrs = match addrs {
+        Some(addrs) => addrs.iter().map(|a| a.to_string()).collect(),
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new("operators", addrs))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

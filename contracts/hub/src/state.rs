@@ -1,7 +1,7 @@
 use komple_types::{
     hub::{HUB_INFO_NAMESPACE, WEBSITE_CONFIG_NAMESPACE},
     module::MODULE_ADDRS_NAMESPACE,
-    shared::CONFIG_NAMESPACE,
+    shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -35,3 +35,5 @@ pub struct WebsiteConfig {
     pub banner_image: Option<String>,
 }
 pub const WEBSITE_CONFIG: Item<WebsiteConfig> = Item::new(WEBSITE_CONFIG_NAMESPACE);
+
+pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

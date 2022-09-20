@@ -49,6 +49,9 @@ pub enum ExecuteMsg {
     RemoveNativeModule {
         module: Modules,
     },
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -57,6 +60,7 @@ pub enum QueryMsg {
     // Gets both general and website config
     Config {},
     ModuleAddress(Modules),
+    Operators {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
