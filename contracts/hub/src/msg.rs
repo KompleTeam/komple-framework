@@ -46,6 +46,9 @@ pub enum ExecuteMsg {
         background_image: Option<String>,
         banner_image: Option<String>,
     },
+    RemoveNativeModule {
+        module: Modules,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

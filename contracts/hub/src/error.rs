@@ -19,6 +19,9 @@ pub enum ContractError {
     #[error("Error while instantiating {module:?} module")]
     ModuleInstantiateError { module: String },
 
+    #[error("Module is invalid")]
+    InvalidModule {},
+
     #[error("{0}")]
     Util(#[from] UtilError),
 
