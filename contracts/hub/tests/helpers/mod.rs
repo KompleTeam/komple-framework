@@ -253,6 +253,7 @@ pub fn create_collection(
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             collection_info,
             token_info,
             per_address_limit,

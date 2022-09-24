@@ -166,6 +166,7 @@ pub fn create_collection(
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             collection_info,
             token_info,
             per_address_limit,
@@ -397,13 +398,17 @@ mod permission_mint {
             )
             .unwrap();
 
-        let collection_2_addr = query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+        let collection_2_addr =
+            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
         let msg = TokenQueryMsg::OwnerOf {
             token_id: "1".to_string(),
             include_expired: None,
         };
-        let res: OwnerOfResponse = app.wrap().query_wasm_smart(collection_2_addr, &msg).unwrap();
+        let res: OwnerOfResponse = app
+            .wrap()
+            .query_wasm_smart(collection_2_addr, &msg)
+            .unwrap();
         assert_eq!(res.owner, USER);
     }
 }

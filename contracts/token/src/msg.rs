@@ -19,6 +19,7 @@ pub struct TokenInfo {
 #[serde(rename_all = "snake_case")]
 pub struct InstantiateMsg {
     pub admin: String,
+    pub creator: String,
     pub token_info: TokenInfo,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
@@ -271,6 +272,7 @@ impl From<QueryMsg> for Cw721QueryMsg {
 #[serde(rename_all = "snake_case")]
 pub struct ConfigResponse {
     pub admin: String,
+    pub creator: String,
     pub native_denom: String,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,

@@ -283,7 +283,7 @@ fn _execute_buy_fixed_listing(
 
             // Royalty fee message
             let royalty_payout = BankMsg::Send {
-                to_address: config.admin.to_string(),
+                to_address: config.creator.to_string(),
                 amount: vec![Coin {
                     denom: config.native_denom.to_string(),
                     amount: royalty_fee,
@@ -301,7 +301,7 @@ fn _execute_buy_fixed_listing(
         contract_addr: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
         msg: to_binary(&FeeModuleExecuteMsg::Distribute {
             custom_addresses: Some(vec![FeeModuleCustomAddress {
-                name: "hub_owner".to_string(),
+                name: "hub_admin".to_string(),
                 payment_address: config.admin.to_string(),
             }]),
         })?,
@@ -311,14 +311,6 @@ fn _execute_buy_fixed_listing(
         }],
     });
 
-    // Marketplace fee message
-    // let fee_payout = BankMsg::Send {
-    //     to_address: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
-    //     amount: vec![Coin {
-    //         denom: config.native_denom.to_string(),
-    //         amount: fee,
-    //     }],
-    // };
     // Owner payout message
     let owner_payout = BankMsg::Send {
         to_address: fixed_listing.owner.to_string(),

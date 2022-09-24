@@ -12,7 +12,9 @@ use komple_token_module::{
     },
     state::{CollectionInfo, Contracts},
 };
-use komple_types::{collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper};
+use komple_types::{
+    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
+};
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -108,6 +110,7 @@ fn setup_collection(
         code_id: token_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             collection_info,
             token_info,
             per_address_limit: None,
@@ -333,6 +336,7 @@ mod actions {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
                         admin: ADMIN.to_string(),
+                        creator: ADMIN.to_string(),
                         collection_info,
                         token_info,
                         per_address_limit: None,
@@ -375,6 +379,7 @@ mod actions {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
                         admin: ADMIN.to_string(),
+                        creator: ADMIN.to_string(),
                         collection_info,
                         token_info,
                         per_address_limit: None,

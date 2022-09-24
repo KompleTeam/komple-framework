@@ -24,6 +24,7 @@ use marketplace_module::msg::ExecuteMsg;
 use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use std::str::FromStr;
 
+pub const CREATOR: &str = "juno..creator";
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
 pub const ADMIN: &str = "juno..admin";
@@ -171,7 +172,7 @@ fn setup_fee_contract(app: &mut App) -> Addr {
         .unwrap();
     // Hub owner is 2%
     let msg = FeeModuleExecuteMsg::AddShare {
-        name: "hub_owner".to_string(),
+        name: "hub_admin".to_string(),
         address: None,
         percentage: Decimal::from_str("0.02").unwrap(),
     };
@@ -241,6 +242,7 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
 pub fn create_collection(
     app: &mut App,
     mint_module_addr: Addr,
+    creator_addr: &str,
     token_module_code_id: u64,
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
@@ -264,7 +266,8 @@ pub fn create_collection(
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
-            admin: ADMIN.to_string(),
+            admin: "".to_string(),
+            creator: "".to_string(),
             collection_info,
             token_info,
             per_address_limit,
@@ -277,7 +280,12 @@ pub fn create_collection(
         linked_collections,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
+        .execute_contract(
+            Addr::unchecked(creator_addr),
+            mint_module_addr,
+            &msg,
+            &vec![],
+        )
         .unwrap();
 }
 
@@ -481,6 +489,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -550,6 +559,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -601,6 +611,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -731,6 +742,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -795,6 +807,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -879,6 +892,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -949,6 +963,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -1034,6 +1049,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -1102,6 +1118,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -1176,10 +1193,25 @@ mod actions {
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
 
+                // Update public permission settings
+                // Creator will be creating the collection
+                let msg = MintExecuteMsg::UpdatePublicCollectionCreation {
+                    public_collection_creation: true,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        mint_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
                 let token_module_code_id = app.store_code(token_module());
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    CREATOR,
                     token_module_code_id,
                     None,
                     None,
@@ -1336,9 +1368,13 @@ mod actions {
                     .unwrap();
                 assert_eq!(balance.amount, Uint128::new(40));
 
-                // Marketplace owner + admin royalty fee
+                // Marketplace owner
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(140));
+                assert_eq!(balance.amount, Uint128::new(40));
+
+                // Creator royalty fee
+                let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(100));
 
                 let msg = TokenExecuteMsg::UpdateRoyaltyShare {
                     royalty_share: Some(Decimal::from_str("0.05").unwrap()),
@@ -1394,9 +1430,13 @@ mod actions {
                     .unwrap();
                 assert_eq!(balance.amount, Uint128::new(20_000));
 
-                // Marketplace owner + admin royalty fee
+                // Marketplace owner
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(70_000));
+                assert_eq!(balance.amount, Uint128::new(20_000));
+
+                // Creator royalty fee
+                let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(50_000));
             }
 
             #[test]
@@ -1412,6 +1452,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -1507,6 +1548,7 @@ mod actions {
                 create_collection(
                     &mut app,
                     mint_module_addr.clone(),
+                    ADMIN,
                     token_module_code_id,
                     None,
                     None,
@@ -1575,6 +1617,7 @@ mod queries {
         create_collection(
             &mut app,
             mint_module_addr.clone(),
+            ADMIN,
             token_module_code_id,
             None,
             None,
@@ -1587,6 +1630,7 @@ mod queries {
         create_collection(
             &mut app,
             mint_module_addr.clone(),
+            ADMIN,
             token_module_code_id,
             None,
             None,

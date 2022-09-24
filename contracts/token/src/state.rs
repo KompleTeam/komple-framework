@@ -26,6 +26,7 @@ pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new(COLLECTION_INFO_NAME
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
+    pub creator: Addr,
     pub native_denom: String,
     pub royalty_share: Option<Decimal>,
 }

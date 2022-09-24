@@ -22,7 +22,8 @@ use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use crate::error::ContractError;
 use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
-    Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
+    Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, HUB_ADDR,
+    LINKED_COLLECTIONS, OPERATORS,
 };
 
 // version info for migration info
@@ -93,7 +94,14 @@ pub fn execute(
             permission_msg,
             collection_ids,
             metadata_ids,
-        } => execute_permission_mint(deps, env, info, permission_msg, collection_ids, metadata_ids),
+        } => execute_permission_mint(
+            deps,
+            env,
+            info,
+            permission_msg,
+            collection_ids,
+            metadata_ids,
+        ),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::UpdateLinkedCollections {
             collection_id,
@@ -127,6 +135,7 @@ pub fn execute_create_collection(
 
     let mut msg = token_instantiate_msg.clone();
     msg.admin = config.admin.to_string();
+    msg.creator = info.sender.to_string();
     msg.token_info.minter = env.contract.address.to_string();
 
     // Instantiate token contract
@@ -154,7 +163,10 @@ pub fn execute_create_collection(
 
     COLLECTION_TYPES.update(
         deps.storage,
-        token_instantiate_msg.collection_info.collection_type.as_str(),
+        token_instantiate_msg
+            .collection_info
+            .collection_type
+            .as_str(),
         |value| -> StdResult<Vec<u32>> {
             match value {
                 Some(mut id_list) => {
@@ -195,7 +207,10 @@ pub fn execute_update_public_collection_creation(
 
     Ok(Response::new()
         .add_attribute("action", "update_public_collection_creation")
-        .add_attribute("public_collection_creation", public_collection_creation.to_string()))
+        .add_attribute(
+            "public_collection_creation",
+            public_collection_creation.to_string(),
+        ))
 }
 
 pub fn execute_update_mint_lock(
@@ -413,7 +428,10 @@ fn execute_update_linked_collections(
     Ok(Response::new().add_attribute("action", "execute_update_linked_collections"))
 }
 
-fn check_collection_ids_exists(deps: &DepsMut, collection_ids: &Vec<u32>) -> Result<(), ContractError> {
+fn check_collection_ids_exists(
+    deps: &DepsMut,
+    collection_ids: &Vec<u32>,
+) -> Result<(), ContractError> {
     let existing_ids = COLLECTION_ADDRS
         .keys(deps.storage, None, None, Order::Ascending)
         .map(|id| id.unwrap())
@@ -432,10 +450,16 @@ fn check_collection_ids_exists(deps: &DepsMut, collection_ids: &Vec<u32>) -> Res
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::CollectionAddress(collection_id) => to_binary(&query_collection_address(deps, collection_id)?),
+        QueryMsg::CollectionAddress(collection_id) => {
+            to_binary(&query_collection_address(deps, collection_id)?)
+        }
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
-        QueryMsg::CollectionTypes(collection_type) => to_binary(&query_collection_types(deps, collection_type)?),
-        QueryMsg::LinkedCollections { collection_id } => to_binary(&query_linked_collections(deps, collection_id)?),
+        QueryMsg::CollectionTypes(collection_type) => {
+            to_binary(&query_collection_types(deps, collection_type)?)
+        }
+        QueryMsg::LinkedCollections { collection_id } => {
+            to_binary(&query_linked_collections(deps, collection_id)?)
+        }
         QueryMsg::Collections { start_after, limit } => {
             to_binary(&query_collections(deps, start_after, limit)?)
         }
@@ -461,7 +485,10 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
     Ok(ResponseWrapper::new("operators", addrs))
 }
 
-fn query_collection_types(deps: Deps, collection_type: Collections) -> StdResult<ResponseWrapper<Vec<u32>>> {
+fn query_collection_types(
+    deps: Deps,
+    collection_type: Collections,
+) -> StdResult<ResponseWrapper<Vec<u32>>> {
     let collection_ids = COLLECTION_TYPES.may_load(deps.storage, collection_type.as_str())?;
     let collection_ids = match collection_ids {
         Some(ids) => ids,
@@ -470,13 +497,19 @@ fn query_collection_types(deps: Deps, collection_type: Collections) -> StdResult
     Ok(ResponseWrapper::new("collection_types", collection_ids))
 }
 
-fn query_linked_collections(deps: Deps, collection_id: u32) -> StdResult<ResponseWrapper<Vec<u32>>> {
+fn query_linked_collections(
+    deps: Deps,
+    collection_id: u32,
+) -> StdResult<ResponseWrapper<Vec<u32>>> {
     let linked_collection_ids = LINKED_COLLECTIONS.may_load(deps.storage, collection_id)?;
     let linked_collection_ids = match linked_collection_ids {
         Some(linked_collection_ids) => linked_collection_ids,
         None => vec![],
     };
-    Ok(ResponseWrapper::new("linked_collections", linked_collection_ids))
+    Ok(ResponseWrapper::new(
+        "linked_collections",
+        linked_collection_ids,
+    ))
 }
 
 fn query_collections(

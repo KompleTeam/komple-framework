@@ -15,8 +15,9 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO, CONFIG, CONTRACTS,
-    LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS, TOKEN_LOCKS,
+    CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO,
+    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS,
+    TOKEN_LOCKS,
 };
 
 use cw721::{ContractInfoResponse, Cw721Execute};
@@ -88,8 +89,10 @@ pub fn instantiate(
     }
 
     let admin = deps.api.addr_validate(&msg.admin)?;
+    let creator = deps.api.addr_validate(&msg.creator)?;
     let config = Config {
         admin,
+        creator,
         native_denom: msg.native_denom,
         royalty_share: msg.royalty_share,
     };
@@ -344,7 +347,8 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
-    if collection_config.max_token_limit.is_some() && token_id > collection_config.max_token_limit.unwrap()
+    if collection_config.max_token_limit.is_some()
+        && token_id > collection_config.max_token_limit.unwrap()
     {
         return Err(ContractError::TokenLimitReached {});
     }
@@ -361,7 +365,9 @@ pub fn execute_mint(
         return Err(ContractError::TokenLimitReached {});
     }
 
-    if collection_config.start_time.is_some() && env.block.time < collection_config.start_time.unwrap() {
+    if collection_config.start_time.is_some()
+        && env.block.time < collection_config.start_time.unwrap()
+    {
         return Err(ContractError::MintingNotStarted {});
     }
 
@@ -577,7 +583,9 @@ fn execute_update_start_time(
 
     let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
 
-    if collection_config.start_time.is_some() && env.block.time >= collection_config.start_time.unwrap() {
+    if collection_config.start_time.is_some()
+        && env.block.time >= collection_config.start_time.unwrap()
+    {
         return Err(ContractError::AlreadyStarted {});
     }
 
@@ -761,6 +769,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
         "locks",
         ConfigResponse {
             admin: config.admin.to_string(),
+            creator: config.creator.to_string(),
             native_denom: config.native_denom,
             per_address_limit: collection_config.per_address_limit,
             start_time: collection_config.start_time,

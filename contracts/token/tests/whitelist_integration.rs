@@ -6,7 +6,9 @@ use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
 use komple_token_module::state::{CollectionInfo, Contracts};
 use komple_token_module::ContractError;
-use komple_types::{collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper};
+use komple_types::{
+    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
+};
 use komple_utils::query_token_owner;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
@@ -117,6 +119,7 @@ fn token_module_instantiation(app: &mut App) -> Addr {
     };
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
+        creator: ADMIN.to_string(),
         token_info,
         per_address_limit: None,
         start_time: None,

@@ -92,6 +92,7 @@ fn proper_instantiate(
     };
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
+        creator: ADMIN.to_string(),
         token_info,
         per_address_limit,
         start_time,
@@ -190,6 +191,7 @@ mod initialization {
         };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             token_info,
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
@@ -231,6 +233,7 @@ mod initialization {
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             token_info: token_info.clone(),
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time),
@@ -257,6 +260,7 @@ mod initialization {
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             token_info: token_info.clone(),
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.minus_seconds(10)),
@@ -301,6 +305,7 @@ mod initialization {
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             token_info,
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
@@ -345,6 +350,7 @@ mod initialization {
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             token_info,
             per_address_limit: Some(0),
             start_time: Some(app.block_info().time.plus_seconds(1)),
@@ -389,6 +395,7 @@ mod initialization {
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
             token_info,
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
@@ -568,6 +575,7 @@ mod actions {
             };
             let msg = InstantiateMsg {
                 admin: ADMIN.to_string(),
+                creator: ADMIN.to_string(),
                 token_info,
                 per_address_limit: None,
                 start_time: None,
