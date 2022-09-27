@@ -1,17 +1,15 @@
+use crate::state::Config;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use komple_token_module::msg::InstantiateMsg as TokenInstantiateMsg;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use komple_types::{collection::Collections, query::ResponseWrapper};
 
-use komple_types::collection::Collections;
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub admin: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     CreateCollection {
         code_id: u64,
@@ -47,35 +45,37 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ResponseWrapper<Config>)]
     Config {},
+    #[returns(ResponseWrapper<String>)]
     CollectionAddress(u32),
+    #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
+    #[returns(ResponseWrapper<Vec<u32>>)]
     CollectionTypes(Collections),
-    LinkedCollections {
-        collection_id: u32,
-    },
+    #[returns(ResponseWrapper<Vec<u32>>)]
+    LinkedCollections { collection_id: u32 },
+    #[returns(ResponseWrapper<Vec<CollectionsResponse>>)]
     Collections {
         start_after: Option<u32>,
         limit: Option<u8>,
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct MintMsg {
     pub collection_id: u32,
     pub owner: String,
     pub metadata_id: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct CollectionsResponse {
     pub collection_id: u32,
     pub address: String,
