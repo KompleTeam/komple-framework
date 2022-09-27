@@ -50,7 +50,7 @@ serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 cw721 = "0.13.2"
 komple-token-module = { path = "../token", features = ["library"] }
-permission-module = { path = "../permission", features = ["library"] }
+komple-permission-module = { path = "../permission", features = ["library"] }
 cw-utils = "0.13.2"
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }

@@ -31,9 +31,9 @@ pub fn mint_module() -> Box<dyn Contract<Empty>> {
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        permission_module::contract::execute,
-        permission_module::contract::instantiate,
-        permission_module::contract::query,
+        komple_permission_module::contract::execute,
+        komple_permission_module::contract::instantiate,
+        komple_permission_module::contract::query,
     );
     Box::new(contract)
 }

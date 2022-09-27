@@ -17,7 +17,7 @@ use komple_types::query::ResponseWrapper;
 use komple_utils::{check_admin_privileges, query_module_address};
 use semver::Version;
 
-use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};

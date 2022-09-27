@@ -565,10 +565,10 @@ dependencies = [
  "komple-merge-module",
  "komple-metadata-module",
  "komple-mint-module",
+ "komple-permission-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "permission-module",
  "schemars",
  "semver",
  "serde",
@@ -609,10 +609,10 @@ dependencies = [
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
  "komple-mint-module",
+ "komple-permission-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "permission-module",
  "schemars",
  "semver",
  "serde",
@@ -651,10 +651,30 @@ dependencies = [
  "cw721",
  "komple-hub-module",
  "komple-metadata-module",
+ "komple-permission-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "permission-module",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-permission-module"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test 0.13.4",
+ "cw-storage-plus 0.13.4",
+ "cw2 0.13.4",
+ "cw721",
+ "komple-token-module",
+ "komple-types",
+ "komple-utils",
  "schemars",
  "semver",
  "serde",
@@ -735,26 +755,6 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
-
-[[package]]
-name = "permission-module"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test 0.13.4",
- "cw-storage-plus 0.13.4",
- "cw2 0.13.4",
- "cw721",
- "komple-token-module",
- "komple-types",
- "komple-utils",
- "schemars",
- "semver",
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "pkcs8"

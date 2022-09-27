@@ -6,6 +6,7 @@ use komple_hub_module::msg::{
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_mint_module::msg::ExecuteMsg;
+use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -17,7 +18,6 @@ use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -47,9 +47,9 @@ pub fn mint_module() -> Box<dyn Contract<Empty>> {
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        permission_module::contract::execute,
-        permission_module::contract::instantiate,
-        permission_module::contract::query,
+        komple_permission_module::contract::execute,
+        komple_permission_module::contract::instantiate,
+        komple_permission_module::contract::query,
     );
     Box::new(contract)
 }
@@ -297,11 +297,11 @@ mod permission_mint {
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+    use komple_permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
     use komple_types::{
         collection::Collections, metadata::Metadata, module::Modules, permission::Permissions,
     };
-    use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
 
     #[test]
     fn test_happy_path() {

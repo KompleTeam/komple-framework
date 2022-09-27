@@ -50,7 +50,7 @@ schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 komple-token-module = { path = "../token", features = ["library"] }
-permission-module = { path = "../permission", features = ["library"] }
+komple-permission-module = { path = "../permission", features = ["library"] }
 komple-mint-module = { path = "../mint", features = ["library"] }
 komple-utils = { path = "../../packages/utils" }
 komple-types = { path = "../../packages/types" }

@@ -16,8 +16,8 @@ use komple_utils::{
 };
 
 use komple_mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
+use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
-use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};

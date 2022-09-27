@@ -392,18 +392,18 @@ mod permission_merge {
     use cw721::OwnerOfResponse;
     use helpers::{add_permission_for_module, link_collections};
     use komple_merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
+    use komple_permission_module::msg::PermissionCheckMsg;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
     use komple_types::collection::Collections;
     use komple_types::module::Modules;
     use komple_types::permission::Permissions;
-    use permission_module::msg::PermissionCheckMsg;
 
     mod ownership_permission {
         use super::*;
 
+        use komple_permission_module::msg::OwnershipMsg;
         use komple_types::metadata::Metadata;
         use komple_utils::query_collection_address;
-        use permission_module::msg::OwnershipMsg;
 
         #[test]
         fn test_happy_path() {
