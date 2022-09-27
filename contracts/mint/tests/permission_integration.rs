@@ -5,6 +5,7 @@ use komple_hub_module::msg::{
 };
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
+use komple_mint_module::msg::ExecuteMsg;
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -16,7 +17,6 @@ use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use mint_module::msg::ExecuteMsg;
 use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 pub const USER: &str = "juno..user";
@@ -37,11 +37,11 @@ pub fn hub_module() -> Box<dyn Contract<Empty>> {
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        mint_module::contract::execute,
-        mint_module::contract::instantiate,
-        mint_module::contract::query,
+        komple_mint_module::contract::execute,
+        komple_mint_module::contract::instantiate,
+        komple_mint_module::contract::query,
     )
-    .with_reply(mint_module::contract::reply);
+    .with_reply(komple_mint_module::contract::reply);
     Box::new(contract)
 }
 
@@ -296,11 +296,11 @@ mod permission_mint {
 
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
+    use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
     use komple_types::{
         collection::Collections, metadata::Metadata, module::Modules, permission::Permissions,
     };
-    use mint_module::msg::ExecuteMsg as MintExecuteMsg;
     use permission_module::msg::{OwnershipMsg, PermissionCheckMsg};
 
     #[test]

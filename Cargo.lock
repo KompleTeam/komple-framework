@@ -564,10 +564,10 @@ dependencies = [
  "komple-marketplace-module",
  "komple-merge-module",
  "komple-metadata-module",
+ "komple-mint-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "mint-module",
  "permission-module",
  "schemars",
  "semver",
@@ -588,10 +588,10 @@ dependencies = [
  "komple-fee-module",
  "komple-hub-module",
  "komple-metadata-module",
+ "komple-mint-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "mint-module",
  "schemars",
  "semver",
  "serde",
@@ -608,10 +608,10 @@ dependencies = [
  "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
+ "komple-mint-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "mint-module",
  "permission-module",
  "schemars",
  "semver",
@@ -631,6 +631,30 @@ dependencies = [
  "cw2 0.13.4",
  "komple-types",
  "komple-utils",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-mint-module"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test 0.13.4",
+ "cw-storage-plus 0.13.4",
+ "cw-utils 0.13.4",
+ "cw2 0.13.4",
+ "cw721",
+ "komple-hub-module",
+ "komple-metadata-module",
+ "komple-token-module",
+ "komple-types",
+ "komple-utils",
+ "permission-module",
  "schemars",
  "semver",
  "serde",
@@ -705,30 +729,6 @@ name = "libc"
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
-
-[[package]]
-name = "mint-module"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test 0.13.4",
- "cw-storage-plus 0.13.4",
- "cw-utils 0.13.4",
- "cw2 0.13.4",
- "cw721",
- "komple-hub-module",
- "komple-metadata-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
- "permission-module",
- "schemars",
- "semver",
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "opaque-debug"

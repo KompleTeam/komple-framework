@@ -57,5 +57,5 @@ komple-fee-module = { path = "../fee", features = ["library"] }
 [dev-dependencies]
 cw-multi-test = "0.13.2"
 komple-hub-module = { path = "../hub", features = ["library"] }
-mint-module = { path = "../mint", features = ["library"] }
+komple-mint-module = { path = "../mint", features = ["library"] }
 komple-metadata-module = { path = "../metadata", features = ["library"] }

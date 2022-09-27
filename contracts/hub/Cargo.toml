@@ -59,7 +59,7 @@ cw-multi-test = "0.13.2"
 komple-marketplace-module = { path = "../marketplace", features = ["library"]  }
 komple-merge-module = { path = "../merge", features = ["library"]  }
 permission-module = { path = "../permission", features = ["library"]  }
-mint-module = { path = "../mint", features = ["library"] }
+komple-mint-module = { path = "../mint", features = ["library"] }
 komple-token-module = { path = "../token", features = ["library"] }
 komple-metadata-module = { path = "../metadata", features = ["library"]  }
 komple-fee-module = { path = "../fee", features = ["library"]  }
