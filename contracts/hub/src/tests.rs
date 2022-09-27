@@ -40,9 +40,9 @@ pub fn permission_module() -> Box<dyn Contract<Empty>> {
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        merge_module::contract::execute,
-        merge_module::contract::instantiate,
-        merge_module::contract::query,
+        komple_merge_module::contract::execute,
+        komple_merge_module::contract::instantiate,
+        komple_merge_module::contract::query,
     );
     Box::new(contract)
 }

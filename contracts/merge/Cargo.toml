@@ -1,5 +1,5 @@
 [package]
-name = "merge-module"
+name = "komple-merge-module"
 version = "0.1.0"
 authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
 edition = "2018"
