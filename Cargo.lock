@@ -561,14 +561,37 @@ dependencies = [
  "cw2 0.13.4",
  "cw721",
  "komple-fee-module",
+ "komple-marketplace-module",
  "komple-metadata-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "marketplace-module",
  "merge-module",
  "mint-module",
  "permission-module",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-marketplace-module"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test 0.13.4",
+ "cw-storage-plus 0.13.4",
+ "cw2 0.13.4",
+ "komple-fee-module",
+ "komple-hub-module",
+ "komple-metadata-module",
+ "komple-token-module",
+ "komple-types",
+ "komple-utils",
+ "mint-module",
  "schemars",
  "semver",
  "serde",
@@ -661,29 +684,6 @@ name = "libc"
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
-
-[[package]]
-name = "marketplace-module"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test 0.13.4",
- "cw-storage-plus 0.13.4",
- "cw2 0.13.4",
- "komple-fee-module",
- "komple-hub-module",
- "komple-metadata-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
- "mint-module",
- "schemars",
- "semver",
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "merge-module"

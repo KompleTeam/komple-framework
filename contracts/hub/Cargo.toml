@@ -56,7 +56,7 @@ cw721 = "0.13.2"
 
 [dev-dependencies]
 cw-multi-test = "0.13.2"
-marketplace-module = { path = "../marketplace", features = ["library"]  }
+komple-marketplace-module = { path = "../marketplace", features = ["library"]  }
 merge-module = { path = "../merge", features = ["library"]  }
 permission-module = { path = "../permission", features = ["library"]  }
 mint-module = { path = "../mint", features = ["library"] }

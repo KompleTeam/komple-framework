@@ -1,5 +1,5 @@
 use cosmwasm_schema::write_api;
-use marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 fn main() {
     write_api! {

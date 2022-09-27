@@ -49,9 +49,9 @@ pub fn merge_module() -> Box<dyn Contract<Empty>> {
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        marketplace_module::contract::execute,
-        marketplace_module::contract::instantiate,
-        marketplace_module::contract::query,
+        komple_marketplace_module::contract::execute,
+        komple_marketplace_module::contract::instantiate,
+        komple_marketplace_module::contract::query,
     );
     Box::new(contract)
 }
