@@ -1,14 +1,14 @@
+use crate::state::Config;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use komple_types::query::ResponseWrapper;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub admin: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     UpdateMergeLock {
         lock: bool,
@@ -25,27 +25,27 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ResponseWrapper<Config>)]
     Config {},
+    #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct MergeBurnMsg {
     pub collection_id: u32,
     pub token_id: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct MergeMsg {
     pub mint: Vec<u32>,
     pub burn: Vec<MergeBurnMsg>,
     pub metadata_ids: Option<Vec<u32>>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {}
