@@ -1,16 +1,17 @@
+use crate::state::{Config, FixedListing};
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
-use komple_types::marketplace::Listing;
+use komple_types::{marketplace::Listing, query::ResponseWrapper};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub admin: String,
     pub native_denom: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     ListFixedToken {
         collection_id: u32,
@@ -34,14 +35,14 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ResponseWrapper<Config>)]
     Config {},
-    FixedListing {
-        collection_id: u32,
-        token_id: u32,
-    },
+    #[returns(ResponseWrapper<FixedListing>)]
+    FixedListing { collection_id: u32, token_id: u32 },
+    #[returns(ResponseWrapper<Vec<FixedListing>>)]
     FixedListings {
         collection_id: u32,
         start_after: Option<u32>,

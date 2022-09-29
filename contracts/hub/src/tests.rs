@@ -21,37 +21,37 @@ pub fn hub_module() -> Box<dyn Contract<Empty>> {
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        mint_module::contract::execute,
-        mint_module::contract::instantiate,
-        mint_module::contract::query,
+        komple_mint_module::contract::execute,
+        komple_mint_module::contract::instantiate,
+        komple_mint_module::contract::query,
     )
-    .with_reply(mint_module::contract::reply);
+    .with_reply(komple_mint_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        permission_module::contract::execute,
-        permission_module::contract::instantiate,
-        permission_module::contract::query,
+        komple_permission_module::contract::execute,
+        komple_permission_module::contract::instantiate,
+        komple_permission_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        merge_module::contract::execute,
-        merge_module::contract::instantiate,
-        merge_module::contract::query,
+        komple_merge_module::contract::execute,
+        komple_merge_module::contract::instantiate,
+        komple_merge_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        marketplace_module::contract::execute,
-        marketplace_module::contract::instantiate,
-        marketplace_module::contract::query,
+        komple_marketplace_module::contract::execute,
+        komple_marketplace_module::contract::instantiate,
+        komple_marketplace_module::contract::query,
     );
     Box::new(contract)
 }

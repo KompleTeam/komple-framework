@@ -1,22 +1,21 @@
+use crate::state::{CollectionInfo, Contracts};
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Decimal, Empty, Timestamp, Uint128};
-use cw721::Expiration;
-use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use komple_types::{metadata::Metadata as MetadataType, tokens::Locks};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use crate::state::CollectionInfo;
-
+use cw721::{
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Expiration,
+    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+};
+use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, MinterResponse, QueryMsg as Cw721QueryMsg};
+use komple_types::{metadata::Metadata as MetadataType, query::ResponseWrapper, tokens::Locks};
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+
+#[cw_serde]
 pub struct TokenInfo {
     pub symbol: String,
     pub minter: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub admin: String,
     pub creator: String,
@@ -30,8 +29,7 @@ pub struct InstantiateMsg {
     pub royalty_share: Option<Decimal>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     // CW721 MESSAGES
     TransferNft {
@@ -148,58 +146,70 @@ impl From<ExecuteMsg> for Cw721ExecuteMsg<Empty> {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(OwnerOfResponse)]
     OwnerOf {
         token_id: String,
         include_expired: Option<bool>,
     },
+    #[returns(ApprovalResponse)]
     Approval {
         token_id: String,
         spender: String,
         include_expired: Option<bool>,
     },
+    #[returns(ApprovalsResponse)]
     Approvals {
         token_id: String,
         include_expired: Option<bool>,
     },
+    #[returns(OperatorsResponse)]
     AllOperators {
         owner: String,
         include_expired: Option<bool>,
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    #[returns(NumTokensResponse)]
     NumTokens {},
+    #[returns(ContractInfoResponse)]
     ContractInfo {},
-    NftInfo {
-        token_id: String,
-    },
+    #[returns(NftInfoResponse<Empty>)]
+    NftInfo { token_id: String },
+    #[returns(AllNftInfoResponse<Empty>)]
     AllNftInfo {
         token_id: String,
         include_expired: Option<bool>,
     },
+    #[returns(TokensResponse)]
     Tokens {
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    #[returns(TokensResponse)]
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    #[returns(MinterResponse)]
     Minter {},
     // Custom query messages
+    #[returns(ResponseWrapper<Locks>)]
     Locks {},
-    TokenLocks {
-        token_id: String,
-    },
-    MintedTokensPerAddress {
-        address: String,
-    },
+    #[returns(ResponseWrapper<Locks>)]
+    TokenLocks { token_id: String },
+    #[returns(ResponseWrapper<u32>)]
+    MintedTokensPerAddress { address: String },
+    #[returns(ResponseWrapper<CollectionInfo>)]
     CollectionInfo {},
+    #[returns(ResponseWrapper<Contracts>)]
     Contracts {},
+    #[returns(ResponseWrapper<ConfigResponse>)]
     Config {},
+    #[returns(ResponseWrapper<Vec<String>>)]
     ContractOperators {},
 }
 
@@ -268,8 +278,7 @@ impl From<QueryMsg> for Cw721QueryMsg {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct ConfigResponse {
     pub admin: String,
     pub creator: String,
@@ -281,17 +290,15 @@ pub struct ConfigResponse {
     pub royalty_share: Option<Decimal>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct LocksReponse {
     pub locks: Locks,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct MintedTokenAmountResponse {
     pub amount: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {}

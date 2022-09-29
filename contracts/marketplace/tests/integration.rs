@@ -6,8 +6,10 @@ use komple_fee_module::msg::{
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
+use komple_marketplace_module::msg::ExecuteMsg;
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
+use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -20,8 +22,6 @@ use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::query_collection_address;
-use marketplace_module::msg::ExecuteMsg;
-use mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use std::str::FromStr;
 
 pub const CREATOR: &str = "juno..creator";
@@ -44,11 +44,11 @@ pub fn hub_module() -> Box<dyn Contract<Empty>> {
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        mint_module::contract::execute,
-        mint_module::contract::instantiate,
-        mint_module::contract::query,
+        komple_mint_module::contract::execute,
+        komple_mint_module::contract::instantiate,
+        komple_mint_module::contract::query,
     )
-    .with_reply(mint_module::contract::reply);
+    .with_reply(komple_mint_module::contract::reply);
     Box::new(contract)
 }
 
@@ -64,9 +64,9 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        marketplace_module::contract::execute,
-        marketplace_module::contract::instantiate,
-        marketplace_module::contract::query,
+        komple_marketplace_module::contract::execute,
+        komple_marketplace_module::contract::instantiate,
+        komple_marketplace_module::contract::query,
     );
     Box::new(contract)
 }
@@ -456,13 +456,13 @@ mod actions {
     use super::*;
 
     use cosmwasm_std::Uint128;
-    use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
-    use komple_token_module::ContractError as TokenContractError;
-    use komple_types::collection::Collections;
-    use marketplace_module::{
+    use komple_marketplace_module::{
         msg::{ExecuteMsg as MarketplaceExecuteMsg, QueryMsg as MarketplaceQueryMsg},
         ContractError as MarketplaceContractError,
     };
+    use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
+    use komple_token_module::ContractError as TokenContractError;
+    use komple_types::collection::Collections;
 
     use komple_types::metadata::Metadata;
 
@@ -472,9 +472,9 @@ mod actions {
         mod fixed_tokens {
             use super::*;
 
+            use komple_marketplace_module::state::FixedListing;
             use komple_types::{metadata::Metadata, query::ResponseWrapper, tokens::Locks};
             use komple_utils::{query_collection_address, query_token_locks};
-            use marketplace_module::state::FixedListing;
 
             #[test]
             fn test_happy_path() {
@@ -1026,8 +1026,8 @@ mod actions {
     }
 
     mod pricing {
+        use komple_marketplace_module::state::FixedListing;
         use komple_types::{marketplace::Listing, query::ResponseWrapper};
-        use marketplace_module::state::FixedListing;
 
         use super::*;
 
@@ -1601,7 +1601,7 @@ mod actions {
 }
 
 mod queries {
-    use marketplace_module::{msg::QueryMsg, state::FixedListing};
+    use komple_marketplace_module::{msg::QueryMsg, state::FixedListing};
 
     use super::*;
 

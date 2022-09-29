@@ -1,12 +1,14 @@
+use crate::state::Config;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Decimal;
+use komple_types::query::ResponseWrapper;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     AddShare {
         name: String,
@@ -26,12 +28,16 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ResponseWrapper<Config>)]
     Config {},
+    #[returns(ResponseWrapper<ShareResponse>)]
     Share { name: String },
+    #[returns(ResponseWrapper<Vec<ShareResponse>>)]
     Shares {},
+    #[returns(ResponseWrapper<Decimal>)]
     TotalFee {},
 }
 
@@ -43,8 +49,7 @@ pub struct ShareResponse {
     pub fee_percentage: Decimal,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct CustomAddress {
     pub name: String,
     pub payment_address: String,

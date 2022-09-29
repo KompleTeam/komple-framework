@@ -1,18 +1,14 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use crate::state::{Config, MetaInfo, Metadata, Trait};
+use cosmwasm_schema::{cw_serde, QueryResponses};
+use komple_types::{metadata::Metadata as MetadataType, query::ResponseWrapper};
 
-use crate::state::{MetaInfo, Metadata, Trait};
-
-use komple_types::metadata::Metadata as MetadataType;
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub admin: String,
     pub metadata_type: MetadataType,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     // Add metadata to the contract for linking it to a token
     // based on metadata type
@@ -48,20 +44,21 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ResponseWrapper<Config>)]
     Config {},
-    RawMetadata {
-        metadata_id: u32,
-    },
-    Metadata {
-        token_id: u32,
-    },
+    #[returns(ResponseWrapper<Metadata>)]
+    RawMetadata { metadata_id: u32 },
+    #[returns(ResponseWrapper<MetadataResponse>)]
+    Metadata { token_id: u32 },
+    #[returns(ResponseWrapper<Vec<Metadata>>)]
     RawMetadatas {
         start_after: Option<u32>,
         limit: Option<u8>,
     },
+    #[returns(ResponseWrapper<Vec<MetadataResponse>>)]
     Metadatas {
         start_after: Option<u32>,
         limit: Option<u8>,
@@ -69,12 +66,11 @@ pub enum QueryMsg {
     // MetadataLock { token_id: u32 },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct MetadataResponse {
     pub metadata: Metadata,
     pub metadata_id: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {}

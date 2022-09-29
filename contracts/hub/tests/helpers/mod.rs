@@ -2,8 +2,11 @@ use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::msg::InstantiateMsg as FeeModuleInstantiateMsg;
 use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
+use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -16,9 +19,6 @@ use komple_types::{
     permission::Permissions, query::ResponseWrapper,
 };
 use komple_utils::{query_collection_address, query_module_address};
-use marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
-use mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -39,19 +39,19 @@ pub fn hub_module() -> Box<dyn Contract<Empty>> {
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        mint_module::contract::execute,
-        mint_module::contract::instantiate,
-        mint_module::contract::query,
+        komple_mint_module::contract::execute,
+        komple_mint_module::contract::instantiate,
+        komple_mint_module::contract::query,
     )
-    .with_reply(mint_module::contract::reply);
+    .with_reply(komple_mint_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        permission_module::contract::execute,
-        permission_module::contract::instantiate,
-        permission_module::contract::query,
+        komple_permission_module::contract::execute,
+        komple_permission_module::contract::instantiate,
+        komple_permission_module::contract::query,
     );
     Box::new(contract)
 }
@@ -68,18 +68,18 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        merge_module::contract::execute,
-        merge_module::contract::instantiate,
-        merge_module::contract::query,
+        komple_merge_module::contract::execute,
+        komple_merge_module::contract::instantiate,
+        komple_merge_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        marketplace_module::contract::execute,
-        marketplace_module::contract::instantiate,
-        marketplace_module::contract::query,
+        komple_marketplace_module::contract::execute,
+        komple_marketplace_module::contract::instantiate,
+        komple_marketplace_module::contract::query,
     );
     Box::new(contract)
 }
