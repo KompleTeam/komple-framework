@@ -1,8 +1,8 @@
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Timestamp, Uint128};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use komple_types::query::ResponseWrapper;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub members: Vec<String>,
     pub start_time: Timestamp,
@@ -12,8 +12,7 @@ pub struct InstantiateMsg {
     pub member_limit: u16,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     UpdateStartTime(Timestamp),
     UpdateEndTime(Timestamp),
@@ -23,24 +22,27 @@ pub enum ExecuteMsg {
     UpdateMemberLimit(u16),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ResponseWrapper<ConfigResponse>)]
     Config {},
+    #[returns(ResponseWrapper<bool>)]
     HasStarted {},
+    #[returns(ResponseWrapper<bool>)]
     HasEnded {},
+    #[returns(ResponseWrapper<bool>)]
     IsActive {},
+    #[returns(ResponseWrapper<Vec<String>>)]
     Members {
         start_after: Option<String>,
         limit: Option<u8>,
     },
-    HasMember {
-        member: String,
-    },
+    #[returns(ResponseWrapper<bool>)]
+    HasMember { member: String },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct ConfigResponse {
     pub admin: String,
     pub start_time: Timestamp,
@@ -52,5 +54,5 @@ pub struct ConfigResponse {
     pub is_active: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {}
