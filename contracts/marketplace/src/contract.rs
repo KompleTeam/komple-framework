@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
+    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
     MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
@@ -20,7 +20,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::tokens::Locks;
 use komple_utils::{
-    check_funds, query_collection_address, query_collection_locks, query_module_address,
+    check_single_fund, query_collection_address, query_collection_locks, query_module_address,
     query_storage, query_token_locks, query_token_owner,
 };
 use semver::Version;
@@ -267,7 +267,10 @@ fn _execute_buy_fixed_listing(
     }
 
     // Check for the sent funds
-    check_funds(&info, &config.native_denom, fixed_listing.price)?;
+    check_single_fund(
+        &info,
+        coin(fixed_listing.price.u128(), config.native_denom.clone()),
+    )?;
 
     let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
     let collection_addr =

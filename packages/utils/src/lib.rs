@@ -3,7 +3,7 @@ use std::{
     str::{from_utf8, Utf8Error},
 };
 
-use cosmwasm_std::{from_slice, Addr, MessageInfo, QuerierWrapper, StdError, StdResult, Uint128};
+use cosmwasm_std::{from_slice, Addr, Coin, MessageInfo, QuerierWrapper, StdError, StdResult};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
 use komple_types::{
@@ -157,28 +157,23 @@ where
     }
 }
 
-pub fn check_funds(
-    info: &MessageInfo,
-    native_denom: &str,
-    price: Uint128,
-) -> Result<(), FundsError> {
+pub fn check_single_fund(info: &MessageInfo, coin: Coin) -> Result<(), FundsError> {
     if info.funds.len() != 1 {
         return Err(FundsError::MissingFunds {});
     };
     let sent_fund = info.funds.get(0).unwrap();
-    if sent_fund.denom != native_denom {
+    if sent_fund.denom != coin.denom {
         return Err(FundsError::InvalidDenom {
             got: sent_fund.denom.to_string(),
-            expected: native_denom.to_string(),
+            expected: coin.denom.to_string(),
         });
     }
-    if sent_fund.amount != price {
+    if sent_fund.amount != coin.amount {
         return Err(FundsError::InvalidFunds {
             got: sent_fund.amount.to_string(),
-            expected: price.to_string(),
+            expected: coin.amount.to_string(),
         });
     }
-
     Ok(())
 }
 
