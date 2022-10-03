@@ -51,9 +51,16 @@ pub fn instantiate(
     let admin = deps.api.addr_validate(&msg.admin)?;
 
     let query = FeeModuleQueryMsg::TotalFee {};
-    let total_fee: Decimal = deps
+    let res: Result<Decimal, StdError> = deps
         .querier
-        .query_wasm_smart(KOMPLE_FEE_CONTRACT_ADDR, &query)?;
+        .query_wasm_smart(KOMPLE_FEE_CONTRACT_ADDR, &query);
+
+    let total_fee: Option<Decimal>;
+    if res.is_ok() {
+        total_fee = Some(res.unwrap());
+    } else {
+        total_fee = None;
+    };
 
     let config = Config {
         admin,
@@ -266,16 +273,36 @@ fn _execute_buy_fixed_listing(
     let collection_addr =
         query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
 
-    // This is the fee marketplace takes
-    let fee = config.fee_percentage.mul(fixed_listing.price);
-
-    // This is the fee for royalty owner
-    // Zero at first because royalty might not exist
-    let mut royalty_fee = Uint128::new(0);
-
+    // Messages to be sent to other contracts
     let mut sub_msgs: Vec<SubMsg> = vec![];
 
-    // Get royalty message if it exists
+    // Payout fee is the full price
+    let mut payout = fixed_listing.price;
+    // Marketplace and royalty fees are 0 at first until they exist
+    let mut marketplace_fee = Uint128::zero();
+    let mut royalty_fee = Uint128::zero();
+
+    // If there is a marketplace fee add to sub_msgs
+    if config.fee_percentage.is_some() {
+        marketplace_fee = config.fee_percentage.unwrap().mul(payout);
+
+        let fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
+            msg: to_binary(&FeeModuleExecuteMsg::Distribute {
+                custom_addresses: Some(vec![FeeModuleCustomAddress {
+                    name: "hub_admin".to_string(),
+                    payment_address: config.admin.to_string(),
+                }]),
+            })?,
+            funds: vec![Coin {
+                denom: config.native_denom.to_string(),
+                amount: marketplace_fee,
+            }],
+        });
+        sub_msgs.push(SubMsg::new(fee_distribution));
+    }
+
+    // If there is a royalty fee add to sub_msgs
     let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
     if let Some(config) = res {
         if let Some(royalty_share) = config.royalty_share {
@@ -294,22 +321,9 @@ fn _execute_buy_fixed_listing(
     }
 
     // Add marketplace and royalty fee and subtract from the price
-    let payout = fixed_listing.price.checked_sub(fee + royalty_fee)?;
-
-    // Fee distribution message
-    let fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
-        msg: to_binary(&FeeModuleExecuteMsg::Distribute {
-            custom_addresses: Some(vec![FeeModuleCustomAddress {
-                name: "hub_admin".to_string(),
-                payment_address: config.admin.to_string(),
-            }]),
-        })?,
-        funds: vec![Coin {
-            denom: config.native_denom.to_string(),
-            amount: fee,
-        }],
-    });
+    payout = fixed_listing
+        .price
+        .checked_sub(marketplace_fee + royalty_fee)?;
 
     // Owner payout message
     let owner_payout = BankMsg::Send {
@@ -320,7 +334,6 @@ fn _execute_buy_fixed_listing(
         }],
     };
     sub_msgs.push(SubMsg::new(owner_payout));
-    sub_msgs.push(SubMsg::new(fee_distribution));
 
     // Transfer token ownership to the new address
     let transfer_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {

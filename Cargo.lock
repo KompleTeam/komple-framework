@@ -560,7 +560,6 @@ dependencies = [
  "cw-utils 0.13.4",
  "cw2 0.13.4",
  "cw721",
- "komple-fee-module",
  "komple-marketplace-module",
  "komple-merge-module",
  "komple-metadata-module",

@@ -1,6 +1,5 @@
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::msg::InstantiateMsg as FeeModuleInstantiateMsg;
 use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
@@ -89,15 +88,6 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
         komple_metadata_module::contract::execute,
         komple_metadata_module::contract::instantiate,
         komple_metadata_module::contract::query,
-    );
-    Box::new(contract)
-}
-
-pub fn fee_contract() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        komple_fee_module::contract::execute,
-        komple_fee_module::contract::instantiate,
-        komple_fee_module::contract::query,
     );
     Box::new(contract)
 }
@@ -199,24 +189,6 @@ pub fn setup_marketplace_module(app: &mut App, hub_addr: Addr) {
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
         .unwrap();
-}
-
-pub fn setup_fee_contract(app: &mut App) -> Addr {
-    let fee_code_id = app.store_code(fee_contract());
-
-    let msg = FeeModuleInstantiateMsg {};
-    let fee_contract_addr = app
-        .instantiate_contract(
-            fee_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &vec![],
-            "test",
-            None,
-        )
-        .unwrap();
-
-    fee_contract_addr
 }
 
 pub fn setup_all_modules(app: &mut App, hub_addr: Addr) {

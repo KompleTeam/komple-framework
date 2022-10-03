@@ -418,6 +418,22 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
+        let hub_addr = setup_hub_module(&mut app);
+        let marketplace_module_code_id = app.store_code(marketplace_module());
+
+        let msg = HubExecuteMsg::InitMarketplaceModule {
+            code_id: marketplace_module_code_id,
+            native_denom: "test".to_string(),
+        };
+        let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
+
+        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace).unwrap();
+        assert_eq!(res, "contract1")
+    }
+
+    #[test]
+    fn test_happy_path_with_fee_module() {
+        let mut app = mock_app();
         setup_fee_contract(&mut app);
         let hub_addr = setup_hub_module(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
@@ -479,7 +495,6 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -549,7 +564,6 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -601,7 +615,6 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -732,7 +745,6 @@ mod actions {
             #[test]
             fn test_invalid_operator() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -797,7 +809,6 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -882,7 +893,6 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -953,7 +963,6 @@ mod actions {
             #[test]
             fn test_invalid_operator() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -1039,7 +1048,6 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -1108,7 +1116,6 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
                 let hub_addr = setup_hub_module(&mut app);
 
                 let (mint_module_addr, marketplace_module_addr) =
@@ -1608,7 +1615,6 @@ mod queries {
     #[test]
     fn test_fixed_listings() {
         let mut app = mock_app();
-        setup_fee_contract(&mut app);
         let hub_addr = setup_hub_module(&mut app);
 
         let (mint_module_addr, marketplace_module_addr) = setup_modules(&mut app, hub_addr.clone());
