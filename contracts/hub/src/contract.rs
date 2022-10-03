@@ -1,15 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
-    StdError, StdResult, SubMsg, WasmMsg,
+    coin, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
+    Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::check_admin_privileges;
+use komple_utils::{check_admin_privileges, check_single_fund};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -24,6 +24,10 @@ const CONTRACT_NAME: &str = "crates.io:komple-hub-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
+
+// Both address and denom will be changed before the contract upload
+const COMMUNITY_POOL_ADDRESS: &str = "community_pool_address";
+const NATIVE_DENOM: &str = "native_denom";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -43,6 +47,14 @@ pub fn instantiate(
         return Err(ContractError::DescriptionTooLong {});
     }
 
+    // There is a 1 token fee for hub initialization
+    // This fee goes to the community pool
+    check_single_fund(&info, coin(1_000_000, NATIVE_DENOM))?;
+    let community_pool_fee = BankMsg::Send {
+        to_address: COMMUNITY_POOL_ADDRESS.to_string(),
+        amount: vec![coin(1_000_000, NATIVE_DENOM)],
+    };
+
     let hub_info = HubInfo {
         name: msg.name,
         description: msg.description,
@@ -54,6 +66,7 @@ pub fn instantiate(
     MODULE_ID.save(deps.storage, &0)?;
 
     Ok(Response::new()
+        .add_message(community_pool_fee)
         .add_attribute("action", "instantiate")
         .add_attribute("admin", info.sender))
 }

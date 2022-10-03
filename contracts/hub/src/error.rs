@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use komple_utils::UtilError;
+use komple_utils::{FundsError, UtilError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -24,6 +24,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     Util(#[from] UtilError),
+
+    #[error("{0}")]
+    Funds(#[from] FundsError),
 
     #[error("Semver parsing error: {0}")]
     SemVer(String),

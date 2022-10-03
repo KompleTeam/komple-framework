@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
@@ -24,7 +24,7 @@ use komple_types::query::ResponseWrapper;
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
 pub const ADMIN: &str = "juno..admin";
-pub const NATIVE_DENOM: &str = "denom";
+pub const NATIVE_DENOM: &str = "native_denom";
 pub const TEST_DENOM: &str = "test_denom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
@@ -81,6 +81,17 @@ pub fn mock_app() -> App {
             .bank
             .init_balance(
                 storage,
+                &Addr::unchecked(ADMIN),
+                vec![Coin {
+                    denom: NATIVE_DENOM.to_string(),
+                    amount: Uint128::new(1_000_000),
+                }],
+            )
+            .unwrap();
+        router
+            .bank
+            .init_balance(
+                storage,
                 &Addr::unchecked(USER),
                 vec![Coin {
                     denom: NATIVE_DENOM.to_string(),
@@ -105,7 +116,7 @@ fn setup_hub_module(app: &mut App) -> Addr {
             hub_code_id,
             Addr::unchecked(ADMIN),
             &msg,
-            &vec![],
+            &[coin(1_000_000, NATIVE_DENOM)],
             "test",
             None,
         )

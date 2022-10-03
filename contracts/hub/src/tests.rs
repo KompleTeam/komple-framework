@@ -3,7 +3,7 @@ use crate::{
     state::WebsiteConfig,
     ContractError,
 };
-use cosmwasm_std::{to_binary, StdError};
+use cosmwasm_std::{coin, to_binary, StdError};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
@@ -61,7 +61,7 @@ pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
 
 const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
 const ADMIN: &str = "juno1qamfln8u5w8d3vlhp5t9mhmylfkgad4jz6t7cv";
-const NATIVE_DENOM: &str = "denom";
+const NATIVE_DENOM: &str = "native_denom";
 
 fn mock_app() -> App {
     AppBuilder::new().build(|router, _, storage| {
@@ -71,8 +71,19 @@ fn mock_app() -> App {
                 storage,
                 &Addr::unchecked(USER),
                 vec![Coin {
+                    denom: "some_denom".to_string(),
+                    amount: Uint128::new(1_000_000),
+                }],
+            )
+            .unwrap();
+        router
+            .bank
+            .init_balance(
+                storage,
+                &Addr::unchecked(ADMIN),
+                vec![Coin {
                     denom: NATIVE_DENOM.to_string(),
-                    amount: Uint128::new(1),
+                    amount: Uint128::new(1_000_000),
                 }],
             )
             .unwrap();
@@ -89,10 +100,146 @@ fn proper_instantiate(app: &mut App) -> Addr {
         external_link: None,
     };
     let hub_module_addr = app
-        .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
+        .instantiate_contract(
+            hub_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[coin(1_000_000, NATIVE_DENOM)],
+            "test",
+            None,
+        )
         .unwrap();
 
     hub_module_addr
+}
+
+mod instantiate {
+    use komple_utils::FundsError;
+
+    use super::*;
+
+    #[test]
+    fn test_happy_path() {
+        let mut app = mock_app();
+        let hub_code_id = app.store_code(hub_module());
+
+        let msg = InstantiateMsg {
+            name: "Test Hub".to_string(),
+            description: "Test Hub".to_string(),
+            image: "https://image.com".to_string(),
+            external_link: None,
+        };
+        let _ = app
+            .instantiate_contract(
+                hub_code_id,
+                Addr::unchecked(ADMIN),
+                &msg,
+                &[coin(1_000_000, NATIVE_DENOM)],
+                "test",
+                None,
+            )
+            .unwrap();
+
+        let res = app
+            .wrap()
+            .query_balance("community_pool_address", NATIVE_DENOM)
+            .unwrap();
+        assert_eq!(res.amount, Uint128::new(1_000_000));
+    }
+
+    #[test]
+    fn test_invalid_funds() {
+        let mut app = mock_app();
+        let hub_code_id = app.store_code(hub_module());
+
+        let msg = InstantiateMsg {
+            name: "Test Hub".to_string(),
+            description: "Test Hub".to_string(),
+            image: "https://image.com".to_string(),
+            external_link: None,
+        };
+
+        let err = app
+            .instantiate_contract(
+                hub_code_id,
+                Addr::unchecked(ADMIN),
+                &msg.clone(),
+                &vec![],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            FundsError::MissingFunds {}.to_string()
+        );
+
+        let err = app
+            .instantiate_contract(
+                hub_code_id,
+                Addr::unchecked(ADMIN),
+                &msg.clone(),
+                &[coin(1, NATIVE_DENOM)],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            FundsError::InvalidFunds {
+                got: "1".to_string(),
+                expected: "1000000".to_string()
+            }
+            .to_string()
+        );
+
+        let err = app
+            .instantiate_contract(
+                hub_code_id,
+                Addr::unchecked(USER),
+                &msg.clone(),
+                &[coin(1_000_000, "some_denom")],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            FundsError::InvalidDenom {
+                got: "some_denom".to_string(),
+                expected: NATIVE_DENOM.to_string()
+            }
+            .to_string()
+        );
+    }
+
+    #[test]
+    fn invalid_description() {
+        let mut app = mock_app();
+        let hub_code_id = app.store_code(hub_module());
+
+        let msg = InstantiateMsg {
+            name: "Test Hub".to_string(),
+            description: "Test HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest Hub".to_string(),
+            image: "https://image.com".to_string(),
+            external_link: None,
+        };
+
+        let err = app
+            .instantiate_contract(
+                hub_code_id,
+                Addr::unchecked(ADMIN),
+                &msg.clone(),
+                &[coin(1_000_000, NATIVE_DENOM)],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            ContractError::DescriptionTooLong {}.to_string()
+        );
+    }
 }
 
 mod actions {
