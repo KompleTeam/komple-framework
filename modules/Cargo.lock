@@ -565,6 +565,7 @@ dependencies = [
  "komple-metadata-module",
  "komple-mint-module",
  "komple-permission-module",
+ "komple-template",
  "komple-token-module",
  "komple-types",
  "komple-utils",
@@ -676,6 +677,19 @@ dependencies = [
  "komple-utils",
  "schemars",
  "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-template"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.13.4",
+ "cw2 0.13.4",
+ "schemars",
  "serde",
  "thiserror",
 ]

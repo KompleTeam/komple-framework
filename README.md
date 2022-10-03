@@ -2,6 +2,12 @@
 
 Komple Framework is a smart contract framework that provides the tools for creating NFT based applications using [CosmWasm](https://cosmwasm.com).
 
-# Maintainers
+## Folder Structure
 
-- Arda [@findolor](https://github.com/findolor)
+### Modules
+
+Modules folder contains the base contracts for the framework.
+
+### Permissions
+
+Permissions folder contains the permission contracts for the permission module.
