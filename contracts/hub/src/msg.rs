@@ -1,5 +1,6 @@
 use crate::state::{HubInfo, WebsiteConfig};
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cosmwasm_std::Binary;
 use komple_types::{module::Modules, query::ResponseWrapper};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -14,22 +15,10 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    // Instantiates a new mint module
-    InitMintModule {
+    RegisterModule {
+        module: String,
+        msg: Binary,
         code_id: u64,
-    },
-    // Instantiates a new permission module
-    InitPermissionModule {
-        code_id: u64,
-    },
-    // Instantiates a new merge module
-    InitMergeModule {
-        code_id: u64,
-    },
-    // Instantiates a new marketplace module
-    InitMarketplaceModule {
-        code_id: u64,
-        native_denom: String,
     },
     // Updates the general hub info
     UpdateHubInfo {
@@ -44,8 +33,8 @@ pub enum ExecuteMsg {
         background_image: Option<String>,
         banner_image: Option<String>,
     },
-    RemoveNativeModule {
-        module: Modules,
+    DeregisterModule {
+        module: String,
     },
     UpdateOperators {
         addrs: Vec<String>,

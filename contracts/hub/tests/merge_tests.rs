@@ -12,9 +12,11 @@ use helpers::{
 mod initialization {
     use super::*;
 
+    use cosmwasm_std::to_binary;
     use komple_types::module::Modules;
 
     use komple_hub_module::ContractError;
+    use komple_merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
     use komple_utils::query_module_address;
 
     #[test]
@@ -23,7 +25,13 @@ mod initialization {
         let hub_addr = proper_instantiate(&mut app);
         let merge_module_code_id = app.store_code(merge_module());
 
-        let msg = ExecuteMsg::InitMergeModule {
+        let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+            admin: ADMIN.to_string(),
+        })
+        .unwrap();
+        let msg = ExecuteMsg::RegisterModule {
+            module: Modules::Merge.to_string(),
+            msg: instantiate_msg,
             code_id: merge_module_code_id,
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
@@ -38,7 +46,13 @@ mod initialization {
         let hub_addr = proper_instantiate(&mut app);
         let merge_module_code_id = app.store_code(merge_module());
 
-        let msg = ExecuteMsg::InitMergeModule {
+        let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+            admin: ADMIN.to_string(),
+        })
+        .unwrap();
+        let msg = ExecuteMsg::RegisterModule {
+            module: Modules::Merge.to_string(),
+            msg: instantiate_msg,
             code_id: merge_module_code_id,
         };
         let err = app

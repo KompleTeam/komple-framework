@@ -7,21 +7,16 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 
-use komple_types::module::{
-    Modules, MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID, MERGE_MODULE_INSTANTIATE_REPLY_ID,
-    MINT_MODULE_INSTANTIATE_REPLY_ID, PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
-};
-use komple_types::{
-    instantiate::{MarketplaceModuleInstantiateMsg, ModuleInstantiateMsg},
-    query::ResponseWrapper,
-};
+use komple_types::module::Modules;
+use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
 use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDR, OPERATORS, WEBSITE_CONFIG,
+    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDRS, MODULE_ID, MODULE_TO_REGISTER,
+    OPERATORS, WEBSITE_CONFIG,
 };
 
 // version info for migration info
@@ -56,6 +51,8 @@ pub fn instantiate(
     };
     HUB_INFO.save(deps.storage, &hub_info)?;
 
+    MODULE_ID.save(deps.storage, &0)?;
+
     Ok(Response::new()
         .add_attribute("action", "instantiate")
         .add_attribute("admin", info.sender))
@@ -69,19 +66,11 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::InitMintModule { code_id } => {
-            execute_init_mint_module(deps, env, info, code_id)
-        }
-        ExecuteMsg::InitPermissionModule { code_id } => {
-            execute_init_permission_module(deps, env, info, code_id)
-        }
-        ExecuteMsg::InitMergeModule { code_id } => {
-            execute_init_merge_module(deps, env, info, code_id)
-        }
-        ExecuteMsg::InitMarketplaceModule {
+        ExecuteMsg::RegisterModule {
+            module,
+            msg,
             code_id,
-            native_denom,
-        } => execute_init_marketplace_module(deps, env, info, code_id, native_denom),
+        } => execute_register_module(deps, env, info, module, msg, code_id),
         ExecuteMsg::UpdateHubInfo {
             name,
             description,
@@ -100,22 +89,23 @@ pub fn execute(
             background_image,
             banner_image,
         ),
-        ExecuteMsg::RemoveNativeModule { module } => {
-            execute_remove_native_module(deps, env, info, module)
+        ExecuteMsg::DeregisterModule { module } => {
+            execute_deregister_module(deps, env, info, module)
         }
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
     }
 }
 
-fn execute_init_mint_module(
+fn execute_register_module(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
+    module: String,
+    msg: Binary,
     code_id: u64,
 ) -> Result<Response, ContractError> {
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
-
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
@@ -124,141 +114,31 @@ fn execute_init_mint_module(
         operators,
     )?;
 
-    let msg: SubMsg = SubMsg {
+    // Get the latest module reply id
+    let module_id = (MODULE_ID.load(deps.storage)?) + 1;
+
+    let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&ModuleInstantiateMsg {
-                admin: config.admin.to_string(),
-            })?,
+            msg,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("Komple Framework Mint module"),
+            label: format!("Komple Framework Module - {}", module.as_str()),
         }
         .into(),
-        id: MINT_MODULE_INSTANTIATE_REPLY_ID,
+        id: module_id,
         gas_limit: None,
         reply_on: ReplyOn::Success,
     };
 
-    Ok(Response::new()
-        .add_submessage(msg)
-        .add_attribute("action", "execute_init_mint_module"))
-}
-
-fn execute_init_permission_module(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    code_id: u64,
-) -> Result<Response, ContractError> {
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        None,
-        operators,
-    )?;
-
-    let msg: SubMsg = SubMsg {
-        msg: WasmMsg::Instantiate {
-            code_id,
-            msg: to_binary(&ModuleInstantiateMsg {
-                admin: config.admin.to_string(),
-            })?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
-            label: String::from("Komple Framework Permission module"),
-        }
-        .into(),
-        id: PERMISSION_MODULE_INSTANTIATE_REPLY_ID,
-        gas_limit: None,
-        reply_on: ReplyOn::Success,
-    };
+    MODULE_ID.save(deps.storage, &module_id)?;
+    // This will be loaded in reply handler for registering the correct module
+    MODULE_TO_REGISTER.save(deps.storage, &module)?;
 
     Ok(Response::new()
-        .add_submessage(msg)
-        .add_attribute("action", "execute_init_permission_module"))
-}
-
-fn execute_init_merge_module(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    code_id: u64,
-) -> Result<Response, ContractError> {
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        None,
-        operators,
-    )?;
-
-    let msg: SubMsg = SubMsg {
-        msg: WasmMsg::Instantiate {
-            code_id,
-            msg: to_binary(&ModuleInstantiateMsg {
-                admin: config.admin.to_string(),
-            })?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
-            label: String::from("Komple Framework Merge module"),
-        }
-        .into(),
-        id: MERGE_MODULE_INSTANTIATE_REPLY_ID,
-        gas_limit: None,
-        reply_on: ReplyOn::Success,
-    };
-
-    Ok(Response::new()
-        .add_submessage(msg)
-        .add_attribute("action", "execute_init_merge_module"))
-}
-
-fn execute_init_marketplace_module(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    code_id: u64,
-    native_denom: String,
-) -> Result<Response, ContractError> {
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        None,
-        operators,
-    )?;
-
-    let msg: SubMsg = SubMsg {
-        msg: WasmMsg::Instantiate {
-            code_id,
-            msg: to_binary(&MarketplaceModuleInstantiateMsg {
-                admin: config.admin.to_string(),
-                native_denom,
-            })?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
-            label: String::from("Komple Framework Marketplace Module"),
-        }
-        .into(),
-        id: MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID,
-        gas_limit: None,
-        reply_on: ReplyOn::Success,
-    };
-
-    Ok(Response::new()
-        .add_submessage(msg)
-        .add_attribute("action", "execute_init_marketplace_module"))
+        .add_submessage(sub_msg)
+        .add_attribute("action", "execute_register_module")
+        .add_attribute("module", module.as_str()))
 }
 
 fn execute_update_hub_info(
@@ -321,11 +201,11 @@ fn execute_update_website_config(
     Ok(Response::new().add_attribute("action", "execute_update_website_config"))
 }
 
-fn execute_remove_native_module(
+fn execute_deregister_module(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    module: Modules,
+    module: String,
 ) -> Result<Response, ContractError> {
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
@@ -337,14 +217,14 @@ fn execute_remove_native_module(
         operators,
     )?;
 
-    if !MODULE_ADDR.has(deps.storage, &module.as_str()) {
+    if !MODULE_ADDRS.has(deps.storage, &module) {
         return Err(ContractError::InvalidModule {});
     }
 
-    MODULE_ADDR.remove(deps.storage, module.as_str());
+    MODULE_ADDRS.remove(deps.storage, &module);
 
     Ok(Response::new()
-        .add_attribute("action", "execute_remove_native_module")
+        .add_attribute("action", "execute_deregister_module")
         .add_attribute("module", module.as_str()))
 }
 
@@ -409,8 +289,8 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
 }
 
 fn query_module_address(deps: Deps, module: Modules) -> StdResult<ResponseWrapper<String>> {
-    let addr = MODULE_ADDR.load(deps.storage, module.as_str())?;
-    Ok(ResponseWrapper::new("module_address", addr.to_string()))
+    let addr = MODULE_ADDRS.load(deps.storage, module.as_str())?;
+    Ok(ResponseWrapper::new("module_addrSess", addr.to_string()))
 }
 
 fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
@@ -424,43 +304,41 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    match msg.id {
-        MINT_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::Mint)
-        }
-        PERMISSION_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::Permission)
-        }
-        MERGE_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::Merge)
-        }
-        MARKETPLACE_MODULE_INSTANTIATE_REPLY_ID => {
-            handle_module_instantiate_reply(deps, msg, Modules::Marketplace)
-        }
-        _ => return Err(ContractError::InvalidReplyID {}),
-    }
+    // Get the last module id
+    let module_id = MODULE_ID.load(deps.storage)?;
+
+    // Check if the reply id is the same
+    if msg.id != module_id {
+        return Err(ContractError::InvalidReplyID {});
+    };
+
+    // Get the module for registering
+    let module_to_register = MODULE_TO_REGISTER.load(deps.storage)?;
+
+    // Handle the registration
+    handle_module_instantiate_reply(deps, msg, module_to_register.as_str())
 }
 
 fn handle_module_instantiate_reply(
     deps: DepsMut,
     msg: Reply,
-    module: Modules,
+    module_to_register: &str,
 ) -> Result<Response, ContractError> {
     let reply = parse_reply_instantiate_data(msg);
     match reply {
         Ok(res) => {
-            MODULE_ADDR.save(
+            MODULE_ADDRS.save(
                 deps.storage,
-                module.as_str(),
+                module_to_register,
                 &Addr::unchecked(res.contract_address),
             )?;
             Ok(Response::default().add_attribute(
                 "action",
-                format!("instantiate_{}_module_reply", module.as_str()),
+                format!("instantiate_{}_module_reply", module_to_register),
             ))
         }
         Err(_) => Err(ContractError::ModuleInstantiateError {
-            module: module.as_str().to_string(),
+            module: module_to_register.to_string(),
         }),
     }
 }

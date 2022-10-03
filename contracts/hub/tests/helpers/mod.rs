@@ -1,11 +1,18 @@
-use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
-use komple_marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
+use komple_marketplace_module::msg::{
+    ExecuteMsg as MarketplaceExecuteMsg, InstantiateMsg as MarketplaceModuleInstantiateMsg,
+};
+use komple_merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
-use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_mint_module::msg::{
+    ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintModuleInstantiateMsg,
+};
+use komple_permission_module::msg::{
+    ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionModuleInstantiateMsg,
+};
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -149,7 +156,13 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
 pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
     let mint_module_code_id = app.store_code(mint_module());
 
-    let msg = ExecuteMsg::InitMintModule {
+    let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+        admin: ADMIN.to_string(),
+    })
+    .unwrap();
+    let msg = ExecuteMsg::RegisterModule {
+        module: Modules::Mint.to_string(),
+        msg: instantiate_msg,
         code_id: mint_module_code_id,
     };
     let _ = app
@@ -160,7 +173,13 @@ pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
 pub fn setup_merge_module(app: &mut App, hub_addr: Addr) {
     let merge_module_code_id = app.store_code(merge_module());
 
-    let msg = ExecuteMsg::InitMergeModule {
+    let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+        admin: ADMIN.to_string(),
+    })
+    .unwrap();
+    let msg = ExecuteMsg::RegisterModule {
+        module: Modules::Merge.to_string(),
+        msg: instantiate_msg,
         code_id: merge_module_code_id,
     };
     let _ = app
@@ -171,20 +190,32 @@ pub fn setup_merge_module(app: &mut App, hub_addr: Addr) {
 pub fn setup_permission_module(app: &mut App, hub_addr: Addr) {
     let permission_module_code_id = app.store_code(permission_module());
 
-    let msg = ExecuteMsg::InitPermissionModule {
+    let instantiate_msg = to_binary(&PermissionModuleInstantiateMsg {
+        admin: ADMIN.to_string(),
+    })
+    .unwrap();
+    let msg = ExecuteMsg::RegisterModule {
+        module: Modules::Permission.to_string(),
+        msg: instantiate_msg,
         code_id: permission_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
 }
 
 pub fn setup_marketplace_module(app: &mut App, hub_addr: Addr) {
     let marketplace_module_code_id = app.store_code(marketplace_module());
 
-    let msg = ExecuteMsg::InitMarketplaceModule {
-        code_id: marketplace_module_code_id,
+    let instantiate_msg = to_binary(&MarketplaceModuleInstantiateMsg {
+        admin: ADMIN.to_string(),
         native_denom: NATIVE_DENOM.to_string(),
+    })
+    .unwrap();
+    let msg = ExecuteMsg::RegisterModule {
+        module: Modules::Marketplace.to_string(),
+        msg: instantiate_msg,
+        code_id: marketplace_module_code_id,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])

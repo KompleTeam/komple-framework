@@ -1,12 +1,14 @@
-use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
-use komple_mint_module::msg::ExecuteMsg;
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_mint_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_permission_module::msg::{
+    ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionInstantiateMsg,
+};
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -116,13 +118,25 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let permission_code_id = app.store_code(permission_module());
 
-    let msg = HubExecuteMsg::InitMintModule {
+    let instantiate_msg = to_binary(&InstantiateMsg {
+        admin: ADMIN.to_string(),
+    })
+    .unwrap();
+    let msg = HubExecuteMsg::RegisterModule {
+        module: Modules::Mint.to_string(),
+        msg: instantiate_msg,
         code_id: mint_code_id,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
-    let msg = HubExecuteMsg::InitPermissionModule {
+    let instantiate_msg = to_binary(&PermissionInstantiateMsg {
+        admin: ADMIN.to_string(),
+    })
+    .unwrap();
+    let msg = HubExecuteMsg::RegisterModule {
+        module: Modules::Permission.to_string(),
+        msg: instantiate_msg,
         code_id: permission_code_id,
     };
     let _ = app
@@ -261,7 +275,13 @@ mod initialization {
         let hub_addr = setup_hub_module(&mut app);
         let mint_module_code_id = app.store_code(mint_module());
 
-        let msg = HubExecuteMsg::InitMintModule {
+        let instantiate_msg = to_binary(&InstantiateMsg {
+            admin: ADMIN.to_string(),
+        })
+        .unwrap();
+        let msg = HubExecuteMsg::RegisterModule {
+            module: Modules::Mint.to_string(),
+            msg: instantiate_msg,
             code_id: mint_module_code_id,
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
@@ -276,7 +296,13 @@ mod initialization {
         let hub_addr = setup_hub_module(&mut app);
         let mint_module_code_id = app.store_code(mint_module());
 
-        let msg = HubExecuteMsg::InitMergeModule {
+        let instantiate_msg = to_binary(&InstantiateMsg {
+            admin: ADMIN.to_string(),
+        })
+        .unwrap();
+        let msg = HubExecuteMsg::RegisterModule {
+            module: Modules::Mint.to_string(),
+            msg: instantiate_msg,
             code_id: mint_module_code_id,
         };
         let err = app

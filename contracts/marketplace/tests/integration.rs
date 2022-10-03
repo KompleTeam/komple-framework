@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::msg::{
     ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
@@ -6,10 +6,10 @@ use komple_fee_module::msg::{
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
-use komple_marketplace_module::msg::ExecuteMsg;
+use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
-use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -215,15 +215,27 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let marketplace_code_id = app.store_code(marketplace_module());
 
-    let msg = HubExecuteMsg::InitMintModule {
+    let instantiate_msg = to_binary(&MintInstantiateMsg {
+        admin: ADMIN.to_string(),
+    })
+    .unwrap();
+    let msg = HubExecuteMsg::RegisterModule {
+        module: Modules::Mint.to_string(),
+        msg: instantiate_msg,
         code_id: mint_code_id,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
-    let msg = HubExecuteMsg::InitMarketplaceModule {
-        code_id: marketplace_code_id,
+    let instantiate_msg = to_binary(&InstantiateMsg {
+        admin: ADMIN.to_string(),
         native_denom: NATIVE_DENOM.to_string(),
+    })
+    .unwrap();
+    let msg = HubExecuteMsg::RegisterModule {
+        module: Modules::Marketplace.to_string(),
+        msg: instantiate_msg,
+        code_id: marketplace_code_id,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
@@ -421,9 +433,15 @@ mod initialization {
         let hub_addr = setup_hub_module(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let msg = HubExecuteMsg::InitMarketplaceModule {
+        let instantiate_msg = to_binary(&InstantiateMsg {
+            admin: ADMIN.to_string(),
+            native_denom: NATIVE_DENOM.to_string(),
+        })
+        .unwrap();
+        let msg = HubExecuteMsg::RegisterModule {
+            module: Modules::Marketplace.to_string(),
+            msg: instantiate_msg,
             code_id: marketplace_module_code_id,
-            native_denom: "test".to_string(),
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
@@ -438,9 +456,15 @@ mod initialization {
         let hub_addr = setup_hub_module(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let msg = HubExecuteMsg::InitMarketplaceModule {
+        let instantiate_msg = to_binary(&InstantiateMsg {
+            admin: ADMIN.to_string(),
+            native_denom: NATIVE_DENOM.to_string(),
+        })
+        .unwrap();
+        let msg = HubExecuteMsg::RegisterModule {
+            module: Modules::Marketplace.to_string(),
+            msg: instantiate_msg,
             code_id: marketplace_module_code_id,
-            native_denom: "test".to_string(),
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
@@ -454,9 +478,15 @@ mod initialization {
         let hub_addr = setup_hub_module(&mut app);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let msg = HubExecuteMsg::InitMarketplaceModule {
+        let instantiate_msg = to_binary(&InstantiateMsg {
+            admin: ADMIN.to_string(),
+            native_denom: NATIVE_DENOM.to_string(),
+        })
+        .unwrap();
+        let msg = HubExecuteMsg::RegisterModule {
+            module: Modules::Marketplace.to_string(),
+            msg: instantiate_msg,
             code_id: marketplace_module_code_id,
-            native_denom: "test".to_string(),
         };
         let err = app
             .execute_contract(Addr::unchecked(USER), hub_addr.clone(), &msg, &vec![])

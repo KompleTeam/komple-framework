@@ -1,5 +1,8 @@
 use komple_types::{
-    hub::{HUB_INFO_NAMESPACE, WEBSITE_CONFIG_NAMESPACE},
+    hub::{
+        HUB_INFO_NAMESPACE, MODULE_ID_NAMESPACE, MODULE_TO_REGISTER_NAMESPACE,
+        WEBSITE_CONFIG_NAMESPACE,
+    },
     module::MODULE_ADDRS_NAMESPACE,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
@@ -25,7 +28,7 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-pub const MODULE_ADDR: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);
+pub const MODULE_ADDRS: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);
 
 // Contains the configuration for website profile
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -37,3 +40,7 @@ pub struct WebsiteConfig {
 pub const WEBSITE_CONFIG: Item<WebsiteConfig> = Item::new(WEBSITE_CONFIG_NAMESPACE);
 
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
+
+pub const MODULE_ID: Item<u64> = Item::new(MODULE_ID_NAMESPACE);
+
+pub const MODULE_TO_REGISTER: Item<String> = Item::new(MODULE_TO_REGISTER_NAMESPACE);
