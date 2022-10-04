@@ -1,4 +1,5 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
@@ -215,9 +216,11 @@ pub fn setup_metadata_module(
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_module());
 
-    let msg = TokenExecuteMsg::InitMetadataContract {
-        code_id: metadata_code_id,
-        metadata_type,
+    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: TokenExecuteMsg::InitMetadataContract {
+            code_id: metadata_code_id,
+            metadata_type,
+        },
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
@@ -225,7 +228,12 @@ pub fn setup_metadata_module(
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_module_addr.clone(), &TokenQueryMsg::Contracts {})
+        .query_wasm_smart(
+            token_module_addr.clone(),
+            &Cw721QueryMsg::Extension {
+                msg: TokenQueryMsg::Contracts {},
+            },
+        )
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -438,7 +446,7 @@ mod permission_mint {
         let collection_2_addr =
             query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
-        let msg = TokenQueryMsg::OwnerOf {
+        let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
             token_id: "1".to_string(),
             include_expired: None,
         };

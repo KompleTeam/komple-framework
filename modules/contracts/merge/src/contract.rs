@@ -1,27 +1,25 @@
+use crate::error::ContractError;
+use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
+use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Response,
-    StdError, StdResult, WasmMsg,
+    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo,
+    Response, StdError, StdResult, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use semver::Version;
-use std::collections::HashMap;
-
+use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
+use komple_mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
+use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{
     check_admin_privileges, query_collection_address, query_linked_collections,
     query_module_address,
 };
-
-use komple_mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
-
-use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
+use semver::Version;
+use std::collections::HashMap;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
@@ -215,8 +213,10 @@ fn make_burn_messages(
         let collection_addr =
             query_collection_address(&deps.querier, &mint_module_addr, &burn_msg.collection_id)?;
 
-        let msg = TokenExecuteMsg::Burn {
-            token_id: burn_msg.token_id.to_string(),
+        let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+            msg: TokenExecuteMsg::Burn {
+                token_id: burn_msg.token_id.to_string(),
+            },
         };
         msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: collection_addr.to_string(),

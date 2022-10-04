@@ -86,8 +86,6 @@ fn execute_add_share(
         return Err(ContractError::InvalidTotalFee {});
     }
 
-    println!("{:?}", address);
-
     let share = Share {
         fee_percentage: percentage,
         payment_address: address

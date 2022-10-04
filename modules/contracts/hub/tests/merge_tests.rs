@@ -1,4 +1,6 @@
 use cosmwasm_std::Addr;
+use cw721::OwnerOfResponse;
+use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::Executor;
 use komple_hub_module::msg::ExecuteMsg;
 
@@ -69,7 +71,6 @@ mod normal_merge {
     use super::*;
 
     use cosmwasm_std::to_binary;
-    use cw721::OwnerOfResponse;
     use helpers::link_collections;
     use komple_merge_module::{
         msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg},
@@ -198,7 +199,7 @@ mod normal_merge {
             .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &vec![])
             .unwrap();
 
-        let msg = TokenQueryMsg::OwnerOf {
+        let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
             token_id: "1".to_string(),
             include_expired: None,
         };
@@ -206,7 +207,7 @@ mod normal_merge {
             app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
         assert!(res.is_err());
 
-        let msg = TokenQueryMsg::OwnerOf {
+        let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
             token_id: "3".to_string(),
             include_expired: None,
         };
@@ -217,7 +218,7 @@ mod normal_merge {
         let collection_2_addr =
             query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
-        let msg = TokenQueryMsg::OwnerOf {
+        let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
             token_id: "1".to_string(),
             include_expired: None,
         };
@@ -401,7 +402,6 @@ mod permission_merge {
     use super::*;
 
     use cosmwasm_std::to_binary;
-    use cw721::OwnerOfResponse;
     use helpers::{add_permission_for_module, link_collections};
     use komple_merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
     use komple_permission_module::msg::PermissionCheckMsg;
@@ -566,7 +566,7 @@ mod permission_merge {
                 .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &vec![])
                 .unwrap();
 
-            let msg = TokenQueryMsg::OwnerOf {
+            let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             };
@@ -574,7 +574,7 @@ mod permission_merge {
                 app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
             assert!(res.is_err());
 
-            let msg = TokenQueryMsg::OwnerOf {
+            let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
                 token_id: "3".to_string(),
                 include_expired: None,
             };
@@ -585,7 +585,7 @@ mod permission_merge {
             let collection_2_addr =
                 query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
-            let msg = TokenQueryMsg::OwnerOf {
+            let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             };

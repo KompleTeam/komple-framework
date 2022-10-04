@@ -1,5 +1,6 @@
 use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
@@ -81,9 +82,11 @@ fn setup_whitelist(
         per_address_limit,
         member_limit: 10,
     };
-    let msg = ExecuteMsg::InitWhitelistContract {
-        code_id: whitelist_code_id,
-        instantiate_msg,
+    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: ExecuteMsg::InitWhitelistContract {
+            code_id: whitelist_code_id,
+            instantiate_msg,
+        },
     };
     let _ = app
         .execute_contract(
@@ -94,7 +97,9 @@ fn setup_whitelist(
         )
         .unwrap();
 
-    let msg = QueryMsg::Contracts {};
+    let msg = Cw721QueryMsg::Extension {
+        msg: QueryMsg::Contracts {},
+    };
     let res: ResponseWrapper<Contracts> = app
         .wrap()
         .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -150,9 +155,11 @@ fn setup_metadata_module(
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_module());
 
-    let msg = ExecuteMsg::InitMetadataContract {
-        code_id: metadata_code_id,
-        metadata_type,
+    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: ExecuteMsg::InitMetadataContract {
+            code_id: metadata_code_id,
+            metadata_type,
+        },
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
@@ -160,7 +167,12 @@ fn setup_metadata_module(
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_module_addr.clone(), &QueryMsg::Contracts {})
+        .query_wasm_smart(
+            token_module_addr.clone(),
+            &Cw721QueryMsg::Extension {
+                msg: QueryMsg::Contracts {},
+            },
+        )
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -217,9 +229,11 @@ mod initialization {
             per_address_limit: 2,
             member_limit: 10,
         };
-        let msg = ExecuteMsg::InitWhitelistContract {
-            code_id: whitelist_code_id,
-            instantiate_msg,
+        let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+            msg: ExecuteMsg::InitWhitelistContract {
+                code_id: whitelist_code_id,
+                instantiate_msg,
+            },
         };
         let _ = app
             .execute_contract(
@@ -230,7 +244,9 @@ mod initialization {
             )
             .unwrap();
 
-        let msg = QueryMsg::Contracts {};
+        let msg = Cw721QueryMsg::Extension {
+            msg: QueryMsg::Contracts {},
+        };
         let res: ResponseWrapper<Contracts> = app
             .wrap()
             .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -272,13 +288,17 @@ mod actions {
             setup_metadata(&mut app, metadata_module_addr.clone());
             setup_metadata(&mut app, metadata_module_addr);
 
-            let random_mint = ExecuteMsg::Mint {
-                owner: RANDOM.to_string(),
-                metadata_id: None,
+            let random_mint: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::Mint {
+                    owner: RANDOM.to_string(),
+                    metadata_id: None,
+                },
             };
-            let random_2_mint = ExecuteMsg::Mint {
-                owner: RANDOM_2.to_string(),
-                metadata_id: None,
+            let random_2_mint: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::Mint {
+                    owner: RANDOM_2.to_string(),
+                    metadata_id: None,
+                },
             };
 
             let _ = app
@@ -349,9 +369,11 @@ mod actions {
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-            let msg = ExecuteMsg::Mint {
-                owner: USER.to_string(),
-                metadata_id: None,
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::Mint {
+                    owner: USER.to_string(),
+                    metadata_id: None,
+                },
             };
             let err = app
                 .execute_contract(
@@ -392,9 +414,11 @@ mod actions {
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-            let msg = ExecuteMsg::Mint {
-                owner: USER.to_string(),
-                metadata_id: None,
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::Mint {
+                    owner: USER.to_string(),
+                    metadata_id: None,
+                },
             };
 
             let _ = app
@@ -450,9 +474,11 @@ mod actions {
                 setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
             setup_metadata(&mut app, metadata_module_addr.clone());
 
-            let msg = ExecuteMsg::Mint {
-                owner: USER.to_string(),
-                metadata_id: None,
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::Mint {
+                    owner: USER.to_string(),
+                    metadata_id: None,
+                },
             };
             let _ = app
                 .execute_contract(

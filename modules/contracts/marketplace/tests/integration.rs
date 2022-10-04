@@ -1,4 +1,5 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::msg::{
     ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
@@ -319,9 +320,11 @@ pub fn setup_metadata_module(
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_module());
 
-    let msg = TokenExecuteMsg::InitMetadataContract {
-        code_id: metadata_code_id,
-        metadata_type,
+    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: TokenExecuteMsg::InitMetadataContract {
+            code_id: metadata_code_id,
+            metadata_type,
+        },
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
@@ -329,7 +332,12 @@ pub fn setup_metadata_module(
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_module_addr.clone(), &TokenQueryMsg::Contracts {})
+        .query_wasm_smart(
+            token_module_addr.clone(),
+            &Cw721QueryMsg::Extension {
+                msg: TokenQueryMsg::Contracts {},
+            },
+        )
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -377,7 +385,9 @@ pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sen
 }
 
 pub fn setup_token_module_operators(app: &mut App, token_module_addr: Addr, addrs: Vec<String>) {
-    let msg = TokenExecuteMsg::UpdateOperators { addrs };
+    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: TokenExecuteMsg::UpdateOperators { addrs },
+    };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &vec![])
         .unwrap();
@@ -389,7 +399,7 @@ pub fn give_approval_to_module(
     owner: &str,
     operator_addr: &Addr,
 ) {
-    let msg = TokenExecuteMsg::ApproveAll {
+    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::ApproveAll {
         operator: operator_addr.to_string(),
         expires: None,
     };
@@ -706,9 +716,11 @@ mod actions {
                     transfer_lock: true,
                     send_lock: true,
                 };
-                let msg = TokenExecuteMsg::UpdateTokenLock {
-                    token_id: "1".to_string(),
-                    locks: transfer_lock.clone(),
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateTokenLock {
+                        token_id: "1".to_string(),
+                        locks: transfer_lock.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -732,9 +744,11 @@ mod actions {
                     TokenContractError::TransferLocked {}.to_string()
                 );
 
-                let msg = TokenExecuteMsg::UpdateTokenLock {
-                    token_id: "1".to_string(),
-                    locks: unlock.clone(),
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateTokenLock {
+                        token_id: "1".to_string(),
+                        locks: unlock.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -745,8 +759,10 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = TokenExecuteMsg::UpdateLocks {
-                    locks: transfer_lock.clone(),
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateLocks {
+                        locks: transfer_lock.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -770,8 +786,10 @@ mod actions {
                     TokenContractError::TransferLocked {}.to_string()
                 );
 
-                let msg = TokenExecuteMsg::UpdateLocks {
-                    locks: unlock.clone(),
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateLocks {
+                        locks: unlock.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1359,8 +1377,10 @@ mod actions {
                 assert_eq!(balance.amount, Uint128::new(20));
 
                 // Setup admin royalty for 10 percent
-                let msg = TokenExecuteMsg::UpdateRoyaltyShare {
-                    royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
+                        royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1424,8 +1444,10 @@ mod actions {
                 let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
                 assert_eq!(balance.amount, Uint128::new(100));
 
-                let msg = TokenExecuteMsg::UpdateRoyaltyShare {
-                    royalty_share: Some(Decimal::from_str("0.05").unwrap()),
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
+                        royalty_share: Some(Decimal::from_str("0.05").unwrap()),
+                    },
                 };
                 let _ = app
                     .execute_contract(

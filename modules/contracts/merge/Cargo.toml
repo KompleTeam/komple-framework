@@ -54,6 +54,7 @@ komple-permission-module = { path = "../permission", features = ["library"] }
 komple-mint-module = { path = "../mint", features = ["library"] }
 komple-utils = { path = "../../packages/utils" }
 komple-types = { path = "../../packages/types" }
+cw721-base = "0.15.0"
 
 [dev-dependencies]
 cw-multi-test = "0.13.2"
