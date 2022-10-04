@@ -5,6 +5,7 @@ use crate::{
     state::CollectionInfo,
 };
 use cosmwasm_std::{coin, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::{
     msg::{ExecuteMsg as MetadataExecuteMsg, QueryMsg as MetadataQueryMsg},
@@ -123,9 +124,11 @@ fn setup_metadata_module(
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_module());
 
-    let msg = ExecuteMsg::InitMetadataContract {
-        code_id: metadata_code_id,
-        metadata_type,
+    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: ExecuteMsg::InitMetadataContract {
+            code_id: metadata_code_id,
+            metadata_type,
+        },
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
@@ -133,7 +136,12 @@ fn setup_metadata_module(
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_module_addr.clone(), &QueryMsg::Contracts {})
+        .query_wasm_smart(
+            token_module_addr.clone(),
+            &Cw721QueryMsg::Extension {
+                msg: QueryMsg::Contracts {},
+            },
+        )
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -434,8 +442,10 @@ mod actions {
             let token_module_addr =
                 proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-            let msg = ExecuteMsg::UpdateOperators {
-                addrs: vec![RANDOM.to_string(), RANDOM_2.to_string()],
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::UpdateOperators {
+                    addrs: vec![RANDOM.to_string(), RANDOM_2.to_string()],
+                },
             };
             let _ = app
                 .execute_contract(
@@ -446,7 +456,9 @@ mod actions {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::ContractOperators {};
+            let msg = Cw721QueryMsg::Extension {
+                msg: QueryMsg::ContractOperators {},
+            };
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
                 .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -460,8 +472,10 @@ mod actions {
             let token_module_addr =
                 proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-            let msg = ExecuteMsg::UpdateOperators {
-                addrs: vec![RANDOM.to_string(), RANDOM_2.to_string()],
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::UpdateOperators {
+                    addrs: vec![RANDOM.to_string(), RANDOM_2.to_string()],
+                },
             };
             let err = app
                 .execute_contract(
@@ -495,7 +509,9 @@ mod actions {
                 Some(Decimal::from_str("0.5").unwrap()),
             );
 
-            let msg = QueryMsg::Config {};
+            let msg = Cw721QueryMsg::Extension {
+                msg: QueryMsg::Config {},
+            };
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
                 .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -505,8 +521,10 @@ mod actions {
                 Some(Decimal::from_str("0.5").unwrap())
             );
 
-            let msg = ExecuteMsg::UpdateRoyaltyShare {
-                royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::UpdateRoyaltyShare {
+                    royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+                },
             };
             let _ = app
                 .execute_contract(
@@ -517,7 +535,9 @@ mod actions {
                 )
                 .unwrap();
 
-            let msg = QueryMsg::Config {};
+            let msg = Cw721QueryMsg::Extension {
+                msg: QueryMsg::Config {},
+            };
             let res: ResponseWrapper<ConfigResponse> = app
                 .wrap()
                 .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -541,8 +561,10 @@ mod actions {
                 Some(Decimal::from_str("0.5").unwrap()),
             );
 
-            let msg = ExecuteMsg::UpdateRoyaltyShare {
-                royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::UpdateRoyaltyShare {
+                    royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+                },
             };
             let err = app
                 .execute_contract(
@@ -610,8 +632,10 @@ mod actions {
                 Some(Decimal::from_str("0.5").unwrap()),
             );
 
-            let msg = ExecuteMsg::UpdateRoyaltyShare {
-                royalty_share: Some(Decimal::from_str("1.2").unwrap()),
+            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                msg: ExecuteMsg::UpdateRoyaltyShare {
+                    royalty_share: Some(Decimal::from_str("1.2").unwrap()),
+                },
             };
             let err = app
                 .execute_contract(
@@ -646,8 +670,10 @@ mod actions {
                     transfer_lock: true,
                     send_lock: false,
                 };
-                let msg = ExecuteMsg::UpdateLocks {
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -658,7 +684,9 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::Locks {};
+                let msg = Cw721QueryMsg::Extension {
+                    msg: QueryMsg::Locks {},
+                };
                 let res: ResponseWrapper<Locks> = app
                     .wrap()
                     .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -678,8 +706,10 @@ mod actions {
                     transfer_lock: true,
                     send_lock: false,
                 };
-                let msg = ExecuteMsg::UpdateLocks {
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -712,9 +742,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -731,9 +763,11 @@ mod actions {
                     transfer_lock: true,
                     send_lock: false,
                 };
-                let msg = ExecuteMsg::UpdateTokenLock {
-                    token_id: "1".to_string(),
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateTokenLock {
+                        token_id: "1".to_string(),
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -744,8 +778,10 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::TokenLocks {
-                    token_id: "1".to_string(),
+                let msg = Cw721QueryMsg::Extension {
+                    msg: QueryMsg::TokenLocks {
+                        token_id: "1".to_string(),
+                    },
                 };
                 let res: ResponseWrapper<Locks> = app
                     .wrap()
@@ -766,9 +802,11 @@ mod actions {
                     transfer_lock: true,
                     send_lock: false,
                 };
-                let msg = ExecuteMsg::UpdateTokenLock {
-                    token_id: "1".to_string(),
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateTokenLock {
+                        token_id: "1".to_string(),
+                        locks: locks.clone(),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -796,9 +834,11 @@ mod actions {
                     transfer_lock: true,
                     send_lock: false,
                 };
-                let msg = ExecuteMsg::UpdateTokenLock {
-                    token_id: "1".to_string(),
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateTokenLock {
+                        token_id: "1".to_string(),
+                        locks: locks.clone(),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -824,8 +864,10 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit {
-                    per_address_limit: Some(5),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdatePerAddressLimit {
+                        per_address_limit: Some(5),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -836,7 +878,9 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::Config {};
+                let msg = Cw721QueryMsg::Extension {
+                    msg: QueryMsg::Config {},
+                };
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
                     .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -850,8 +894,10 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit {
-                    per_address_limit: Some(5),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdatePerAddressLimit {
+                        per_address_limit: Some(5),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -873,8 +919,10 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit {
-                    per_address_limit: Some(0),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdatePerAddressLimit {
+                        per_address_limit: Some(0),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -900,8 +948,10 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: Some(app.block_info().time.plus_seconds(5)),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateStartTime {
+                        start_time: Some(app.block_info().time.plus_seconds(5)),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -912,7 +962,9 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::Config {};
+                let msg = Cw721QueryMsg::Extension {
+                    msg: QueryMsg::Config {},
+                };
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
                     .query_wasm_smart(token_module_addr.clone(), &msg)
@@ -929,8 +981,10 @@ mod actions {
                 let token_module_addr =
                     proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: Some(app.block_info().time.plus_seconds(5)),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateStartTime {
+                        start_time: Some(app.block_info().time.plus_seconds(5)),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -964,8 +1018,10 @@ mod actions {
 
                 app.update_block(|block| block.time = block.time.plus_seconds(10));
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: Some(app.block_info().time.plus_seconds(5)),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateStartTime {
+                        start_time: Some(app.block_info().time.plus_seconds(5)),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -982,8 +1038,10 @@ mod actions {
 
                 app.update_block(|block| block.time = block.time.minus_seconds(6));
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: Some(genesis_time.plus_seconds(2)),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateStartTime {
+                        start_time: Some(genesis_time.plus_seconds(2)),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1020,9 +1078,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1033,9 +1093,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::TransferNft {
-                    recipient: RANDOM.to_string(),
-                    token_id: "1".to_string(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::TransferNft {
+                        recipient: RANDOM.to_string(),
+                        token_id: "1".to_string(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1063,9 +1125,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1083,9 +1147,11 @@ mod actions {
                     send_lock: false,
                 };
 
-                let msg = ExecuteMsg::UpdateTokenLock {
-                    token_id: "1".to_string(),
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateTokenLock {
+                        token_id: "1".to_string(),
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1096,9 +1162,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::TransferNft {
-                    recipient: RANDOM.to_string(),
-                    token_id: "1".to_string(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::TransferNft {
+                        recipient: RANDOM.to_string(),
+                        token_id: "1".to_string(),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1113,8 +1181,10 @@ mod actions {
                     ContractError::TransferLocked {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateLocks {
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1125,9 +1195,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::TransferNft {
-                    recipient: RANDOM.to_string(),
-                    token_id: "1".to_string(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::TransferNft {
+                        recipient: RANDOM.to_string(),
+                        token_id: "1".to_string(),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1160,9 +1232,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1173,7 +1247,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::ApproveAll {
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::ApproveAll {
                     operator: ADMIN.to_string(),
                     expires: None,
                 };
@@ -1186,9 +1260,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::AdminTransferNft {
-                    recipient: RANDOM.to_string(),
-                    token_id: "1".to_string(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::AdminTransferNft {
+                        recipient: RANDOM.to_string(),
+                        token_id: "1".to_string(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1216,9 +1292,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1251,9 +1329,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr.clone());
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1264,8 +1344,10 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Burn {
-                    token_id: "1".to_string(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Burn {
+                        token_id: "1".to_string(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1298,9 +1380,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1318,9 +1402,11 @@ mod actions {
                     send_lock: false,
                 };
 
-                let msg = ExecuteMsg::UpdateTokenLock {
-                    token_id: "1".to_string(),
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateTokenLock {
+                        token_id: "1".to_string(),
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1331,8 +1417,10 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Burn {
-                    token_id: "1".to_string(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Burn {
+                        token_id: "1".to_string(),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1347,8 +1435,10 @@ mod actions {
                     ContractError::BurnLocked {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateLocks {
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1359,8 +1449,10 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Burn {
-                    token_id: "1".to_string(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Burn {
+                        token_id: "1".to_string(),
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1400,9 +1492,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1440,8 +1534,10 @@ mod actions {
                     send_lock: false,
                 };
 
-                let msg = ExecuteMsg::UpdateLocks {
-                    locks: locks.clone(),
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1452,9 +1548,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1491,9 +1589,11 @@ mod actions {
                 setup_metadata(&mut app, metadata_module_addr.clone());
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1504,9 +1604,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Mint {
-                    owner: RANDOM.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: RANDOM.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1517,9 +1619,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Mint {
-                    owner: RANDOM_2.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: RANDOM_2.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1556,9 +1660,11 @@ mod actions {
                 setup_metadata(&mut app, metadata_module_addr.clone());
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1569,9 +1675,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let _ = app
                     .execute_contract(
@@ -1582,9 +1690,11 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1621,9 +1731,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1659,9 +1771,11 @@ mod actions {
                 );
                 setup_metadata(&mut app, metadata_module_addr);
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1690,9 +1804,11 @@ mod actions {
                     None,
                 );
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(
@@ -1707,9 +1823,11 @@ mod actions {
                     FundsError::MissingFunds {}.to_string()
                 );
 
-                let msg = ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
+                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: ExecuteMsg::Mint {
+                        owner: USER.to_string(),
+                        metadata_id: None,
+                    },
                 };
                 let err = app
                     .execute_contract(

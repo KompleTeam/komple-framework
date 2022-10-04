@@ -8,6 +8,7 @@ use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
+use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use komple_token_module::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
 };
@@ -348,9 +349,11 @@ fn _execute_mint(
     for msg in msgs {
         let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
 
-        let mint_msg = TokenExecuteMsg::Mint {
-            owner: msg.owner.clone(),
-            metadata_id: msg.metadata_id,
+        let mint_msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+            msg: TokenExecuteMsg::Mint {
+                owner: msg.owner.clone(),
+                metadata_id: msg.metadata_id,
+            },
         };
         let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: collection_addr.to_string(),

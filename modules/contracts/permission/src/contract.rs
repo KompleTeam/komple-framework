@@ -147,9 +147,7 @@ fn execute_check(
             return Err(ContractError::InvalidPermissions {});
         }
         let _ = match permission.permission_type {
-            Permissions::Ownership => {
-                check_ownership_permission(&deps, &hub_addr, permission.data)
-            }
+            Permissions::Ownership => check_ownership_permission(&deps, &hub_addr, permission.data),
             Permissions::Attribute => unimplemented!(),
         };
     }
@@ -169,8 +167,7 @@ fn check_ownership_permission(
     hub_addr: &Addr,
     data: Binary,
 ) -> Result<bool, ContractError> {
-    let mint_module_addr =
-        query_module_address(&deps.querier, hub_addr, Modules::Mint)?;
+    let mint_module_addr = query_module_address(&deps.querier, hub_addr, Modules::Mint)?;
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 

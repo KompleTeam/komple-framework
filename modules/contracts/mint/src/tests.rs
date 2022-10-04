@@ -1,5 +1,6 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
+use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::{
     msg::ExecuteMsg as MetadataExecuteMsg,
@@ -134,9 +135,11 @@ fn setup_metadata_module(
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_module());
 
-    let msg = TokenExecuteMsg::InitMetadataContract {
-        code_id: metadata_code_id,
-        metadata_type,
+    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: TokenExecuteMsg::InitMetadataContract {
+            code_id: metadata_code_id,
+            metadata_type,
+        },
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
@@ -144,7 +147,12 @@ fn setup_metadata_module(
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_module_addr.clone(), &TokenQueryMsg::Contracts {})
+        .query_wasm_smart(
+            token_module_addr.clone(),
+            &Cw721QueryMsg::Extension {
+                msg: TokenQueryMsg::Contracts {},
+            },
+        )
         .unwrap();
     res.data.metadata.unwrap()
 }
@@ -234,7 +242,7 @@ mod actions {
                 app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
             let token_address = response.data;
 
-            let msg = TokenQueryMsg::OwnerOf {
+            let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             };

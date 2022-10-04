@@ -13,15 +13,18 @@ use komple_utils::{check_admin_privileges, check_single_fund};
 use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::msg::{
+    ConfigResponse, ExecuteMsg as TokenExecuteMsg, InstantiateMsg, MigrateMsg,
+    QueryMsg as TokenQueryMsg,
+};
 use crate::state::{
     CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO,
     CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS,
     TOKEN_LOCKS,
 };
 
-use cw721::{ContractInfoResponse, Cw721Execute};
-use cw721_base::MintMsg;
+use cw721::ContractInfoResponse;
+use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 
 use komple_metadata_module::msg::{
     ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
@@ -31,7 +34,10 @@ use komple_whitelist_module::msg::{
     QueryMsg as WhitelistQueryMsg,
 };
 
-pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty>;
+pub type Cw721Contract<'a> =
+    cw721_base::Cw721Contract<'a, Empty, Empty, TokenExecuteMsg, TokenQueryMsg>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<Empty, TokenExecuteMsg>;
+pub type QueryMsg = cw721_base::QueryMsg<TokenQueryMsg>;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-token-module";
@@ -144,61 +150,75 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        // LOCK MESSAGES
-        ExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
-        ExecuteMsg::UpdateTokenLock { token_id, locks } => {
-            execute_update_token_locks(deps, env, info, token_id, locks)
-        }
-
-        // OPERATION MESSAGES
-        ExecuteMsg::Mint { owner, metadata_id } => {
-            execute_mint(deps, env, info, owner, metadata_id)
-        }
-        ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
-        ExecuteMsg::TransferNft {
-            token_id,
-            recipient,
-        } => execute_transfer(deps, env, info, token_id, recipient),
-        ExecuteMsg::SendNft {
-            token_id,
-            contract,
-            msg,
-        } => execute_send(deps, env, info, token_id, contract, msg),
-
-        // CONFIG MESSAGES
-        ExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
-            execute_update_per_address_limit(deps, env, info, per_address_limit)
-        }
-        ExecuteMsg::UpdateStartTime { start_time } => {
-            execute_update_start_time(deps, env, info, start_time)
-        }
-
-        // ADMIN MESSAGES
-        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
-        ExecuteMsg::AdminTransferNft {
-            recipient,
-            token_id,
-        } => execute_admin_transfer(deps, env, info, token_id, recipient),
-        ExecuteMsg::UpdateRoyaltyShare { royalty_share } => {
-            execute_update_royalty_share(deps, env, info, royalty_share)
-        }
-
-        // CONTRACT MESSAGES
-        ExecuteMsg::InitMetadataContract {
-            code_id,
-            metadata_type,
-        } => execute_init_metadata_module(deps, env, info, code_id, metadata_type),
-        ExecuteMsg::InitWhitelistContract {
-            code_id,
-            instantiate_msg,
-        } => execute_init_whitelist_module(deps, env, info, code_id, instantiate_msg),
-
-        // CW721 MESSAGES
+        ExecuteMsg::Extension { msg } => match msg {
+            // LOCK MESSAGES
+            TokenExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
+            TokenExecuteMsg::UpdateTokenLock { token_id, locks } => {
+                execute_update_token_locks(deps, env, info, token_id, locks)
+            }
+            // OPERATION MESSAGES
+            TokenExecuteMsg::Mint { owner, metadata_id } => {
+                execute_mint(deps, env, info, owner, metadata_id)
+            }
+            TokenExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
+            TokenExecuteMsg::TransferNft {
+                token_id,
+                recipient,
+            } => execute_transfer(deps, env, info, token_id, recipient),
+            TokenExecuteMsg::SendNft {
+                token_id,
+                contract,
+                msg,
+            } => execute_send(deps, env, info, token_id, contract, msg),
+            // CONFIG MESSAGES
+            TokenExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
+                execute_update_per_address_limit(deps, env, info, per_address_limit)
+            }
+            TokenExecuteMsg::UpdateStartTime { start_time } => {
+                execute_update_start_time(deps, env, info, start_time)
+            }
+            // ADMIN MESSAGES
+            TokenExecuteMsg::UpdateOperators { addrs } => {
+                execute_update_operators(deps, env, info, addrs)
+            }
+            TokenExecuteMsg::AdminTransferNft {
+                recipient,
+                token_id,
+            } => execute_admin_transfer(deps, env, info, token_id, recipient),
+            TokenExecuteMsg::UpdateRoyaltyShare { royalty_share } => {
+                execute_update_royalty_share(deps, env, info, royalty_share)
+            }
+            // CONTRACT MESSAGES
+            TokenExecuteMsg::InitMetadataContract {
+                code_id,
+                metadata_type,
+            } => execute_init_metadata_module(deps, env, info, code_id, metadata_type),
+            TokenExecuteMsg::InitWhitelistContract {
+                code_id,
+                instantiate_msg,
+            } => execute_init_whitelist_module(deps, env, info, code_id, instantiate_msg),
+        },
         _ => {
-            let res = Cw721Contract::default().execute(deps, env, info, msg.into());
-            match res {
-                Ok(res) => Ok(res),
-                Err(e) => Err(e.into()),
+            match msg {
+                // We are not allowing for normal mint endpoint
+                Cw721ExecuteMsg::Mint(_mint_msg) => return Err(ContractError::Unauthorized {}.into()),
+                Cw721ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
+                Cw721ExecuteMsg::SendNft {
+                    token_id,
+                    contract,
+                    msg,
+                } => execute_send(deps, env, info, token_id, contract, msg),
+                Cw721ExecuteMsg::TransferNft {
+                    token_id,
+                    recipient,
+                } => execute_transfer(deps, env, info, token_id, recipient),
+                _ => {
+                    let res = Cw721Contract::default().execute(deps, env, info, msg.into());
+                    match res {
+                        Ok(res) => Ok(res),
+                        Err(e) => Err(e.into()),
+                    }
+                }
             }
         }
     }
@@ -452,8 +472,7 @@ pub fn execute_burn(
         funds: vec![],
     });
 
-    let res = Cw721Contract::default().burn(deps, env, info, token_id);
-
+    let res = Cw721Contract::default().execute(deps, env, info, ExecuteMsg::Burn { token_id });
     match res {
         Ok(res) => Ok(res.add_message(unlink_metadata_msg)),
         Err(e) => Err(e.into()),
@@ -477,7 +496,15 @@ pub fn execute_transfer(
         return Err(ContractError::TransferLocked {});
     }
 
-    let res = Cw721Contract::default().transfer_nft(deps, env, info, recipient, token_id);
+    let res = Cw721Contract::default().execute(
+        deps,
+        env,
+        info,
+        ExecuteMsg::TransferNft {
+            recipient,
+            token_id,
+        },
+    );
     match res {
         Ok(res) => Ok(res),
         Err(e) => Err(e.into()),
@@ -503,7 +530,15 @@ pub fn execute_admin_transfer(
         operators,
     )?;
 
-    let res = Cw721Contract::default().transfer_nft(deps, env, info, recipient, token_id);
+    let res = Cw721Contract::default().execute(
+        deps,
+        env,
+        info,
+        ExecuteMsg::TransferNft {
+            recipient,
+            token_id,
+        },
+    );
     match res {
         Ok(res) => Ok(res),
         Err(e) => Err(e.into()),
@@ -528,7 +563,16 @@ pub fn execute_send(
         return Err(ContractError::SendLocked {});
     }
 
-    let res = Cw721Contract::default().send_nft(deps, env, info, contract, token_id, msg);
+    let res = Cw721Contract::default().execute(
+        deps,
+        env,
+        info,
+        ExecuteMsg::SendNft {
+            contract,
+            token_id,
+            msg,
+        },
+    );
     match res {
         Ok(res) => Ok(res),
         Err(e) => Err(e.into()),
@@ -751,15 +795,19 @@ fn get_mint_price(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::Locks {} => to_binary(&query_locks(deps)?),
-        QueryMsg::TokenLocks { token_id } => to_binary(&query_token_locks(deps, token_id)?),
-        QueryMsg::MintedTokensPerAddress { address } => {
-            to_binary(&query_minted_tokens_per_address(deps, address)?)
-        }
-        QueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
-        QueryMsg::Contracts {} => to_binary(&query_contracts(deps)?),
-        QueryMsg::ContractOperators {} => to_binary(&query_contract_operators(deps)?),
+        QueryMsg::Extension { msg } => match msg {
+            TokenQueryMsg::Config {} => to_binary(&query_config(deps)?),
+            TokenQueryMsg::Locks {} => to_binary(&query_locks(deps)?),
+            TokenQueryMsg::TokenLocks { token_id } => {
+                to_binary(&query_token_locks(deps, token_id)?)
+            }
+            TokenQueryMsg::MintedTokensPerAddress { address } => {
+                to_binary(&query_minted_tokens_per_address(deps, address)?)
+            }
+            TokenQueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
+            TokenQueryMsg::Contracts {} => to_binary(&query_contracts(deps)?),
+            TokenQueryMsg::ContractOperators {} => to_binary(&query_contract_operators(deps)?),
+        },
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
 }

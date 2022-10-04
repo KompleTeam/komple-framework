@@ -1,4 +1,5 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_marketplace_module::msg::{
@@ -321,7 +322,7 @@ pub fn give_approval_to_module(
     owner: &str,
     operator_addr: &Addr,
 ) {
-    let msg = TokenExecuteMsg::ApproveAll {
+    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::ApproveAll {
         operator: operator_addr.to_string(),
         expires: None,
     };
@@ -383,12 +384,6 @@ pub fn get_modules_addresses(app: &mut App, hub_addr: &Addr) -> (Addr, Addr, Add
     let res = query_module_address(&app.wrap(), hub_addr, Modules::Marketplace);
     marketplace_module_addr = res.unwrap();
 
-    // println!("");
-    // println!("mint_module_addr: {}", mint_module_addr);
-    // println!("merge_module_addr: {}", merge_module_addr);
-    // println!("permission_module_addr: {}", permission_module_addr);
-    // println!("");
-
     (
         mint_module_addr,
         merge_module_addr,
@@ -437,9 +432,11 @@ pub fn setup_metadata_module(
 ) -> Addr {
     let metadata_code_id = app.store_code(metadata_module());
 
-    let msg = TokenExecuteMsg::InitMetadataContract {
-        code_id: metadata_code_id,
-        metadata_type,
+    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+        msg: TokenExecuteMsg::InitMetadataContract {
+            code_id: metadata_code_id,
+            metadata_type,
+        },
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
@@ -447,7 +444,12 @@ pub fn setup_metadata_module(
 
     let res: ResponseWrapper<Contracts> = app
         .wrap()
-        .query_wasm_smart(token_module_addr.clone(), &TokenQueryMsg::Contracts {})
+        .query_wasm_smart(
+            token_module_addr.clone(),
+            &Cw721QueryMsg::Extension {
+                msg: TokenQueryMsg::Contracts {},
+            },
+        )
         .unwrap();
     res.data.metadata.unwrap()
 }

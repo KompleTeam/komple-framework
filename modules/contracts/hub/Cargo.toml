@@ -52,7 +52,6 @@ thiserror = { version = "1.0.31" }
 cw-utils = "0.13.2"
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
-cw721 = "0.13.2"
 
 [dev-dependencies]
 cw-multi-test = "0.13.2"
@@ -62,3 +61,5 @@ komple-permission-module = { path = "../permission", features = ["library"]  }
 komple-mint-module = { path = "../mint", features = ["library"] }
 komple-token-module = { path = "../token", features = ["library"] }
 komple-metadata-module = { path = "../metadata", features = ["library"]  }
+cw721 = "0.15.0"
+cw721-base = { version = "0.15.0" }
