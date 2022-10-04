@@ -201,7 +201,9 @@ pub fn execute(
         _ => {
             match msg {
                 // We are not allowing for normal mint endpoint
-                Cw721ExecuteMsg::Mint(_mint_msg) => return Err(ContractError::Unauthorized {}.into()),
+                Cw721ExecuteMsg::Mint(_mint_msg) => {
+                    return Err(ContractError::Unauthorized {}.into())
+                }
                 Cw721ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
                 Cw721ExecuteMsg::SendNft {
                     token_id,

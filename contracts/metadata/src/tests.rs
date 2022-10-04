@@ -1433,19 +1433,22 @@ mod queries {
                 start_after: None,
                 limit: None,
             };
-            let res: ResponseWrapper<Vec<Metadata>> = app
+            let res: ResponseWrapper<Vec<MetadataResponse>> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 30);
             assert_eq!(
                 res.data[14],
-                Metadata {
-                    meta_info,
-                    attributes: vec![Trait {
-                        trait_type: "trait_type_15".to_string(),
-                        value: "10".to_string(),
-                    }]
+                MetadataResponse {
+                    metadata: Metadata {
+                        meta_info,
+                        attributes: vec![Trait {
+                            trait_type: "trait_type_15".to_string(),
+                            value: "10".to_string(),
+                        }]
+                    },
+                    metadata_id: 15
                 }
             );
         }
@@ -1486,19 +1489,22 @@ mod queries {
                 start_after: Some(35),
                 limit: None,
             };
-            let res: ResponseWrapper<Vec<Metadata>> = app
+            let res: ResponseWrapper<Vec<MetadataResponse>> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 15);
             assert_eq!(
                 res.data[0],
-                Metadata {
-                    meta_info: meta_info.clone(),
-                    attributes: vec![Trait {
-                        trait_type: "trait_type_36".to_string(),
-                        value: "10".to_string(),
-                    }]
+                MetadataResponse {
+                    metadata: Metadata {
+                        meta_info: meta_info.clone(),
+                        attributes: vec![Trait {
+                            trait_type: "trait_type_36".to_string(),
+                            value: "10".to_string(),
+                        }]
+                    },
+                    metadata_id: 36
                 }
             );
 
@@ -1506,19 +1512,22 @@ mod queries {
                 start_after: Some(35),
                 limit: Some(7),
             };
-            let res: ResponseWrapper<Vec<Metadata>> = app
+            let res: ResponseWrapper<Vec<MetadataResponse>> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 7);
             assert_eq!(
                 res.data[6],
-                Metadata {
-                    meta_info,
-                    attributes: vec![Trait {
-                        trait_type: "trait_type_42".to_string(),
-                        value: "10".to_string(),
-                    }]
+                MetadataResponse {
+                    metadata: Metadata {
+                        meta_info,
+                        attributes: vec![Trait {
+                            trait_type: "trait_type_42".to_string(),
+                            value: "10".to_string(),
+                        }]
+                    },
+                    metadata_id: 42
                 }
             );
         }
