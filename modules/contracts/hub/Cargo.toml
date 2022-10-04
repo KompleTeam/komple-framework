@@ -62,4 +62,4 @@ komple-mint-module = { path = "../mint", features = ["library"] }
 komple-token-module = { path = "../token", features = ["library"] }
 komple-metadata-module = { path = "../metadata", features = ["library"]  }
 cw721 = "0.15.0"
-cw721-base = { version = "0.15.0" }
+cw721-base = { version = "0.15.0", features = ["library"] }

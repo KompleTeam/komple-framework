@@ -727,7 +727,7 @@ dependencies = [
  "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
- "cw721 0.13.4",
+ "cw721 0.15.0",
  "komple-token-module",
  "komple-types",
  "komple-utils",
