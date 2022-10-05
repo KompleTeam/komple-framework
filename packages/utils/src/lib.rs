@@ -1,7 +1,3 @@
-use std::{
-    ops::Deref,
-    str::{from_utf8, Utf8Error},
-};
 use cosmwasm_std::{from_slice, Addr, QuerierWrapper, StdError, StdResult};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
@@ -11,6 +7,10 @@ use komple_types::{
     tokens::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
 };
 use serde::de::DeserializeOwned;
+use std::{
+    ops::Deref,
+    str::{from_utf8, Utf8Error},
+};
 use thiserror::Error;
 
 pub mod funds;
@@ -169,4 +169,3 @@ pub enum UtilError {
     #[error("{0}")]
     Utf8(#[from] Utf8Error),
 }
-

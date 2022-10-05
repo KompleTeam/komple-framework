@@ -73,7 +73,6 @@ pub fn execute(
             module_name,
             custom_payment_addresses,
         ),
-        _ => unimplemented!(),
     }
 }
 
@@ -541,8 +540,6 @@ fn query_modules(
             })
             .collect::<Vec<String>>(),
     };
-
-    println!("{:?}", modules);
 
     Ok(ResponseWrapper {
         query: "modules".to_string(),

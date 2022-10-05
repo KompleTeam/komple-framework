@@ -259,7 +259,7 @@ mod actions {
     use super::*;
 
     mod minting {
-        use komple_utils::FundsError;
+        use komple_utils::funds::FundsError;
 
         use super::*;
 

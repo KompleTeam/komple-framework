@@ -1,4 +1,4 @@
-use cosmwasm_std::{Uint128, MessageInfo, Coin, StdError};
+use cosmwasm_std::{Coin, MessageInfo, StdError, Uint128};
 use thiserror::Error;
 
 pub fn check_single_amount(info: &MessageInfo, amount: Uint128) -> Result<(), FundsError> {
@@ -49,4 +49,3 @@ pub enum FundsError {
     #[error("No funds found!")]
     MissingFunds {},
 }
-
