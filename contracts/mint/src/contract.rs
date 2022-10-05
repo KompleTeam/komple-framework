@@ -23,8 +23,8 @@ use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use crate::error::ContractError;
 use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
-    Config, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG, HUB_ADDR,
-    LINKED_COLLECTIONS, OPERATORS,
+    Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG,
+    HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
 };
 
 // version info for migration info
@@ -108,6 +108,12 @@ pub fn execute(
             collection_id,
             linked_collections,
         } => execute_update_linked_collections(deps, env, info, collection_id, linked_collections),
+        ExecuteMsg::WhitelistCollection { collection_id } => {
+            execute_whitelist_collection(deps, env, info, collection_id)
+        }
+        ExecuteMsg::BlacklistCollection { collection_id } => {
+            execute_blacklist_collection(deps, env, info, collection_id)
+        }
     }
 }
 
@@ -431,21 +437,85 @@ fn execute_update_linked_collections(
     Ok(Response::new().add_attribute("action", "execute_update_linked_collections"))
 }
 
+fn execute_whitelist_collection(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    collection_id: u32,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        operators,
+    )?;
+
+    if COLLECTION_ADDRS.has(deps.storage, collection_id) {
+        return Err(ContractError::AlreadyWhitelistlisted {});
+    };
+
+    let collection_addr = BLACKLIST_COLLECTION_ADDRS.may_load(deps.storage, collection_id)?;
+    if collection_addr.is_none() {
+        return Err(ContractError::CollectionIdNotFound {});
+    };
+
+    BLACKLIST_COLLECTION_ADDRS.remove(deps.storage, collection_id);
+    COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
+
+    Ok(Response::new()
+        .add_attribute("action", "execute_whitelist_collection")
+        .add_attribute("collection_id", collection_id.to_string()))
+}
+
+fn execute_blacklist_collection(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    collection_id: u32,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        operators,
+    )?;
+
+    if BLACKLIST_COLLECTION_ADDRS.has(deps.storage, collection_id) {
+        return Err(ContractError::AlreadyBlacklisted {});
+    };
+
+    let collection_addr = COLLECTION_ADDRS.may_load(deps.storage, collection_id)?;
+    if collection_addr.is_none() {
+        return Err(ContractError::CollectionIdNotFound {});
+    };
+
+    COLLECTION_ADDRS.remove(deps.storage, collection_id);
+    BLACKLIST_COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
+
+    Ok(Response::new()
+        .add_attribute("action", "execute_blacklist_collection")
+        .add_attribute("collection_id", collection_id.to_string()))
+}
+
 fn check_collection_ids_exists(
     deps: &DepsMut,
     collection_ids: &Vec<u32>,
 ) -> Result<(), ContractError> {
-    let existing_ids = COLLECTION_ADDRS
-        .keys(deps.storage, None, None, Order::Ascending)
-        .map(|id| id.unwrap())
-        .collect::<Vec<u32>>();
-
     for collection_id in collection_ids {
-        if !existing_ids.contains(collection_id) {
-            return Err(ContractError::InvalidCollectionId {});
+        if !COLLECTION_ADDRS.has(deps.storage, *collection_id) {
+            return Err(ContractError::CollectionIdNotFound {});
         }
     }
-
     Ok(())
 }
 
@@ -463,9 +533,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::LinkedCollections { collection_id } => {
             to_binary(&query_linked_collections(deps, collection_id)?)
         }
-        QueryMsg::Collections { start_after, limit } => {
-            to_binary(&query_collections(deps, start_after, limit)?)
-        }
+        QueryMsg::Collections {
+            blacklist,
+            start_after,
+            limit,
+        } => to_binary(&query_collections(deps, blacklist, start_after, limit)?),
     }
 }
 
@@ -517,12 +589,19 @@ fn query_linked_collections(
 
 fn query_collections(
     deps: Deps,
+    blacklist: bool,
     start_after: Option<u32>,
     limit: Option<u8>,
 ) -> StdResult<ResponseWrapper<Vec<CollectionsResponse>>> {
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
-    let collections = COLLECTION_ADDRS
+
+    let collections_state = match blacklist {
+        true => BLACKLIST_COLLECTION_ADDRS,
+        false => COLLECTION_ADDRS,
+    };
+
+    let collections = collections_state
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {
@@ -533,6 +612,7 @@ fn query_collections(
             }
         })
         .collect::<Vec<CollectionsResponse>>();
+
     Ok(ResponseWrapper::new("collections", collections))
 }
 
