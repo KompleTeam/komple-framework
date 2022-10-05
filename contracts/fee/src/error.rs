@@ -1,4 +1,5 @@
 use cosmwasm_std::{DivideByZeroError, StdError};
+use komple_utils::funds::FundsError;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -9,18 +10,30 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Invalid percentage")]
-    InvalidPercentage {},
+    #[error("Invalid fee")]
+    InvalidFee {},
+
+    #[error("Fee already exists")]
+    ExistingFee {},
 
     #[error("Share already exists")]
     ExistingShare {},
 
-    #[error("Share not found")]
-    ShareNotFound {},
+    #[error("Fee not found")]
+    FeeNotFound {},
 
     #[error("Total fee cannot exceed 1")]
     InvalidTotalFee {},
 
+    #[error("Invalid funds")]
+    InvalidFunds {},
+
+    #[error("No payments found for distribution")]
+    NoPaymentsFound {},
+
     #[error("{0}")]
     DivideByZeroError(#[from] DivideByZeroError),
+
+    #[error("{0}")]
+    FundsError(#[from] FundsError),
 }

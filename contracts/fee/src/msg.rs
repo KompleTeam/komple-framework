@@ -1,30 +1,28 @@
 use crate::state::Config;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Decimal;
-use komple_types::query::ResponseWrapper;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cosmwasm_std::{Binary, Decimal, Uint128};
+use komple_types::{fee::Fees, query::ResponseWrapper};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {}
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    AddShare {
-        name: String,
-        address: Option<String>,
-        percentage: Decimal,
+    SetFee {
+        fee_type: Fees,
+        module_name: String,
+        fee_name: String,
+        data: Binary,
     },
-    UpdateShare {
-        name: String,
-        address: Option<String>,
-        percentage: Decimal,
-    },
-    RemoveShare {
-        name: String,
+    RemoveFee {
+        fee_type: Fees,
+        module_name: String,
+        fee_name: String,
     },
     Distribute {
-        custom_addresses: Option<Vec<CustomAddress>>,
+        fee_type: Fees,
+        module_name: String,
+        custom_payment_addresses: Option<Vec<CustomPaymentAddress>>,
     },
 }
 
@@ -33,24 +31,58 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     #[returns(ResponseWrapper<Config>)]
     Config {},
-    #[returns(ResponseWrapper<ShareResponse>)]
-    Share { name: String },
-    #[returns(ResponseWrapper<Vec<ShareResponse>>)]
-    Shares {},
+    #[returns(ResponseWrapper<PercentageFeeResponse>)]
+    PercentageFee {
+        module_name: String,
+        fee_name: String,
+    },
+    #[returns(ResponseWrapper<FixedFeeResponse>)]
+    FixedFee {
+        module_name: String,
+        fee_name: String,
+    },
+    #[returns(ResponseWrapper<Vec<PercentageFeeResponse>>)]
+    PercentageFees {
+        module_name: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    #[returns(ResponseWrapper<Vec<FixedFeeResponse>>)]
+    FixedFees {
+        module_name: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
     #[returns(ResponseWrapper<Decimal>)]
-    TotalFee {},
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub struct ShareResponse {
-    pub name: String,
-    pub payment_address: Option<String>,
-    pub fee_percentage: Decimal,
+    TotalPercentageFees { module_name: String },
+    #[returns(ResponseWrapper<Uint128>)]
+    TotalFixedFees { module_name: String },
+    #[returns(ResponseWrapper<Vec<String>>)]
+    Modules {
+        fee_type: Fees,
+        // start_after: Option<String>,
+        limit: Option<u32>,
+    },
 }
 
 #[cw_serde]
-pub struct CustomAddress {
-    pub name: String,
-    pub payment_address: String,
+pub struct PercentageFeeResponse {
+    pub module_name: String,
+    pub fee_name: String,
+    pub address: Option<String>,
+    pub value: Decimal,
+}
+
+#[cw_serde]
+pub struct FixedFeeResponse {
+    pub module_name: String,
+    pub fee_name: String,
+    pub address: Option<String>,
+    pub value: Uint128,
+}
+
+#[cw_serde]
+pub struct CustomPaymentAddress {
+    pub fee_name: String,
+    pub address: String,
 }
