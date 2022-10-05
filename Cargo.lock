@@ -596,6 +596,7 @@ dependencies = [
  "cw-storage-plus 0.14.0",
  "cw2 0.14.0",
  "komple-types",
+ "komple-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -764,6 +765,7 @@ dependencies = [
 name = "komple-types"
 version = "0.1.0"
 dependencies = [
+ "cosmwasm-schema",
  "cosmwasm-std",
  "schemars",
  "serde",

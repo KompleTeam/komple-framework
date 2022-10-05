@@ -1,8 +1,9 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::msg::{
-    ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
+use komple_fee_module::{
+    msg::{ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg},
+    state::PercentagePayment as FeeModulePercentagePayment,
 };
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
@@ -19,6 +20,7 @@ use komple_token_module::{
     state::{CollectionInfo, Contracts},
 };
 use komple_types::collection::Collections;
+use komple_types::fee::Fees;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -155,10 +157,15 @@ fn setup_fee_contract(app: &mut App) -> Addr {
         .unwrap();
 
     // Komple is 4%
-    let msg = FeeModuleExecuteMsg::AddShare {
-        name: "komple".to_string(),
-        address: Some("contract0".to_string()),
-        percentage: Decimal::from_str("0.04").unwrap(),
+    let msg = FeeModuleExecuteMsg::SetFee {
+        fee_type: Fees::Percentage,
+        module_name: Modules::Marketplace.to_string(),
+        fee_name: "komple".to_string(),
+        data: to_binary(&FeeModulePercentagePayment {
+            address: Some("contract0".to_string()),
+            value: Decimal::from_str("0.04").unwrap(),
+        })
+        .unwrap(),
     };
     let _ = app
         .execute_contract(
@@ -169,10 +176,15 @@ fn setup_fee_contract(app: &mut App) -> Addr {
         )
         .unwrap();
     // Community pool is 2%
-    let msg = FeeModuleExecuteMsg::AddShare {
-        name: "community".to_string(),
-        address: Some("juno..community".to_string()),
-        percentage: Decimal::from_str("0.02").unwrap(),
+    let msg = FeeModuleExecuteMsg::SetFee {
+        fee_type: Fees::Percentage,
+        module_name: Modules::Marketplace.to_string(),
+        fee_name: "community".to_string(),
+        data: to_binary(&FeeModulePercentagePayment {
+            address: Some("juno..community".to_string()),
+            value: Decimal::from_str("0.02").unwrap(),
+        })
+        .unwrap(),
     };
     let _ = app
         .execute_contract(
@@ -183,10 +195,15 @@ fn setup_fee_contract(app: &mut App) -> Addr {
         )
         .unwrap();
     // Hub owner is 2%
-    let msg = FeeModuleExecuteMsg::AddShare {
-        name: "hub_admin".to_string(),
-        address: None,
-        percentage: Decimal::from_str("0.02").unwrap(),
+    let msg = FeeModuleExecuteMsg::SetFee {
+        fee_type: Fees::Percentage,
+        module_name: Modules::Marketplace.to_string(),
+        fee_name: "hub_admin".to_string(),
+        data: to_binary(&FeeModulePercentagePayment {
+            address: None,
+            value: Decimal::from_str("0.02").unwrap(),
+        })
+        .unwrap(),
     };
     let _ = app
         .execute_contract(
@@ -1246,7 +1263,7 @@ mod actions {
             use std::str::FromStr;
 
             use cosmwasm_std::{Decimal, StdError};
-            use komple_utils::{query_token_locks, FundsError};
+            use komple_utils::{funds::FundsError, query_token_locks};
 
             use super::*;
 

@@ -1,9 +1,4 @@
-use std::{
-    ops::Deref,
-    str::{from_utf8, Utf8Error},
-};
-
-use cosmwasm_std::{from_slice, Addr, Coin, MessageInfo, QuerierWrapper, StdError, StdResult};
+use cosmwasm_std::{from_slice, Addr, QuerierWrapper, StdError, StdResult};
 use cw721::OwnerOfResponse;
 use cw_storage_plus::Path;
 use komple_types::{
@@ -12,7 +7,13 @@ use komple_types::{
     tokens::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
 };
 use serde::de::DeserializeOwned;
+use std::{
+    ops::Deref,
+    str::{from_utf8, Utf8Error},
+};
 use thiserror::Error;
+
+pub mod funds;
 
 pub fn check_admin_privileges(
     sender: &Addr,
@@ -157,26 +158,6 @@ where
     }
 }
 
-pub fn check_single_fund(info: &MessageInfo, coin: Coin) -> Result<(), FundsError> {
-    if info.funds.len() != 1 {
-        return Err(FundsError::MissingFunds {});
-    };
-    let sent_fund = info.funds.get(0).unwrap();
-    if sent_fund.denom != coin.denom {
-        return Err(FundsError::InvalidDenom {
-            got: sent_fund.denom.to_string(),
-            expected: coin.denom.to_string(),
-        });
-    }
-    if sent_fund.amount != coin.amount {
-        return Err(FundsError::InvalidFunds {
-            got: sent_fund.amount.to_string(),
-            expected: coin.amount.to_string(),
-        });
-    }
-    Ok(())
-}
-
 #[derive(Error, Debug, PartialEq)]
 pub enum UtilError {
     #[error("{0}")]
@@ -187,19 +168,4 @@ pub enum UtilError {
 
     #[error("{0}")]
     Utf8(#[from] Utf8Error),
-}
-
-#[derive(Error, Debug, PartialEq)]
-pub enum FundsError {
-    #[error("{0}")]
-    Std(#[from] StdError),
-
-    #[error("Invalid denom! Got: {got} - Expected: {expected}")]
-    InvalidDenom { got: String, expected: String },
-
-    #[error("Invalid funds! Got: {got} - Expected: {expected}")]
-    InvalidFunds { got: String, expected: String },
-
-    #[error("No funds found!")]
-    MissingFunds {},
 }

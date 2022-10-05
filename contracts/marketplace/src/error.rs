@@ -1,6 +1,6 @@
 use cosmwasm_std::{OverflowError, StdError};
 use komple_token_module::ContractError as TokenContractError;
-use komple_utils::{FundsError, UtilError};
+use komple_utils::{funds::FundsError, UtilError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
