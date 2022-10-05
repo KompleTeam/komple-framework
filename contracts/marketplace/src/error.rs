@@ -1,6 +1,6 @@
 use cosmwasm_std::{OverflowError, StdError};
 use komple_token_module::ContractError as TokenContractError;
-use komple_utils::{FundsError, UtilError};
+use komple_utils::{funds::FundsError, UtilError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -10,12 +10,6 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
-
-    #[error("Invalid funds")]
-    InvalidFunds {},
-
-    #[error("Invalid denom")]
-    InvalidDenom {},
 
     #[error("Token transfer locked")]
     TransferLocked {},
@@ -28,9 +22,6 @@ pub enum ContractError {
 
     #[error("Token is not listed")]
     NotListed {},
-
-    #[error("Fee contract is not initialized")]
-    NoFeeContract {},
 
     #[error("Cannot make a self purchase")]
     SelfPurchase {},
