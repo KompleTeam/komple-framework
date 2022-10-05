@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use komple_utils::{funds::FundsError, UtilError};
+use komple_utils::{FundsError, UtilError};
 use thiserror::Error;
 
 use cw721_base::ContractError as Cw721ContractError;
@@ -21,7 +21,7 @@ pub enum ContractError {
     #[error("Token transfer locked")]
     TransferLocked {},
 
-    #[error("Token send locked")]
+    #[error("token send locked")]
     SendLocked {},
 
     #[error("Per address limit must be greater than 0")]
@@ -54,7 +54,7 @@ pub enum ContractError {
     #[error("Invalid royalty share")]
     InvalidRoyaltyShare {},
 
-    #[error("Token_id already claimed")]
+    #[error("token_id already claimed")]
     Claimed {},
 
     #[error("Cannot set approval that is already expired")]

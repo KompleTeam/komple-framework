@@ -8,22 +8,21 @@ use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_storage_plus::Bound;
 use komple_fee_module::msg::{
-    CustomPaymentAddress as FeeModuleCustomPaymentAddress, ExecuteMsg as FeeModuleExecuteMsg,
+    CustomAddress as FeeModuleCustomAddress, ExecuteMsg as FeeModuleExecuteMsg,
     QueryMsg as FeeModuleQueryMsg,
 };
 use komple_token_module::state::Config as TokenConfig;
 use komple_token_module::{
     msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError,
 };
-use komple_types::fee::Fees;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::tokens::Locks;
 use komple_utils::{
-    funds::check_single_coin, query_collection_address, query_collection_locks,
-    query_module_address, query_storage, query_token_locks, query_token_owner,
+    check_single_fund, query_collection_address, query_collection_locks, query_module_address,
+    query_storage, query_token_locks, query_token_owner,
 };
 use semver::Version;
 use std::ops::Mul;
@@ -52,16 +51,14 @@ pub fn instantiate(
 
     let admin = deps.api.addr_validate(&msg.admin)?;
 
-    let query = FeeModuleQueryMsg::TotalPercentageFees {
-        module_name: Modules::Marketplace.to_string(),
-    };
-    let res: Result<ResponseWrapper<Decimal>, StdError> = deps
+    let query = FeeModuleQueryMsg::TotalFee {};
+    let res: Result<Decimal, StdError> = deps
         .querier
         .query_wasm_smart(KOMPLE_FEE_CONTRACT_ADDR, &query);
 
     let total_fee: Option<Decimal>;
     if res.is_ok() {
-        total_fee = Some(res.unwrap().data);
+        total_fee = Some(res.unwrap());
     } else {
         total_fee = None;
     };
@@ -275,7 +272,7 @@ fn _execute_buy_fixed_listing(
     }
 
     // Check for the sent funds
-    check_single_coin(
+    check_single_fund(
         &info,
         coin(fixed_listing.price.u128(), config.native_denom.clone()),
     )?;
@@ -300,11 +297,9 @@ fn _execute_buy_fixed_listing(
         let fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
             msg: to_binary(&FeeModuleExecuteMsg::Distribute {
-                fee_type: Fees::Percentage,
-                module_name: Modules::Marketplace.to_string(),
-                custom_payment_addresses: Some(vec![FeeModuleCustomPaymentAddress {
-                    fee_name: "hub_admin".to_string(),
-                    address: config.admin.to_string(),
+                custom_addresses: Some(vec![FeeModuleCustomAddress {
+                    name: "hub_admin".to_string(),
+                    payment_address: config.admin.to_string(),
                 }]),
             })?,
             funds: vec![Coin {

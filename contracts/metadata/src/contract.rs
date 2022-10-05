@@ -481,20 +481,17 @@ fn query_raw_metadatas(
     deps: Deps,
     start_after: Option<u32>,
     limit: Option<u8>,
-) -> StdResult<ResponseWrapper<Vec<MetadataResponse>>> {
+) -> StdResult<ResponseWrapper<Vec<Metadata>>> {
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
     let metadatas = METADATA
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| {
-            let (metadata_id, metadata) = item.unwrap();
-            MetadataResponse {
-                metadata_id,
-                metadata,
-            }
+            let (_, metadata) = item.unwrap();
+            metadata
         })
-        .collect::<Vec<MetadataResponse>>();
+        .collect::<Vec<Metadata>>();
     Ok(ResponseWrapper::new("metadatas", metadatas))
 }
 

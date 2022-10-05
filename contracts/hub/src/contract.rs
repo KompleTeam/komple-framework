@@ -9,7 +9,7 @@ use cw_utils::parse_reply_instantiate_data;
 
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::{check_admin_privileges, funds::check_single_coin};
+use komple_utils::{check_admin_privileges, check_single_fund};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -49,7 +49,7 @@ pub fn instantiate(
 
     // There is a 1 token fee for hub initialization
     // This fee goes to the community pool
-    check_single_coin(&info, coin(1_000_000, NATIVE_DENOM))?;
+    check_single_fund(&info, coin(1_000_000, NATIVE_DENOM))?;
     let community_pool_fee = BankMsg::Send {
         to_address: COMMUNITY_POOL_ADDRESS.to_string(),
         amount: vec![coin(1_000_000, NATIVE_DENOM)],

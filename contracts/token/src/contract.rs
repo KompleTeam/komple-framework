@@ -9,7 +9,7 @@ use cw_utils::parse_reply_instantiate_data;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
-use komple_utils::{check_admin_privileges, funds::check_single_coin};
+use komple_utils::{check_admin_privileges, check_single_fund};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -201,9 +201,7 @@ pub fn execute(
         _ => {
             match msg {
                 // We are not allowing for normal mint endpoint
-                Cw721ExecuteMsg::Mint(_mint_msg) => {
-                    return Err(ContractError::Unauthorized {}.into())
-                }
+                Cw721ExecuteMsg::Mint(_mint_msg) => return Err(ContractError::Unauthorized {}.into()),
                 Cw721ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
                 Cw721ExecuteMsg::SendNft {
                     token_id,
@@ -395,7 +393,7 @@ pub fn execute_mint(
 
     let mint_price = get_mint_price(&deps, &config, &collection_config)?;
     if mint_price.is_some() {
-        check_single_coin(
+        check_single_fund(
             &info,
             coin(
                 mint_price.as_ref().unwrap().amount.u128(),
