@@ -21,7 +21,7 @@ pub enum ContractError {
     #[error("Token transfer locked")]
     TransferLocked {},
 
-    #[error("token send locked")]
+    #[error("Token send locked")]
     SendLocked {},
 
     #[error("Per address limit must be greater than 0")]
@@ -54,7 +54,7 @@ pub enum ContractError {
     #[error("Invalid royalty share")]
     InvalidRoyaltyShare {},
 
-    #[error("token_id already claimed")]
+    #[error("Token_id already claimed")]
     Claimed {},
 
     #[error("Cannot set approval that is already expired")]
