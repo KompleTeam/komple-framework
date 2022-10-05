@@ -114,7 +114,7 @@ fn proper_instantiate(app: &mut App) -> Addr {
 }
 
 mod instantiate {
-    use komple_utils::funds::FundsError;
+    use komple_utils::FundsError;
 
     use super::*;
 

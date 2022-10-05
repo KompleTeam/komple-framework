@@ -14,7 +14,7 @@ use komple_metadata_module::{
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
-use komple_utils::{funds::FundsError, query_token_owner};
+use komple_utils::{query_token_owner, FundsError};
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

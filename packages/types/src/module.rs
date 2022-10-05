@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Modules {
-    Hub,
     Mint,
     Permission,
     Swap,
@@ -15,7 +14,6 @@ pub enum Modules {
 impl Modules {
     pub fn as_str(&self) -> &str {
         match self {
-            Modules::Hub => "hub",
             Modules::Mint => "mint",
             Modules::Permission => "permission",
             Modules::Swap => "swap",

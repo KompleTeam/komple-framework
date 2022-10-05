@@ -43,12 +43,6 @@ pub enum ExecuteMsg {
         collection_id: u32,
         linked_collections: Vec<u32>,
     },
-    WhitelistCollection {
-        collection_id: u32,
-    },
-    BlacklistCollection {
-        collection_id: u32,
-    },
 }
 
 #[cw_serde]
@@ -66,7 +60,6 @@ pub enum QueryMsg {
     LinkedCollections { collection_id: u32 },
     #[returns(ResponseWrapper<Vec<CollectionsResponse>>)]
     Collections {
-        blacklist: bool,
         start_after: Option<u32>,
         limit: Option<u8>,
     },

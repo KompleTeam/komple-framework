@@ -53,7 +53,7 @@ pub enum QueryMsg {
     RawMetadata { metadata_id: u32 },
     #[returns(ResponseWrapper<MetadataResponse>)]
     Metadata { token_id: u32 },
-    #[returns(ResponseWrapper<Vec<MetadataResponse>>)]
+    #[returns(ResponseWrapper<Vec<Metadata>>)]
     RawMetadatas {
         start_after: Option<u32>,
         limit: Option<u8>,

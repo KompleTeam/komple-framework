@@ -10,6 +10,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Cannot update metadata")]
+    UpdateLocked {},
+
     #[error("Attribute already exists")]
     AttributeAlreadyExists {},
 
