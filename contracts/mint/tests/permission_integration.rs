@@ -115,7 +115,7 @@ fn setup_hub_module(app: &mut App) -> Addr {
             image: "https://example.com/image.png".to_string(),
             external_link: None,
         },
-        marbu_fee_contract: None,
+        marbu_fee_module: None,
     };
     let hub_addr = app
         .instantiate_contract(

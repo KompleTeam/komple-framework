@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct InstantiateMsg {
     pub admin: Option<String>,
     pub hub_info: HubInfo,
-    pub marbu_fee_contract: Option<String>,
+    pub marbu_fee_module: Option<String>,
 }
 
 #[cw_serde]

@@ -161,7 +161,7 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
             image: "https://image.com".to_string(),
             external_link: None,
         },
-        marbu_fee_contract: None,
+        marbu_fee_module: None,
     };
     let hub_module_addr = app
         .instantiate_contract(

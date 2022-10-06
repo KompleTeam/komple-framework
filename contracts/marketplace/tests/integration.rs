@@ -240,7 +240,7 @@ fn setup_hub_module(app: &mut App, is_marbu: bool) -> Addr {
             image: "https://example.com/image.png".to_string(),
             external_link: None,
         },
-        marbu_fee_contract: fee_module_addr,
+        marbu_fee_module: fee_module_addr,
     };
     let hub_addr = app
         .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)

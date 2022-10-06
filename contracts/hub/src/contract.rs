@@ -48,9 +48,9 @@ pub fn instantiate(
 
     // Save fee module info for Marbu if exists
     // This comes from Marbu controller on Hub creation
-    if let Some(marbu_fee_contract) = msg.marbu_fee_contract {
-        let marbu_fee_contract = deps.api.addr_validate(&marbu_fee_contract)?;
-        MARBU_FEE_MODULE.save(deps.storage, &marbu_fee_contract)?;
+    if let Some(marbu_fee_module) = msg.marbu_fee_module {
+        let marbu_fee_module = deps.api.addr_validate(&marbu_fee_module)?;
+        MARBU_FEE_MODULE.save(deps.storage, &marbu_fee_module)?;
     }
 
     HUB_INFO.save(deps.storage, &msg.hub_info)?;
