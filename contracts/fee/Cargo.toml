@@ -1,6 +1,6 @@
 [package]
 name = "komple-fee-module"
-version = "0.2.0"
+version = "0.0.1"
 authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
 edition = "2018"
 description = "Komple fee module for general fee configuration and distribution"

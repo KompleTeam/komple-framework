@@ -344,18 +344,6 @@ dependencies = [
 
 [[package]]
 name = "cw721"
-version = "0.13.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "035818368a74c07dd9ed5c5a93340199ba251530162010b9f34c3809e3b97df1"
-dependencies = [
- "cosmwasm-std",
- "cw-utils 0.13.4",
- "schemars",
- "serde",
-]
-
-[[package]]
-name = "cw721"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20dfe04f86e5327956b559ffcc86d9a43167391f37402afd8bf40b0be16bee4d"
@@ -378,7 +366,7 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "cw-utils 0.15.1",
  "cw2 0.15.1",
- "cw721 0.15.0",
+ "cw721",
  "schemars",
  "serde",
  "thiserror",
@@ -587,7 +575,7 @@ dependencies = [
 
 [[package]]
 name = "komple-fee-module"
-version = "0.2.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -604,7 +592,7 @@ dependencies = [
 
 [[package]]
 name = "komple-hub-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -613,7 +601,7 @@ dependencies = [
  "cw-storage-plus 0.13.4",
  "cw-utils 0.13.4",
  "cw2 0.13.4",
- "cw721 0.15.0",
+ "cw721",
  "cw721-base",
  "komple-marketplace-module",
  "komple-merge-module",
@@ -631,7 +619,7 @@ dependencies = [
 
 [[package]]
 name = "komple-marketplace-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -655,7 +643,7 @@ dependencies = [
 
 [[package]]
 name = "komple-merge-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -677,7 +665,7 @@ dependencies = [
 
 [[package]]
 name = "komple-metadata-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -695,7 +683,7 @@ dependencies = [
 
 [[package]]
 name = "komple-mint-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -704,7 +692,7 @@ dependencies = [
  "cw-storage-plus 0.13.4",
  "cw-utils 0.13.4",
  "cw2 0.13.4",
- "cw721 0.15.0",
+ "cw721",
  "cw721-base",
  "komple-hub-module",
  "komple-metadata-module",
@@ -720,7 +708,7 @@ dependencies = [
 
 [[package]]
 name = "komple-permission-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -728,7 +716,7 @@ dependencies = [
  "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
  "cw2 0.13.4",
- "cw721 0.15.0",
+ "cw721",
  "komple-token-module",
  "komple-types",
  "komple-utils",
@@ -740,7 +728,7 @@ dependencies = [
 
 [[package]]
 name = "komple-token-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -749,7 +737,7 @@ dependencies = [
  "cw-storage-plus 0.13.4",
  "cw-utils 0.13.4",
  "cw2 0.13.4",
- "cw721 0.15.0",
+ "cw721",
  "cw721-base",
  "komple-metadata-module",
  "komple-types",
@@ -763,7 +751,7 @@ dependencies = [
 
 [[package]]
 name = "komple-types"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -773,11 +761,11 @@ dependencies = [
 
 [[package]]
 name = "komple-utils"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-std",
- "cw-storage-plus 0.13.4",
- "cw721 0.13.4",
+ "cw-storage-plus 0.15.1",
+ "cw721-base",
  "komple-types",
  "schemars",
  "serde",
@@ -786,7 +774,7 @@ dependencies = [
 
 [[package]]
 name = "komple-whitelist-module"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",

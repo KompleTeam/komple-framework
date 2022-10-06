@@ -1,5 +1,5 @@
-use cosmwasm_std::{from_slice, Addr, QuerierWrapper, StdError, StdResult};
-use cw721::OwnerOfResponse;
+use cosmwasm_std::{from_slice, Addr, Empty, QuerierWrapper, StdError, StdResult};
+use cw721_base::state::TokenInfo;
 use cw_storage_plus::Path;
 use komple_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
@@ -91,7 +91,7 @@ pub fn query_token_owner(
     token_id: &u32,
 ) -> StdResult<Addr> {
     let key = get_map_storage_key(TOKENS_NAMESPACE, token_id.to_string().as_bytes())?;
-    let res = query_storage::<OwnerOfResponse>(&querier, &collection_addr, &key)?;
+    let res = query_storage::<TokenInfo<Empty>>(&querier, &collection_addr, &key)?;
     match res {
         Some(res) => Ok(Addr::unchecked(res.owner)),
         None => Err(StdError::NotFound {
