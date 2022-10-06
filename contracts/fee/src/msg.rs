@@ -4,7 +4,9 @@ use cosmwasm_std::{Binary, Decimal, Uint128};
 use komple_types::{fee::Fees, query::ResponseWrapper};
 
 #[cw_serde]
-pub struct InstantiateMsg {}
+pub struct InstantiateMsg {
+    pub admin: String,
+}
 
 #[cw_serde]
 pub enum ExecuteMsg {

@@ -9,7 +9,9 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
 use komple_types::fee::Fees;
+use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_utils::check_admin_privileges;
 use komple_utils::funds::{check_single_amount, FundsError};
 
 use crate::error::ContractError;
@@ -17,7 +19,9 @@ use crate::msg::{
     CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, InstantiateMsg, PercentageFeeResponse,
     QueryMsg,
 };
-use crate::state::{Config, FixedPayment, PercentagePayment, CONFIG, FIXED_FEES, PERCENTAGE_FEES};
+use crate::state::{
+    Config, FixedPayment, PercentagePayment, CONFIG, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-fee-module";
@@ -28,18 +32,23 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    _msg: InstantiateMsg,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let config = Config {
-        admin: info.sender.clone(),
-    };
+    let admin = deps.api.addr_validate(&msg.admin)?;
+
+    let config = Config { admin };
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "instantiate")
-        .add_attribute("admin", info.sender))
+    HUB_ADDR.save(deps.storage, &info.sender)?;
+
+    Ok(Response::new().add_event(
+        Event::new("komple_framework")
+            .add_attribute("module", Modules::Fee.as_str())
+            .add_attribute("action", "instantiate")
+            .add_attribute("admin", info.sender),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -78,24 +87,24 @@ pub fn execute(
 
 fn execute_set_fee(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     fee_type: Fees,
     module_name: String,
     fee_name: String,
     data: Binary,
 ) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
-    if info.sender != config.admin {
-        return Err(ContractError::Unauthorized {});
-    }
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        None,
+    )?;
 
-    // Add events for indexing
-    let event = Event::new("komple_fee_module")
-        .add_attribute("action", "execute_set_fee")
-        .add_attribute("fee_type", fee_type.as_str())
-        .add_attribute("module_name", &module_name)
-        .add_attribute("fee_name", &fee_name);
+    let mut event_attributes: Vec<(&str, String)> = vec![];
 
     match fee_type {
         Fees::Fixed => {
@@ -111,13 +120,9 @@ fn execute_set_fee(
 
             FIXED_FEES.save(deps.storage, (&module_name, &fee_name), &fixed_payment)?;
 
-            event
-                .clone()
-                .add_attribute("value", fixed_payment.value.to_string());
+            event_attributes.push(("value", fixed_payment.value.to_string()));
             if let Some(payment_address) = fixed_payment.address {
-                event
-                    .clone()
-                    .add_attribute("address", payment_address.to_string());
+                event_attributes.push(("address", payment_address.to_string()));
             }
         }
         Fees::Percentage => {
@@ -149,45 +154,55 @@ fn execute_set_fee(
 
             PERCENTAGE_FEES.save(deps.storage, (&module_name, &fee_name), &percentage_payment)?;
 
-            event
-                .clone()
-                .add_attribute("value", percentage_payment.value.to_string());
+            event_attributes.push(("value", percentage_payment.value.to_string()));
             if let Some(payment_address) = percentage_payment.address {
-                event
-                    .clone()
-                    .add_attribute("address", payment_address.to_string());
+                event_attributes.push(("address", payment_address.to_string()));
             }
         }
     }
 
-    Ok(Response::new().add_event(event))
+    Ok(Response::new().add_event(
+        Event::new("komple_framework")
+            .add_attribute("module", "fee_module")
+            .add_attribute("action", "set_fee")
+            .add_attribute("fee_type", fee_type.as_str())
+            .add_attribute("module_name", &module_name)
+            .add_attribute("fee_name", &fee_name)
+            .add_attributes(event_attributes),
+    ))
 }
 
 fn execute_remove_fee(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     fee_type: Fees,
     module_name: String,
     fee_name: String,
 ) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
-    if info.sender != config.admin {
-        return Err(ContractError::Unauthorized {});
-    }
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        None,
+    )?;
 
     match fee_type {
         Fees::Fixed => FIXED_FEES.remove(deps.storage, (&module_name, &fee_name)),
         Fees::Percentage => PERCENTAGE_FEES.remove(deps.storage, (&module_name, &fee_name)),
     }
 
-    let event = Event::new("komple_fee_module")
-        .add_attribute("action", "execute_remove_fee")
-        .add_attribute("fee_type", fee_type.as_str())
-        .add_attribute("module_name", &module_name)
-        .add_attribute("fee_name", &fee_name);
-
-    Ok(Response::new().add_event(event))
+    Ok(Response::new().add_event(
+        Event::new("komple_framework")
+            .add_attribute("module", "fee_module")
+            .add_attribute("action", "remove_fee")
+            .add_attribute("fee_type", fee_type.as_str())
+            .add_attribute("module_name", &module_name)
+            .add_attribute("fee_name", &fee_name),
+    ))
 }
 
 fn execute_distribute(
@@ -204,11 +219,6 @@ fn execute_distribute(
         return Err(FundsError::MissingFunds {}.into());
     };
     let fund = &info.funds[0];
-
-    let event = Event::new("komple_fee_module")
-        .add_attribute("action", "execute_distribute")
-        .add_attribute("fee_type", fee_type.as_str())
-        .add_attribute("module_name", &module_name);
 
     match fee_type {
         Fees::Fixed => {
@@ -330,7 +340,13 @@ fn execute_distribute(
         }
     }
 
-    Ok(Response::new().add_messages(msgs).add_event(event))
+    Ok(Response::new().add_messages(msgs).add_event(
+        Event::new("komple_framework")
+            .add_attribute("module", Modules::Fee.as_str())
+            .add_attribute("action", "distribute")
+            .add_attribute("fee_type", fee_type.as_str())
+            .add_attribute("module_name", &module_name),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

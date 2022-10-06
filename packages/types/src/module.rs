@@ -10,6 +10,7 @@ pub enum Modules {
     Swap,
     Merge,
     Marketplace,
+    Fee,
 }
 
 impl Modules {
@@ -21,6 +22,7 @@ impl Modules {
             Modules::Swap => "swap",
             Modules::Merge => "merge",
             Modules::Marketplace => "marketplace",
+            Modules::Fee => "fee",
         }
     }
     pub fn to_string(&self) -> String {

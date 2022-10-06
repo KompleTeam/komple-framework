@@ -1,5 +1,5 @@
 use cosmwasm_std::{DivideByZeroError, StdError};
-use komple_utils::funds::FundsError;
+use komple_utils::{funds::FundsError, UtilError};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -33,6 +33,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     DivideByZeroError(#[from] DivideByZeroError),
+
+    #[error("{0}")]
+    UtilError(#[from] UtilError),
 
     #[error("{0}")]
     FundsError(#[from] FundsError),

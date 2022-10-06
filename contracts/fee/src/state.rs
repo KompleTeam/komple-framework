@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
     fee::{FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
-    shared::CONFIG_NAMESPACE,
+    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE},
 };
 
 use cosmwasm_std::{Addr, Decimal, Uint128};
@@ -35,3 +35,5 @@ pub struct FixedPayment {
 // (module_name, fee_name) -> constant value
 // (hub_module, creation_fee) -> 1_000_000 utoken
 pub const FIXED_FEES: Map<(&str, &str), FixedPayment> = Map::new(FIXED_FEES_NAMESPACE);
+
+pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);

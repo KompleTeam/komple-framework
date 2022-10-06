@@ -42,7 +42,9 @@ fn mock_app() -> App {
 fn setup_fee_contract(app: &mut App) -> Addr {
     let code_id = app.store_code(fee_contract());
 
-    let msg = InstantiateMsg {};
+    let msg = InstantiateMsg {
+        admin: ADMIN.to_string(),
+    };
     let addr = app
         .instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &vec![], "test", None)
         .unwrap();
@@ -77,7 +79,9 @@ mod instantiation {
         let mut app = mock_app();
         let code_id = app.store_code(fee_contract());
 
-        let msg = InstantiateMsg {};
+        let msg = InstantiateMsg {
+            admin: ADMIN.to_string(),
+        };
         let addr = app
             .instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &vec![], "test", None)
             .unwrap();
