@@ -5,14 +5,12 @@ use komple_types::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Decimal, Uint128};
+use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
-    // General marketplace fee from every buy/sell
-    pub fee_percentage: Option<Decimal>,
     pub native_denom: String,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);

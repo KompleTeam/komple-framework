@@ -7,10 +7,9 @@ use serde::{Deserialize, Serialize};
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub name: String,
-    pub description: String,
-    pub image: String,
-    pub external_link: Option<String>,
+    pub admin: Option<String>,
+    pub hub_info: HubInfo,
+    pub marbu_fee_contract: Option<String>,
 }
 
 #[cw_serde]

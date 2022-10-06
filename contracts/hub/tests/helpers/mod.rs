@@ -2,6 +2,7 @@ use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint1
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_hub_module::state::HubInfo;
 use komple_marketplace_module::msg::{
     ExecuteMsg as MarketplaceExecuteMsg, InstantiateMsg as MarketplaceModuleInstantiateMsg,
 };
@@ -153,10 +154,14 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
     let hub_code_id = app.store_code(hub_module());
 
     let msg = InstantiateMsg {
-        name: "Test Hub".to_string(),
-        description: "Test Hub".to_string(),
-        image: "https://image.com".to_string(),
-        external_link: None,
+        admin: None,
+        hub_info: HubInfo {
+            name: "Test Hub".to_string(),
+            description: "Test Hub".to_string(),
+            image: "https://image.com".to_string(),
+            external_link: None,
+        },
+        marbu_fee_contract: None,
     };
     let hub_module_addr = app
         .instantiate_contract(

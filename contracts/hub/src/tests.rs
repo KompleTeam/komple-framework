@@ -1,6 +1,6 @@
 use crate::{
     msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg},
-    state::WebsiteConfig,
+    state::{HubInfo, WebsiteConfig},
     ContractError,
 };
 use cosmwasm_std::{coin, to_binary, StdError};
@@ -94,10 +94,14 @@ fn proper_instantiate(app: &mut App) -> Addr {
     let hub_code_id = app.store_code(hub_module());
 
     let msg = InstantiateMsg {
-        name: "Test Hub".to_string(),
-        description: "Test Hub".to_string(),
-        image: "https://image.com".to_string(),
-        external_link: None,
+        admin: None,
+        hub_info: HubInfo {
+            name: "Test Hub".to_string(),
+            description: "Test Hub".to_string(),
+            image: "https://image.com".to_string(),
+            external_link: None,
+        },
+        marbu_fee_contract: None,
     };
     let hub_module_addr = app
         .instantiate_contract(
@@ -114,8 +118,6 @@ fn proper_instantiate(app: &mut App) -> Addr {
 }
 
 mod instantiate {
-    use komple_utils::funds::FundsError;
-
     use super::*;
 
     #[test]
@@ -124,93 +126,18 @@ mod instantiate {
         let hub_code_id = app.store_code(hub_module());
 
         let msg = InstantiateMsg {
-            name: "Test Hub".to_string(),
-            description: "Test Hub".to_string(),
-            image: "https://image.com".to_string(),
-            external_link: None,
+            admin: None,
+            hub_info: HubInfo {
+                name: "Test Hub".to_string(),
+                description: "Test Hub".to_string(),
+                image: "https://image.com".to_string(),
+                external_link: None,
+            },
+            marbu_fee_contract: None,
         };
         let _ = app
-            .instantiate_contract(
-                hub_code_id,
-                Addr::unchecked(ADMIN),
-                &msg,
-                &[coin(1_000_000, NATIVE_DENOM)],
-                "test",
-                None,
-            )
+            .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
             .unwrap();
-
-        let res = app
-            .wrap()
-            .query_balance("community_pool_address", NATIVE_DENOM)
-            .unwrap();
-        assert_eq!(res.amount, Uint128::new(1_000_000));
-    }
-
-    #[test]
-    fn test_invalid_funds() {
-        let mut app = mock_app();
-        let hub_code_id = app.store_code(hub_module());
-
-        let msg = InstantiateMsg {
-            name: "Test Hub".to_string(),
-            description: "Test Hub".to_string(),
-            image: "https://image.com".to_string(),
-            external_link: None,
-        };
-
-        let err = app
-            .instantiate_contract(
-                hub_code_id,
-                Addr::unchecked(ADMIN),
-                &msg.clone(),
-                &vec![],
-                "test",
-                None,
-            )
-            .unwrap_err();
-        assert_eq!(
-            err.source().unwrap().to_string(),
-            FundsError::MissingFunds {}.to_string()
-        );
-
-        let err = app
-            .instantiate_contract(
-                hub_code_id,
-                Addr::unchecked(ADMIN),
-                &msg.clone(),
-                &[coin(1, NATIVE_DENOM)],
-                "test",
-                None,
-            )
-            .unwrap_err();
-        assert_eq!(
-            err.source().unwrap().to_string(),
-            FundsError::InvalidFunds {
-                got: "1".to_string(),
-                expected: "1000000".to_string()
-            }
-            .to_string()
-        );
-
-        let err = app
-            .instantiate_contract(
-                hub_code_id,
-                Addr::unchecked(USER),
-                &msg.clone(),
-                &[coin(1_000_000, "some_denom")],
-                "test",
-                None,
-            )
-            .unwrap_err();
-        assert_eq!(
-            err.source().unwrap().to_string(),
-            FundsError::InvalidDenom {
-                got: "some_denom".to_string(),
-                expected: NATIVE_DENOM.to_string()
-            }
-            .to_string()
-        );
     }
 
     #[test]
@@ -219,10 +146,14 @@ mod instantiate {
         let hub_code_id = app.store_code(hub_module());
 
         let msg = InstantiateMsg {
-            name: "Test Hub".to_string(),
-            description: "Test HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest Hub".to_string(),
-            image: "https://image.com".to_string(),
-            external_link: None,
+            admin: None,
+            hub_info: HubInfo {
+                name: "Test Hub".to_string(),
+                description: "Test HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest Hub".to_string(),
+                image: "https://image.com".to_string(),
+                external_link: None,
+            },
+            marbu_fee_contract: None
         };
 
         let err = app

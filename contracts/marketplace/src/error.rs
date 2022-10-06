@@ -26,6 +26,9 @@ pub enum ContractError {
     #[error("Cannot make a self purchase")]
     SelfPurchase {},
 
+    #[error("Fee module address not found")]
+    FeeModuleNotFound {},
+
     #[error("{0}")]
     Overflow(#[from] OverflowError),
 

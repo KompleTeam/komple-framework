@@ -5,3 +5,5 @@ pub const WEBSITE_CONFIG_NAMESPACE: &str = "website_config";
 pub const MODULE_ID_NAMESPACE: &str = "module_id";
 
 pub const MODULE_TO_REGISTER_NAMESPACE: &str = "module_to_register";
+
+pub const MARBU_FEE_MODULE_NAMESPACE: &str = "marbu_fee_module";

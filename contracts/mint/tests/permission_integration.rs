@@ -4,6 +4,7 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
+use komple_hub_module::state::HubInfo;
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_mint_module::msg::{ExecuteMsg, InstantiateMsg};
@@ -107,10 +108,14 @@ fn setup_hub_module(app: &mut App) -> Addr {
     let hub_code_id = app.store_code(hub_module());
 
     let msg = HubInstantiateMsg {
-        name: "Test Hub".to_string(),
-        description: "Test Hub".to_string(),
-        image: "https://example.com/image.png".to_string(),
-        external_link: None,
+        admin: None,
+        hub_info: HubInfo {
+            name: "Test Hub".to_string(),
+            description: "Test Hub".to_string(),
+            image: "https://example.com/image.png".to_string(),
+            external_link: None,
+        },
+        marbu_fee_contract: None,
     };
     let hub_addr = app
         .instantiate_contract(

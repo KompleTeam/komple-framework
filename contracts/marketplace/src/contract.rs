@@ -16,6 +16,7 @@ use komple_token_module::{
     msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError,
 };
 use komple_types::fee::Fees;
+use komple_types::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -36,11 +37,6 @@ use crate::state::{Config, FixedListing, CONFIG, FIXED_LISTING, HUB_ADDR};
 const CONTRACT_NAME: &str = "crates.io:komple-marketplace-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-// This is used for testing the fee contract
-const KOMPLE_FEE_CONTRACT_ADDR: &str = "contract0";
-// const KOMPLE_FEE_CONTRACT_ADDR: &str =
-//     "juno1jq7yr7pdgp5khazxtu68fvgkc9ck58jvdezzwnn9ml3a3mlapfzq9d8r3s";
-
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
@@ -52,23 +48,8 @@ pub fn instantiate(
 
     let admin = deps.api.addr_validate(&msg.admin)?;
 
-    let query = FeeModuleQueryMsg::TotalPercentageFees {
-        module_name: Modules::Marketplace.to_string(),
-    };
-    let res: Result<ResponseWrapper<Decimal>, StdError> = deps
-        .querier
-        .query_wasm_smart(KOMPLE_FEE_CONTRACT_ADDR, &query);
-
-    let total_fee: Option<Decimal>;
-    if res.is_ok() {
-        total_fee = Some(res.unwrap().data);
-    } else {
-        total_fee = None;
-    };
-
     let config = Config {
         admin,
-        fee_percentage: total_fee,
         native_denom: msg.native_denom,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -287,18 +268,19 @@ fn _execute_buy_fixed_listing(
     // Messages to be sent to other contracts
     let mut sub_msgs: Vec<SubMsg> = vec![];
 
-    // Payout fee is the full price
-    let mut payout = fixed_listing.price;
     // Marketplace and royalty fees are 0 at first until they exist
     let mut marketplace_fee = Uint128::zero();
     let mut royalty_fee = Uint128::zero();
 
-    // If there is a marketplace fee add to sub_msgs
-    if config.fee_percentage.is_some() {
-        marketplace_fee = config.fee_percentage.unwrap().mul(payout);
-
-        let fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: KOMPLE_FEE_CONTRACT_ADDR.to_string(),
+    // Process Marbu fee if it exists on Hub
+    let res = query_storage::<Addr>(&deps.querier, &hub_addr, MARBU_FEE_MODULE_NAMESPACE)?;
+    if let Some(marbu_fee_module) = res {
+        // Get the new fee based on fee percentage
+        let fee_to_send = get_fee(&deps, &marbu_fee_module, fixed_listing.price);
+        marketplace_fee += fee_to_send;
+        // Create distribution message and add it to sub_msgss
+        let marbu_fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: marbu_fee_module.to_string(),
             msg: to_binary(&FeeModuleExecuteMsg::Distribute {
                 fee_type: Fees::Percentage,
                 module_name: Modules::Marketplace.to_string(),
@@ -309,13 +291,41 @@ fn _execute_buy_fixed_listing(
             })?,
             funds: vec![Coin {
                 denom: config.native_denom.to_string(),
-                amount: marketplace_fee,
+                amount: fee_to_send,
+            }],
+        });
+        sub_msgs.push(SubMsg::new(marbu_fee_distribution));
+    };
+
+    // Check if fee module is registerd on the Hub
+    let fee_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Fee);
+    if fee_module_addr.is_ok() {
+        // Get the new fee based on fee percentage
+        let fee_to_send = get_fee(
+            &deps,
+            &fee_module_addr.as_ref().unwrap(),
+            fixed_listing.price,
+        );
+        marketplace_fee += fee_to_send;
+        // Create distribution message and add it to sub_msgss
+        let fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: fee_module_addr.unwrap().to_string(),
+            msg: to_binary(&FeeModuleExecuteMsg::Distribute {
+                fee_type: Fees::Percentage,
+                module_name: Modules::Marketplace.to_string(),
+                // TODO: Refactor here to accept custom payment addresses
+                // This can be updated by admin to take custom fees
+                custom_payment_addresses: None,
+            })?,
+            funds: vec![Coin {
+                denom: config.native_denom.to_string(),
+                amount: fee_to_send,
             }],
         });
         sub_msgs.push(SubMsg::new(fee_distribution));
     }
 
-    // If there is a royalty fee add to sub_msgs
+    // Check if there is a royalty fee add to sub_msgs
     let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
     if let Some(config) = res {
         if let Some(royalty_share) = config.royalty_share {
@@ -334,7 +344,7 @@ fn _execute_buy_fixed_listing(
     }
 
     // Add marketplace and royalty fee and subtract from the price
-    payout = fixed_listing
+    let payout = fixed_listing
         .price
         .checked_sub(marketplace_fee + royalty_fee)?;
 
@@ -385,6 +395,20 @@ fn _execute_buy_fixed_listing(
         .add_submessages(sub_msgs)
         .add_messages(vec![transfer_msg, unlock_msg])
         .add_attribute("action", "execute_buy"))
+}
+
+fn get_fee(deps: &DepsMut, fee_module_addr: &Addr, listing_price: Uint128) -> Uint128 {
+    let query = FeeModuleQueryMsg::TotalPercentageFees {
+        module_name: Modules::Marketplace.to_string(),
+    };
+    let res: Result<ResponseWrapper<Decimal>, StdError> =
+        deps.querier.query_wasm_smart(fee_module_addr, &query);
+
+    let mut marketplace_fee = Uint128::zero();
+    if let Ok(fee_percentage) = res {
+        marketplace_fee = fee_percentage.data.mul(listing_price);
+    };
+    marketplace_fee
 }
 
 fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {

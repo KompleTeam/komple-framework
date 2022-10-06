@@ -1,22 +1,22 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn,
-    Response, StdError, StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
+    StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::{check_admin_privileges, funds::check_single_coin};
+use komple_utils::check_admin_privileges;
 use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MODULE_ADDRS, MODULE_ID, MODULE_TO_REGISTER,
-    OPERATORS, WEBSITE_CONFIG,
+    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MARBU_FEE_MODULE, MODULE_ADDRS, MODULE_ID,
+    MODULE_TO_REGISTER, OPERATORS, WEBSITE_CONFIG,
 };
 
 // version info for migration info
@@ -24,10 +24,6 @@ const CONTRACT_NAME: &str = "crates.io:komple-hub-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
-
-// Both address and denom will be changed before the contract upload
-const COMMUNITY_POOL_ADDRESS: &str = "community_pool_address";
-const NATIVE_DENOM: &str = "native_denom";
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -38,37 +34,32 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let config = Config {
-        admin: info.sender.clone(),
+    let admin = match msg.admin {
+        Some(value) => deps.api.addr_validate(&value)?,
+        None => info.sender,
     };
+
+    let config = Config { admin };
     CONFIG.save(deps.storage, &config)?;
 
-    if msg.description.len() > MAX_DESCRIPTION_LENGTH as usize {
+    if msg.hub_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
     }
 
-    // There is a 1 token fee for hub initialization
-    // This fee goes to the community pool
-    check_single_coin(&info, coin(1_000_000, NATIVE_DENOM))?;
-    let community_pool_fee = BankMsg::Send {
-        to_address: COMMUNITY_POOL_ADDRESS.to_string(),
-        amount: vec![coin(1_000_000, NATIVE_DENOM)],
-    };
+    // Save fee module info for Marbu if exists
+    // This comes from Marbu controller on Hub creation
+    if let Some(marbu_fee_contract) = msg.marbu_fee_contract {
+        let marbu_fee_contract = deps.api.addr_validate(&marbu_fee_contract)?;
+        MARBU_FEE_MODULE.save(deps.storage, &marbu_fee_contract)?;
+    }
 
-    let hub_info = HubInfo {
-        name: msg.name,
-        description: msg.description,
-        image: msg.image,
-        external_link: msg.external_link,
-    };
-    HUB_INFO.save(deps.storage, &hub_info)?;
+    HUB_INFO.save(deps.storage, &msg.hub_info)?;
 
     MODULE_ID.save(deps.storage, &0)?;
 
     Ok(Response::new()
-        .add_message(community_pool_fee)
         .add_attribute("action", "instantiate")
-        .add_attribute("admin", info.sender))
+        .add_attribute("admin", config.admin.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

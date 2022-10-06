@@ -1,12 +1,18 @@
-use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::{
-    msg::{ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg},
+    msg::{
+        ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
+        QueryMsg as FeeModuleQueryMsg,
+    },
     state::PercentagePayment as FeeModulePercentagePayment,
 };
-use komple_hub_module::msg::{
-    ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
+use komple_hub_module::{
+    msg::{
+        ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
+    },
+    state::HubInfo,
 };
 use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
@@ -83,7 +89,7 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-pub fn fee_contract() -> Box<dyn Contract<Empty>> {
+pub fn fee_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         komple_fee_module::contract::execute,
         komple_fee_module::contract::instantiate,
@@ -94,17 +100,6 @@ pub fn fee_contract() -> Box<dyn Contract<Empty>> {
 
 pub fn mock_app() -> App {
     AppBuilder::new().build(|router, _, storage| {
-        router
-            .bank
-            .init_balance(
-                storage,
-                &Addr::unchecked(ADMIN),
-                vec![Coin {
-                    denom: NATIVE_DENOM.to_string(),
-                    amount: Uint128::new(1_000_000),
-                }],
-            )
-            .unwrap();
         router
             .bank
             .init_balance(
@@ -141,21 +136,7 @@ pub fn mock_app() -> App {
     })
 }
 
-fn setup_fee_contract(app: &mut App) -> Addr {
-    let fee_code_id = app.store_code(fee_contract());
-
-    let msg = FeeModuleInstantiateMsg {};
-    let fee_contract_addr = app
-        .instantiate_contract(
-            fee_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &vec![],
-            "test",
-            None,
-        )
-        .unwrap();
-
+fn setup_fee_module(app: &mut App, fee_module_addr: &Addr) {
     // Komple is 4%
     let msg = FeeModuleExecuteMsg::SetFee {
         fee_type: Fees::Percentage,
@@ -170,7 +151,7 @@ fn setup_fee_contract(app: &mut App) -> Addr {
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            fee_contract_addr.clone(),
+            fee_module_addr.clone(),
             &msg,
             &vec![],
         )
@@ -189,7 +170,7 @@ fn setup_fee_contract(app: &mut App) -> Addr {
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            fee_contract_addr.clone(),
+            fee_module_addr.clone(),
             &msg,
             &vec![],
         )
@@ -208,33 +189,61 @@ fn setup_fee_contract(app: &mut App) -> Addr {
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            fee_contract_addr.clone(),
+            fee_module_addr.clone(),
             &msg,
             &vec![],
         )
         .unwrap();
 
-    fee_contract_addr
+    let msg = FeeModuleQueryMsg::TotalPercentageFees {
+        module_name: Modules::Marketplace.to_string(),
+    };
+    let _: ResponseWrapper<Decimal> = app
+        .wrap()
+        .query_wasm_smart(fee_module_addr.clone(), &msg)
+        .unwrap();
 }
 
-fn setup_hub_module(app: &mut App) -> Addr {
+fn setup_hub_module(app: &mut App, is_marbu: bool) -> Addr {
     let hub_code_id = app.store_code(hub_module());
 
+    let fee_module_addr = match is_marbu {
+        true => {
+            let fee_code_id = app.store_code(fee_module());
+
+            let msg = FeeModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+            };
+            let fee_module_addr = app
+                .instantiate_contract(
+                    fee_code_id,
+                    Addr::unchecked(ADMIN),
+                    &msg,
+                    &vec![],
+                    "test",
+                    None,
+                )
+                .unwrap();
+
+            setup_fee_module(app, &fee_module_addr);
+
+            Some(fee_module_addr.to_string())
+        }
+        false => None,
+    };
+
     let msg = HubInstantiateMsg {
-        name: "Test Hub".to_string(),
-        description: "Test Hub".to_string(),
-        image: "https://example.com/image.png".to_string(),
-        external_link: None,
+        admin: None,
+        hub_info: HubInfo {
+            name: "Test Hub".to_string(),
+            description: "Test Hub".to_string(),
+            image: "https://example.com/image.png".to_string(),
+            external_link: None,
+        },
+        marbu_fee_contract: fee_module_addr,
     };
     let hub_addr = app
-        .instantiate_contract(
-            hub_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[coin(1_000_000, NATIVE_DENOM)],
-            "test",
-            None,
-        )
+        .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
         .unwrap();
 
     hub_addr
@@ -468,7 +477,7 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let hub_addr = setup_hub_module(&mut app);
+        let hub_addr = setup_hub_module(&mut app, false);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
         let instantiate_msg = to_binary(&InstantiateMsg {
@@ -490,9 +499,20 @@ mod initialization {
     #[test]
     fn test_happy_path_with_fee_module() {
         let mut app = mock_app();
-        setup_fee_contract(&mut app);
-        let hub_addr = setup_hub_module(&mut app);
+        let hub_addr = setup_hub_module(&mut app, false);
         let marketplace_module_code_id = app.store_code(marketplace_module());
+        let fee_module_code_id = app.store_code(fee_module());
+
+        let instantiate_msg = to_binary(&FeeModuleInstantiateMsg {
+            admin: ADMIN.to_string(),
+        })
+        .unwrap();
+        let msg = HubExecuteMsg::RegisterModule {
+            module: Modules::Fee.to_string(),
+            msg: instantiate_msg,
+            code_id: fee_module_code_id,
+        };
+        let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
         let instantiate_msg = to_binary(&InstantiateMsg {
             admin: ADMIN.to_string(),
@@ -513,7 +533,7 @@ mod initialization {
     #[test]
     fn test_invalid_sender() {
         let mut app = mock_app();
-        let hub_addr = setup_hub_module(&mut app);
+        let hub_addr = setup_hub_module(&mut app, false);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
         let instantiate_msg = to_binary(&InstantiateMsg {
@@ -563,7 +583,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -632,7 +652,7 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -683,7 +703,7 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -821,7 +841,7 @@ mod actions {
             #[test]
             fn test_invalid_operator() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -885,7 +905,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -969,7 +989,7 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -1039,7 +1059,7 @@ mod actions {
             #[test]
             fn test_invalid_operator() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -1124,7 +1144,7 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -1192,7 +1212,7 @@ mod actions {
             #[test]
             fn test_invalid_owner() {
                 let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -1263,15 +1283,14 @@ mod actions {
             use std::str::FromStr;
 
             use cosmwasm_std::{Decimal, StdError};
-            use komple_utils::{funds::FundsError, query_token_locks};
+            use komple_utils::{funds::FundsError, query_module_address, query_token_locks};
 
             use super::*;
 
             #[test]
-            fn test_happy_path() {
+            fn test_happy_path_with_marbu() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, true);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -1527,10 +1546,273 @@ mod actions {
             }
 
             #[test]
+            fn test_happy_path_without_marbu() {
+                let mut app = mock_app();
+                let hub_addr = setup_hub_module(&mut app, false);
+
+                let (mint_module_addr, marketplace_module_addr) =
+                    setup_modules(&mut app, hub_addr.clone());
+
+                // Register and setup fee module
+                let fee_module_code_id = app.store_code(fee_module());
+                let msg = HubExecuteMsg::RegisterModule {
+                    module: Modules::Fee.to_string(),
+                    msg: to_binary(&FeeModuleInstantiateMsg {
+                        admin: ADMIN.to_string(),
+                    })
+                    .unwrap(),
+                    code_id: fee_module_code_id,
+                };
+                let _ = app
+                    .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
+                    .unwrap();
+                let fee_module_addr =
+                    query_module_address(&app.wrap(), &hub_addr, Modules::Fee).unwrap();
+                setup_fee_module(&mut app, &fee_module_addr);
+
+                // Update public permission settings
+                // Creator will be creating the collection
+                let msg = MintExecuteMsg::UpdatePublicCollectionCreation {
+                    public_collection_creation: true,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        mint_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                let token_module_code_id = app.store_code(token_module());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    CREATOR,
+                    token_module_code_id,
+                    None,
+                    None,
+                    Collections::Normal,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
+
+                let collection_addr =
+                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+                let metadata_module_addr =
+                    setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
+                setup_metadata(&mut app, metadata_module_addr.clone());
+                setup_metadata(&mut app, metadata_module_addr.clone());
+                setup_metadata(&mut app, metadata_module_addr.clone());
+
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+
+                give_approval_to_module(
+                    &mut app,
+                    collection_addr.clone(),
+                    USER,
+                    &marketplace_module_addr,
+                );
+
+                setup_marketplace_listing(
+                    &mut app,
+                    &mint_module_addr,
+                    &marketplace_module_addr,
+                    1,
+                    1,
+                    Uint128::new(1_000),
+                );
+
+                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                assert_eq!(locks.transfer_lock, true);
+                assert_eq!(locks.send_lock, true);
+                assert_eq!(locks.burn_lock, true);
+
+                let msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![coin(1_000, NATIVE_DENOM)],
+                    )
+                    .unwrap();
+
+                let msg = MarketplaceQueryMsg::FixedListing {
+                    collection_id: 1,
+                    token_id: 1,
+                };
+                let res: Result<Empty, StdError> = app
+                    .wrap()
+                    .query_wasm_smart(marketplace_module_addr.clone(), &msg);
+                assert!(res.is_err());
+
+                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                assert_eq!(locks.transfer_lock, false);
+                assert_eq!(locks.send_lock, false);
+                assert_eq!(locks.burn_lock, false);
+
+                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                assert_eq!(owner, Addr::unchecked(RANDOM));
+
+                // Buyer balance
+                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(999_000));
+
+                // Owner balance
+                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(1_000_920));
+
+                // Komple fee
+                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(40));
+
+                // Community fee
+                let balance = app
+                    .wrap()
+                    .query_balance("juno..community", NATIVE_DENOM)
+                    .unwrap();
+                assert_eq!(balance.amount, Uint128::new(20));
+
+                // Setup admin royalty for 10 percent
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
+                        royalty_share: Some(Decimal::from_str("0.1").unwrap()),
+                    },
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                setup_marketplace_listing(
+                    &mut app,
+                    &mint_module_addr,
+                    &marketplace_module_addr,
+                    1,
+                    2,
+                    Uint128::new(1_000),
+                );
+
+                let msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 2,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![coin(1_000, NATIVE_DENOM)],
+                    )
+                    .unwrap();
+
+                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                assert_eq!(owner, Addr::unchecked(RANDOM));
+
+                // Buyer balance
+                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(998_000));
+
+                // Owner balance
+                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(1_001_740));
+
+                // Komple fee
+                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(80));
+
+                // Community fee
+                let balance = app
+                    .wrap()
+                    .query_balance("juno..community", NATIVE_DENOM)
+                    .unwrap();
+                assert_eq!(balance.amount, Uint128::new(40));
+
+                // Creator royalty fee
+                let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(100));
+
+                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
+                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
+                        royalty_share: Some(Decimal::from_str("0.05").unwrap()),
+                    },
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        collection_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
+                    .unwrap();
+
+                setup_marketplace_listing(
+                    &mut app,
+                    &mint_module_addr,
+                    &marketplace_module_addr,
+                    1,
+                    3,
+                    Uint128::new(998_000),
+                );
+
+                let msg = MarketplaceExecuteMsg::Buy {
+                    listing_type: Listing::Fixed,
+                    collection_id: 1,
+                    token_id: 3,
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(RANDOM),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &vec![coin(998_000, NATIVE_DENOM)],
+                    )
+                    .unwrap();
+
+                // Buyer balance
+                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(0));
+
+                // Owner balance
+                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(1_870_000));
+
+                // Komple fee
+                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(40_000));
+
+                // Community fee
+                let balance = app
+                    .wrap()
+                    .query_balance("juno..community", NATIVE_DENOM)
+                    .unwrap();
+                assert_eq!(balance.amount, Uint128::new(20_000));
+
+                // Creator royalty fee
+                let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
+                assert_eq!(balance.amount, Uint128::new(50_000));
+            }
+
+            #[test]
             fn test_invalid_funds() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
-                let hub_addr = setup_hub_module(&mut app);
+
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -1625,8 +1907,7 @@ mod actions {
             #[test]
             fn test_self_purchase() {
                 let mut app = mock_app();
-                setup_fee_contract(&mut app);
-                let hub_addr = setup_hub_module(&mut app);
+                let hub_addr = setup_hub_module(&mut app, false);
 
                 let (mint_module_addr, marketplace_module_addr) =
                     setup_modules(&mut app, hub_addr.clone());
@@ -1695,7 +1976,7 @@ mod queries {
     #[test]
     fn test_fixed_listings() {
         let mut app = mock_app();
-        let hub_addr = setup_hub_module(&mut app);
+        let hub_addr = setup_hub_module(&mut app, false);
 
         let (mint_module_addr, marketplace_module_addr) = setup_modules(&mut app, hub_addr.clone());
 
