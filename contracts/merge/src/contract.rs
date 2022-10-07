@@ -121,7 +121,7 @@ fn execute_permission_merge(
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     let permission_msg = PermissionExecuteMsg::Check {
-        module: Modules::Merge,
+        module: Modules::Merge.to_string(),
         msg: permission_msg,
     };
     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {

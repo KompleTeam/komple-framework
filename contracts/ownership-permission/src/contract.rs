@@ -9,7 +9,7 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::HUB_ADDR_NAMESPACE;
 use komple_utils::{
-    query_collection_address, query_module_address, query_token_owner, query_storage,
+    query_collection_address, query_module_address, query_storage, query_token_owner,
 };
 use std::collections::HashMap;
 

@@ -19,8 +19,11 @@ pub enum ContractError {
     #[error("No permissions found for module")]
     NoPermissionsForModule {},
 
-    #[error("Custom Error val: {val:?}")]
-    CustomError { val: String },
+    #[error("Invalid reply ID")]
+    InvalidReplyID {},
+
+    #[error("Error while instantiating {permission:?} permission")]
+    PermissionInstantiateError { permission: String },
 
     #[error("{0}")]
     Util(#[from] UtilError),

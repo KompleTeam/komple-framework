@@ -1,24 +1,22 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
-    StdResult,
+    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
+    ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw_utils::parse_reply_instantiate_data;
 use komple_types::module::Modules;
-use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;
-use komple_utils::{
-    check_admin_privileges, query_collection_address, query_module_address, query_token_owner,
-};
+use komple_utils::check_admin_privileges;
 use semver::Version;
-use std::collections::HashMap;
 
 use crate::error::ContractError;
-use crate::msg::{
-    ExecuteMsg, InstantiateMsg, MigrateMsg, OwnershipMsg, PermissionCheckMsg, QueryMsg,
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, PermissionCheckMsg, QueryMsg};
+use crate::state::{
+    Config, CONFIG, HUB_ADDR, MODULE_PERMISSIONS, OPERATORS, PERMISSIONS, PERMISSION_ID,
+    PERMISSION_TO_REGISTER,
 };
-use crate::state::{Config, CONFIG, HUB_ADDR, MODULE_PERMISSIONS, OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-permission-module";
@@ -40,6 +38,8 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
+    PERMISSION_ID.save(deps.storage, &0)?;
+
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
@@ -51,6 +51,11 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::RegisterPermission {
+            permission,
+            msg,
+            code_id,
+        } => execute_register_permission(deps, env, info, permission, msg, code_id),
         ExecuteMsg::UpdateModulePermissions {
             module,
             permissions,
@@ -60,17 +65,62 @@ pub fn execute(
     }
 }
 
+fn execute_register_permission(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    permission: String,
+    msg: Binary,
+    code_id: u64,
+) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        operators,
+    )?;
+
+    // Get the latest permission reply id
+    let permission_id = (PERMISSION_ID.load(deps.storage)?) + 1;
+
+    let sub_msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id,
+            msg,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: format!("Komple Permission Module - {}", permission.as_str()),
+        }
+        .into(),
+        id: permission_id,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
+    PERMISSION_ID.save(deps.storage, &permission_id)?;
+    // This will be loaded in reply handler for registering the correct module
+    PERMISSION_TO_REGISTER.save(deps.storage, &permission)?;
+
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("action", "execute_register_permission")
+        .add_attribute("module", permission.as_str()))
+}
+
 fn execute_update_module_permissions(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    module: Modules,
-    permissions: Vec<Permissions>,
+    module: String,
+    permissions: Vec<String>,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
-
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
@@ -79,7 +129,13 @@ fn execute_update_module_permissions(
         operators,
     )?;
 
-    MODULE_PERMISSIONS.save(deps.storage, module.as_str(), &permissions)?;
+    for permission in &permissions {
+        if !PERMISSIONS.has(deps.storage, permission) {
+            return Err(ContractError::InvalidPermissions {});
+        };
+    }
+
+    MODULE_PERMISSIONS.save(deps.storage, &module, &permissions)?;
 
     Ok(Response::new()
         .add_attribute("action", "execute_update_module_permissions")
@@ -126,10 +182,10 @@ fn execute_check(
     deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    module: Modules,
+    module: String,
     msg: Binary,
 ) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.load(deps.storage)?;
+    let mut msgs: Vec<CosmosMsg> = vec![];
 
     let data: Vec<PermissionCheckMsg> = from_binary(&msg)?;
     if data.len() == 0 {
@@ -146,10 +202,13 @@ fn execute_check(
         if !expected_permissions.contains(&permission.permission_type) {
             return Err(ContractError::InvalidPermissions {});
         }
-        let _ = match permission.permission_type {
-            Permissions::Ownership => check_ownership_permission(&deps, &hub_addr, permission.data),
-            Permissions::Attribute => unimplemented!(),
-        };
+        let addr = PERMISSIONS.load(deps.storage, &permission.permission_type)?;
+        let permission_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: addr.to_string(),
+            msg: permission.data,
+            funds: vec![],
+        });
+        msgs.push(permission_msg);
     }
 
     Ok(Response::new()
@@ -162,49 +221,20 @@ fn execute_check(
         ))
 }
 
-fn check_ownership_permission(
-    deps: &DepsMut,
-    hub_addr: &Addr,
-    data: Binary,
-) -> Result<bool, ContractError> {
-    let mint_module_addr = query_module_address(&deps.querier, hub_addr, Modules::Mint)?;
-
-    let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
-
-    let mut collection_map: HashMap<u32, Addr> = HashMap::new();
-
-    for ownership_msg in msgs {
-        let collection_addr = match collection_map.contains_key(&ownership_msg.collection_id) {
-            true => collection_map
-                .get(&ownership_msg.collection_id)
-                .unwrap()
-                .clone(),
-            false => {
-                let collection_addr = query_collection_address(
-                    &deps.querier,
-                    &mint_module_addr,
-                    &ownership_msg.collection_id,
-                )?;
-                collection_map.insert(ownership_msg.collection_id, collection_addr.clone());
-                collection_addr
-            }
-        };
-
-        let owner =
-            query_token_owner(&deps.querier, &collection_addr, &ownership_msg.token_id).unwrap();
-        if owner != ownership_msg.owner {
-            return Err(ContractError::InvalidOwnership {});
-        }
-    }
-    Ok(true)
-}
-
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::PermissionAddress { permission } => {
+            to_binary(&query_permission_address(deps, permission)?)
+        }
         QueryMsg::ModulePermissions(module) => to_binary(&query_module_permissions(deps, module)?),
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
+}
+
+fn query_permission_address(deps: Deps, permission: String) -> StdResult<ResponseWrapper<String>> {
+    let addr = PERMISSIONS.load(deps.storage, &permission)?;
+    Ok(ResponseWrapper::new("permission_address", addr.to_string()))
 }
 
 fn query_module_permissions(
@@ -224,6 +254,47 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
         "operators",
         addrs.iter().map(|a| a.to_string()).collect(),
     ))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    // Get the last permission id
+    let permission_id = PERMISSION_ID.load(deps.storage)?;
+
+    // Check if the reply id is the same
+    if msg.id != permission_id {
+        return Err(ContractError::InvalidReplyID {});
+    };
+
+    // Get the module for registering
+    let permission_to_register = PERMISSION_TO_REGISTER.load(deps.storage)?;
+
+    // Handle the registration
+    handle_permission_instantiate_reply(deps, msg, permission_to_register.as_str())
+}
+
+fn handle_permission_instantiate_reply(
+    deps: DepsMut,
+    msg: Reply,
+    permission_to_register: &str,
+) -> Result<Response, ContractError> {
+    let reply = parse_reply_instantiate_data(msg);
+    match reply {
+        Ok(res) => {
+            PERMISSIONS.save(
+                deps.storage,
+                permission_to_register,
+                &Addr::unchecked(res.contract_address),
+            )?;
+            Ok(Response::default().add_attribute(
+                "action",
+                format!("instantiate_{}_permission_reply", permission_to_register),
+            ))
+        }
+        Err(_) => Err(ContractError::PermissionInstantiateError {
+            permission: permission_to_register.to_string(),
+        }),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -1,4 +1,5 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cw721::OwnerOfResponse;
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{
@@ -7,11 +8,15 @@ use komple_hub_module::msg::{
 use komple_hub_module::state::HubInfo;
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
-use komple_mint_module::msg::{ExecuteMsg, InstantiateMsg};
-use komple_ownership_permission_module::msg::InstantiateMsg as OwnershipModuleInstantiateMsg;
+use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
+use komple_ownership_permission_module::msg::{
+    InstantiateMsg as OwnershipModuleInstantiateMsg, OwnershipMsg,
+};
 use komple_permission_module::msg::{
     ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionInstantiateMsg,
+    PermissionCheckMsg,
 };
+use komple_permission_module::ContractError;
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -24,6 +29,7 @@ use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;
+use komple_utils::query_collection_address;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -147,7 +153,7 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let permission_code_id = app.store_code(permission_module());
 
-    let instantiate_msg = to_binary(&InstantiateMsg {
+    let instantiate_msg = to_binary(&MintInstantiateMsg {
         admin: ADMIN.to_string(),
     })
     .unwrap();
@@ -205,7 +211,7 @@ pub fn create_collection(
         symbol: "TEST".to_string(),
         minter: mint_module_addr.to_string(),
     };
-    let msg = ExecuteMsg::CreateCollection {
+    let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
@@ -288,7 +294,7 @@ pub fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
 }
 
 pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
-    let msg = ExecuteMsg::Mint {
+    let msg = MintExecuteMsg::Mint {
         collection_id,
         metadata_id: None,
     };
@@ -358,177 +364,118 @@ fn register_permission(app: &mut App, permission_module_addr: &Addr) {
         .unwrap();
 }
 
-mod initialization {
-    use super::*;
+#[test]
+fn test_update_module_permissions() {
+    let mut app = mock_app();
+    let hub_addr = setup_hub_module(&mut app);
+    let (_, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
 
-    use komple_types::module::Modules;
+    setup_ownership_permission_module(&mut app);
+    register_permission(&mut app, &permission_module_addr);
 
-    use komple_hub_module::ContractError;
-    use komple_utils::query_module_address;
-
-    #[test]
-    fn test_happy_path() {
-        let mut app = mock_app();
-        let hub_addr = setup_hub_module(&mut app);
-        let mint_module_code_id = app.store_code(mint_module());
-
-        let instantiate_msg = to_binary(&InstantiateMsg {
-            admin: ADMIN.to_string(),
-        })
-        .unwrap();
-        let msg = HubExecuteMsg::RegisterModule {
-            module: Modules::Mint.to_string(),
-            msg: instantiate_msg,
-            code_id: mint_module_code_id,
-        };
-        let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
-
-        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
-        assert_eq!(res, "contract1")
-    }
-
-    #[test]
-    fn test_invalid_sender() {
-        let mut app = mock_app();
-        let hub_addr = setup_hub_module(&mut app);
-        let mint_module_code_id = app.store_code(mint_module());
-
-        let instantiate_msg = to_binary(&InstantiateMsg {
-            admin: ADMIN.to_string(),
-        })
-        .unwrap();
-        let msg = HubExecuteMsg::RegisterModule {
-            module: Modules::Mint.to_string(),
-            msg: instantiate_msg,
-            code_id: mint_module_code_id,
-        };
-        let err = app
-            .execute_contract(Addr::unchecked(USER), hub_addr.clone(), &msg, &vec![])
-            .unwrap_err();
-        assert_eq!(
-            err.source().unwrap().to_string(),
-            ContractError::Unauthorized {}.to_string()
+    let msg = PermissionExecuteMsg::UpdateModulePermissions {
+        module: Modules::Mint.to_string(),
+        permissions: vec![Permissions::Attribute.to_string()],
+    };
+    let err = app
+        .execute_contract(
+            Addr::unchecked(USER),
+            permission_module_addr.clone(),
+            &msg,
+            &vec![],
         )
-    }
+        .unwrap_err();
+    assert_eq!(
+        err.source().unwrap().to_string(),
+        ContractError::Unauthorized {}.to_string()
+    );
+
+    let msg = PermissionExecuteMsg::UpdateModulePermissions {
+        module: Modules::Mint.to_string(),
+        permissions: vec![Permissions::Ownership.to_string()],
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            permission_module_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap();
+
+    let msg = PermissionExecuteMsg::UpdateModulePermissions {
+        module: Modules::Mint.to_string(),
+        permissions: vec![Permissions::Attribute.to_string()],
+    };
+    let err = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            permission_module_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap_err();
+    assert_eq!(
+        err.source().unwrap().to_string(),
+        ContractError::InvalidPermissions {}.to_string()
+    )
 }
 
-mod permission_mint {
-    use komple_utils::query_collection_address;
+#[test]
+fn test_permission_check() {
+    let mut app = mock_app();
+    let hub_addr = setup_hub_module(&mut app);
+    let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
+    let token_module_code_id = app.store_code(token_module());
+    create_collection(
+        &mut app,
+        mint_module_addr.clone(),
+        token_module_code_id,
+        None,
+        None,
+        Collections::Normal,
+        None,
+        None,
+        None,
+        None,
+    );
+    let collection_addr =
+        query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
+    let metadata_module_addr_1 =
+        setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
+    setup_metadata(&mut app, metadata_module_addr_1.clone());
+    mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+    setup_ownership_permission_module(&mut app);
+    register_permission(&mut app, &permission_module_addr);
+    setup_module_permissions(
+        &mut app,
+        &permission_module_addr,
+        Modules::Mint.to_string(),
+        vec![Permissions::Ownership.to_string()],
+    );
 
-    use super::*;
-
-    use cosmwasm_std::to_binary;
-    use cw721::OwnerOfResponse;
-    use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
-    use komple_ownership_permission_module::msg::OwnershipMsg;
-    use komple_permission_module::msg::PermissionCheckMsg;
-    use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::{
-        collection::Collections, metadata::Metadata, module::Modules, permission::Permissions,
+    // Make sure token owner is USER
+    let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
+        token_id: "1".to_string(),
+        include_expired: None,
     };
+    let res: OwnerOfResponse = app.wrap().query_wasm_smart(collection_addr, &msg).unwrap();
+    assert_eq!(res.owner, USER);
 
-    #[test]
-    fn test_happy_path() {
-        let mut app = mock_app();
-        let hub_addr = setup_hub_module(&mut app);
-
-        let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
-
-        let token_module_code_id = app.store_code(token_module());
-        create_collection(
-            &mut app,
-            mint_module_addr.clone(),
-            token_module_code_id,
-            None,
-            None,
-            Collections::Normal,
-            None,
-            None,
-            None,
-            None,
-        );
-        create_collection(
-            &mut app,
-            mint_module_addr.clone(),
-            token_module_code_id,
-            None,
-            None,
-            Collections::Normal,
-            None,
-            None,
-            None,
-            None,
-        );
-
-        let collection_addr_1 =
-            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
-        let collection_addr_2 =
-            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &2).unwrap();
-
-        let metadata_module_addr_1 =
-            setup_metadata_module(&mut app, collection_addr_1, Metadata::Standard);
-        let metadata_module_addr_2 =
-            setup_metadata_module(&mut app, collection_addr_2, Metadata::Standard);
-
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
-        setup_metadata(&mut app, metadata_module_addr_2);
-
-        mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-        mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-
-        setup_ownership_permission_module(&mut app);
-        register_permission(&mut app, &permission_module_addr);
-        setup_module_permissions(
-            &mut app,
-            &permission_module_addr,
-            Modules::Mint.to_string(),
-            vec![Permissions::Ownership.to_string()],
-        );
-
-        let permission_msg = to_binary(&vec![PermissionCheckMsg {
+    let msg = PermissionExecuteMsg::Check {
+        module: Modules::Mint.to_string(),
+        msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Ownership.to_string(),
-            data: to_binary(&vec![
-                OwnershipMsg {
-                    collection_id: 1,
-                    token_id: 1,
-                    address: USER.to_string(),
-                },
-                OwnershipMsg {
-                    collection_id: 1,
-                    token_id: 2,
-                    address: USER.to_string(),
-                },
-            ])
+            data: to_binary(&OwnershipMsg {
+                collection_id: 1,
+                token_id: 1,
+                address: USER.to_string(),
+            })
             .unwrap(),
         }])
+        .unwrap(),
+    };
+    let _ = app
+        .execute_contract(Addr::unchecked(ADMIN), permission_module_addr, &msg, &[])
         .unwrap();
-        let collection_ids = vec![2];
-        let msg = MintExecuteMsg::PermissionMint {
-            permission_msg,
-            collection_ids,
-            metadata_ids: None,
-        };
-        let _ = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                mint_module_addr.clone(),
-                &msg,
-                &vec![],
-            )
-            .unwrap();
-
-        let collection_2_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
-
-        let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
-            token_id: "1".to_string(),
-            include_expired: None,
-        };
-        let res: OwnerOfResponse = app
-            .wrap()
-            .query_wasm_smart(collection_2_addr, &msg)
-            .unwrap();
-        assert_eq!(res.owner, USER);
-    }
 }

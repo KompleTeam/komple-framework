@@ -12,6 +12,7 @@ use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_mint_module::msg::{
     ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintModuleInstantiateMsg,
 };
+use komple_ownership_permission_module::msg::InstantiateMsg as OwnershipModuleInstantiateMsg;
 use komple_permission_module::msg::{
     ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionModuleInstantiateMsg,
 };
@@ -22,9 +23,10 @@ use komple_token_module::{
     },
     state::{CollectionInfo, Contracts},
 };
+use komple_types::permission::Permissions;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, module::Modules,
-    permission::Permissions, query::ResponseWrapper,
+    query::ResponseWrapper,
 };
 use komple_utils::{query_collection_address, query_module_address};
 
@@ -60,7 +62,8 @@ pub fn permission_module() -> Box<dyn Contract<Empty>> {
         komple_permission_module::contract::execute,
         komple_permission_module::contract::instantiate,
         komple_permission_module::contract::query,
-    );
+    )
+    .with_reply(komple_permission_module::contract::reply);
     Box::new(contract)
 }
 
@@ -97,6 +100,15 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
         komple_metadata_module::contract::execute,
         komple_metadata_module::contract::instantiate,
         komple_metadata_module::contract::query,
+    );
+    Box::new(contract)
+}
+
+pub fn ownership_permission_module() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        komple_ownership_permission_module::contract::execute,
+        komple_ownership_permission_module::contract::instantiate,
+        komple_ownership_permission_module::contract::query,
     );
     Box::new(contract)
 }
@@ -336,11 +348,31 @@ pub fn give_approval_to_module(
         .unwrap();
 }
 
-pub fn add_permission_for_module(
+pub fn setup_ownership_permission_module(app: &mut App) -> Addr {
+    let ownership_permission_code_id = app.store_code(ownership_permission_module());
+
+    let msg = OwnershipModuleInstantiateMsg {
+        admin: ADMIN.to_string(),
+    };
+    let ownership_permission_module_addr = app
+        .instantiate_contract(
+            ownership_permission_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
+
+    ownership_permission_module_addr
+}
+
+pub fn setup_module_permissions(
     app: &mut App,
-    permission_module_addr: Addr,
-    module: Modules,
-    permissions: Vec<Permissions>,
+    permission_module_addr: &Addr,
+    module: String,
+    permissions: Vec<String>,
 ) {
     let msg = PermissionExecuteMsg::UpdateModulePermissions {
         module,
@@ -349,9 +381,30 @@ pub fn add_permission_for_module(
     let _ = app
         .execute_contract(
             Addr::unchecked(ADMIN),
-            permission_module_addr,
+            permission_module_addr.clone(),
             &msg,
             &vec![],
+        )
+        .unwrap();
+}
+
+pub fn register_permission(app: &mut App, permission_module_addr: &Addr) {
+    let ownership_permission_code_id = app.store_code(ownership_permission_module());
+
+    let msg = PermissionExecuteMsg::RegisterPermission {
+        permission: Permissions::Ownership.to_string(),
+        msg: to_binary(&OwnershipModuleInstantiateMsg {
+            admin: ADMIN.to_string(),
+        })
+        .unwrap(),
+        code_id: ownership_permission_code_id,
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            permission_module_addr.clone(),
+            &msg,
+            &[],
         )
         .unwrap();
 }

@@ -1,6 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::{module::Modules, permission::Permissions, query::ResponseWrapper};
+use komple_types::{module::Modules, query::ResponseWrapper};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -9,15 +9,20 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
+    RegisterPermission {
+        permission: String,
+        msg: Binary,
+        code_id: u64,
+    },
     UpdateModulePermissions {
-        module: Modules,
-        permissions: Vec<Permissions>,
+        module: String,
+        permissions: Vec<String>,
     },
     UpdateOperators {
         addrs: Vec<String>,
     },
     Check {
-        module: Modules,
+        module: String,
         msg: Binary,
     },
 }
@@ -25,6 +30,8 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ResponseWrapper<String>)]
+    PermissionAddress { permission: String },
     #[returns(ResponseWrapper<Vec<String>>)]
     ModulePermissions(Modules),
     #[returns(ResponseWrapper<Vec<String>>)]
@@ -32,15 +39,8 @@ pub enum QueryMsg {
 }
 
 #[cw_serde]
-pub struct OwnershipMsg {
-    pub collection_id: u32,
-    pub token_id: u32,
-    pub owner: String,
-}
-
-#[cw_serde]
 pub struct PermissionCheckMsg {
-    pub permission_type: Permissions,
+    pub permission_type: String,
     pub data: Binary,
 }
 

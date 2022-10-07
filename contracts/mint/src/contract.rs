@@ -314,7 +314,7 @@ fn execute_permission_mint(
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     let permission_msg = PermissionExecuteMsg::Check {
-        module: Modules::Mint,
+        module: Modules::Mint.to_string(),
         msg: permission_msg,
     };
     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {

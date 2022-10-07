@@ -402,7 +402,10 @@ mod permission_merge {
     use super::*;
 
     use cosmwasm_std::to_binary;
-    use helpers::{add_permission_for_module, link_collections};
+    use helpers::{
+        link_collections, register_permission, setup_module_permissions,
+        setup_ownership_permission_module,
+    };
     use komple_merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
     use komple_permission_module::msg::PermissionCheckMsg;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
@@ -413,7 +416,7 @@ mod permission_merge {
     mod ownership_permission {
         use super::*;
 
-        use komple_permission_module::msg::OwnershipMsg;
+        use komple_ownership_permission_module::msg::OwnershipMsg;
         use komple_types::metadata::Metadata;
         use komple_utils::query_collection_address;
 
@@ -514,26 +517,27 @@ mod permission_merge {
                 USER,
                 &merge_module_addr,
             );
-
-            add_permission_for_module(
+            setup_ownership_permission_module(&mut app);
+            register_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
                 &mut app,
-                permission_module_addr,
-                Modules::Merge,
-                vec![Permissions::Ownership],
+                &permission_module_addr,
+                Modules::Merge.to_string(),
+                vec![Permissions::Ownership.to_string()],
             );
 
             let permission_msg = to_binary(&vec![PermissionCheckMsg {
-                permission_type: Permissions::Ownership,
+                permission_type: Permissions::Ownership.to_string(),
                 data: to_binary(&vec![
                     OwnershipMsg {
                         collection_id: 1,
                         token_id: 1,
-                        owner: USER.to_string(),
+                        address: USER.to_string(),
                     },
                     OwnershipMsg {
                         collection_id: 1,
                         token_id: 2,
-                        owner: USER.to_string(),
+                        address: USER.to_string(),
                     },
                 ])
                 .unwrap(),

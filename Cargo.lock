@@ -232,6 +232,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-multi-test"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8e81b4a7821d5eeba0d23f737c16027b39a600742ca8c32eb980895ffd270f4"
+dependencies = [
+ "anyhow",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.1",
+ "derivative",
+ "itertools",
+ "prost",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cw-storage-plus"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -607,6 +626,7 @@ dependencies = [
  "komple-merge-module",
  "komple-metadata-module",
  "komple-mint-module",
+ "komple-ownership-permission-module",
  "komple-permission-module",
  "komple-token-module",
  "komple-types",
@@ -696,12 +716,30 @@ dependencies = [
  "cw721-base",
  "komple-hub-module",
  "komple-metadata-module",
+ "komple-ownership-permission-module",
  "komple-permission-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
  "schemars",
  "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-ownership-permission-module"
+version = "0.0.1"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test 0.15.1",
+ "cw-storage-plus 0.15.1",
+ "cw2 0.15.1",
+ "komple-types",
+ "komple-utils",
+ "schemars",
  "serde",
  "thiserror",
 ]
@@ -715,8 +753,14 @@ dependencies = [
  "cosmwasm-storage",
  "cw-multi-test 0.13.4",
  "cw-storage-plus 0.13.4",
+ "cw-utils 0.13.4",
  "cw2 0.13.4",
  "cw721",
+ "cw721-base",
+ "komple-hub-module",
+ "komple-metadata-module",
+ "komple-mint-module",
+ "komple-ownership-permission-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",

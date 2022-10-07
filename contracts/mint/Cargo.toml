@@ -61,3 +61,4 @@ cw-multi-test = "0.13.2"
 komple-metadata-module = { path = "../metadata", features = ["library"] }
 komple-hub-module = { path = "../hub", features = ["library"] }
 cw721 = "0.15.0"
+komple-ownership-permission-module = { path = "../ownership-permission" }

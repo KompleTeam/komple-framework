@@ -53,7 +53,14 @@ komple-token-module = { path = "../token", features = ["library"] }
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
 cw721 = "0.15.0"
+cw-utils = "0.13.2"
 
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
 cw-multi-test = "0.13.2"
+komple-ownership-permission-module = { path = "../ownership-permission" }
+komple-metadata-module = { path = "../metadata" }
+komple-token-module = { path = "../token" }
+komple-mint-module = { path = "../mint" }
+komple-hub-module = { path = "../hub" }
+cw721-base = "0.15.0"
