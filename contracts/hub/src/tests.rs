@@ -6,6 +6,7 @@ use crate::{
 use cosmwasm_std::{coin, to_binary, StdError};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_fee_module::msg::InstantiateMsg as FeeModuleInstantiateMsg;
 use komple_marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
 use komple_merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
 use komple_mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
@@ -55,6 +56,15 @@ pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
         komple_marketplace_module::contract::execute,
         komple_marketplace_module::contract::instantiate,
         komple_marketplace_module::contract::query,
+    );
+    Box::new(contract)
+}
+
+pub fn fee_module() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        komple_fee_module::contract::execute,
+        komple_fee_module::contract::instantiate,
+        komple_fee_module::contract::query,
     );
     Box::new(contract)
 }
@@ -176,477 +186,253 @@ mod instantiate {
 mod actions {
     use super::*;
 
-    mod init_modules {
+    mod register_module {
         use super::*;
 
-        mod mint_module_tests {
-            use super::*;
+        #[test]
+        fn test_register_mint_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let mint_module_code_id = app.store_code(mint_module());
 
-            #[test]
-            fn test_init_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let mint_module_code_id = app.store_code(mint_module());
-
-                let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Mint.to_string(),
-                    msg: instantiate_msg,
-                    code_id: mint_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Mint);
-                let res: ResponseWrapper<String> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-                assert_eq!(res.data, "contract1")
-            }
-
-            #[test]
-            fn test_init_unhappy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let mint_module_code_id = app.store_code(mint_module());
-
-                let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Mint.to_string(),
-                    msg: instantiate_msg,
-                    code_id: mint_module_code_id,
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(USER),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::Unauthorized {}.to_string()
+            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Mint.to_string(),
+                msg: instantiate_msg,
+                code_id: mint_module_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
                 )
-            }
+                .unwrap();
+
+            let msg = QueryMsg::ModuleAddress {
+                module: Modules::Mint.to_string(),
+            };
+            let res: ResponseWrapper<String> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
+            assert_eq!(res.data, "contract1")
+        }
+        #[test]
+        fn test_register_permission_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let permission_module_code_id = app.store_code(permission_module());
+
+            let instantiate_msg = to_binary(&PermissionModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Permission.to_string(),
+                msg: instantiate_msg,
+                code_id: permission_module_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap();
+
+            let msg = QueryMsg::ModuleAddress {
+                module: Modules::Permission.to_string(),
+            };
+            let res: ResponseWrapper<String> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
+            assert_eq!(res.data, "contract1")
         }
 
-        mod permission_module_tests {
-            use super::*;
+        #[test]
+        fn test_register_merge_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let merge_module_code_id = app.store_code(merge_module());
 
-            #[test]
-            fn test_init_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let permission_module_code_id = app.store_code(permission_module());
-
-                let instantiate_msg = to_binary(&PermissionModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Permission.to_string(),
-                    msg: instantiate_msg,
-                    code_id: permission_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Permission);
-                let res: ResponseWrapper<String> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-                assert_eq!(res.data, "contract1")
-            }
-
-            #[test]
-            fn test_init_unhappy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let permission_module_code_id = app.store_code(permission_module());
-
-                let instantiate_msg = to_binary(&PermissionModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Permission.to_string(),
-                    msg: instantiate_msg,
-                    code_id: permission_module_code_id,
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(USER),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::Unauthorized {}.to_string()
+            let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Merge.to_string(),
+                msg: instantiate_msg,
+                code_id: merge_module_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
                 )
-            }
-        }
-        mod merge_module_tests {
-            use super::*;
-
-            #[test]
-            fn test_init_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let merge_module_code_id = app.store_code(merge_module());
-
-                let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
                 .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Merge.to_string(),
-                    msg: instantiate_msg,
-                    code_id: merge_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::Merge);
-                let res: ResponseWrapper<String> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-                assert_eq!(res.data, "contract1")
-            }
-
-            #[test]
-            fn test_init_unhappy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let merge_module_code_id = app.store_code(merge_module());
-
-                let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Merge.to_string(),
-                    msg: instantiate_msg,
-                    code_id: merge_module_code_id,
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(USER),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::Unauthorized {}.to_string()
-                )
-            }
+            let msg = QueryMsg::ModuleAddress {
+                module: Modules::Merge.to_string(),
+            };
+            let res: ResponseWrapper<String> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
+            assert_eq!(res.data, "contract1")
         }
 
-        mod marketplace_module_tests {
-            use super::*;
+        #[test]
+        fn test_register_marketplace_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let marketplace_module_code_id = app.store_code(marketplace_module());
 
-            #[test]
-            fn test_init_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let marketplace_module_code_id = app.store_code(marketplace_module());
-
-                let instantiate_msg = to_binary(&MarketplaceModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                    native_denom: NATIVE_DENOM.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Marketplace.to_string(),
-                    msg: instantiate_msg,
-                    code_id: marketplace_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Marketplace);
-                let res: ResponseWrapper<String> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-                assert_eq!(res.data, "contract1")
-            }
-
-            #[test]
-            fn test_init_unhappy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let marketplace_module_code_id = app.store_code(marketplace_module());
-
-                let instantiate_msg = to_binary(&MarketplaceModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                    native_denom: NATIVE_DENOM.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Marketplace.to_string(),
-                    msg: instantiate_msg,
-                    code_id: marketplace_module_code_id,
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(USER),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::Unauthorized {}.to_string()
+            let instantiate_msg = to_binary(&MarketplaceModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+                native_denom: NATIVE_DENOM.to_string(),
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Marketplace.to_string(),
+                msg: instantiate_msg,
+                code_id: marketplace_module_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
                 )
-            }
+                .unwrap();
+
+            let msg = QueryMsg::ModuleAddress {
+                module: Modules::Marketplace.to_string(),
+            };
+            let res: ResponseWrapper<String> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
+            assert_eq!(res.data, "contract1")
+        }
+
+        #[test]
+        fn test_register_fee_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let fee_module_code_id = app.store_code(fee_module());
+
+            let instantiate_msg = to_binary(&FeeModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Fee.to_string(),
+                msg: instantiate_msg,
+                code_id: fee_module_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap();
+
+            let msg = QueryMsg::ModuleAddress {
+                module: Modules::Fee.to_string(),
+            };
+            let res: ResponseWrapper<String> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
+            assert_eq!(res.data, "contract1")
+        }
+
+        #[test]
+        fn test_register_unhappy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let mint_module_code_id = app.store_code(mint_module());
+
+            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Mint.to_string(),
+                msg: instantiate_msg,
+                code_id: mint_module_code_id,
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            )
         }
     }
 
     mod remove_native_modules {
         use super::*;
 
-        mod mint_module_tests {
-            use super::*;
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let mint_module_code_id = app.store_code(mint_module());
 
-            #[test]
-            fn test_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let mint_module_code_id = app.store_code(mint_module());
-
-                let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
+            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+                admin: ADMIN.to_string(),
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Mint.to_string(),
+                msg: instantiate_msg,
+                code_id: mint_module_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
                 .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Mint.to_string(),
-                    msg: instantiate_msg,
-                    code_id: mint_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::Mint);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_module_addr.clone(), &msg)
-                    .unwrap();
-                assert_eq!(res.data, "contract1");
-
-                let msg = ExecuteMsg::DeregisterModule {
-                    module: Modules::Mint.to_string(),
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Mint);
-                let res: Result<ResponseWrapper<String>, StdError> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg);
-                assert!(res.is_err());
-            }
-        }
-
-        mod permission_module_tests {
-            use super::*;
-
-            #[test]
-            fn test_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let permission_module_code_id = app.store_code(permission_module());
-
-                let instantiate_msg = to_binary(&PermissionModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
+            let msg = QueryMsg::ModuleAddress {
+                module: Modules::Mint.to_string(),
+            };
+            let res: ResponseWrapper<String> = app
+                .wrap()
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
                 .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Permission.to_string(),
-                    msg: instantiate_msg,
-                    code_id: permission_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
+            assert_eq!(res.data, "contract1");
 
-                let msg = QueryMsg::ModuleAddress(Modules::Permission);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_module_addr.clone(), &msg)
-                    .unwrap();
-                assert_eq!(res.data, "contract1");
-
-                let msg = ExecuteMsg::DeregisterModule {
-                    module: Modules::Permission.to_string(),
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Permission);
-                let res: Result<ResponseWrapper<String>, StdError> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg);
-                assert!(res.is_err());
-            }
-        }
-
-        mod merge_module_tests {
-            use super::*;
-
-            #[test]
-            fn test_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let merge_module_code_id = app.store_code(merge_module());
-
-                let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                })
+            let msg = ExecuteMsg::DeregisterModule {
+                module: Modules::Mint.to_string(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    hub_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
                 .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Merge.to_string(),
-                    msg: instantiate_msg,
-                    code_id: merge_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
 
-                let msg = QueryMsg::ModuleAddress(Modules::Merge);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_module_addr.clone(), &msg)
-                    .unwrap();
-                assert_eq!(res.data, "contract1");
-
-                let msg = ExecuteMsg::DeregisterModule {
-                    module: Modules::Merge.to_string(),
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Merge);
-                let res: Result<ResponseWrapper<String>, StdError> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg);
-                assert!(res.is_err());
-            }
-        }
-
-        mod marketplace_module_tests {
-            use super::*;
-
-            #[test]
-            fn test_happy_path() {
-                let mut app = mock_app();
-                let hub_module_addr = proper_instantiate(&mut app);
-                let marketplace_module_code_id = app.store_code(marketplace_module());
-
-                let instantiate_msg = to_binary(&MarketplaceModuleInstantiateMsg {
-                    admin: ADMIN.to_string(),
-                    native_denom: NATIVE_DENOM.to_string(),
-                })
-                .unwrap();
-                let msg = ExecuteMsg::RegisterModule {
-                    module: Modules::Marketplace.to_string(),
-                    msg: instantiate_msg,
-                    code_id: marketplace_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Marketplace);
-                let res: ResponseWrapper<String> = app
-                    .wrap()
-                    .query_wasm_smart(hub_module_addr.clone(), &msg)
-                    .unwrap();
-                assert_eq!(res.data, "contract1");
-
-                let msg = ExecuteMsg::DeregisterModule {
-                    module: Modules::Marketplace.to_string(),
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        hub_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
-
-                let msg = QueryMsg::ModuleAddress(Modules::Marketplace);
-                let res: Result<ResponseWrapper<String>, StdError> =
-                    app.wrap().query_wasm_smart(hub_module_addr, &msg);
-                assert!(res.is_err());
-            }
+            let msg = QueryMsg::ModuleAddress {
+                module: Modules::Mint.to_string(),
+            };
+            let res: Result<ResponseWrapper<String>, StdError> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg);
+            assert!(res.is_err());
         }
 
         #[test]

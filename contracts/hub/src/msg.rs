@@ -1,7 +1,7 @@
 use crate::state::{HubInfo, WebsiteConfig};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::{module::Modules, query::ResponseWrapper};
+use komple_types::query::ResponseWrapper;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +47,7 @@ pub enum QueryMsg {
     #[returns(ResponseWrapper<ConfigResponse>)]
     Config {},
     #[returns(ResponseWrapper<String>)]
-    ModuleAddress(Modules),
+    ModuleAddress { module: String },
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
 }

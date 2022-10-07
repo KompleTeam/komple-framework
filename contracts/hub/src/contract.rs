@@ -7,7 +7,6 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 
-use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
 use semver::Version;
@@ -273,7 +272,7 @@ fn execute_update_operators(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::ModuleAddress(module) => to_binary(&query_module_address(deps, module)?),
+        QueryMsg::ModuleAddress { module } => to_binary(&query_module_address(deps, module)?),
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
@@ -292,7 +291,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
     ))
 }
 
-fn query_module_address(deps: Deps, module: Modules) -> StdResult<ResponseWrapper<String>> {
+fn query_module_address(deps: Deps, module: String) -> StdResult<ResponseWrapper<String>> {
     let addr = MODULE_ADDRS.load(deps.storage, module.as_str())?;
     Ok(ResponseWrapper::new("module_addrSess", addr.to_string()))
 }

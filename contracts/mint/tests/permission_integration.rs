@@ -172,10 +172,14 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
         .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
 
-    let msg = HubQueryMsg::ModuleAddress(Modules::Mint);
+    let msg = HubQueryMsg::ModuleAddress {
+        module: Modules::Mint.to_string(),
+    };
     let mint_res: ResponseWrapper<Addr> =
         app.wrap().query_wasm_smart(hub_addr.clone(), &msg).unwrap();
-    let msg = HubQueryMsg::ModuleAddress(Modules::Permission);
+    let msg = HubQueryMsg::ModuleAddress {
+        module: Modules::Permission.to_string(),
+    };
     let permission_res: ResponseWrapper<Addr> =
         app.wrap().query_wasm_smart(hub_addr.clone(), &msg).unwrap();
 
