@@ -112,7 +112,7 @@ fn token_module_instantiation(app: &mut App) -> Addr {
     let token_code_id = app.store_code(token_module());
 
     let collection_info = CollectionInfo {
-        collection_type: Collections::Normal,
+        collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
         description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),

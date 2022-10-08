@@ -81,7 +81,7 @@ fn proper_instantiate(
     let token_code_id = app.store_code(token_module());
 
     let collection_info = CollectionInfo {
-        collection_type: Collections::Normal,
+        collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
         description: "Test Description".to_string(),
         image: "https://some-image.com".to_string(),
@@ -187,7 +187,7 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
 
         let collection_info = CollectionInfo {
-            collection_type: Collections::Normal,
+            collection_type: Collections::Standard,
             name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
@@ -228,7 +228,7 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
 
         let collection_info = CollectionInfo {
-            collection_type: Collections::Normal,
+            collection_type: Collections::Standard,
             name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
@@ -300,7 +300,7 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
 
         let collection_info = CollectionInfo {
-            collection_type: Collections::Normal,
+            collection_type: Collections::Standard,
             name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
@@ -345,7 +345,7 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
 
         let collection_info = CollectionInfo {
-            collection_type: Collections::Normal,
+            collection_type: Collections::Standard,
             name: "Test Collection".to_string(),
             description: "Test Description".to_string(),
             image: "https://some-image.com".to_string(),
@@ -390,7 +390,7 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
 
         let collection_info = CollectionInfo {
-            collection_type: Collections::Normal,
+            collection_type: Collections::Standard,
             name: "Test Collection".to_string(),
             description: "Test DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest Description".to_string(),
             image: "https://some-image.com".to_string(),
@@ -585,7 +585,7 @@ mod actions {
             let mut app = mock_app();
             let token_code_id = app.store_code(token_module());
             let collection_info = CollectionInfo {
-                collection_type: Collections::Normal,
+                collection_type: Collections::Standard,
                 name: "Test Collection".to_string(),
                 description: "Test Description".to_string(),
                 image: "https://some-image.com".to_string(),

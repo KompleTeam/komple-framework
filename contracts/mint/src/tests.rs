@@ -99,7 +99,7 @@ fn setup_collection(
     let token_code_id = app.store_code(token_module());
 
     let collection_info = CollectionInfo {
-        collection_type: Collections::Normal,
+        collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
         description: "Test Description".to_string(),
         image: "ipfs://xyz".to_string(),
@@ -331,7 +331,7 @@ mod actions {
                 let token_code_id = app.store_code(token_module());
 
                 let collection_info = CollectionInfo {
-                    collection_type: Collections::Normal,
+                    collection_type: Collections::Standard,
                     name: "Test Collection".to_string(),
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
@@ -374,7 +374,7 @@ mod actions {
                 let token_code_id = app.store_code(token_module());
 
                 let collection_info = CollectionInfo {
-                    collection_type: Collections::Normal,
+                    collection_type: Collections::Standard,
                     name: "Test Collection".to_string(),
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),

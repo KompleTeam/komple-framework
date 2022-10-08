@@ -437,7 +437,7 @@ fn test_permission_check() {
         token_module_code_id,
         None,
         None,
-        Collections::Normal,
+        Collections::Standard,
         None,
         None,
         None,

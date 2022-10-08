@@ -4,14 +4,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Collections {
-    Normal,
+    Standard,
+    // TODO: Find a new collection type
     Linked,
 }
 
 impl Collections {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Collections::Normal => "normal",
+            Collections::Standard => "standard",
             Collections::Linked => "linked",
         }
     }
