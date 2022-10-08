@@ -5,8 +5,6 @@ use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_hub_module::state::HubInfo;
-use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
-use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_mint_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_ownership_permission_module::msg::InstantiateMsg as OwnershipModuleInstantiateMsg;
 use komple_permission_module::msg::{
@@ -205,7 +203,7 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
         unit_price: None,
         native_denom: NATIVE_DENOM.to_string(),
         max_token_limit: None,
-        ipfs_link: None,
+        ipfs_link: Some("some-link".to_string()),
     };
     let msg = ExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
@@ -251,38 +249,6 @@ pub fn setup_metadata_module(
         )
         .unwrap();
     res.data.metadata.unwrap()
-}
-
-pub fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
-    let meta_info = MetaInfo {
-        image: Some("https://some-image.com".to_string()),
-        external_url: None,
-        description: Some("Some description".to_string()),
-        youtube_url: None,
-        animation_url: None,
-    };
-    let attributes = vec![
-        Trait {
-            trait_type: "trait_1".to_string(),
-            value: "value_1".to_string(),
-        },
-        Trait {
-            trait_type: "trait_2".to_string(),
-            value: "value_2".to_string(),
-        },
-    ];
-    let msg = MetadataExecuteMsg::AddMetadata {
-        meta_info,
-        attributes,
-    };
-    let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            metadata_module_addr.clone(),
-            &msg,
-            &vec![],
-        )
-        .unwrap();
 }
 
 pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
@@ -439,14 +405,8 @@ mod permission_mint {
         let collection_addr_2 =
             query_collection_address(&app.wrap(), &mint_module_addr.clone(), &2).unwrap();
 
-        let metadata_module_addr_1 =
-            setup_metadata_module(&mut app, collection_addr_1, Metadata::Standard);
-        let metadata_module_addr_2 =
-            setup_metadata_module(&mut app, collection_addr_2, Metadata::Standard);
-
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
-        setup_metadata(&mut app, metadata_module_addr_2);
+        setup_metadata_module(&mut app, collection_addr_1, Metadata::Standard);
+        setup_metadata_module(&mut app, collection_addr_2, Metadata::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);

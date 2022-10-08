@@ -7,7 +7,7 @@ use komple_hub_module::msg::ExecuteMsg;
 pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
-    mock_app, proper_instantiate, setup_all_modules, setup_metadata, setup_metadata_module,
+    mock_app, proper_instantiate, setup_all_modules, setup_metadata_module,
     setup_mint_module_operators, token_module, ADMIN, USER,
 };
 
@@ -119,18 +119,9 @@ mod normal_merge {
         let collection_3_addr =
             query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
 
-        let metadata_module_addr_1 =
-            setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
-        let metadata_module_addr_2 =
-            setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
-        let metadata_module_addr_3 =
-            setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
-
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
-        setup_metadata(&mut app, metadata_module_addr_2);
-        setup_metadata(&mut app, metadata_module_addr_3);
+        setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
+        setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
+        setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -243,9 +234,7 @@ mod normal_merge {
 
         let collection_1_addr =
             query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-        let metadata_module_addr_1 =
-            setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
-        setup_metadata(&mut app, metadata_module_addr_1.clone());
+        setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -422,18 +411,9 @@ mod permission_merge {
             let collection_3_addr =
                 query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
 
-            let metadata_module_addr_1 =
-                setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
-            let metadata_module_addr_2 =
-                setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
-            let metadata_module_addr_3 =
-                setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
-
-            setup_metadata(&mut app, metadata_module_addr_1.clone());
-            setup_metadata(&mut app, metadata_module_addr_1.clone());
-            setup_metadata(&mut app, metadata_module_addr_1.clone());
-            setup_metadata(&mut app, metadata_module_addr_2);
-            setup_metadata(&mut app, metadata_module_addr_3);
+            setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
+            setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
+            setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
 
             mint_token(&mut app, mint_module_addr.clone(), 1, USER);
             mint_token(&mut app, mint_module_addr.clone(), 1, USER);

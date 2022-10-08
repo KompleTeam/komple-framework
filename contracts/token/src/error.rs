@@ -72,6 +72,9 @@ pub enum ContractError {
     #[error("Error while instantiating contract")]
     ContractsInstantiateError {},
 
+    #[error("IPFS link not found")]
+    IpfsNotFound {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 

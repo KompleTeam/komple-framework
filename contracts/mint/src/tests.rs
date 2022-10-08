@@ -3,10 +3,6 @@ use crate::msg::{ExecuteMsg, InstantiateMsg};
 use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_metadata_module::{
-    msg::ExecuteMsg as MetadataExecuteMsg,
-    state::{MetaInfo, Trait},
-};
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::{
     msg::{
@@ -116,7 +112,7 @@ fn setup_collection(
         unit_price,
         max_token_limit: None,
         native_denom: NATIVE_DENOM.to_string(),
-        ipfs_link: None,
+        ipfs_link: Some("some-link".to_string()),
     };
 
     let msg = ExecuteMsg::CreateCollection {
@@ -165,38 +161,6 @@ fn setup_metadata_module(
     res.data.metadata.unwrap()
 }
 
-fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
-    let meta_info = MetaInfo {
-        image: Some("https://some-image.com".to_string()),
-        external_url: None,
-        description: Some("Some description".to_string()),
-        youtube_url: None,
-        animation_url: None,
-    };
-    let attributes = vec![
-        Trait {
-            trait_type: "trait_1".to_string(),
-            value: "value_1".to_string(),
-        },
-        Trait {
-            trait_type: "trait_2".to_string(),
-            value: "value_2".to_string(),
-        },
-    ];
-    let msg = MetadataExecuteMsg::AddMetadata {
-        meta_info,
-        attributes,
-    };
-    let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            metadata_module_addr.clone(),
-            &msg,
-            &vec![],
-        )
-        .unwrap();
-}
-
 mod actions {
     use super::*;
 
@@ -224,9 +188,7 @@ mod actions {
             );
 
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr, MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr, MetadataType::Standard);
 
             let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
             assert_eq!(res.amount, Uint128::new(0));
@@ -268,9 +230,7 @@ mod actions {
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
 
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr, MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr, MetadataType::Standard);
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
             let _ = app
@@ -353,7 +313,7 @@ mod actions {
                     unit_price: None,
                     native_denom: NATIVE_DENOM.to_string(),
                     max_token_limit: None,
-                    ipfs_link: None,
+                    ipfs_link: Some("some-link".to_string()),
                 };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
@@ -609,9 +569,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -646,9 +604,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let err = app
@@ -666,9 +622,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -689,9 +643,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 2 };
             let err = app
@@ -715,9 +667,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -738,9 +688,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
@@ -758,9 +706,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
@@ -778,9 +724,7 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr = query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 2 };
             let err = app

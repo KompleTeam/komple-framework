@@ -6,6 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
+use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
@@ -26,8 +27,9 @@ use crate::state::{
 use cw721::ContractInfoResponse;
 use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 
-use komple_metadata_module::msg::{
-    ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
+use komple_metadata_module::{
+    msg::{ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg},
+    state::MetaInfo as MetadataMetaInfo,
 };
 use komple_whitelist_module::msg::{
     ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
@@ -57,43 +59,44 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let locks = Locks {
-        burn_lock: false,
-        mint_lock: false,
-        transfer_lock: false,
-        send_lock: false,
-    };
-
-    let contracts = Contracts {
-        whitelist: None,
-        metadata: None,
-    };
-    CONTRACTS.save(deps.storage, &contracts)?;
-
     if msg.collection_config.start_time.is_some()
         && env.block.time >= msg.collection_config.start_time.unwrap()
     {
         return Err(ContractError::InvalidStartTime {});
     };
-
     if msg.collection_config.max_token_limit.is_some()
         && msg.collection_config.max_token_limit.unwrap() == 0
     {
         return Err(ContractError::InvalidMaxTokenLimit {});
     };
-
     if msg.collection_config.per_address_limit.is_some()
         && msg.collection_config.per_address_limit.unwrap() == 0
     {
         return Err(ContractError::InvalidPerAddressLimit {});
     };
+    if msg.collection_info.collection_type == Collections::Standard
+        && msg.collection_config.ipfs_link.is_none()
+    {
+        return Err(ContractError::IpfsNotFound {});
+    };
 
     COLLECTION_CONFIG.save(deps.storage, &msg.collection_config)?;
+
+    if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
+        return Err(ContractError::DescriptionTooLong {});
+    }
+    let collection_info = CollectionInfo {
+        collection_type: msg.collection_info.collection_type,
+        name: msg.collection_info.name.clone(),
+        description: msg.collection_info.description,
+        image: msg.collection_info.image,
+        external_link: msg.collection_info.external_link,
+    };
+    COLLECTION_INFO.save(deps.storage, &collection_info)?;
 
     if msg.royalty_share.is_some() && msg.royalty_share.unwrap() > Decimal::one() {
         return Err(ContractError::InvalidRoyaltyShare {});
     }
-
     let admin = deps.api.addr_validate(&msg.admin)?;
     let creator = deps.api.addr_validate(&msg.creator)?;
     let config = Config {
@@ -103,24 +106,23 @@ pub fn instantiate(
     };
     CONFIG.save(deps.storage, &config)?;
 
+    let locks = Locks {
+        burn_lock: false,
+        mint_lock: false,
+        transfer_lock: false,
+        send_lock: false,
+    };
     LOCKS.save(deps.storage, &locks)?;
 
     TOKEN_IDS.save(deps.storage, &0)?;
 
     MINT_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
-        return Err(ContractError::DescriptionTooLong {});
-    }
-
-    let collection_info = CollectionInfo {
-        collection_type: msg.collection_info.collection_type,
-        name: msg.collection_info.name.clone(),
-        description: msg.collection_info.description,
-        image: msg.collection_info.image,
-        external_link: msg.collection_info.external_link,
+    let contracts = Contracts {
+        whitelist: None,
+        metadata: None,
     };
-    COLLECTION_INFO.save(deps.storage, &collection_info)?;
+    CONTRACTS.save(deps.storage, &contracts)?;
 
     let contract_info = ContractInfoResponse {
         name: msg.collection_info.name.clone(),
@@ -355,6 +357,7 @@ pub fn execute_mint(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
+    let collection_info = COLLECTION_INFO.load(deps.storage)?;
 
     let locks = LOCKS.load(deps.storage)?;
     if locks.mint_lock {
@@ -420,7 +423,35 @@ pub fn execute_mint(
 
     let res = Cw721Contract::default().mint(deps, env, info, mint_msg);
 
-    let mut msgs: Vec<CosmosMsg> = vec![CosmosMsg::Wasm(WasmMsg::Execute {
+    let mut msgs: Vec<CosmosMsg> = vec![];
+
+    // If the collection is standard
+    // Execute add_metadata message to save the ifps link to metadata module
+    if collection_info.collection_type == Collections::Standard {
+        if collection_config.ipfs_link.is_none() {
+            return Err(ContractError::IpfsNotFound {});
+        };
+
+        let ifps_link = format!("{}/{}", collection_config.ipfs_link.unwrap(), token_id);
+
+        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: contracts.metadata.clone().unwrap().to_string(),
+            msg: to_binary(&MetadataExecuteMsg::AddMetadata {
+                meta_info: MetadataMetaInfo {
+                    image: Some(ifps_link),
+                    external_url: None,
+                    description: None,
+                    youtube_url: None,
+                    animation_url: None,
+                },
+                attributes: vec![],
+            })
+            .unwrap(),
+            funds: vec![],
+        }))
+    }
+    // Link the metadata
+    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: contracts.metadata.unwrap().to_string(),
         msg: to_binary(&MetadataExecuteMsg::LinkMetadata {
             token_id,
@@ -428,14 +459,14 @@ pub fn execute_mint(
         })
         .unwrap(),
         funds: vec![],
-    })];
+    }));
     if mint_price.is_some() {
         let payment_msg: CosmosMsg<Empty> = CosmosMsg::Bank(BankMsg::Send {
             to_address: config.admin.to_string(),
             amount: vec![mint_price.unwrap()],
         });
         msgs.push(payment_msg);
-    }
+    };
 
     match res {
         Ok(res) => Ok(res.add_messages(msgs)),

@@ -9,7 +9,7 @@ use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::{
     msg::{ExecuteMsg as MetadataExecuteMsg, QueryMsg as MetadataQueryMsg},
-    state::{MetaInfo, Trait},
+    state::{MetaInfo, MetaInfo as MetadataMetaInfo, Metadata as MetadataMetadata, Trait},
 };
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
@@ -151,38 +151,6 @@ fn setup_metadata_module(
     res.data.metadata.unwrap()
 }
 
-fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
-    let meta_info = MetaInfo {
-        image: Some("https://some-image.com".to_string()),
-        external_url: None,
-        description: Some("Some description".to_string()),
-        youtube_url: None,
-        animation_url: None,
-    };
-    let attributes = vec![
-        Trait {
-            trait_type: "trait_1".to_string(),
-            value: "value_1".to_string(),
-        },
-        Trait {
-            trait_type: "trait_2".to_string(),
-            value: "value_2".to_string(),
-        },
-    ];
-    let msg = MetadataExecuteMsg::AddMetadata {
-        meta_info,
-        attributes,
-    };
-    let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            metadata_module_addr.clone(),
-            &msg,
-            &vec![],
-        )
-        .unwrap();
-}
-
 mod initialization {
     use super::*;
 
@@ -208,7 +176,7 @@ mod initialization {
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
-            ipfs_link: None,
+            ipfs_link: Some("some-link".to_string()),
         };
 
         let msg = InstantiateMsg {
@@ -254,7 +222,7 @@ mod initialization {
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
-            ipfs_link: None,
+            ipfs_link: Some("some-link".to_string()),
         };
 
         let msg = InstantiateMsg {
@@ -327,7 +295,7 @@ mod initialization {
             max_token_limit: Some(0),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
-            ipfs_link: None,
+            ipfs_link: Some("some-link".to_string()),
         };
 
         let msg = InstantiateMsg {
@@ -376,7 +344,7 @@ mod initialization {
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
-            ipfs_link: None,
+            ipfs_link: Some("some-link".to_string()),
         };
 
         let msg = InstantiateMsg {
@@ -425,7 +393,7 @@ mod initialization {
             max_token_limit: Some(100),
             unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
-            ipfs_link: None,
+            ipfs_link: Some("some-link".to_string()),
         };
 
         let msg = InstantiateMsg {
@@ -451,6 +419,55 @@ mod initialization {
             ContractError::DescriptionTooLong {}.to_string()
         );
     }
+
+    #[test]
+    fn test_missing_ipfs_link() {
+        let mut app = mock_app();
+        let token_code_id = app.store_code(token_module());
+
+        let collection_info = CollectionInfo {
+            collection_type: Collections::Standard,
+            name: "Test Collection".to_string(),
+            description: "Test DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest Description".to_string(),
+            image: "https://some-image.com".to_string(),
+            external_link: None,
+        };
+        let token_info = TokenInfo {
+            symbol: "TTT".to_string(),
+            minter: ADMIN.to_string(),
+        };
+        let collection_config = CollectionConfig {
+            per_address_limit: Some(5),
+            start_time: Some(app.block_info().time.plus_seconds(1)),
+            max_token_limit: Some(100),
+            unit_price: Some(Uint128::new(100)),
+            native_denom: NATIVE_DENOM.to_string(),
+            ipfs_link: None,
+        };
+
+        let msg = InstantiateMsg {
+            admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
+            token_info,
+            collection_info,
+            collection_config,
+            royalty_share: None,
+        };
+        let err = app
+            .instantiate_contract(
+                token_code_id,
+                Addr::unchecked(ADMIN),
+                &msg,
+                &[],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            ContractError::IpfsNotFound {}.to_string()
+        );
+    }
 }
 
 mod actions {
@@ -470,7 +487,7 @@ mod actions {
                 None,
                 None,
                 None,
-                None,
+                Some("some-link".to_string()),
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -508,7 +525,7 @@ mod actions {
                 None,
                 None,
                 None,
-                None,
+                Some("some-link".to_string()),
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -546,7 +563,7 @@ mod actions {
                 None,
                 None,
                 Some(Decimal::from_str("0.5").unwrap()),
-                None,
+                Some("some-link".to_string()),
             );
 
             let msg = Cw721QueryMsg::Extension {
@@ -599,7 +616,7 @@ mod actions {
                 None,
                 None,
                 Some(Decimal::from_str("0.5").unwrap()),
-                None,
+                Some("some-link".to_string()),
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -642,7 +659,7 @@ mod actions {
                 max_token_limit: None,
                 unit_price: None,
                 native_denom: NATIVE_DENOM.to_string(),
-                ipfs_link: None,
+                ipfs_link: Some("some-link".to_string()),
             };
 
             let msg = InstantiateMsg {
@@ -676,7 +693,7 @@ mod actions {
                 None,
                 None,
                 Some(Decimal::from_str("0.5").unwrap()),
-                None,
+                Some("some-link".to_string()),
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -716,7 +733,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let locks = Locks {
@@ -760,7 +777,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let locks = Locks {
@@ -803,15 +820,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -872,7 +888,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let locks = Locks {
@@ -912,7 +928,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let locks = Locks {
@@ -956,7 +972,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -994,7 +1010,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1027,7 +1043,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1064,7 +1080,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1105,7 +1121,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1139,7 +1155,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let genesis_time = app.block_info().time;
@@ -1204,15 +1220,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1259,15 +1274,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1374,15 +1388,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1442,15 +1455,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1487,7 +1499,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let metadata_module_addr = setup_metadata_module(
@@ -1495,7 +1507,6 @@ mod actions {
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr.clone());
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1546,15 +1557,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1646,6 +1656,8 @@ mod actions {
         }
 
         mod mint_operation {
+            use komple_metadata_module::msg::MetadataResponse;
+
             use super::*;
 
             #[test]
@@ -1659,7 +1671,7 @@ mod actions {
                     None,
                     Some(Uint128::new(1_000_000)),
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let metadata_module_addr = setup_metadata_module(
@@ -1667,7 +1679,6 @@ mod actions {
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1689,6 +1700,26 @@ mod actions {
 
                 let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
                 assert_eq!(res, coin(1_000_000, NATIVE_DENOM));
+
+                let msg = MetadataQueryMsg::Metadata { token_id: 1 };
+                let res: ResponseWrapper<MetadataResponse> = app
+                    .wrap()
+                    .query_wasm_smart(metadata_module_addr, &msg)
+                    .unwrap();
+                assert_eq!(res.data.metadata_id, 1);
+                assert_eq!(
+                    res.data.metadata,
+                    MetadataMetadata {
+                        meta_info: MetaInfo {
+                            image: Some("some-link/1".to_string()),
+                            external_url: None,
+                            description: None,
+                            animation_url: None,
+                            youtube_url: None
+                        },
+                        attributes: vec![]
+                    }
+                );
             }
 
             #[test]
@@ -1702,15 +1733,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let locks = Locks {
                     mint_lock: true,
@@ -1764,16 +1794,14 @@ mod actions {
                     Some(2),
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr.clone());
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1836,16 +1864,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr.clone());
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1909,15 +1935,14 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1950,15 +1975,14 @@ mod actions {
                     None,
                     Some(Uint128::new(1_000_000)),
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
-                let metadata_module_addr = setup_metadata_module(
+                setup_metadata_module(
                     &mut app,
                     token_module_addr.clone(),
                     MetadataType::Standard,
                 );
-                setup_metadata(&mut app, metadata_module_addr);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1991,7 +2015,7 @@ mod actions {
                     None,
                     Some(Uint128::new(100)),
                     None,
-                    None,
+                    Some("some-link".to_string()),
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {

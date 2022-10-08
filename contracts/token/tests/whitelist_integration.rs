@@ -2,8 +2,6 @@ use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
-use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
 use komple_token_module::state::{CollectionConfig, CollectionInfo, Contracts};
 use komple_token_module::ContractError;
@@ -128,7 +126,7 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         max_token_limit: None,
         unit_price: None,
         native_denom: NATIVE_DENOM.to_string(),
-        ipfs_link: None,
+        ipfs_link: Some("some-link".to_string()),
     };
 
     let msg = InstantiateMsg {
@@ -180,38 +178,6 @@ fn setup_metadata_module(
         )
         .unwrap();
     res.data.metadata.unwrap()
-}
-
-fn setup_metadata(app: &mut App, metadata_module_addr: Addr) {
-    let meta_info = MetaInfo {
-        image: Some("https://some-image.com".to_string()),
-        external_url: None,
-        description: Some("Some description".to_string()),
-        youtube_url: None,
-        animation_url: None,
-    };
-    let attributes = vec![
-        Trait {
-            trait_type: "trait_1".to_string(),
-            value: "value_1".to_string(),
-        },
-        Trait {
-            trait_type: "trait_2".to_string(),
-            value: "value_2".to_string(),
-        },
-    ];
-    let msg = MetadataExecuteMsg::AddMetadata {
-        meta_info,
-        attributes,
-    };
-    let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            metadata_module_addr.clone(),
-            &msg,
-            &vec![],
-        )
-        .unwrap();
 }
 
 mod initialization {
@@ -286,12 +252,7 @@ mod actions {
                 2,
             );
 
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr.clone());
-            setup_metadata(&mut app, metadata_module_addr.clone());
-            setup_metadata(&mut app, metadata_module_addr.clone());
-            setup_metadata(&mut app, metadata_module_addr);
+            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
             let random_mint: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::Mint {
@@ -368,9 +329,7 @@ mod actions {
                 2,
             );
 
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
@@ -412,10 +371,7 @@ mod actions {
                 2,
             );
 
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr.clone());
-            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
@@ -475,9 +431,7 @@ mod actions {
                 2,
             );
 
-            let metadata_module_addr =
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
-            setup_metadata(&mut app, metadata_module_addr.clone());
+            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::Mint {
