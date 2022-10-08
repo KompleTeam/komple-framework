@@ -1,4 +1,4 @@
-use crate::state::Contracts;
+use crate::state::{CollectionConfig, Contracts};
 use crate::{msg::ConfigResponse, ContractError};
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo},
@@ -77,6 +77,7 @@ fn proper_instantiate(
     max_token_limit: Option<u32>,
     unit_price: Option<Uint128>,
     royalty_share: Option<Decimal>,
+    ipfs_link: Option<String>,
 ) -> Addr {
     let token_code_id = app.store_code(token_module());
 
@@ -91,16 +92,20 @@ fn proper_instantiate(
         symbol: "TTT".to_string(),
         minter,
     };
+    let collection_config = CollectionConfig {
+        native_denom: NATIVE_DENOM.to_string(),
+        per_address_limit,
+        start_time,
+        max_token_limit,
+        unit_price,
+        ipfs_link,
+    };
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
-        per_address_limit,
-        start_time,
+        collection_config,
         collection_info,
-        max_token_limit,
-        unit_price,
-        native_denom: NATIVE_DENOM.to_string(),
         royalty_share,
     };
     let token_module_addr = app
@@ -197,16 +202,21 @@ mod initialization {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
         };
+        let collection_config = CollectionConfig {
+            per_address_limit: Some(5),
+            start_time: Some(app.block_info().time.plus_seconds(1)),
+            max_token_limit: Some(100),
+            unit_price: Some(Uint128::new(100)),
+            native_denom: NATIVE_DENOM.to_string(),
+            ipfs_link: None,
+        };
+
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            per_address_limit: Some(5),
-            start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
-            max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
-            native_denom: NATIVE_DENOM.to_string(),
+            collection_config,
             royalty_share: None,
         };
         let token_module_addr = app
@@ -238,17 +248,21 @@ mod initialization {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
         };
+        let mut collection_config = CollectionConfig {
+            per_address_limit: Some(5),
+            start_time: Some(app.block_info().time),
+            max_token_limit: Some(100),
+            unit_price: Some(Uint128::new(100)),
+            native_denom: NATIVE_DENOM.to_string(),
+            ipfs_link: None,
+        };
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info: token_info.clone(),
-            per_address_limit: Some(5),
-            start_time: Some(app.block_info().time),
             collection_info: collection_info.clone(),
-            max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
-            native_denom: NATIVE_DENOM.to_string(),
+            collection_config: collection_config.clone(),
             royalty_share: None,
         };
         let err = app
@@ -266,16 +280,13 @@ mod initialization {
             ContractError::InvalidStartTime {}.to_string()
         );
 
+        collection_config.start_time = Some(app.block_info().time.minus_seconds(10));
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info: token_info.clone(),
-            per_address_limit: Some(5),
-            start_time: Some(app.block_info().time.minus_seconds(10)),
             collection_info: collection_info.clone(),
-            max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
-            native_denom: NATIVE_DENOM.to_string(),
+            collection_config,
             royalty_share: None,
         };
         let err = app
@@ -310,17 +321,21 @@ mod initialization {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
         };
+        let collection_config = CollectionConfig {
+            per_address_limit: Some(5),
+            start_time: Some(app.block_info().time.plus_seconds(1)),
+            max_token_limit: Some(0),
+            unit_price: Some(Uint128::new(100)),
+            native_denom: NATIVE_DENOM.to_string(),
+            ipfs_link: None,
+        };
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            per_address_limit: Some(5),
-            start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
-            max_token_limit: Some(0),
-            unit_price: Some(Uint128::new(100)),
-            native_denom: NATIVE_DENOM.to_string(),
+            collection_config,
             royalty_share: None,
         };
         let err = app
@@ -355,17 +370,21 @@ mod initialization {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
         };
+        let collection_config = CollectionConfig {
+            per_address_limit: Some(0),
+            start_time: Some(app.block_info().time.plus_seconds(1)),
+            max_token_limit: Some(100),
+            unit_price: Some(Uint128::new(100)),
+            native_denom: NATIVE_DENOM.to_string(),
+            ipfs_link: None,
+        };
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            per_address_limit: Some(0),
-            start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
-            max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
-            native_denom: NATIVE_DENOM.to_string(),
+            collection_config,
             royalty_share: None,
         };
         let err = app
@@ -400,17 +419,21 @@ mod initialization {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
         };
+        let collection_config = CollectionConfig {
+            per_address_limit: Some(5),
+            start_time: Some(app.block_info().time.plus_seconds(1)),
+            max_token_limit: Some(100),
+            unit_price: Some(Uint128::new(100)),
+            native_denom: NATIVE_DENOM.to_string(),
+            ipfs_link: None,
+        };
 
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            per_address_limit: Some(5),
-            start_time: Some(app.block_info().time.plus_seconds(1)),
             collection_info,
-            max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
-            native_denom: NATIVE_DENOM.to_string(),
+            collection_config,
             royalty_share: None,
         };
         let err = app
@@ -439,8 +462,16 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let token_module_addr =
-                proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+            let token_module_addr = proper_instantiate(
+                &mut app,
+                ADMIN.to_string(),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::UpdateOperators {
@@ -469,8 +500,16 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let token_module_addr =
-                proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+            let token_module_addr = proper_instantiate(
+                &mut app,
+                ADMIN.to_string(),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::UpdateOperators {
@@ -507,6 +546,7 @@ mod actions {
                 None,
                 None,
                 Some(Decimal::from_str("0.5").unwrap()),
+                None,
             );
 
             let msg = Cw721QueryMsg::Extension {
@@ -559,6 +599,7 @@ mod actions {
                 None,
                 None,
                 Some(Decimal::from_str("0.5").unwrap()),
+                None,
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -595,16 +636,21 @@ mod actions {
                 symbol: "TTT".to_string(),
                 minter: ADMIN.to_string(),
             };
+            let collection_config = CollectionConfig {
+                per_address_limit: None,
+                start_time: None,
+                max_token_limit: None,
+                unit_price: None,
+                native_denom: NATIVE_DENOM.to_string(),
+                ipfs_link: None,
+            };
+
             let msg = InstantiateMsg {
                 admin: ADMIN.to_string(),
                 creator: ADMIN.to_string(),
                 token_info,
-                per_address_limit: None,
-                start_time: None,
                 collection_info,
-                max_token_limit: None,
-                unit_price: None,
-                native_denom: NATIVE_DENOM.to_string(),
+                collection_config,
                 royalty_share: Some(Decimal::from_str("1.2").unwrap()),
             };
             let err = app
@@ -630,6 +676,7 @@ mod actions {
                 None,
                 None,
                 Some(Decimal::from_str("0.5").unwrap()),
+                None,
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -661,8 +708,16 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let locks = Locks {
                     mint_lock: false,
@@ -697,8 +752,16 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let locks = Locks {
                     mint_lock: false,
@@ -732,8 +795,16 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -793,8 +864,16 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let locks = Locks {
                     mint_lock: false,
@@ -825,8 +904,16 @@ mod actions {
             #[test]
             fn test_invalid_token_id() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let locks = Locks {
                     mint_lock: false,
@@ -861,8 +948,16 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdatePerAddressLimit {
@@ -891,8 +986,16 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdatePerAddressLimit {
@@ -916,8 +1019,16 @@ mod actions {
             #[test]
             fn test_invalid_per_address_limit() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdatePerAddressLimit {
@@ -945,8 +1056,16 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdateStartTime {
@@ -978,8 +1097,16 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdateStartTime {
@@ -1009,6 +1136,7 @@ mod actions {
                     ADMIN.to_string(),
                     None,
                     Some(start_time),
+                    None,
                     None,
                     None,
                     None,
@@ -1068,8 +1196,16 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -1115,8 +1251,16 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -1222,8 +1366,16 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -1282,8 +1434,16 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -1319,8 +1479,16 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -1370,8 +1538,16 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -1483,6 +1659,7 @@ mod actions {
                     None,
                     Some(Uint128::new(1_000_000)),
                     None,
+                    None,
                 );
 
                 let metadata_module_addr = setup_metadata_module(
@@ -1517,8 +1694,16 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_module_addr =
-                    proper_instantiate(&mut app, ADMIN.to_string(), None, None, None, None, None);
+                let token_module_addr = proper_instantiate(
+                    &mut app,
+                    ADMIN.to_string(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                );
 
                 let metadata_module_addr = setup_metadata_module(
                     &mut app,
@@ -1577,6 +1762,7 @@ mod actions {
                     None,
                     None,
                     Some(2),
+                    None,
                     None,
                     None,
                 );
@@ -1646,6 +1832,7 @@ mod actions {
                     &mut app,
                     ADMIN.to_string(),
                     Some(2),
+                    None,
                     None,
                     None,
                     None,
@@ -1722,6 +1909,7 @@ mod actions {
                     None,
                     None,
                     None,
+                    None,
                 );
 
                 let metadata_module_addr = setup_metadata_module(
@@ -1762,6 +1950,7 @@ mod actions {
                     None,
                     Some(Uint128::new(1_000_000)),
                     None,
+                    None,
                 );
 
                 let metadata_module_addr = setup_metadata_module(
@@ -1801,6 +1990,7 @@ mod actions {
                     None,
                     None,
                     Some(Uint128::new(100)),
+                    None,
                     None,
                 );
 

@@ -7,6 +7,7 @@ use komple_metadata_module::{
     msg::ExecuteMsg as MetadataExecuteMsg,
     state::{MetaInfo, Trait},
 };
+use komple_token_module::state::CollectionConfig;
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -109,18 +110,23 @@ fn setup_collection(
         symbol: "TEST".to_string(),
         minter: minter_addr.to_string(),
     };
+    let collection_config = CollectionConfig {
+        per_address_limit: None,
+        start_time: None,
+        unit_price,
+        max_token_limit: None,
+        native_denom: NATIVE_DENOM.to_string(),
+        ipfs_link: None,
+    };
+
     let msg = ExecuteMsg::CreateCollection {
         code_id: token_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             collection_info,
+            collection_config,
             token_info,
-            per_address_limit: None,
-            start_time: None,
-            unit_price,
-            native_denom: NATIVE_DENOM.to_string(),
-            max_token_limit: None,
             royalty_share: Some(Decimal::new(Uint128::new(5))),
         },
         linked_collections,
@@ -341,18 +347,22 @@ mod actions {
                     symbol: "TEST".to_string(),
                     minter: minter_addr.to_string(),
                 };
+                let collection_config = CollectionConfig {
+                    per_address_limit: None,
+                    start_time: None,
+                    unit_price: None,
+                    native_denom: NATIVE_DENOM.to_string(),
+                    max_token_limit: None,
+                    ipfs_link: None,
+                };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
                         admin: ADMIN.to_string(),
                         creator: ADMIN.to_string(),
                         collection_info,
+                        collection_config,
                         token_info,
-                        per_address_limit: None,
-                        start_time: None,
-                        unit_price: None,
-                        native_denom: NATIVE_DENOM.to_string(),
-                        max_token_limit: None,
                         royalty_share: Some(Decimal::new(Uint128::new(5))),
                     },
                     linked_collections: None,
@@ -384,18 +394,22 @@ mod actions {
                     symbol: "TEST".to_string(),
                     minter: minter_addr.to_string(),
                 };
+                let collection_config = CollectionConfig {
+                    per_address_limit: None,
+                    start_time: None,
+                    unit_price: None,
+                    native_denom: NATIVE_DENOM.to_string(),
+                    max_token_limit: None,
+                    ipfs_link: None,
+                };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
                         admin: ADMIN.to_string(),
                         creator: ADMIN.to_string(),
                         collection_info,
+                        collection_config,
                         token_info,
-                        per_address_limit: None,
-                        start_time: None,
-                        unit_price: None,
-                        native_denom: NATIVE_DENOM.to_string(),
-                        max_token_limit: None,
                         royalty_share: Some(Decimal::new(Uint128::new(5))),
                     },
                     linked_collections: None,

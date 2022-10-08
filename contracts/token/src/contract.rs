@@ -70,25 +70,25 @@ pub fn instantiate(
     };
     CONTRACTS.save(deps.storage, &contracts)?;
 
-    if msg.start_time.is_some() && env.block.time >= msg.start_time.unwrap() {
+    if msg.collection_config.start_time.is_some()
+        && env.block.time >= msg.collection_config.start_time.unwrap()
+    {
         return Err(ContractError::InvalidStartTime {});
     };
 
-    if msg.max_token_limit.is_some() && msg.max_token_limit.unwrap() == 0 {
+    if msg.collection_config.max_token_limit.is_some()
+        && msg.collection_config.max_token_limit.unwrap() == 0
+    {
         return Err(ContractError::InvalidMaxTokenLimit {});
     };
 
-    if msg.per_address_limit.is_some() && msg.per_address_limit.unwrap() == 0 {
+    if msg.collection_config.per_address_limit.is_some()
+        && msg.collection_config.per_address_limit.unwrap() == 0
+    {
         return Err(ContractError::InvalidPerAddressLimit {});
     };
 
-    let collection_config = CollectionConfig {
-        per_address_limit: msg.per_address_limit,
-        start_time: msg.start_time,
-        max_token_limit: msg.max_token_limit,
-        unit_price: msg.unit_price,
-    };
-    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
+    COLLECTION_CONFIG.save(deps.storage, &msg.collection_config)?;
 
     if msg.royalty_share.is_some() && msg.royalty_share.unwrap() > Decimal::one() {
         return Err(ContractError::InvalidRoyaltyShare {});
@@ -99,7 +99,6 @@ pub fn instantiate(
     let config = Config {
         admin,
         creator,
-        native_denom: msg.native_denom,
         royalty_share: msg.royalty_share,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -393,13 +392,13 @@ pub fn execute_mint(
         return Err(ContractError::MintingNotStarted {});
     }
 
-    let mint_price = get_mint_price(&deps, &config, &collection_config)?;
+    let mint_price = get_mint_price(&deps, &collection_config)?;
     if mint_price.is_some() {
         check_single_coin(
             &info,
             coin(
                 mint_price.as_ref().unwrap().amount.u128(),
-                config.native_denom,
+                collection_config.native_denom,
             ),
         )?;
     }
@@ -768,14 +767,13 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
 
 fn get_mint_price(
     deps: &DepsMut,
-    config: &Config,
     collection_config: &CollectionConfig,
 ) -> Result<Option<Coin>, ContractError> {
     let contracts = CONTRACTS.load(deps.storage)?;
 
     let collection_price = collection_config
         .unit_price
-        .and_then(|price| Some(coin(price.u128(), &config.native_denom)));
+        .and_then(|price| Some(coin(price.u128(), &collection_config.native_denom)));
 
     if contracts.whitelist.is_none() {
         return Ok(collection_price);
@@ -788,7 +786,10 @@ fn get_mint_price(
         .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
 
     if res.data.is_active {
-        return Ok(Some(coin(res.data.unit_price.u128(), &config.native_denom)));
+        return Ok(Some(coin(
+            res.data.unit_price.u128(),
+            &collection_config.native_denom,
+        )));
     } else {
         return Ok(collection_price);
     }
@@ -822,7 +823,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
         ConfigResponse {
             admin: config.admin.to_string(),
             creator: config.creator.to_string(),
-            native_denom: config.native_denom,
+            native_denom: collection_config.native_denom,
             per_address_limit: collection_config.per_address_limit,
             start_time: collection_config.start_time,
             max_token_limit: collection_config.max_token_limit,

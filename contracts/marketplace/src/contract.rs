@@ -5,22 +5,24 @@ use cosmwasm_std::{
     MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
+use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_storage_plus::Bound;
 use komple_fee_module::msg::{
     CustomPaymentAddress as FeeModuleCustomPaymentAddress, ExecuteMsg as FeeModuleExecuteMsg,
     QueryMsg as FeeModuleQueryMsg,
 };
-use komple_token_module::state::Config as TokenConfig;
 use komple_token_module::{
-    msg::ExecuteMsg as TokenExecuteMsg, ContractError as TokenContractError,
+    msg::{
+        ConfigResponse as TokenConfigResponse, ExecuteMsg as TokenExecuteMsg,
+        QueryMsg as TokenQueryMsg,
+    },
+    ContractError as TokenContractError,
 };
 use komple_types::fee::Fees;
 use komple_types::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::tokens::Locks;
 use komple_utils::{
     funds::check_single_coin, query_collection_address, query_collection_locks,
@@ -325,22 +327,26 @@ fn _execute_buy_fixed_listing(
         sub_msgs.push(SubMsg::new(fee_distribution));
     }
 
+    // TODO: Check if this should change with a raw query instead
     // Check if there is a royalty fee add to sub_msgs
-    let res = query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
-    if let Some(config) = res {
-        if let Some(royalty_share) = config.royalty_share {
-            royalty_fee = royalty_share.mul(fixed_listing.price);
+    let res: ResponseWrapper<TokenConfigResponse> = deps.querier.query_wasm_smart(
+        collection_addr.clone(),
+        &Cw721QueryMsg::Extension {
+            msg: TokenQueryMsg::Config {},
+        },
+    )?;
+    if let Some(royalty_share) = res.data.royalty_share {
+        royalty_fee = royalty_share.mul(fixed_listing.price);
 
-            // Royalty fee message
-            let royalty_payout = BankMsg::Send {
-                to_address: config.creator.to_string(),
-                amount: vec![Coin {
-                    denom: config.native_denom.to_string(),
-                    amount: royalty_fee,
-                }],
-            };
-            sub_msgs.push(SubMsg::new(royalty_payout))
-        }
+        // Royalty fee message
+        let royalty_payout = BankMsg::Send {
+            to_address: res.data.creator.to_string(),
+            amount: vec![Coin {
+                denom: res.data.native_denom.to_string(),
+                amount: royalty_fee,
+            }],
+        };
+        sub_msgs.push(SubMsg::new(royalty_payout))
     }
 
     // Add marketplace and royalty fee and subtract from the price

@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::{
@@ -23,7 +23,7 @@ use komple_token_module::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
         QueryMsg as TokenQueryMsg, TokenInfo,
     },
-    state::{CollectionInfo, Contracts},
+    state::{CollectionConfig, CollectionInfo, Contracts},
 };
 use komple_types::collection::Collections;
 use komple_types::fee::Fees;
@@ -298,16 +298,9 @@ pub fn create_collection(
     mint_module_addr: Addr,
     creator_addr: &str,
     token_module_code_id: u64,
-    per_address_limit: Option<u32>,
-    start_time: Option<Timestamp>,
-    collection_type: Collections,
-    linked_collections: Option<Vec<u32>>,
-    unit_price: Option<Uint128>,
-    max_token_limit: Option<u32>,
-    royalty_share: Option<Decimal>,
 ) {
     let collection_info = CollectionInfo {
-        collection_type,
+        collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
         description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
@@ -317,21 +310,25 @@ pub fn create_collection(
         symbol: "TEST".to_string(),
         minter: mint_module_addr.to_string(),
     };
+    let collection_config = CollectionConfig {
+        per_address_limit: None,
+        start_time: None,
+        unit_price: None,
+        native_denom: NATIVE_DENOM.to_string(),
+        max_token_limit: None,
+        ipfs_link: None,
+    };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: "".to_string(),
             creator: "".to_string(),
             collection_info,
+            collection_config,
             token_info,
-            per_address_limit,
-            start_time,
-            unit_price,
-            native_denom: NATIVE_DENOM.to_string(),
-            max_token_limit,
-            royalty_share,
+            royalty_share: None,
         },
-        linked_collections,
+        linked_collections: None,
     };
     let _ = app
         .execute_contract(
@@ -570,7 +567,6 @@ mod actions {
     };
     use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
     use komple_token_module::ContractError as TokenContractError;
-    use komple_types::collection::Collections;
 
     use komple_types::metadata::Metadata;
 
@@ -598,13 +594,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -667,13 +656,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -718,13 +700,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -856,13 +831,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -920,13 +888,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1004,13 +965,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1074,13 +1028,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1159,13 +1106,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1227,13 +1167,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1319,13 +1252,6 @@ mod actions {
                     mint_module_addr.clone(),
                     CREATOR,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1594,13 +1520,6 @@ mod actions {
                     mint_module_addr.clone(),
                     CREATOR,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1827,13 +1746,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1922,13 +1834,6 @@ mod actions {
                     mint_module_addr.clone(),
                     ADMIN,
                     token_module_code_id,
-                    None,
-                    None,
-                    Collections::Standard,
-                    None,
-                    None,
-                    None,
-                    None,
                 );
 
                 let collection_addr =
@@ -1990,26 +1895,12 @@ mod queries {
             mint_module_addr.clone(),
             ADMIN,
             token_module_code_id,
-            None,
-            None,
-            Collections::Standard,
-            None,
-            None,
-            None,
-            None,
         );
         create_collection(
             &mut app,
             mint_module_addr.clone(),
             ADMIN,
             token_module_code_id,
-            None,
-            None,
-            Collections::Standard,
-            None,
-            None,
-            None,
-            None,
         );
 
         let collection_addr_1 =

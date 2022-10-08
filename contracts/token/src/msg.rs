@@ -1,4 +1,4 @@
-use crate::state::{CollectionInfo, Contracts};
+use crate::state::{CollectionConfig, CollectionInfo, Contracts};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Decimal, Timestamp, Uint128};
 use cw721::CustomMsg;
@@ -16,12 +16,8 @@ pub struct InstantiateMsg {
     pub admin: String,
     pub creator: String,
     pub token_info: TokenInfo,
-    pub per_address_limit: Option<u32>,
-    pub start_time: Option<Timestamp>,
     pub collection_info: CollectionInfo,
-    pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Uint128>,
-    pub native_denom: String,
+    pub collection_config: CollectionConfig,
     pub royalty_share: Option<Decimal>,
 }
 

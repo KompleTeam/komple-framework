@@ -5,7 +5,7 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::ExecuteMsg as MetadataExecuteMsg;
 use komple_metadata_module::state::{MetaInfo, Trait};
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
-use komple_token_module::state::{CollectionInfo, Contracts};
+use komple_token_module::state::{CollectionConfig, CollectionInfo, Contracts};
 use komple_token_module::ContractError;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
@@ -122,16 +122,21 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         symbol: "TEST".to_string(),
         minter: ADMIN.to_string(),
     };
+    let collection_config = CollectionConfig {
+        per_address_limit: None,
+        start_time: None,
+        max_token_limit: None,
+        unit_price: None,
+        native_denom: NATIVE_DENOM.to_string(),
+        ipfs_link: None,
+    };
+
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
-        per_address_limit: None,
-        start_time: None,
         collection_info,
-        max_token_limit: None,
-        unit_price: None,
-        native_denom: NATIVE_DENOM.to_string(),
+        collection_config,
         royalty_share: None,
     };
     let token_module_addr = app

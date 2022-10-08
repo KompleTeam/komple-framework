@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
 use cw721::OwnerOfResponse;
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -17,6 +17,7 @@ use komple_permission_module::msg::{
     PermissionCheckMsg,
 };
 use komple_permission_module::ContractError;
+use komple_token_module::state::CollectionConfig;
 use komple_token_module::{
     msg::{
         ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
@@ -192,20 +193,9 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     (mint_res.data, permission_res.data)
 }
 
-pub fn create_collection(
-    app: &mut App,
-    mint_module_addr: Addr,
-    token_module_code_id: u64,
-    per_address_limit: Option<u32>,
-    start_time: Option<Timestamp>,
-    collection_type: Collections,
-    linked_collections: Option<Vec<u32>>,
-    unit_price: Option<Uint128>,
-    max_token_limit: Option<u32>,
-    royalty_share: Option<Decimal>,
-) {
+pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_code_id: u64) {
     let collection_info = CollectionInfo {
-        collection_type,
+        collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
         description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
@@ -215,21 +205,25 @@ pub fn create_collection(
         symbol: "TEST".to_string(),
         minter: mint_module_addr.to_string(),
     };
+    let collection_config = CollectionConfig {
+        per_address_limit: None,
+        start_time: None,
+        unit_price: None,
+        native_denom: NATIVE_DENOM.to_string(),
+        max_token_limit: None,
+        ipfs_link: None,
+    };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             collection_info,
+            collection_config,
             token_info,
-            per_address_limit,
-            start_time,
-            unit_price,
-            native_denom: NATIVE_DENOM.to_string(),
-            max_token_limit,
-            royalty_share,
+            royalty_share: None,
         },
-        linked_collections,
+        linked_collections: None,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
@@ -431,18 +425,7 @@ fn test_permission_check() {
     let hub_addr = setup_hub_module(&mut app);
     let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
     let token_module_code_id = app.store_code(token_module());
-    create_collection(
-        &mut app,
-        mint_module_addr.clone(),
-        token_module_code_id,
-        None,
-        None,
-        Collections::Standard,
-        None,
-        None,
-        None,
-        None,
-    );
+    create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
     let collection_addr =
         query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
     let metadata_module_addr_1 =

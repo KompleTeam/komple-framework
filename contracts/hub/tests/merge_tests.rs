@@ -77,7 +77,7 @@ mod normal_merge {
         ContractError as MergeContractError,
     };
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::{collection::Collections, metadata::Metadata};
+    use komple_types::metadata::Metadata;
     use komple_utils::query_collection_address;
 
     #[test]
@@ -96,35 +96,17 @@ mod normal_merge {
             mint_module_addr.clone(),
             token_module_code_id,
             None,
-            None,
-            Collections::Standard,
-            None,
-            None,
-            None,
-            None,
         );
         create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
-            None,
-            Collections::Standard,
-            None,
-            None,
-            None,
-            None,
         );
         create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
-            None,
-            None,
-            Collections::Standard,
-            None,
-            None,
-            None,
             None,
         );
 
@@ -245,36 +227,18 @@ mod normal_merge {
             mint_module_addr.clone(),
             token_module_code_id,
             None,
-            None,
-            Collections::Standard,
-            None,
-            None,
-            None,
-            None,
         );
         create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
             None,
-            None,
-            Collections::Standard,
-            None,
-            None,
-            None,
-            None,
         );
         create_collection(
             &mut app,
             mint_module_addr.clone(),
             token_module_code_id,
-            None,
-            None,
-            Collections::Standard,
             Some(vec![2]),
-            None,
-            None,
-            None,
         );
 
         let collection_1_addr =
@@ -409,7 +373,6 @@ mod permission_merge {
     use komple_merge_module::msg::{ExecuteMsg as MergeExecuteMsg, MergeBurnMsg, MergeMsg};
     use komple_permission_module::msg::PermissionCheckMsg;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::collection::Collections;
     use komple_types::module::Modules;
     use komple_types::permission::Permissions;
 
@@ -436,35 +399,17 @@ mod permission_merge {
                 mint_module_addr.clone(),
                 token_module_code_id,
                 None,
-                None,
-                Collections::Standard,
-                None,
-                None,
-                None,
-                None,
             );
             create_collection(
                 &mut app,
                 mint_module_addr.clone(),
                 token_module_code_id,
                 None,
-                None,
-                Collections::Standard,
-                None,
-                None,
-                None,
-                None,
             );
             create_collection(
                 &mut app,
                 mint_module_addr.clone(),
                 token_module_code_id,
-                None,
-                None,
-                Collections::Standard,
-                None,
-                None,
-                None,
                 None,
             );
 

@@ -27,17 +27,18 @@ pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new(COLLECTION_INFO_NAME
 pub struct Config {
     pub admin: Addr,
     pub creator: Addr,
-    pub native_denom: String,
     pub royalty_share: Option<Decimal>,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CollectionConfig {
+    pub native_denom: String,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
     pub unit_price: Option<Uint128>,
+    pub ipfs_link: Option<String>,
 }
 pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new(COLLECTION_CONFIG_NAMESPACE);
 
