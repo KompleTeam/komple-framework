@@ -8,8 +8,8 @@ use cosmwasm_std::{coin, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::{
-    msg::{ExecuteMsg as MetadataExecuteMsg, QueryMsg as MetadataQueryMsg},
-    state::{MetaInfo, MetaInfo as MetadataMetaInfo, Metadata as MetadataMetadata, Trait},
+    msg::QueryMsg as MetadataQueryMsg,
+    state::{MetaInfo, Metadata as MetadataMetadata},
 };
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
@@ -548,174 +548,6 @@ mod actions {
         }
     }
 
-    mod update_royalty {
-        use super::*;
-        use std::str::FromStr;
-
-        #[test]
-        fn test_happy_path() {
-            let mut app = mock_app();
-            let token_module_addr = proper_instantiate(
-                &mut app,
-                ADMIN.to_string(),
-                None,
-                None,
-                None,
-                None,
-                Some(Decimal::from_str("0.5").unwrap()),
-                Some("some-link".to_string()),
-            );
-
-            let msg = Cw721QueryMsg::Extension {
-                msg: QueryMsg::Config {},
-            };
-            let res: ResponseWrapper<ConfigResponse> = app
-                .wrap()
-                .query_wasm_smart(token_module_addr.clone(), &msg)
-                .unwrap();
-            assert_eq!(
-                res.data.royalty_share,
-                Some(Decimal::from_str("0.5").unwrap())
-            );
-
-            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::UpdateRoyaltyShare {
-                    royalty_share: Some(Decimal::from_str("0.1").unwrap()),
-                },
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap();
-
-            let msg = Cw721QueryMsg::Extension {
-                msg: QueryMsg::Config {},
-            };
-            let res: ResponseWrapper<ConfigResponse> = app
-                .wrap()
-                .query_wasm_smart(token_module_addr.clone(), &msg)
-                .unwrap();
-            assert_eq!(
-                res.data.royalty_share,
-                Some(Decimal::from_str("0.1").unwrap())
-            );
-        }
-
-        #[test]
-        fn test_invalid_owner() {
-            let mut app = mock_app();
-            let token_module_addr = proper_instantiate(
-                &mut app,
-                ADMIN.to_string(),
-                None,
-                None,
-                None,
-                None,
-                Some(Decimal::from_str("0.5").unwrap()),
-                Some("some-link".to_string()),
-            );
-
-            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::UpdateRoyaltyShare {
-                    royalty_share: Some(Decimal::from_str("0.1").unwrap()),
-                },
-            };
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    token_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::Unauthorized {}.to_string()
-            );
-        }
-
-        #[test]
-        fn test_invalid_share() {
-            let mut app = mock_app();
-            let token_code_id = app.store_code(token_module());
-            let collection_info = CollectionInfo {
-                collection_type: Collections::Standard,
-                name: "Test Collection".to_string(),
-                description: "Test Description".to_string(),
-                image: "https://some-image.com".to_string(),
-                external_link: None,
-            };
-            let token_info = TokenInfo {
-                symbol: "TTT".to_string(),
-                minter: ADMIN.to_string(),
-            };
-            let collection_config = CollectionConfig {
-                per_address_limit: None,
-                start_time: None,
-                max_token_limit: None,
-                unit_price: None,
-                native_denom: NATIVE_DENOM.to_string(),
-                ipfs_link: Some("some-link".to_string()),
-            };
-
-            let msg = InstantiateMsg {
-                admin: ADMIN.to_string(),
-                creator: ADMIN.to_string(),
-                token_info,
-                collection_info,
-                collection_config,
-                royalty_share: Some(Decimal::from_str("1.2").unwrap()),
-            };
-            let err = app
-                .instantiate_contract(
-                    token_code_id,
-                    Addr::unchecked(ADMIN),
-                    &msg,
-                    &[],
-                    "test",
-                    None,
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::InvalidRoyaltyShare {}.to_string()
-            );
-
-            let token_module_addr = proper_instantiate(
-                &mut app,
-                ADMIN.to_string(),
-                None,
-                None,
-                None,
-                None,
-                Some(Decimal::from_str("0.5").unwrap()),
-                Some("some-link".to_string()),
-            );
-
-            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::UpdateRoyaltyShare {
-                    royalty_share: Some(Decimal::from_str("1.2").unwrap()),
-                },
-            };
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::InvalidRoyaltyShare {}.to_string()
-            );
-        }
-    }
-
     mod update_locks {
         use super::*;
 
@@ -823,11 +655,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1223,11 +1051,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1277,11 +1101,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1391,11 +1211,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1458,11 +1274,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1560,11 +1372,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1736,11 +1544,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let locks = Locks {
                     mint_lock: true,
@@ -1797,11 +1601,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1867,11 +1667,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1938,11 +1734,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1978,11 +1770,7 @@ mod actions {
                     Some("some-link".to_string()),
                 );
 
-                setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
-                );
+                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {

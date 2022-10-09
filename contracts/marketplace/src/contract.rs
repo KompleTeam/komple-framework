@@ -5,25 +5,22 @@ use cosmwasm_std::{
     MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
+use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_storage_plus::Bound;
 use komple_fee_module::msg::{
     CustomPaymentAddress as FeeModuleCustomPaymentAddress, ExecuteMsg as FeeModuleExecuteMsg,
-    QueryMsg as FeeModuleQueryMsg,
+    PercentageFeeResponse, QueryMsg as FeeModuleQueryMsg,
 };
 use komple_token_module::{
-    msg::{
-        ConfigResponse as TokenConfigResponse, ExecuteMsg as TokenExecuteMsg,
-        QueryMsg as TokenQueryMsg,
-    },
+    msg::ExecuteMsg as TokenExecuteMsg, state::Config as TokenConfig,
     ContractError as TokenContractError,
 };
-use komple_types::fee::Fees;
 use komple_types::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
+use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
 use komple_utils::{
     funds::check_single_coin, query_collection_address, query_collection_locks,
     query_module_address, query_storage, query_token_locks, query_token_owner,
@@ -274,80 +271,62 @@ fn _execute_buy_fixed_listing(
     let mut marketplace_fee = Uint128::zero();
     let mut royalty_fee = Uint128::zero();
 
-    // Process Marbu fee if it exists on Hub
+    // Process Marbu fee if exists on Hub
     let res = query_storage::<Addr>(&deps.querier, &hub_addr, MARBU_FEE_MODULE_NAMESPACE)?;
     if let Some(marbu_fee_module) = res {
-        // Get the new fee based on fee percentage
-        let fee_to_send = get_fee(&deps, &marbu_fee_module, fixed_listing.price);
-        marketplace_fee += fee_to_send;
-        // Create distribution message and add it to sub_msgss
-        let marbu_fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: marbu_fee_module.to_string(),
-            msg: to_binary(&FeeModuleExecuteMsg::Distribute {
-                fee_type: Fees::Percentage,
-                module_name: Modules::Marketplace.to_string(),
-                custom_payment_addresses: Some(vec![FeeModuleCustomPaymentAddress {
-                    fee_name: "hub_admin".to_string(),
-                    address: config.admin.to_string(),
-                }]),
-            })?,
-            funds: vec![Coin {
-                denom: config.native_denom.to_string(),
-                amount: fee_to_send,
-            }],
-        });
-        sub_msgs.push(SubMsg::new(marbu_fee_distribution));
+        process_marketplace_fees(
+            &deps,
+            &config,
+            &marbu_fee_module,
+            fixed_listing.price,
+            &mut marketplace_fee,
+            &mut sub_msgs,
+            Some(vec![FeeModuleCustomPaymentAddress {
+                fee_name: "hub_admin".to_string(),
+                address: config.admin.to_string(),
+            }]),
+        )?;
     };
 
-    // Check if fee module is registerd on the Hub
+    // Process fee module fees if exists on Hub
     let fee_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if fee_module_addr.is_ok() {
-        // Get the new fee based on fee percentage
-        let fee_to_send = get_fee(
+        // Marketplace fees
+        process_marketplace_fees(
             &deps,
+            &config,
             &fee_module_addr.as_ref().unwrap(),
             fixed_listing.price,
-        );
-        marketplace_fee += fee_to_send;
-        // Create distribution message and add it to sub_msgss
-        let fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: fee_module_addr.unwrap().to_string(),
-            msg: to_binary(&FeeModuleExecuteMsg::Distribute {
-                fee_type: Fees::Percentage,
-                module_name: Modules::Marketplace.to_string(),
-                // TODO: Refactor here to accept custom payment addresses
-                // This can be updated by admin to take custom fees
-                custom_payment_addresses: None,
-            })?,
-            funds: vec![Coin {
-                denom: config.native_denom.to_string(),
-                amount: fee_to_send,
-            }],
-        });
-        sub_msgs.push(SubMsg::new(fee_distribution));
-    }
+            &mut marketplace_fee,
+            &mut sub_msgs,
+            None,
+        )?;
 
-    // TODO: Check if this should change with a raw query instead
-    // Check if there is a royalty fee add to sub_msgs
-    let res: ResponseWrapper<TokenConfigResponse> = deps.querier.query_wasm_smart(
-        collection_addr.clone(),
-        &Cw721QueryMsg::Extension {
-            msg: TokenQueryMsg::Config {},
-        },
-    )?;
-    if let Some(royalty_share) = res.data.royalty_share {
-        royalty_fee = royalty_share.mul(fixed_listing.price);
-
-        // Royalty fee message
-        let royalty_payout = BankMsg::Send {
-            to_address: res.data.creator.to_string(),
-            amount: vec![Coin {
-                denom: res.data.native_denom.to_string(),
-                amount: royalty_fee,
-            }],
+        // Collection royalty fees
+        let query = FeeModuleQueryMsg::PercentageFee {
+            module_name: Modules::Mint.to_string(),
+            fee_name: format!("collection_{}_royalty", collection_id.to_string()),
         };
-        sub_msgs.push(SubMsg::new(royalty_payout))
-    }
+        let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> = deps
+            .querier
+            .query_wasm_smart(fee_module_addr.unwrap(), &query);
+        if let Ok(percentage_fee) = res {
+            royalty_fee = percentage_fee.data.value.mul(fixed_listing.price);
+
+            let res =
+                query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
+            if let Some(token_config) = res {
+                let royalty_payout = BankMsg::Send {
+                    to_address: token_config.creator.to_string(),
+                    amount: vec![Coin {
+                        denom: config.native_denom.to_string(),
+                        amount: royalty_fee,
+                    }],
+                };
+                sub_msgs.push(SubMsg::new(royalty_payout))
+            };
+        };
+    };
 
     // Add marketplace and royalty fee and subtract from the price
     let payout = fixed_listing
@@ -403,18 +382,48 @@ fn _execute_buy_fixed_listing(
         .add_attribute("action", "execute_buy"))
 }
 
-fn get_fee(deps: &DepsMut, fee_module_addr: &Addr, listing_price: Uint128) -> Uint128 {
+// Gets the current fee percentage from fee module
+// Updates the marketplace fee if exists
+// Creates a distribute msg and adds to sub message
+fn process_marketplace_fees(
+    deps: &DepsMut,
+    config: &Config,
+    fee_module_addr: &Addr,
+    listing_price: Uint128,
+    marketplace_fee: &mut Uint128,
+    sub_msgs: &mut Vec<SubMsg>,
+    custom_payment_addresses: Option<Vec<FeeModuleCustomPaymentAddress>>,
+) -> Result<(), ContractError> {
     let query = FeeModuleQueryMsg::TotalPercentageFees {
         module_name: Modules::Marketplace.to_string(),
     };
     let res: Result<ResponseWrapper<Decimal>, StdError> =
         deps.querier.query_wasm_smart(fee_module_addr, &query);
 
-    let mut marketplace_fee = Uint128::zero();
     if let Ok(fee_percentage) = res {
-        marketplace_fee = fee_percentage.data.mul(listing_price);
+        let fee_to_send = fee_percentage.data.mul(listing_price);
+
+        if !fee_to_send.is_zero() {
+            *marketplace_fee += fee_to_send;
+
+            // Create distribution message and add it to sub_msgs
+            let marbu_fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+                contract_addr: fee_module_addr.to_string(),
+                msg: to_binary(&FeeModuleExecuteMsg::Distribute {
+                    fee_type: Fees::Percentage,
+                    module_name: Modules::Marketplace.to_string(),
+                    custom_payment_addresses,
+                })?,
+                funds: vec![Coin {
+                    denom: config.native_denom.to_string(),
+                    amount: fee_to_send,
+                }],
+            });
+            sub_msgs.push(SubMsg::new(marbu_fee_distribution));
+        }
     };
-    marketplace_fee
+
+    Ok(())
 }
 
 fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {

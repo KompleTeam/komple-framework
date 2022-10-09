@@ -202,6 +202,27 @@ fn setup_fee_module(app: &mut App, fee_module_addr: &Addr) {
         .unwrap();
 }
 
+fn set_royalties(app: &mut App, fee_module_addr: &Addr, collection_id: &u32, royalty: &str) {
+    let msg = FeeModuleExecuteMsg::SetFee {
+        fee_type: Fees::Percentage,
+        module_name: Modules::Mint.to_string(),
+        fee_name: format!("collection_{}_royalty", collection_id.to_string()),
+        data: to_binary(&FeeModulePercentagePayment {
+            address: None,
+            value: Decimal::from_str(royalty).unwrap(),
+        })
+        .unwrap(),
+    };
+    let _ = app
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            fee_module_addr.clone(),
+            &msg,
+            &vec![],
+        )
+        .unwrap();
+}
+
 fn setup_hub_module(app: &mut App, is_marbu: bool) -> Addr {
     let hub_code_id = app.store_code(hub_module());
 
@@ -419,7 +440,7 @@ pub fn setup_marketplace_listing(
     );
 
     let msg = ExecuteMsg::ListFixedToken {
-        collection_id: collection_id,
+        collection_id,
         token_id,
         price,
     };
@@ -1165,9 +1186,7 @@ mod actions {
         use komple_utils::{query_collection_address, query_token_owner};
 
         mod fixed_tokens {
-            use std::str::FromStr;
-
-            use cosmwasm_std::{Decimal, StdError};
+            use cosmwasm_std::StdError;
             use komple_utils::{funds::FundsError, query_module_address, query_token_locks};
 
             use super::*;
@@ -1286,20 +1305,23 @@ mod actions {
                 let balance = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
                 assert_eq!(balance.amount, Uint128::new(20));
 
-                // Setup admin royalty for 10 percent
-                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
-                        royalty_share: Some(Decimal::from_str("0.1").unwrap()),
-                    },
+                let fee_module_code_id = app.store_code(fee_module());
+                let msg = HubExecuteMsg::RegisterModule {
+                    module: Modules::Fee.to_string(),
+                    msg: to_binary(&FeeModuleInstantiateMsg {
+                        admin: ADMIN.to_string(),
+                    })
+                    .unwrap(),
+                    code_id: fee_module_code_id,
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
                     .unwrap();
+                let fee_module_addr =
+                    query_module_address(&app.wrap(), &hub_addr, Modules::Fee).unwrap();
+
+                // Setup admin royalty for 10 percent
+                set_royalties(&mut app, &fee_module_addr, &1, "0.1");
 
                 setup_marketplace_listing(
                     &mut app,
@@ -1354,19 +1376,8 @@ mod actions {
                 let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
                 assert_eq!(balance.amount, Uint128::new(100));
 
-                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
-                        royalty_share: Some(Decimal::from_str("0.05").unwrap()),
-                    },
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
+                // Setup admin royalty for 10 percent
+                set_royalties(&mut app, &fee_module_addr, &1, "0.05");
 
                 setup_marketplace_listing(
                     &mut app,
@@ -1547,19 +1558,7 @@ mod actions {
                 assert_eq!(balance.amount, Uint128::new(20));
 
                 // Setup admin royalty for 10 percent
-                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
-                        royalty_share: Some(Decimal::from_str("0.1").unwrap()),
-                    },
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
+                set_royalties(&mut app, &fee_module_addr, &1, "0.1");
 
                 setup_marketplace_listing(
                     &mut app,
@@ -1610,19 +1609,7 @@ mod actions {
                 let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
                 assert_eq!(balance.amount, Uint128::new(100));
 
-                let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: TokenExecuteMsg::UpdateRoyaltyShare {
-                        royalty_share: Some(Decimal::from_str("0.05").unwrap()),
-                    },
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        collection_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
-                    .unwrap();
+                set_royalties(&mut app, &fee_module_addr, &1, "0.05");
 
                 setup_marketplace_listing(
                     &mut app,

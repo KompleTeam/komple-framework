@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
+    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env,
     MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
@@ -94,16 +94,9 @@ pub fn instantiate(
     };
     COLLECTION_INFO.save(deps.storage, &collection_info)?;
 
-    if msg.royalty_share.is_some() && msg.royalty_share.unwrap() > Decimal::one() {
-        return Err(ContractError::InvalidRoyaltyShare {});
-    }
     let admin = deps.api.addr_validate(&msg.admin)?;
     let creator = deps.api.addr_validate(&msg.creator)?;
-    let config = Config {
-        admin,
-        creator,
-        royalty_share: msg.royalty_share,
-    };
+    let config = Config { admin, creator };
     CONFIG.save(deps.storage, &config)?;
 
     let locks = Locks {
@@ -186,9 +179,6 @@ pub fn execute(
                 recipient,
                 token_id,
             } => execute_admin_transfer(deps, env, info, token_id, recipient),
-            TokenExecuteMsg::UpdateRoyaltyShare { royalty_share } => {
-                execute_update_royalty_share(deps, env, info, royalty_share)
-            }
             // CONTRACT MESSAGES
             TokenExecuteMsg::InitMetadataContract {
                 code_id,
@@ -256,34 +246,6 @@ pub fn execute_update_operators(
     OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_attribute("action", "execute_update_operators"))
-}
-
-fn execute_update_royalty_share(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    royalty_share: Option<Decimal>,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let mut config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    if royalty_share.is_some() && royalty_share.unwrap() > Decimal::one() {
-        return Err(ContractError::InvalidRoyaltyShare {});
-    }
-
-    config.royalty_share = royalty_share;
-    CONFIG.save(deps.storage, &config)?;
-
-    Ok(Response::new().add_attribute("action", "execute_update_royalty_share"))
 }
 
 pub fn execute_update_locks(
@@ -859,7 +821,6 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
             start_time: collection_config.start_time,
             max_token_limit: collection_config.max_token_limit,
             unit_price: collection_config.unit_price,
-            royalty_share: config.royalty_share,
         },
     ))
 }

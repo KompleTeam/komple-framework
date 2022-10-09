@@ -45,9 +45,6 @@ pub enum ExecuteMsg {
     UpdateOperators {
         addrs: Vec<String>,
     },
-    UpdateRoyaltyShare {
-        royalty_share: Option<Decimal>,
-    },
     AdminTransferNft {
         recipient: String,
         token_id: String,
@@ -112,7 +109,6 @@ pub struct ConfigResponse {
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
     pub unit_price: Option<Uint128>,
-    pub royalty_share: Option<Decimal>,
 }
 
 #[cw_serde]
