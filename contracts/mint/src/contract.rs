@@ -152,7 +152,7 @@ pub fn execute_create_collection(
             msg: to_binary(&msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("komple Framework Token Contract"),
+            label: String::from("Komple Framework Token Module"),
         }
         .into(),
         id: TOKEN_INSTANTIATE_REPLY_ID,

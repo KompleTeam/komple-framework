@@ -28,8 +28,7 @@ use cw721::ContractInfoResponse;
 use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 
 use komple_metadata_module::{
-    msg::{ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg},
-    state::MetaInfo as MetadataMetaInfo,
+    msg::ExecuteMsg as MetadataExecuteMsg, state::MetaInfo as MetadataMetaInfo,
 };
 use komple_whitelist_module::msg::{
     ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
@@ -55,7 +54,7 @@ pub fn instantiate(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    mut msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -79,7 +78,6 @@ pub fn instantiate(
     {
         return Err(ContractError::IpfsNotFound {});
     };
-
     COLLECTION_CONFIG.save(deps.storage, &msg.collection_config)?;
 
     if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
@@ -93,6 +91,14 @@ pub fn instantiate(
         external_link: msg.collection_info.external_link,
     };
     COLLECTION_INFO.save(deps.storage, &collection_info)?;
+
+    if (collection_info.collection_type == Collections::Standard
+        && msg.metadata_info.instantiate_msg.metadata_type != MetadataType::Standard)
+        || (collection_info.collection_type != Collections::Standard
+            && msg.metadata_info.instantiate_msg.metadata_type == MetadataType::Standard)
+    {
+        return Err(ContractError::InvalidCollectionMetadataType {});
+    }
 
     let admin = deps.api.addr_validate(&msg.admin)?;
     let creator = deps.api.addr_validate(&msg.creator)?;
@@ -130,7 +136,23 @@ pub fn instantiate(
         .minter
         .save(deps.storage, &minter)?;
 
+    msg.metadata_info.instantiate_msg.admin = config.admin.to_string();
+    let sub_msg: SubMsg = SubMsg {
+        msg: WasmMsg::Instantiate {
+            code_id: msg.metadata_info.code_id,
+            msg: to_binary(&msg.metadata_info.instantiate_msg)?,
+            funds: info.funds,
+            admin: Some(info.sender.to_string()),
+            label: String::from("Komple Framework Metadata Module"),
+        }
+        .into(),
+        id: METADATA_MODULE_INSTANTIATE_REPLY_ID,
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+    };
+
     Ok(Response::new()
+        .add_submessage(sub_msg)
         .add_attribute("action", "instantiate")
         .add_attribute("minter", msg.token_info.minter)
         .add_attribute("collection_name", msg.collection_info.name))
@@ -180,10 +202,6 @@ pub fn execute(
                 token_id,
             } => execute_admin_transfer(deps, env, info, token_id, recipient),
             // CONTRACT MESSAGES
-            TokenExecuteMsg::InitMetadataContract {
-                code_id,
-                metadata_type,
-            } => execute_init_metadata_module(deps, env, info, code_id, metadata_type),
             TokenExecuteMsg::InitWhitelistContract {
                 code_id,
                 instantiate_msg,
@@ -644,47 +662,6 @@ fn execute_update_start_time(
     Ok(Response::new().add_attribute("action", "execute_update_start_time"))
 }
 
-fn execute_init_metadata_module(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    code_id: u64,
-    metadata_type: MetadataType,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    let sub_msg: SubMsg = SubMsg {
-        msg: WasmMsg::Instantiate {
-            code_id,
-            msg: to_binary(&MetadataInstantiateMsg {
-                admin: config.admin.to_string(),
-                metadata_type,
-            })?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
-            label: String::from("komple Framework Metadata Contract"),
-        }
-        .into(),
-        id: METADATA_MODULE_INSTANTIATE_REPLY_ID,
-        gas_limit: None,
-        reply_on: ReplyOn::Success,
-    };
-
-    Ok(Response::new()
-        .add_submessage(sub_msg)
-        .add_attribute("action", "execute_init_metadata_module"))
-}
-
 fn execute_init_whitelist_module(
     deps: DepsMut,
     env: Env,
@@ -710,7 +687,7 @@ fn execute_init_whitelist_module(
             msg: to_binary(&instantiate_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
-            label: String::from("komple Framework Whitelist Contract"),
+            label: String::from("Komple Framework Whitelist Module"),
         }
         .into(),
         id: WHITELIST_MODULE_INSTANTIATE_REPLY_ID,

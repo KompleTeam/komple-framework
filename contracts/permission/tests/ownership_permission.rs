@@ -1,11 +1,12 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
 use cw721::OwnerOfResponse;
-use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
+use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_hub_module::state::HubInfo;
+use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
 use komple_ownership_permission_module::msg::{
     InstantiateMsg as OwnershipModuleInstantiateMsg, OwnershipMsg,
@@ -18,10 +19,9 @@ use komple_permission_module::ContractError;
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::{
     msg::{
-        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
-        QueryMsg as TokenQueryMsg, TokenInfo,
+        InstantiateMsg as TokenInstantiateMsg, MetadataInfo, QueryMsg as TokenQueryMsg, TokenInfo,
     },
-    state::{CollectionInfo, Contracts},
+    state::CollectionInfo,
 };
 use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
@@ -192,6 +192,8 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
 }
 
 pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_code_id: u64) {
+    let metadata_code_id = app.store_code(metadata_module());
+
     let collection_info = CollectionInfo {
         collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
@@ -211,6 +213,13 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
         max_token_limit: None,
         ipfs_link: Some("some-link".to_string()),
     };
+    let metadata_info = MetadataInfo {
+        instantiate_msg: MetadataInstantiateMsg {
+            admin: "".to_string(),
+            metadata_type: MetadataType::Standard,
+        },
+        code_id: metadata_code_id,
+    };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
@@ -219,42 +228,13 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
             collection_info,
             collection_config,
             token_info,
-            royalty_share: None,
+            metadata_info,
         },
         linked_collections: None,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
         .unwrap();
-}
-
-pub fn setup_metadata_module(
-    app: &mut App,
-    token_module_addr: Addr,
-    metadata_type: MetadataType,
-) -> Addr {
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::InitMetadataContract {
-            code_id: metadata_code_id,
-            metadata_type,
-        },
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-        .unwrap();
-
-    let res: ResponseWrapper<Contracts> = app
-        .wrap()
-        .query_wasm_smart(
-            token_module_addr.clone(),
-            &Cw721QueryMsg::Extension {
-                msg: TokenQueryMsg::Contracts {},
-            },
-        )
-        .unwrap();
-    res.data.metadata.unwrap()
 }
 
 pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
@@ -395,7 +375,6 @@ fn test_permission_check() {
     let collection_addr =
         StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1)
             .unwrap();
-    setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
     mint_token(&mut app, mint_module_addr.clone(), 1, USER);
     setup_ownership_permission_module(&mut app);
     register_permission(&mut app, &permission_module_addr);

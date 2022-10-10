@@ -72,6 +72,9 @@ pub enum ContractError {
     #[error("IPFS link not found")]
     IpfsNotFound {},
 
+    #[error("Collection and metadata types must be standard")]
+    InvalidCollectionMetadataType {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
 

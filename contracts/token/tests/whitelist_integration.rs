@@ -2,7 +2,8 @@ use cosmwasm_std::{coin, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo};
+use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use komple_token_module::state::{CollectionConfig, CollectionInfo, Contracts};
 use komple_token_module::ContractError;
 use komple_types::{
@@ -108,6 +109,7 @@ fn setup_whitelist(
 
 fn token_module_instantiation(app: &mut App) -> Addr {
     let token_code_id = app.store_code(token_module());
+    let metadata_code_id = app.store_code(metadata_module());
 
     let collection_info = CollectionInfo {
         collection_type: Collections::Standard,
@@ -128,14 +130,20 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         native_denom: NATIVE_DENOM.to_string(),
         ipfs_link: Some("some-link".to_string()),
     };
-
+    let metadata_info = MetadataInfo {
+        instantiate_msg: MetadataInstantiateMsg {
+            admin: "".to_string(),
+            metadata_type: MetadataType::Standard,
+        },
+        code_id: metadata_code_id,
+    };
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
         collection_info,
         collection_config,
-        royalty_share: None,
+        metadata_info,
     };
     let token_module_addr = app
         .instantiate_contract(
@@ -149,35 +157,6 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         .unwrap();
 
     token_module_addr
-}
-
-fn setup_metadata_module(
-    app: &mut App,
-    token_module_addr: Addr,
-    metadata_type: MetadataType,
-) -> Addr {
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: ExecuteMsg::InitMetadataContract {
-            code_id: metadata_code_id,
-            metadata_type,
-        },
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-        .unwrap();
-
-    let res: ResponseWrapper<Contracts> = app
-        .wrap()
-        .query_wasm_smart(
-            token_module_addr.clone(),
-            &Cw721QueryMsg::Extension {
-                msg: QueryMsg::Contracts {},
-            },
-        )
-        .unwrap();
-    res.data.metadata.unwrap()
 }
 
 mod initialization {
@@ -222,7 +201,7 @@ mod initialization {
             .wrap()
             .query_wasm_smart(token_module_addr.clone(), &msg)
             .unwrap();
-        assert_eq!(res.data.whitelist.unwrap(), "contract1")
+        assert_eq!(res.data.whitelist.unwrap(), "contract2")
     }
 }
 
@@ -251,8 +230,6 @@ mod actions {
                 Uint128::new(100),
                 2,
             );
-
-            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
             let random_mint: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::Mint {
@@ -333,8 +310,6 @@ mod actions {
                 2,
             );
 
-            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
-
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -374,8 +349,6 @@ mod actions {
                 Uint128::new(100),
                 2,
             );
-
-            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
@@ -434,8 +407,6 @@ mod actions {
                 Uint128::new(100),
                 2,
             );
-
-            setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::Mint {

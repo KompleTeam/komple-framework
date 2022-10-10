@@ -1,19 +1,20 @@
 use crate::state::{CollectionConfig, Contracts};
 use crate::{msg::ConfigResponse, ContractError};
 use crate::{
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TokenInfo},
+    msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo},
     state::CollectionInfo,
 };
-use cosmwasm_std::{coin, Addr, Coin, Decimal, Empty, Timestamp, Uint128};
+use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::{
-    msg::QueryMsg as MetadataQueryMsg,
+    msg::{InstantiateMsg as MetadataInstantiateMsg, QueryMsg as MetadataQueryMsg},
     state::{MetaInfo, Metadata as MetadataMetadata},
 };
-use komple_types::query::ResponseWrapper;
-use komple_types::tokens::Locks;
-use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
+use komple_types::{
+    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
+    tokens::Locks,
+};
 use komple_utils::{funds::FundsError, storage::StorageHelper};
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
@@ -76,10 +77,10 @@ fn proper_instantiate(
     start_time: Option<Timestamp>,
     max_token_limit: Option<u32>,
     unit_price: Option<Uint128>,
-    royalty_share: Option<Decimal>,
     ipfs_link: Option<String>,
 ) -> Addr {
     let token_code_id = app.store_code(token_module());
+    let metadata_code_id = app.store_code(metadata_module());
 
     let collection_info = CollectionInfo {
         collection_type: Collections::Standard,
@@ -100,13 +101,20 @@ fn proper_instantiate(
         unit_price,
         ipfs_link,
     };
+    let metadata_info = MetadataInfo {
+        instantiate_msg: MetadataInstantiateMsg {
+            admin: "".to_string(),
+            metadata_type: MetadataType::Standard,
+        },
+        code_id: metadata_code_id,
+    };
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
         collection_config,
         collection_info,
-        royalty_share,
+        metadata_info,
     };
     let token_module_addr = app
         .instantiate_contract(
@@ -122,35 +130,6 @@ fn proper_instantiate(
     token_module_addr
 }
 
-fn setup_metadata_module(
-    app: &mut App,
-    token_module_addr: Addr,
-    metadata_type: MetadataType,
-) -> Addr {
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: ExecuteMsg::InitMetadataContract {
-            code_id: metadata_code_id,
-            metadata_type,
-        },
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-        .unwrap();
-
-    let res: ResponseWrapper<Contracts> = app
-        .wrap()
-        .query_wasm_smart(
-            token_module_addr.clone(),
-            &Cw721QueryMsg::Extension {
-                msg: QueryMsg::Contracts {},
-            },
-        )
-        .unwrap();
-    res.data.metadata.unwrap()
-}
-
 mod initialization {
     use super::*;
 
@@ -158,6 +137,7 @@ mod initialization {
     fn test_happy_path() {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
+        let metadata_code_id = app.store_code(metadata_module());
 
         let collection_info = CollectionInfo {
             collection_type: Collections::Standard,
@@ -178,14 +158,20 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
-
+        let metadata_info = MetadataInfo {
+            instantiate_msg: MetadataInstantiateMsg {
+                admin: "".to_string(),
+                metadata_type: MetadataType::Standard,
+            },
+            code_id: metadata_code_id,
+        };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            collection_info,
             collection_config,
-            royalty_share: None,
+            collection_info,
+            metadata_info,
         };
         let token_module_addr = app
             .instantiate_contract(
@@ -204,6 +190,7 @@ mod initialization {
     fn test_invalid_time() {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
+        let metadata_code_id = app.store_code(metadata_module());
 
         let collection_info = CollectionInfo {
             collection_type: Collections::Standard,
@@ -224,14 +211,20 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
-
+        let metadata_info = MetadataInfo {
+            instantiate_msg: MetadataInstantiateMsg {
+                admin: "".to_string(),
+                metadata_type: MetadataType::Standard,
+            },
+            code_id: metadata_code_id,
+        };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info: token_info.clone(),
             collection_info: collection_info.clone(),
             collection_config: collection_config.clone(),
-            royalty_share: None,
+            metadata_info: metadata_info.clone(),
         };
         let err = app
             .instantiate_contract(
@@ -255,7 +248,7 @@ mod initialization {
             token_info: token_info.clone(),
             collection_info: collection_info.clone(),
             collection_config,
-            royalty_share: None,
+            metadata_info,
         };
         let err = app
             .instantiate_contract(
@@ -277,6 +270,7 @@ mod initialization {
     fn test_invalid_max_token_limit() {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
+        let metadata_code_id = app.store_code(metadata_module());
 
         let collection_info = CollectionInfo {
             collection_type: Collections::Standard,
@@ -297,14 +291,20 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
-
+        let metadata_info = MetadataInfo {
+            instantiate_msg: MetadataInstantiateMsg {
+                admin: "".to_string(),
+                metadata_type: MetadataType::Standard,
+            },
+            code_id: metadata_code_id,
+        };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_info,
             collection_config,
-            royalty_share: None,
+            metadata_info,
         };
         let err = app
             .instantiate_contract(
@@ -326,6 +326,7 @@ mod initialization {
     fn test_invalid_per_address_limit() {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
+        let metadata_code_id = app.store_code(metadata_module());
 
         let collection_info = CollectionInfo {
             collection_type: Collections::Standard,
@@ -346,14 +347,20 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
-
+        let metadata_info = MetadataInfo {
+            instantiate_msg: MetadataInstantiateMsg {
+                admin: "".to_string(),
+                metadata_type: MetadataType::Standard,
+            },
+            code_id: metadata_code_id,
+        };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_info,
             collection_config,
-            royalty_share: None,
+            metadata_info,
         };
         let err = app
             .instantiate_contract(
@@ -375,6 +382,7 @@ mod initialization {
     fn test_invalid_description() {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
+        let metadata_code_id = app.store_code(metadata_module());
 
         let collection_info = CollectionInfo {
             collection_type: Collections::Standard,
@@ -395,14 +403,20 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
-
+        let metadata_info = MetadataInfo {
+            instantiate_msg: MetadataInstantiateMsg {
+                admin: "".to_string(),
+                metadata_type: MetadataType::Standard,
+            },
+            code_id: metadata_code_id,
+        };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_info,
             collection_config,
-            royalty_share: None,
+            metadata_info,
         };
         let err = app
             .instantiate_contract(
@@ -424,6 +438,7 @@ mod initialization {
     fn test_missing_ipfs_link() {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
+        let metadata_code_id = app.store_code(metadata_module());
 
         let collection_info = CollectionInfo {
             collection_type: Collections::Standard,
@@ -444,14 +459,20 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: None,
         };
-
+        let metadata_info = MetadataInfo {
+            instantiate_msg: MetadataInstantiateMsg {
+                admin: "".to_string(),
+                metadata_type: MetadataType::Standard,
+            },
+            code_id: metadata_code_id,
+        };
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_info,
             collection_config,
-            royalty_share: None,
+            metadata_info,
         };
         let err = app
             .instantiate_contract(
@@ -468,6 +489,80 @@ mod initialization {
             ContractError::IpfsNotFound {}.to_string()
         );
     }
+
+    #[test]
+    fn test_invalid_collection_metadata_type() {
+        let mut app = mock_app();
+        let token_code_id = app.store_code(token_module());
+        let metadata_code_id = app.store_code(metadata_module());
+
+        let mut collection_info = CollectionInfo {
+            collection_type: Collections::Standard,
+            name: "Test Collection".to_string(),
+            description: "Test Description".to_string(),
+            image: "https://some-image.com".to_string(),
+            external_link: None,
+        };
+        let token_info = TokenInfo {
+            symbol: "TTT".to_string(),
+            minter: ADMIN.to_string(),
+        };
+        let collection_config = CollectionConfig {
+            per_address_limit: Some(5),
+            start_time: Some(app.block_info().time.plus_seconds(1)),
+            max_token_limit: Some(100),
+            unit_price: Some(Uint128::new(100)),
+            native_denom: NATIVE_DENOM.to_string(),
+            ipfs_link: Some("some-link".to_string()),
+        };
+        let mut metadata_info = MetadataInfo {
+            instantiate_msg: MetadataInstantiateMsg {
+                admin: "".to_string(),
+                metadata_type: MetadataType::Dynamic,
+            },
+            code_id: metadata_code_id,
+        };
+        let msg = InstantiateMsg {
+            admin: ADMIN.to_string(),
+            creator: ADMIN.to_string(),
+            token_info,
+            collection_info: collection_info.clone(),
+            collection_config,
+            metadata_info: metadata_info.clone(),
+        };
+
+        let err = app
+            .instantiate_contract(
+                token_code_id,
+                Addr::unchecked(ADMIN),
+                &msg,
+                &[],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            ContractError::InvalidCollectionMetadataType {}.to_string()
+        );
+
+        metadata_info.instantiate_msg.metadata_type = MetadataType::Standard;
+        collection_info.collection_type = Collections::Linked;
+        let err = app
+            .instantiate_contract(
+                token_code_id,
+                Addr::unchecked(ADMIN),
+                &msg,
+                &[],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            ContractError::InvalidCollectionMetadataType {}.to_string()
+        );
+    }
 }
 
 mod actions {
@@ -482,7 +577,6 @@ mod actions {
             let token_module_addr = proper_instantiate(
                 &mut app,
                 ADMIN.to_string(),
-                None,
                 None,
                 None,
                 None,
@@ -524,7 +618,6 @@ mod actions {
                 None,
                 None,
                 None,
-                None,
                 Some("some-link".to_string()),
             );
 
@@ -560,7 +653,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -608,7 +700,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -651,11 +742,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -715,7 +803,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -751,7 +838,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -799,7 +885,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -837,7 +922,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -866,7 +950,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -903,7 +986,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -948,7 +1030,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -980,7 +1061,6 @@ mod actions {
                     ADMIN.to_string(),
                     None,
                     Some(start_time),
-                    None,
                     None,
                     None,
                     Some("some-link".to_string()),
@@ -1047,11 +1127,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1098,11 +1175,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1208,11 +1282,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1272,11 +1343,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1312,14 +1380,7 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
-                );
-
-                let metadata_module_addr = setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1354,9 +1415,18 @@ mod actions {
                 let res = StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1);
                 assert!(res.is_err());
 
+                let msg = Cw721QueryMsg::Extension {
+                    msg: QueryMsg::Contracts {},
+                };
+                let res: ResponseWrapper<Contracts> = app
+                    .wrap()
+                    .query_wasm_smart(token_module_addr, &msg)
+                    .unwrap();
+
                 let msg = MetadataQueryMsg::Metadata { token_id: 1 };
-                let res: Result<Empty, cosmwasm_std::StdError> =
-                    app.wrap().query_wasm_smart(metadata_module_addr, &msg);
+                let res: Result<Empty, cosmwasm_std::StdError> = app
+                    .wrap()
+                    .query_wasm_smart(res.data.metadata.unwrap(), &msg);
                 assert!(res.is_err());
             }
 
@@ -1370,11 +1440,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1480,14 +1547,7 @@ mod actions {
                     None,
                     None,
                     Some(Uint128::new(1_000_000)),
-                    None,
                     Some("some-link".to_string()),
-                );
-
-                let metadata_module_addr = setup_metadata_module(
-                    &mut app,
-                    token_module_addr.clone(),
-                    MetadataType::Standard,
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1512,10 +1572,18 @@ mod actions {
                 let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
                 assert_eq!(res, coin(1_000_000, NATIVE_DENOM));
 
+                let msg = Cw721QueryMsg::Extension {
+                    msg: QueryMsg::Contracts {},
+                };
+                let res: ResponseWrapper<Contracts> = app
+                    .wrap()
+                    .query_wasm_smart(token_module_addr, &msg)
+                    .unwrap();
+
                 let msg = MetadataQueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr, &msg)
+                    .query_wasm_smart(res.data.metadata.unwrap(), &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata_id, 1);
                 assert_eq!(
@@ -1543,11 +1611,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let locks = Locks {
                     mint_lock: true,
@@ -1600,11 +1665,8 @@ mod actions {
                     None,
                     Some(2),
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1666,11 +1728,8 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1733,11 +1792,8 @@ mod actions {
                     Some(start_time),
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1769,11 +1825,8 @@ mod actions {
                     None,
                     None,
                     Some(Uint128::new(1_000_000)),
-                    None,
                     Some("some-link".to_string()),
                 );
-
-                setup_metadata_module(&mut app, token_module_addr.clone(), MetadataType::Standard);
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::Mint {
@@ -1805,7 +1858,6 @@ mod actions {
                     None,
                     None,
                     Some(Uint128::new(100)),
-                    None,
                     Some("some-link".to_string()),
                 );
 

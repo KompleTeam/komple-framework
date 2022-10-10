@@ -1,15 +1,13 @@
 use crate::msg::QueryMsg;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use cosmwasm_std::{Addr, Coin, Decimal, Empty, Uint128};
-use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
+use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::{
-    msg::{
-        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
-        QueryMsg as TokenQueryMsg, TokenInfo,
-    },
-    state::{CollectionInfo, Contracts},
+    msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
+    state::CollectionInfo,
 };
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
@@ -94,6 +92,7 @@ fn setup_collection(
     unit_price: Option<Uint128>,
 ) {
     let token_code_id = app.store_code(token_module());
+    let metadata_code_id = app.store_code(metadata_module());
 
     let collection_info = CollectionInfo {
         collection_type: Collections::Standard,
@@ -114,7 +113,13 @@ fn setup_collection(
         native_denom: NATIVE_DENOM.to_string(),
         ipfs_link: Some("some-link".to_string()),
     };
-
+    let metadata_info = MetadataInfo {
+        instantiate_msg: MetadataInstantiateMsg {
+            admin: "".to_string(),
+            metadata_type: MetadataType::Standard,
+        },
+        code_id: metadata_code_id,
+    };
     let msg = ExecuteMsg::CreateCollection {
         code_id: token_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
@@ -123,42 +128,13 @@ fn setup_collection(
             collection_info,
             collection_config,
             token_info,
-            royalty_share: Some(Decimal::new(Uint128::new(5))),
+            metadata_info,
         },
         linked_collections,
     };
     let _ = app
         .execute_contract(sender, minter_addr.clone(), &msg, &vec![])
         .unwrap();
-}
-
-fn setup_metadata_module(
-    app: &mut App,
-    token_module_addr: Addr,
-    metadata_type: MetadataType,
-) -> Addr {
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::InitMetadataContract {
-            code_id: metadata_code_id,
-            metadata_type,
-        },
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-        .unwrap();
-
-    let res: ResponseWrapper<Contracts> = app
-        .wrap()
-        .query_wasm_smart(
-            token_module_addr.clone(),
-            &Cw721QueryMsg::Extension {
-                msg: TokenQueryMsg::Contracts {},
-            },
-        )
-        .unwrap();
-    res.data.metadata.unwrap()
 }
 
 mod actions {
@@ -186,10 +162,6 @@ mod actions {
                 None,
                 Some(Uint128::new(50_000)),
             );
-
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr, MetadataType::Standard);
 
             let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
             assert_eq!(res.amount, Uint128::new(0));
@@ -229,10 +201,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr, MetadataType::Standard);
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
             let _ = app
@@ -297,6 +265,7 @@ mod actions {
                 let mut app = mock_app();
                 let minter_addr = proper_instantiate(&mut app);
                 let token_code_id = app.store_code(token_module());
+                let metadata_code_id = app.store_code(metadata_module());
 
                 let collection_info = CollectionInfo {
                     collection_type: Collections::Standard,
@@ -317,6 +286,13 @@ mod actions {
                     max_token_limit: None,
                     ipfs_link: Some("some-link".to_string()),
                 };
+                let metadata_info = MetadataInfo {
+                    instantiate_msg: MetadataInstantiateMsg {
+                        admin: "".to_string(),
+                        metadata_type: MetadataType::Standard,
+                    },
+                    code_id: metadata_code_id,
+                };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
@@ -325,7 +301,7 @@ mod actions {
                         collection_info,
                         collection_config,
                         token_info,
-                        royalty_share: Some(Decimal::new(Uint128::new(5))),
+                        metadata_info,
                     },
                     linked_collections: None,
                 };
@@ -344,6 +320,7 @@ mod actions {
                 let mut app = mock_app();
                 let minter_addr = proper_instantiate(&mut app);
                 let token_code_id = app.store_code(token_module());
+                let metadata_code_id = app.store_code(metadata_module());
 
                 let collection_info = CollectionInfo {
                     collection_type: Collections::Standard,
@@ -364,6 +341,13 @@ mod actions {
                     max_token_limit: None,
                     ipfs_link: None,
                 };
+                let metadata_info = MetadataInfo {
+                    instantiate_msg: MetadataInstantiateMsg {
+                        admin: "".to_string(),
+                        metadata_type: MetadataType::Standard,
+                    },
+                    code_id: metadata_code_id,
+                };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
                     token_instantiate_msg: TokenInstantiateMsg {
@@ -372,7 +356,7 @@ mod actions {
                         collection_info,
                         collection_config,
                         token_info,
-                        royalty_share: Some(Decimal::new(Uint128::new(5))),
+                        metadata_info,
                     },
                     linked_collections: None,
                 };
@@ -543,7 +527,7 @@ mod actions {
                 .unwrap();
             assert_eq!(res.data.len(), 7);
             assert_eq!(res.data[3].collection_id, 4);
-            assert_eq!(res.data[3].address, "contract4");
+            assert_eq!(res.data[3].address, "contract7");
 
             let msg = QueryMsg::Collections {
                 blacklist: false,
@@ -556,7 +540,7 @@ mod actions {
                 .unwrap();
             assert_eq!(res.data.len(), 4);
             assert_eq!(res.data[3].collection_id, 6);
-            assert_eq!(res.data[3].address, "contract6");
+            assert_eq!(res.data[3].address, "contract11");
         }
     }
 
@@ -572,7 +556,6 @@ mod actions {
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
             let collection_addr =
                 StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -607,9 +590,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let err = app
@@ -626,9 +606,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -648,9 +625,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 2 };
             let err = app
@@ -673,9 +647,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -695,9 +666,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
@@ -714,9 +682,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
@@ -733,9 +698,6 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-            setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 2 };
             let err = app

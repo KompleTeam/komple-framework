@@ -8,8 +8,8 @@ use komple_utils::storage::StorageHelper;
 pub mod helpers;
 use helpers::{
     create_collection, get_modules_addresses, give_approval_to_module, merge_module, mint_token,
-    mock_app, proper_instantiate, setup_all_modules, setup_metadata_module,
-    setup_mint_module_operators, token_module, ADMIN, USER,
+    mock_app, proper_instantiate, setup_all_modules, setup_mint_module_operators, token_module,
+    ADMIN, USER,
 };
 
 mod initialization {
@@ -78,7 +78,6 @@ mod normal_merge {
         ContractError as MergeContractError,
     };
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::metadata::Metadata;
 
     #[test]
     fn test_happy_path() {
@@ -114,14 +113,8 @@ mod normal_merge {
 
         let collection_1_addr =
             StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-        let collection_2_addr =
-            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
         let collection_3_addr =
             StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
-
-        setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
-        setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
-        setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -231,10 +224,6 @@ mod normal_merge {
             token_module_code_id,
             Some(vec![2]),
         );
-
-        let collection_1_addr =
-            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-        setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -369,7 +358,6 @@ mod permission_merge {
         use super::*;
 
         use komple_ownership_permission_module::msg::OwnershipMsg;
-        use komple_types::metadata::Metadata;
 
         #[test]
         fn test_happy_path() {
@@ -402,20 +390,6 @@ mod permission_merge {
             );
 
             link_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
-
-            let collection_1_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                    .unwrap();
-            let collection_2_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2)
-                    .unwrap();
-            let collection_3_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3)
-                    .unwrap();
-
-            setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
-            setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
-            setup_metadata_module(&mut app, collection_3_addr.clone(), Metadata::Standard);
 
             mint_token(&mut app, mint_module_addr.clone(), 1, USER);
             mint_token(&mut app, mint_module_addr.clone(), 1, USER);

@@ -1,8 +1,9 @@
 use crate::state::{CollectionConfig, CollectionInfo, Contracts};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Binary, Decimal, Timestamp, Uint128};
+use cosmwasm_std::{Binary, Timestamp, Uint128};
 use cw721::CustomMsg;
-use komple_types::{metadata::Metadata as MetadataType, query::ResponseWrapper, tokens::Locks};
+use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_types::{query::ResponseWrapper, tokens::Locks};
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 #[cw_serde]
@@ -12,13 +13,19 @@ pub struct TokenInfo {
 }
 
 #[cw_serde]
+pub struct MetadataInfo {
+    pub instantiate_msg: MetadataInstantiateMsg,
+    pub code_id: u64,
+}
+
+#[cw_serde]
 pub struct InstantiateMsg {
     pub admin: String,
     pub creator: String,
     pub token_info: TokenInfo,
     pub collection_info: CollectionInfo,
     pub collection_config: CollectionConfig,
-    pub royalty_share: Option<Decimal>,
+    pub metadata_info: MetadataInfo,
 }
 
 #[cw_serde]
@@ -68,10 +75,6 @@ pub enum ExecuteMsg {
     },
 
     // CONTRACT MESSAGES
-    InitMetadataContract {
-        code_id: u64,
-        metadata_type: MetadataType,
-    },
     InitWhitelistContract {
         code_id: u64,
         instantiate_msg: WhitelistInstantiateMsg,

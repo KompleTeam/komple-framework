@@ -1,5 +1,5 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
-use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
+use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_hub_module::state::HubInfo;
@@ -7,6 +7,7 @@ use komple_marketplace_module::msg::{
     ExecuteMsg as MarketplaceExecuteMsg, InstantiateMsg as MarketplaceModuleInstantiateMsg,
 };
 use komple_merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
+use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{
     ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintModuleInstantiateMsg,
 };
@@ -17,16 +18,13 @@ use komple_permission_module::msg::{
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::{
     msg::{
-        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
-        QueryMsg as TokenQueryMsg, TokenInfo,
+        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, MetadataInfo,
+        TokenInfo,
     },
-    state::{CollectionInfo, Contracts},
+    state::CollectionInfo,
 };
 use komple_types::permission::Permissions;
-use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, module::Modules,
-    query::ResponseWrapper,
-};
+use komple_types::{collection::Collections, metadata::Metadata as MetadataType, module::Modules};
 use komple_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
@@ -270,6 +268,8 @@ pub fn create_collection(
     token_module_code_id: u64,
     linked_collections: Option<Vec<u32>>,
 ) {
+    let metadata_code_id = app.store_code(metadata_module());
+
     let collection_info = CollectionInfo {
         collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
@@ -289,6 +289,13 @@ pub fn create_collection(
         max_token_limit: None,
         ipfs_link: Some("some-link".to_string()),
     };
+    let metadata_info = MetadataInfo {
+        instantiate_msg: MetadataInstantiateMsg {
+            admin: "".to_string(),
+            metadata_type: MetadataType::Standard,
+        },
+        code_id: metadata_code_id,
+    };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
@@ -297,7 +304,7 @@ pub fn create_collection(
             collection_info,
             collection_config,
             token_info,
-            royalty_share: None,
+            metadata_info,
         },
         linked_collections,
     };
@@ -479,33 +486,4 @@ pub fn setup_marketplace_listing(
             &vec![],
         )
         .unwrap();
-}
-
-pub fn setup_metadata_module(
-    app: &mut App,
-    token_module_addr: Addr,
-    metadata_type: MetadataType,
-) -> Addr {
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::InitMetadataContract {
-            code_id: metadata_code_id,
-            metadata_type,
-        },
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-        .unwrap();
-
-    let res: ResponseWrapper<Contracts> = app
-        .wrap()
-        .query_wasm_smart(
-            token_module_addr.clone(),
-            &Cw721QueryMsg::Extension {
-                msg: TokenQueryMsg::Contracts {},
-            },
-        )
-        .unwrap();
-    res.data.metadata.unwrap()
 }

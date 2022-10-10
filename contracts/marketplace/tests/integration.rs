@@ -1,5 +1,5 @@
 use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Uint128};
-use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
+use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::{
     msg::{
@@ -16,13 +16,14 @@ use komple_hub_module::{
 };
 use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_marketplace_module::ContractError;
+use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
 use komple_token_module::{
     msg::{
-        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
-        QueryMsg as TokenQueryMsg, TokenInfo,
+        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, MetadataInfo,
+        TokenInfo,
     },
-    state::{CollectionConfig, CollectionInfo, Contracts},
+    state::{CollectionConfig, CollectionInfo},
 };
 use komple_types::collection::Collections;
 use komple_types::fee::Fees;
@@ -320,6 +321,8 @@ pub fn create_collection(
     creator_addr: &str,
     token_module_code_id: u64,
 ) {
+    let metadata_code_id = app.store_code(metadata_module());
+
     let collection_info = CollectionInfo {
         collection_type: Collections::Standard,
         name: "Test Collection".to_string(),
@@ -339,6 +342,13 @@ pub fn create_collection(
         max_token_limit: None,
         ipfs_link: Some("some-link".to_string()),
     };
+    let metadata_info = MetadataInfo {
+        instantiate_msg: MetadataInstantiateMsg {
+            admin: "".to_string(),
+            metadata_type: MetadataType::Standard,
+        },
+        code_id: metadata_code_id,
+    };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         token_instantiate_msg: TokenInstantiateMsg {
@@ -347,7 +357,7 @@ pub fn create_collection(
             collection_info,
             collection_config,
             token_info,
-            royalty_share: None,
+            metadata_info,
         },
         linked_collections: None,
     };
@@ -359,35 +369,6 @@ pub fn create_collection(
             &vec![],
         )
         .unwrap();
-}
-
-pub fn setup_metadata_module(
-    app: &mut App,
-    token_module_addr: Addr,
-    metadata_type: MetadataType,
-) -> Addr {
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::InitMetadataContract {
-            code_id: metadata_code_id,
-            metadata_type,
-        },
-    };
-    let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-        .unwrap();
-
-    let res: ResponseWrapper<Contracts> = app
-        .wrap()
-        .query_wasm_smart(
-            token_module_addr.clone(),
-            &Cw721QueryMsg::Extension {
-                msg: TokenQueryMsg::Contracts {},
-            },
-        )
-        .unwrap();
-    res.data.metadata.unwrap()
 }
 
 pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sender: &str) {
@@ -555,8 +536,6 @@ mod actions {
     use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
     use komple_token_module::ContractError as TokenContractError;
 
-    use komple_types::metadata::Metadata;
-
     mod listing {
         use super::*;
 
@@ -564,7 +543,7 @@ mod actions {
             use super::*;
 
             use komple_marketplace_module::state::FixedListing;
-            use komple_types::{metadata::Metadata, query::ResponseWrapper, tokens::Locks};
+            use komple_types::{query::ResponseWrapper, tokens::Locks};
             use komple_utils::storage::StorageHelper;
 
             #[test]
@@ -586,8 +565,6 @@ mod actions {
                 let collection_addr =
                     StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                         .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -645,12 +622,6 @@ mod actions {
                     token_module_code_id,
                 );
 
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
-
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
@@ -687,12 +658,6 @@ mod actions {
                     ADMIN,
                     token_module_code_id,
                 );
-
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -819,12 +784,6 @@ mod actions {
                     token_module_code_id,
                 );
 
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
-
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 let msg = MarketplaceExecuteMsg::ListFixedToken {
@@ -873,8 +832,6 @@ mod actions {
                 let collection_addr =
                     StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                         .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -952,8 +909,6 @@ mod actions {
                     StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                         .unwrap();
 
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
-
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_token_module_operators(
@@ -1013,8 +968,6 @@ mod actions {
                 let collection_addr =
                     StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                         .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -1085,12 +1038,6 @@ mod actions {
                     token_module_code_id,
                 );
 
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
-
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_marketplace_listing(
@@ -1144,12 +1091,6 @@ mod actions {
                     ADMIN,
                     token_module_code_id,
                 );
-
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
@@ -1228,8 +1169,6 @@ mod actions {
                 let collection_addr =
                     StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                         .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1492,8 +1431,6 @@ mod actions {
                     StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                         .unwrap();
 
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
-
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -1691,12 +1628,6 @@ mod actions {
                     token_module_code_id,
                 );
 
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
-
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_marketplace_listing(
@@ -1778,12 +1709,6 @@ mod actions {
                     token_module_code_id,
                 );
 
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
-
-                setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
-
                 mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
                 setup_marketplace_listing(
@@ -1843,10 +1768,6 @@ mod queries {
             ADMIN,
             token_module_code_id,
         );
-
-        let collection_addr_1 =
-            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-        setup_metadata_module(&mut app, collection_addr_1.clone(), MetadataType::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);

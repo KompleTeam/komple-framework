@@ -257,10 +257,8 @@ fn _execute_buy_fixed_listing(
         coin(fixed_listing.price.u128(), config.native_denom.clone()),
     )?;
 
-    let mint_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-    let collection_addr =
-        StorageHelper::query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
+    // Get the collection address
+    let collection_addr = get_collection_address(&deps, &collection_id)?;
 
     // Messages to be sent to other contracts
     let mut sub_msgs: Vec<SubMsg> = vec![];
