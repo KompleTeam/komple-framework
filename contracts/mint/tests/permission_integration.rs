@@ -328,7 +328,7 @@ mod initialization {
     use komple_types::module::Modules;
 
     use komple_hub_module::ContractError;
-    use komple_utils::query_module_address;
+    use komple_utils::storage::StorageHelper;
 
     #[test]
     fn test_happy_path() {
@@ -347,7 +347,8 @@ mod initialization {
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
-        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
+        let res =
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
         assert_eq!(res, "contract1")
     }
 
@@ -377,7 +378,7 @@ mod initialization {
 }
 
 mod permission_mint {
-    use komple_utils::query_collection_address;
+    use komple_utils::storage::StorageHelper;
 
     use super::*;
 
@@ -401,9 +402,11 @@ mod permission_mint {
         create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
 
         let collection_addr_1 =
-            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1)
+                .unwrap();
         let collection_addr_2 =
-            query_collection_address(&app.wrap(), &mint_module_addr.clone(), &2).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr.clone(), &2)
+                .unwrap();
 
         setup_metadata_module(&mut app, collection_addr_1, Metadata::Standard);
         setup_metadata_module(&mut app, collection_addr_2, Metadata::Standard);
@@ -453,7 +456,7 @@ mod permission_mint {
             .unwrap();
 
         let collection_2_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
         let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
             token_id: "1".to_string(),

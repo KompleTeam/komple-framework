@@ -8,9 +8,7 @@ use cw2::set_contract_version;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::HUB_ADDR_NAMESPACE;
-use komple_utils::{
-    query_collection_address, query_module_address, query_storage, query_token_owner,
-};
+use komple_utils::storage::StorageHelper;
 use std::collections::HashMap;
 
 use crate::error::ContractError;
@@ -64,7 +62,8 @@ pub fn execute_check(
     data: Binary,
 ) -> Result<Response, ContractError> {
     let hub_addr = query_hub_addr(&deps)?;
-    let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+    let mint_module_addr =
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
@@ -78,7 +77,7 @@ pub fn execute_check(
                 .unwrap()
                 .clone(),
             false => {
-                let collection_addr = query_collection_address(
+                let collection_addr = StorageHelper::query_collection_address(
                     &deps.querier,
                     &mint_module_addr,
                     &ownership_msg.collection_id,
@@ -88,8 +87,12 @@ pub fn execute_check(
             }
         };
 
-        let owner =
-            query_token_owner(&deps.querier, &collection_addr, &ownership_msg.token_id).unwrap();
+        let owner = StorageHelper::query_token_owner(
+            &deps.querier,
+            &collection_addr,
+            &ownership_msg.token_id,
+        )
+        .unwrap();
         if owner != ownership_msg.address {
             return Err(ContractError::InvalidOwnership {});
         }
@@ -102,7 +105,8 @@ pub fn execute_check(
 // Queries the hub address from permission modules storage
 fn query_hub_addr(deps: &DepsMut) -> Result<Addr, ContractError> {
     let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
-    let res = query_storage::<Addr>(&deps.querier, &permission_addr, &HUB_ADDR_NAMESPACE)?;
+    let res =
+        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, &HUB_ADDR_NAMESPACE)?;
     Ok(res.unwrap())
 }
 

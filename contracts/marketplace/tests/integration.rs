@@ -15,6 +15,7 @@ use komple_hub_module::{
     state::HubInfo,
 };
 use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_marketplace_module::ContractError;
 use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
 use komple_token_module::{
     msg::{
@@ -28,7 +29,8 @@ use komple_types::fee::Fees;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::query_collection_address;
+use komple_utils::funds::FundsError;
+use komple_utils::storage::StorageHelper;
 use std::str::FromStr;
 
 pub const CREATOR: &str = "juno..creator";
@@ -431,7 +433,8 @@ pub fn setup_marketplace_listing(
     price: Uint128,
 ) {
     let collection_addr =
-        query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
+        StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &collection_id)
+            .unwrap();
 
     setup_token_module_operators(
         app,
@@ -457,11 +460,6 @@ pub fn setup_marketplace_listing(
 mod initialization {
     use super::*;
 
-    use komple_types::module::Modules;
-
-    use komple_hub_module::ContractError;
-    use komple_utils::query_module_address;
-
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
@@ -480,7 +478,8 @@ mod initialization {
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
-        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace).unwrap();
+        let res = StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace)
+            .unwrap();
         assert_eq!(res, "contract1")
     }
 
@@ -514,7 +513,8 @@ mod initialization {
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
-        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace).unwrap();
+        let res = StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace)
+            .unwrap();
         assert_eq!(res, "contract2")
     }
 
@@ -565,7 +565,7 @@ mod actions {
 
             use komple_marketplace_module::state::FixedListing;
             use komple_types::{metadata::Metadata, query::ResponseWrapper, tokens::Locks};
-            use komple_utils::{query_collection_address, query_token_locks};
+            use komple_utils::storage::StorageHelper;
 
             #[test]
             fn test_happy_path() {
@@ -584,7 +584,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -621,7 +622,8 @@ mod actions {
                 assert_eq!(res.data.owner, USER.to_string());
                 assert_eq!(res.data.price, Uint128::new(1_000_000));
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks =
+                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, true);
                 assert_eq!(locks.send_lock, true);
                 assert_eq!(locks.burn_lock, true);
@@ -644,7 +646,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -686,7 +689,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -699,7 +703,8 @@ mod actions {
                 };
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 let unlock = Locks {
                     mint_lock: false,
@@ -815,7 +820,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -845,12 +851,7 @@ mod actions {
     mod delisting {
         use super::*;
 
-        use cosmwasm_std::Empty;
-        use komple_utils::query_collection_address;
-
         mod fixed_tokens {
-            use komple_utils::query_token_locks;
-
             use super::*;
 
             #[test]
@@ -870,7 +871,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -896,7 +898,8 @@ mod actions {
                     )
                     .unwrap();
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks =
+                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, true);
                 assert_eq!(locks.send_lock, true);
                 assert_eq!(locks.burn_lock, true);
@@ -914,7 +917,8 @@ mod actions {
                     )
                     .unwrap();
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks =
+                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, false);
                 assert_eq!(locks.send_lock, false);
                 assert_eq!(locks.burn_lock, false);
@@ -945,7 +949,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1006,7 +1011,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1061,8 +1067,6 @@ mod actions {
         use super::*;
 
         mod fixed_tokens {
-            use komple_utils::query_collection_address;
-
             use super::*;
 
             #[test]
@@ -1082,7 +1086,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1141,7 +1146,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1183,11 +1189,9 @@ mod actions {
 
         use cosmwasm_std::coin;
         use komple_types::marketplace::Listing;
-        use komple_utils::{query_collection_address, query_token_owner};
 
         mod fixed_tokens {
             use cosmwasm_std::StdError;
-            use komple_utils::{funds::FundsError, query_module_address, query_token_locks};
 
             use super::*;
 
@@ -1222,7 +1226,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1246,7 +1251,8 @@ mod actions {
                     Uint128::new(1_000),
                 );
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks =
+                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, true);
                 assert_eq!(locks.send_lock, true);
                 assert_eq!(locks.burn_lock, true);
@@ -1274,12 +1280,14 @@ mod actions {
                     .query_wasm_smart(marketplace_module_addr.clone(), &msg);
                 assert!(res.is_err());
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks =
+                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, false);
                 assert_eq!(locks.send_lock, false);
                 assert_eq!(locks.burn_lock, false);
 
-                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                let owner =
+                    StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(owner, Addr::unchecked(RANDOM));
 
                 // Buyer balance
@@ -1318,7 +1326,8 @@ mod actions {
                     .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
                     .unwrap();
                 let fee_module_addr =
-                    query_module_address(&app.wrap(), &hub_addr, Modules::Fee).unwrap();
+                    StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Fee)
+                        .unwrap();
 
                 // Setup admin royalty for 10 percent
                 set_royalties(&mut app, &fee_module_addr, &1, "0.1");
@@ -1346,7 +1355,8 @@ mod actions {
                     )
                     .unwrap();
 
-                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                let owner =
+                    StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(owner, Addr::unchecked(RANDOM));
 
                 // Buyer balance
@@ -1452,7 +1462,8 @@ mod actions {
                     .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
                     .unwrap();
                 let fee_module_addr =
-                    query_module_address(&app.wrap(), &hub_addr, Modules::Fee).unwrap();
+                    StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Fee)
+                        .unwrap();
                 setup_fee_module(&mut app, &fee_module_addr);
 
                 // Update public permission settings
@@ -1478,7 +1489,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1502,7 +1514,8 @@ mod actions {
                     Uint128::new(1_000),
                 );
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks =
+                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, true);
                 assert_eq!(locks.send_lock, true);
                 assert_eq!(locks.burn_lock, true);
@@ -1530,12 +1543,14 @@ mod actions {
                     .query_wasm_smart(marketplace_module_addr.clone(), &msg);
                 assert!(res.is_err());
 
-                let locks = query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+                let locks =
+                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(locks.transfer_lock, false);
                 assert_eq!(locks.send_lock, false);
                 assert_eq!(locks.burn_lock, false);
 
-                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                let owner =
+                    StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(owner, Addr::unchecked(RANDOM));
 
                 // Buyer balance
@@ -1583,7 +1598,8 @@ mod actions {
                     )
                     .unwrap();
 
-                let owner = query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+                let owner =
+                    StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
                 assert_eq!(owner, Addr::unchecked(RANDOM));
 
                 // Buyer balance
@@ -1676,7 +1692,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1762,7 +1779,8 @@ mod actions {
                 );
 
                 let collection_addr =
-                    query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
 
                 setup_metadata_module(&mut app, collection_addr.clone(), Metadata::Standard);
 
@@ -1827,7 +1845,7 @@ mod queries {
         );
 
         let collection_addr_1 =
-            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         setup_metadata_module(&mut app, collection_addr_1.clone(), MetadataType::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);

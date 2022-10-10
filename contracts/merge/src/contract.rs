@@ -14,10 +14,7 @@ use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::{
-    check_admin_privileges, query_collection_address, query_linked_collections,
-    query_module_address,
-};
+use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 use std::collections::HashMap;
 
@@ -116,7 +113,7 @@ fn execute_permission_merge(
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
@@ -176,7 +173,8 @@ fn make_merge_msg(
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
-    let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+    let mint_module_addr =
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
 
     // MergeMsg contains mint, burn and metadata infos
     let merge_msg: MergeMsg = from_binary(&msg)?;
@@ -210,8 +208,11 @@ fn make_burn_messages(
     msgs: &mut Vec<CosmosMsg>,
 ) -> Result<(), ContractError> {
     for burn_msg in &merge_msg.burn {
-        let collection_addr =
-            query_collection_address(&deps.querier, &mint_module_addr, &burn_msg.collection_id)?;
+        let collection_addr = StorageHelper::query_collection_address(
+            &deps.querier,
+            &mint_module_addr,
+            &burn_msg.collection_id,
+        )?;
 
         let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
             msg: TokenExecuteMsg::Burn {
@@ -244,8 +245,11 @@ fn make_mint_messages(
         let linked_collections = match linked_collection_map.contains_key(&collection_id) {
             true => linked_collection_map.get(&collection_id).unwrap().clone(),
             false => {
-                let collections =
-                    query_linked_collections(&deps.querier, &mint_module_addr, *collection_id)?;
+                let collections = StorageHelper::query_linked_collections(
+                    &deps.querier,
+                    &mint_module_addr,
+                    *collection_id,
+                )?;
                 linked_collection_map.insert(*collection_id, collections.clone());
                 collections
             }

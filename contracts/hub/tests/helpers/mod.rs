@@ -27,7 +27,7 @@ use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, module::Modules,
     query::ResponseWrapper,
 };
-use komple_utils::{query_collection_address, query_module_address};
+use komple_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -427,16 +427,16 @@ pub fn get_modules_addresses(app: &mut App, hub_addr: &Addr) -> (Addr, Addr, Add
     let permission_module_addr: Addr;
     let marketplace_module_addr: Addr;
 
-    let res = query_module_address(&app.wrap(), hub_addr, Modules::Mint);
+    let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Mint);
     mint_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), hub_addr, Modules::Merge);
+    let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Merge);
     merge_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), hub_addr, Modules::Permission);
+    let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Permission);
     permission_module_addr = res.unwrap();
 
-    let res = query_module_address(&app.wrap(), hub_addr, Modules::Marketplace);
+    let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Marketplace);
     marketplace_module_addr = res.unwrap();
 
     (
@@ -457,7 +457,8 @@ pub fn setup_marketplace_listing(
     let (mint_module_addr, _, _, marketplace_module_addr) = get_modules_addresses(app, &hub_addr);
 
     let collection_addr =
-        query_collection_address(&app.wrap(), &mint_module_addr, &collection_id).unwrap();
+        StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &collection_id)
+            .unwrap();
 
     setup_token_module_operators(
         app,

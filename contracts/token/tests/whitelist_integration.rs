@@ -8,7 +8,7 @@ use komple_token_module::ContractError;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
-use komple_utils::query_token_owner;
+use komple_utils::storage::StorageHelper;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
@@ -300,10 +300,14 @@ mod actions {
                 )
                 .unwrap();
 
-            let token_1_owner = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
-            let token_2_owner = query_token_owner(&app.wrap(), &token_module_addr, &2).unwrap();
-            let token_3_owner = query_token_owner(&app.wrap(), &token_module_addr, &3).unwrap();
-            let token_4_owner = query_token_owner(&app.wrap(), &token_module_addr, &4).unwrap();
+            let token_1_owner =
+                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
+            let token_2_owner =
+                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &2).unwrap();
+            let token_3_owner =
+                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &3).unwrap();
+            let token_4_owner =
+                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &4).unwrap();
 
             assert_eq!(token_1_owner, RANDOM.to_string());
             assert_eq!(token_2_owner, RANDOM_2.to_string());

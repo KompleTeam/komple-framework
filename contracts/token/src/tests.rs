@@ -14,7 +14,7 @@ use komple_metadata_module::{
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{collection::Collections, metadata::Metadata as MetadataType};
-use komple_utils::{funds::FundsError, query_token_owner};
+use komple_utils::{funds::FundsError, storage::StorageHelper};
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -1083,7 +1083,8 @@ mod actions {
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
+                let res =
+                    StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
                 assert_eq!(res, Addr::unchecked(RANDOM));
             }
 
@@ -1256,7 +1257,8 @@ mod actions {
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
+                let res =
+                    StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
                 assert_eq!(res, Addr::unchecked(RANDOM));
             }
 
@@ -1349,7 +1351,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_module_addr, &1);
+                let res = StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1);
                 assert!(res.is_err());
 
                 let msg = MetadataQueryMsg::Metadata { token_id: 1 };
@@ -1503,7 +1505,8 @@ mod actions {
                     )
                     .unwrap();
 
-                let res = query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
+                let res =
+                    StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
                 assert_eq!(res, Addr::unchecked(USER));
 
                 let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();

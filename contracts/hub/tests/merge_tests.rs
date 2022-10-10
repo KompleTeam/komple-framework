@@ -3,6 +3,7 @@ use cw721::OwnerOfResponse;
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::Executor;
 use komple_hub_module::msg::ExecuteMsg;
+use komple_utils::storage::StorageHelper;
 
 pub mod helpers;
 use helpers::{
@@ -19,7 +20,6 @@ mod initialization {
 
     use komple_hub_module::ContractError;
     use komple_merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
-    use komple_utils::query_module_address;
 
     #[test]
     fn test_happy_path() {
@@ -38,7 +38,8 @@ mod initialization {
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
 
-        let res = query_module_address(&app.wrap(), &hub_addr, Modules::Merge).unwrap();
+        let res =
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge).unwrap();
         assert_eq!(res, "contract1")
     }
 
@@ -78,7 +79,6 @@ mod normal_merge {
     };
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
     use komple_types::metadata::Metadata;
-    use komple_utils::query_collection_address;
 
     #[test]
     fn test_happy_path() {
@@ -113,11 +113,11 @@ mod normal_merge {
         link_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
 
         let collection_1_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         let collection_2_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
         let collection_3_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
 
         setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
         setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
@@ -189,7 +189,7 @@ mod normal_merge {
         assert!(res.is_err());
 
         let collection_2_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
 
         let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
             token_id: "1".to_string(),
@@ -233,7 +233,7 @@ mod normal_merge {
         );
 
         let collection_1_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
 
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -328,7 +328,7 @@ mod normal_merge {
 
         setup_mint_module_operators(&mut app, mint_module_addr.clone(), vec![]);
         let collection_1_addr =
-            query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
         give_approval_to_module(
             &mut app,
             collection_1_addr.clone(),
@@ -370,7 +370,6 @@ mod permission_merge {
 
         use komple_ownership_permission_module::msg::OwnershipMsg;
         use komple_types::metadata::Metadata;
-        use komple_utils::query_collection_address;
 
         #[test]
         fn test_happy_path() {
@@ -405,11 +404,14 @@ mod permission_merge {
             link_collections(&mut app, mint_module_addr.clone(), 2, vec![3]);
 
             let collection_1_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
             let collection_2_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2)
+                    .unwrap();
             let collection_3_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3)
+                    .unwrap();
 
             setup_metadata_module(&mut app, collection_1_addr.clone(), Metadata::Standard);
             setup_metadata_module(&mut app, collection_2_addr.clone(), Metadata::Standard);
@@ -427,7 +429,8 @@ mod permission_merge {
             );
 
             let collection_1_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
             give_approval_to_module(
                 &mut app,
                 collection_1_addr.clone(),
@@ -435,7 +438,8 @@ mod permission_merge {
                 &merge_module_addr,
             );
             let collection_3_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &3).unwrap();
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3)
+                    .unwrap();
             give_approval_to_module(
                 &mut app,
                 collection_3_addr.clone(),
@@ -512,7 +516,8 @@ mod permission_merge {
             assert!(res.is_err());
 
             let collection_2_addr =
-                query_collection_address(&app.wrap(), &mint_module_addr, &2).unwrap();
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2)
+                    .unwrap();
 
             let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
                 token_id: "1".to_string(),

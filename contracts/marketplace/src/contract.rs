@@ -21,10 +21,7 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_utils::{
-    funds::check_single_coin, query_collection_address, query_collection_locks,
-    query_module_address, query_storage, query_token_locks, query_token_owner,
-};
+use komple_utils::{funds::check_single_coin, storage::StorageHelper};
 use semver::Version;
 use std::ops::Mul;
 
@@ -106,7 +103,7 @@ fn execute_list_fixed_token(
     price: Uint128,
 ) -> Result<Response, ContractError> {
     let collection_addr = get_collection_address(&deps, &collection_id)?;
-    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
+    let owner = StorageHelper::query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     // Check if the token owner is the same as info.sender
     if owner != info.sender {
@@ -114,11 +111,11 @@ fn execute_list_fixed_token(
     }
 
     // Checking the collection locks
-    let collection_locks = query_collection_locks(&deps.querier, &collection_addr)?;
+    let collection_locks = StorageHelper::query_collection_locks(&deps.querier, &collection_addr)?;
     check_locks(collection_locks)?;
 
     // Checking the token locks
-    let token_locks = query_token_locks(&deps.querier, &collection_addr, &token_id)?;
+    let token_locks = StorageHelper::query_token_locks(&deps.querier, &collection_addr, &token_id)?;
     check_locks(token_locks)?;
 
     let fixed_listing = FixedListing {
@@ -160,7 +157,7 @@ fn execute_delist_fixed_token(
     token_id: u32,
 ) -> Result<Response, ContractError> {
     let collection_addr = get_collection_address(&deps, &collection_id)?;
-    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
+    let owner = StorageHelper::query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     // Check if the token owner is the same as info.sender
     if owner != info.sender {
@@ -207,7 +204,7 @@ fn execute_update_price(
     price: Uint128,
 ) -> Result<Response, ContractError> {
     let collection_addr = get_collection_address(&deps, &collection_id)?;
-    let owner = query_token_owner(&deps.querier, &collection_addr, &token_id)?;
+    let owner = StorageHelper::query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
     // Check if the token owner is the same as info.sender
     if owner != info.sender {
@@ -260,9 +257,10 @@ fn _execute_buy_fixed_listing(
         coin(fixed_listing.price.u128(), config.native_denom.clone()),
     )?;
 
-    let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+    let mint_module_addr =
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
     let collection_addr =
-        query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
+        StorageHelper::query_collection_address(&deps.querier, &mint_module_addr, &collection_id)?;
 
     // Messages to be sent to other contracts
     let mut sub_msgs: Vec<SubMsg> = vec![];
@@ -272,7 +270,8 @@ fn _execute_buy_fixed_listing(
     let mut royalty_fee = Uint128::zero();
 
     // Process Marbu fee if exists on Hub
-    let res = query_storage::<Addr>(&deps.querier, &hub_addr, MARBU_FEE_MODULE_NAMESPACE)?;
+    let res =
+        StorageHelper::query_storage::<Addr>(&deps.querier, &hub_addr, MARBU_FEE_MODULE_NAMESPACE)?;
     if let Some(marbu_fee_module) = res {
         process_marketplace_fees(
             &deps,
@@ -289,7 +288,8 @@ fn _execute_buy_fixed_listing(
     };
 
     // Process fee module fees if exists on Hub
-    let fee_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Fee);
+    let fee_module_addr =
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if fee_module_addr.is_ok() {
         // Marketplace fees
         process_marketplace_fees(
@@ -313,8 +313,11 @@ fn _execute_buy_fixed_listing(
         if let Ok(percentage_fee) = res {
             royalty_fee = percentage_fee.data.value.mul(fixed_listing.price);
 
-            let res =
-                query_storage::<TokenConfig>(&deps.querier, &collection_addr, CONFIG_NAMESPACE)?;
+            let res = StorageHelper::query_storage::<TokenConfig>(
+                &deps.querier,
+                &collection_addr,
+                CONFIG_NAMESPACE,
+            )?;
             if let Some(token_config) = res {
                 let royalty_payout = BankMsg::Send {
                     to_address: token_config.creator.to_string(),
@@ -428,9 +431,10 @@ fn process_marketplace_fees(
 
 fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
-    let mint_module_addr = query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+    let mint_module_addr =
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
     let collection_addr =
-        query_collection_address(&deps.querier, &mint_module_addr, collection_id)?;
+        StorageHelper::query_collection_address(&deps.querier, &mint_module_addr, collection_id)?;
     Ok(collection_addr)
 }
 

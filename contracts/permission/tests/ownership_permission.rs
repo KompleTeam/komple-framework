@@ -28,7 +28,7 @@ use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;
-use komple_utils::query_collection_address;
+use komple_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -393,7 +393,8 @@ fn test_permission_check() {
     let token_module_code_id = app.store_code(token_module());
     create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
     let collection_addr =
-        query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1).unwrap();
+        StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1)
+            .unwrap();
     setup_metadata_module(&mut app, collection_addr.clone(), MetadataType::Standard);
     mint_token(&mut app, mint_module_addr.clone(), 1, USER);
     setup_ownership_permission_module(&mut app);

@@ -15,7 +15,7 @@ use komple_token_module::msg::{
 use komple_types::collection::Collections;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::{check_admin_privileges, query_module_address};
+use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
@@ -309,7 +309,7 @@ fn execute_permission_mint(
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let permission_module_addr =
-        query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
 
     let mut msgs: Vec<CosmosMsg> = vec![];
 
