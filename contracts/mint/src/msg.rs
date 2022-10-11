@@ -2,7 +2,7 @@ use crate::state::Config;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use komple_token_module::msg::InstantiateMsg as TokenInstantiateMsg;
-use komple_types::{collection::Collections, query::ResponseWrapper};
+use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -60,8 +60,6 @@ pub enum QueryMsg {
     CollectionAddress(u32),
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
-    #[returns(ResponseWrapper<Vec<u32>>)]
-    CollectionTypes(Collections),
     #[returns(ResponseWrapper<Vec<u32>>)]
     LinkedCollections { collection_id: u32 },
     #[returns(ResponseWrapper<Vec<CollectionsResponse>>)]

@@ -9,7 +9,6 @@ use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_token_module::{helper::KompleTokenModule, msg::InstantiateMsg as TokenInstantiateMsg};
-use komple_types::collection::Collections;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
@@ -20,8 +19,8 @@ use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use crate::error::ContractError;
 use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
-    Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID, COLLECTION_TYPES, CONFIG,
-    HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
+    Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID, CONFIG, HUB_ADDR,
+    LINKED_COLLECTIONS, OPERATORS,
 };
 
 // version info for migration info
@@ -165,22 +164,6 @@ pub fn execute_create_collection(
         LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collections.unwrap())?;
     }
 
-    COLLECTION_TYPES.update(
-        deps.storage,
-        token_instantiate_msg
-            .collection_info
-            .collection_type
-            .as_str(),
-        |value| -> StdResult<Vec<u32>> {
-            match value {
-                Some(mut id_list) => {
-                    id_list.push(collection_id);
-                    Ok(id_list)
-                }
-                None => Ok(vec![collection_id]),
-            }
-        },
-    )?;
     COLLECTION_ID.save(deps.storage, &collection_id)?;
 
     Ok(Response::new()
@@ -518,9 +501,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_binary(&query_collection_address(deps, collection_id)?)
         }
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
-        QueryMsg::CollectionTypes(collection_type) => {
-            to_binary(&query_collection_types(deps, collection_type)?)
-        }
         QueryMsg::LinkedCollections { collection_id } => {
             to_binary(&query_linked_collections(deps, collection_id)?)
         }
@@ -549,18 +529,6 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
         None => vec![],
     };
     Ok(ResponseWrapper::new("operators", addrs))
-}
-
-fn query_collection_types(
-    deps: Deps,
-    collection_type: Collections,
-) -> StdResult<ResponseWrapper<Vec<u32>>> {
-    let collection_ids = COLLECTION_TYPES.may_load(deps.storage, collection_type.as_str())?;
-    let collection_ids = match collection_ids {
-        Some(ids) => ids,
-        None => vec![],
-    };
-    Ok(ResponseWrapper::new("collection_types", collection_ids))
 }
 
 fn query_linked_collections(
