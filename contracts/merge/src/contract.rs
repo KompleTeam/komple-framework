@@ -8,7 +8,7 @@ use cosmwasm_std::{
     StdResult, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use komple_mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
+use komple_mint_module::helper::KompleMintModule;
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::helper::KompleTokenModule;
 use komple_types::module::Modules;
@@ -256,20 +256,17 @@ fn make_mint_messages(
             }
         }
 
-        let msg = MintModuleExecuteMsg::MintTo {
-            collection_id: *collection_id,
-            recipient: info.sender.to_string(),
-            metadata_id: merge_msg
+        let msg = KompleMintModule(mint_module_addr.clone()).mint_to_msg(
+            info.sender.to_string(),
+            *collection_id,
+            merge_msg
                 .metadata_ids
                 .as_ref()
                 .as_ref()
                 .and_then(|ids| Some(ids[index])),
-        };
-        msgs.push(WasmMsg::Execute {
-            contract_addr: mint_module_addr.to_string(),
-            msg: to_binary(&msg)?,
-            funds: info.funds.clone(),
-        });
+            info.funds.clone(),
+        )?;
+        msgs.push(msg);
     }
 
     Ok(())

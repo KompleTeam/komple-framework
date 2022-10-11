@@ -67,7 +67,7 @@ impl KompleTokenModule {
         &self,
         owner: String,
         metadata_id: Option<u32>,
-        funds: &Vec<Coin>,
+        funds: Vec<Coin>,
     ) -> StdResult<WasmMsg> {
         let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
             msg: ExecuteMsg::Mint { owner, metadata_id },
@@ -75,7 +75,7 @@ impl KompleTokenModule {
         Ok(WasmMsg::Execute {
             contract_addr: self.0.to_string(),
             msg: to_binary(&msg)?,
-            funds: funds.to_vec(),
+            funds,
         })
     }
 }

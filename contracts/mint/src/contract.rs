@@ -355,7 +355,7 @@ fn _execute_mint(
         let msg = KompleTokenModule(collection_addr).mint_msg(
             msg.owner.clone(),
             msg.metadata_id,
-            &info.funds,
+            info.funds.clone(),
         )?;
         mint_msgs.push(msg);
     }
