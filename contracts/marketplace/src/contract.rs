@@ -1,14 +1,17 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env,
-    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
+    coin, to_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, MessageInfo, Order,
+    Response, StdError, StdResult, SubMsg, Uint128,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
-use komple_fee_module::msg::{
-    CustomPaymentAddress as FeeModuleCustomPaymentAddress, ExecuteMsg as FeeModuleExecuteMsg,
-    PercentageFeeResponse, QueryMsg as FeeModuleQueryMsg,
+use komple_fee_module::{
+    helper::KompleFeeModule,
+    msg::{
+        CustomPaymentAddress as FeeModuleCustomPaymentAddress, PercentageFeeResponse,
+        QueryMsg as FeeModuleQueryMsg,
+    },
 };
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
@@ -376,18 +379,16 @@ fn process_marketplace_fees(
             *marketplace_fee += fee_to_send;
 
             // Create distribution message and add it to sub_msgs
-            let marbu_fee_distribution: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-                contract_addr: fee_module_addr.to_string(),
-                msg: to_binary(&FeeModuleExecuteMsg::Distribute {
-                    fee_type: Fees::Percentage,
-                    module_name: Modules::Marketplace.to_string(),
+            let marbu_fee_distribution = KompleFeeModule(fee_module_addr.to_owned())
+                .distribute_msg(
+                    Fees::Percentage,
+                    Modules::Marketplace.to_string(),
                     custom_payment_addresses,
-                })?,
-                funds: vec![Coin {
-                    denom: config.native_denom.to_string(),
-                    amount: fee_to_send,
-                }],
-            });
+                    vec![Coin {
+                        denom: config.native_denom.to_string(),
+                        amount: fee_to_send,
+                    }],
+                )?;
             sub_msgs.push(SubMsg::new(marbu_fee_distribution));
         }
     };
