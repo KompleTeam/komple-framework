@@ -27,9 +27,7 @@ use crate::state::{
 use cw721::ContractInfoResponse;
 use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 
-use komple_metadata_module::{
-    msg::ExecuteMsg as MetadataExecuteMsg, state::MetaInfo as MetadataMetaInfo,
-};
+use komple_metadata_module::{helper::KompleMetadataModule, state::MetaInfo as MetadataMetaInfo};
 use komple_whitelist_module::msg::{
     ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
     QueryMsg as WhitelistQueryMsg,
@@ -414,32 +412,23 @@ pub fn execute_mint(
 
         let ifps_link = format!("{}/{}", collection_config.ipfs_link.unwrap(), token_id);
 
-        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: contracts.metadata.clone().unwrap().to_string(),
-            msg: to_binary(&MetadataExecuteMsg::AddMetadata {
-                meta_info: MetadataMetaInfo {
-                    image: Some(ifps_link),
-                    external_url: None,
-                    description: None,
-                    youtube_url: None,
-                    animation_url: None,
-                },
-                attributes: vec![],
-            })
-            .unwrap(),
-            funds: vec![],
-        }))
+        let msg = KompleMetadataModule(contracts.metadata.clone().unwrap()).add_metadata_msg(
+            MetadataMetaInfo {
+                image: Some(ifps_link),
+                external_url: None,
+                description: None,
+                youtube_url: None,
+                animation_url: None,
+            },
+            vec![],
+        )?;
+        msgs.push(msg.into())
     }
     // Link the metadata
-    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: contracts.metadata.unwrap().to_string(),
-        msg: to_binary(&MetadataExecuteMsg::LinkMetadata {
-            token_id,
-            metadata_id,
-        })
-        .unwrap(),
-        funds: vec![],
-    }));
+    let msg = KompleMetadataModule(contracts.metadata.clone().unwrap())
+        .link_metadata_msg(token_id, metadata_id)?;
+    msgs.push(msg.into());
+
     if mint_price.is_some() {
         let payment_msg: CosmosMsg<Empty> = CosmosMsg::Bank(BankMsg::Send {
             to_address: config.admin.to_string(),
@@ -475,14 +464,8 @@ pub fn execute_burn(
         return Err(ContractError::MetadataContractNotFound {});
     };
 
-    let unlink_metadata_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: contracts.metadata.unwrap().to_string(),
-        msg: to_binary(&MetadataExecuteMsg::UnlinkMetadata {
-            token_id: token_id.parse::<u32>().unwrap(),
-        })
-        .unwrap(),
-        funds: vec![],
-    });
+    let unlink_metadata_msg = KompleMetadataModule(contracts.metadata.clone().unwrap())
+        .unlink_metadata_msg(token_id.parse::<u32>().unwrap())?;
 
     let res = Cw721Contract::default().execute(deps, env, info, ExecuteMsg::Burn { token_id });
     match res {
