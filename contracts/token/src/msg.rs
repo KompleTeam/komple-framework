@@ -61,7 +61,7 @@ pub enum ExecuteMsg {
     UpdateLocks {
         locks: Locks,
     },
-    UpdateTokenLock {
+    UpdateTokenLocks {
         token_id: String,
         locks: Locks,
     },

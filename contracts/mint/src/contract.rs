@@ -1,17 +1,14 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
-    ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply, ReplyOn,
+    Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
-use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
-use komple_token_module::msg::{
-    ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg,
-};
+use komple_token_module::{helper::KompleTokenModule, msg::InstantiateMsg as TokenInstantiateMsg};
 use komple_types::collection::Collections;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -350,22 +347,16 @@ fn _execute_mint(
     action: &str,
     msgs: Vec<MintMsg>,
 ) -> Result<Response, ContractError> {
-    let mut mint_msgs: Vec<CosmosMsg> = vec![];
+    let mut mint_msgs: Vec<WasmMsg> = vec![];
 
     for msg in msgs {
         let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
 
-        let mint_msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-            msg: TokenExecuteMsg::Mint {
-                owner: msg.owner.clone(),
-                metadata_id: msg.metadata_id,
-            },
-        };
-        let msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: collection_addr.to_string(),
-            msg: to_binary(&mint_msg)?,
-            funds: info.funds.clone(),
-        });
+        let msg = KompleTokenModule(collection_addr).mint_msg(
+            msg.owner.clone(),
+            msg.metadata_id,
+            &info.funds,
+        )?;
         mint_msgs.push(msg);
     }
 

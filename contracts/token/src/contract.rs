@@ -169,7 +169,7 @@ pub fn execute(
         ExecuteMsg::Extension { msg } => match msg {
             // LOCK MESSAGES
             TokenExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
-            TokenExecuteMsg::UpdateTokenLock { token_id, locks } => {
+            TokenExecuteMsg::UpdateTokenLocks { token_id, locks } => {
                 execute_update_token_locks(deps, env, info, token_id, locks)
             }
             // OPERATION MESSAGES

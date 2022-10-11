@@ -684,7 +684,7 @@ mod actions {
                     send_lock: true,
                 };
                 let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: TokenExecuteMsg::UpdateTokenLock {
+                    msg: TokenExecuteMsg::UpdateTokenLocks {
                         token_id: "1".to_string(),
                         locks: transfer_lock.clone(),
                     },
@@ -712,7 +712,7 @@ mod actions {
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: TokenExecuteMsg::UpdateTokenLock {
+                    msg: TokenExecuteMsg::UpdateTokenLocks {
                         token_id: "1".to_string(),
                         locks: unlock.clone(),
                     },

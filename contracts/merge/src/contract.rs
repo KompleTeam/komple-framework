@@ -4,14 +4,13 @@ use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo,
-    Response, StdError, StdResult, WasmMsg,
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use komple_mint_module::msg::ExecuteMsg as MintModuleExecuteMsg;
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
+use komple_token_module::helper::KompleTokenModule;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
@@ -95,7 +94,7 @@ fn execute_merge(
     info: MessageInfo,
     msg: Binary,
 ) -> Result<Response, ContractError> {
-    let mut msgs: Vec<CosmosMsg> = vec![];
+    let mut msgs: Vec<WasmMsg> = vec![];
 
     make_merge_msg(&deps, &info, msg, &mut msgs)?;
 
@@ -115,17 +114,17 @@ fn execute_permission_merge(
     let permission_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
 
-    let mut msgs: Vec<CosmosMsg> = vec![];
+    let mut msgs: Vec<WasmMsg> = vec![];
 
     let permission_msg = PermissionExecuteMsg::Check {
         module: Modules::Merge.to_string(),
         msg: permission_msg,
     };
-    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+    msgs.push(WasmMsg::Execute {
         contract_addr: permission_module_addr.to_string(),
         msg: to_binary(&permission_msg)?,
         funds: info.funds.clone(),
-    }));
+    });
 
     make_merge_msg(&deps, &info, merge_msg, &mut msgs)?;
 
@@ -170,7 +169,7 @@ fn make_merge_msg(
     deps: &DepsMut,
     info: &MessageInfo,
     msg: Binary,
-    msgs: &mut Vec<CosmosMsg>,
+    msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr =
@@ -192,7 +191,7 @@ fn make_merge_msg(
     }
 
     // Pushes the burn messages inside msgs list
-    make_burn_messages(&deps, &info, &mint_module_addr, &merge_msg, msgs)?;
+    make_burn_messages(&deps, &mint_module_addr, &merge_msg, msgs)?;
 
     // Pushes the mint messages inside msgs list
     make_mint_messages(deps, info, &mint_module_addr, &merge_msg, msgs)?;
@@ -202,10 +201,9 @@ fn make_merge_msg(
 
 fn make_burn_messages(
     deps: &DepsMut,
-    info: &MessageInfo,
     mint_module_addr: &Addr,
     merge_msg: &MergeMsg,
-    msgs: &mut Vec<CosmosMsg>,
+    msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
     for burn_msg in &merge_msg.burn {
         let collection_addr = StorageHelper::query_collection_address(
@@ -214,16 +212,9 @@ fn make_burn_messages(
             &burn_msg.collection_id,
         )?;
 
-        let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-            msg: TokenExecuteMsg::Burn {
-                token_id: burn_msg.token_id.to_string(),
-            },
-        };
-        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: collection_addr.to_string(),
-            msg: to_binary(&msg)?,
-            funds: info.funds.clone(),
-        }));
+        let lock_msg =
+            KompleTokenModule(collection_addr).burn_msg(burn_msg.token_id.to_string())?;
+        msgs.push(lock_msg);
     }
     Ok(())
 }
@@ -233,7 +224,7 @@ fn make_mint_messages(
     info: &MessageInfo,
     mint_module_addr: &Addr,
     merge_msg: &MergeMsg,
-    msgs: &mut Vec<CosmosMsg>,
+    msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
     let burn_collection_ids: Vec<u32> = merge_msg.burn.iter().map(|m| m.collection_id).collect();
 
@@ -274,11 +265,11 @@ fn make_mint_messages(
                 .as_ref()
                 .and_then(|ids| Some(ids[index])),
         };
-        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+        msgs.push(WasmMsg::Execute {
             contract_addr: mint_module_addr.to_string(),
             msg: to_binary(&msg)?,
             funds: info.funds.clone(),
-        }));
+        });
     }
 
     Ok(())

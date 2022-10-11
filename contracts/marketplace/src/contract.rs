@@ -5,15 +5,13 @@ use cosmwasm_std::{
     MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_storage_plus::Bound;
 use komple_fee_module::msg::{
     CustomPaymentAddress as FeeModuleCustomPaymentAddress, ExecuteMsg as FeeModuleExecuteMsg,
     PercentageFeeResponse, QueryMsg as FeeModuleQueryMsg,
 };
 use komple_token_module::{
-    msg::ExecuteMsg as TokenExecuteMsg, state::Config as TokenConfig,
-    ContractError as TokenContractError,
+    helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
 };
 use komple_types::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_types::marketplace::Listing;
@@ -127,22 +125,15 @@ fn execute_list_fixed_token(
     FIXED_LISTING.save(deps.storage, (collection_id, token_id), &fixed_listing)?;
 
     // Locking the token so it will not be available for other actions
-    let tmp_msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::UpdateTokenLock {
-            token_id: token_id.to_string(),
-            locks: Locks {
-                burn_lock: true,
-                mint_lock: false,
-                transfer_lock: true,
-                send_lock: true,
-            },
+    let lock_msg = KompleTokenModule(collection_addr).update_token_locks_msg(
+        token_id.to_string(),
+        Locks {
+            burn_lock: true,
+            mint_lock: false,
+            transfer_lock: true,
+            send_lock: true,
         },
-    };
-    let lock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: collection_addr.to_string(),
-        msg: to_binary(&tmp_msg).unwrap(),
-        funds: vec![],
-    });
+    )?;
 
     Ok(Response::new()
         .add_message(lock_msg)
@@ -172,22 +163,15 @@ fn execute_delist_fixed_token(
     FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
     // Unlocking token so it can be used again
-    let tmp_msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::UpdateTokenLock {
-            token_id: token_id.to_string(),
-            locks: Locks {
-                burn_lock: false,
-                mint_lock: false,
-                transfer_lock: false,
-                send_lock: false,
-            },
+    let unlock_msg = KompleTokenModule(collection_addr).update_token_locks_msg(
+        token_id.to_string(),
+        Locks {
+            burn_lock: false,
+            mint_lock: false,
+            transfer_lock: false,
+            send_lock: false,
         },
-    };
-    let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: collection_addr.to_string(),
-        msg: to_binary(&tmp_msg).unwrap(),
-        funds: vec![],
-    });
+    )?;
 
     Ok(Response::new()
         .add_message(unlock_msg)
@@ -345,35 +329,19 @@ fn _execute_buy_fixed_listing(
     sub_msgs.push(SubMsg::new(owner_payout));
 
     // Transfer token ownership to the new address
-    let tmp_msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::AdminTransferNft {
-            recipient: info.sender.to_string(),
-            token_id: token_id.to_string(),
-        },
-    };
-    let transfer_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: collection_addr.to_string(),
-        msg: to_binary(&tmp_msg)?,
-        funds: vec![],
-    });
+    let transfer_msg = KompleTokenModule(collection_addr.clone())
+        .admin_transfer_nft_msg(token_id.to_string(), info.sender.to_string())?;
 
     // Lift up the token locks
-    let tmp_msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::UpdateTokenLock {
-            token_id: token_id.to_string(),
-            locks: Locks {
-                burn_lock: false,
-                mint_lock: false,
-                transfer_lock: false,
-                send_lock: false,
-            },
+    let unlock_msg = KompleTokenModule(collection_addr).update_token_locks_msg(
+        token_id.to_string(),
+        Locks {
+            burn_lock: false,
+            mint_lock: false,
+            transfer_lock: false,
+            send_lock: false,
         },
-    };
-    let unlock_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: collection_addr.to_string(),
-        msg: to_binary(&tmp_msg)?,
-        funds: vec![],
-    });
+    )?;
 
     FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
