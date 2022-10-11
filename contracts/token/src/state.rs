@@ -2,8 +2,8 @@ use komple_types::{
     collection::Collections,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
     tokens::{
-        Locks, COLLECTION_CONFIG_NAMESPACE, COLLECTION_INFO_NAMESPACE, CONTRACTS_NAMESPACE,
-        LOCKS_NAMESPACE, MINTED_TOKENS_PER_ADDR_NAMESPACE, MINT_MODULE_ADDR_NAMESPACE,
+        Locks, COLLECTION_CONFIG_NAMESPACE, COLLECTION_INFO_NAMESPACE, LOCKS_NAMESPACE,
+        MINTED_TOKENS_PER_ADDR_NAMESPACE, MINT_MODULE_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE,
         TOKEN_IDS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
     },
 };
@@ -42,11 +42,11 @@ pub struct CollectionConfig {
 pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new(COLLECTION_CONFIG_NAMESPACE);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Contracts {
+pub struct SubModules {
     pub metadata: Option<Addr>,
     pub whitelist: Option<Addr>,
 }
-pub const CONTRACTS: Item<Contracts> = Item::new(CONTRACTS_NAMESPACE);
+pub const SUB_MODULES: Item<SubModules> = Item::new(SUB_MODULES_NAMESPACE);
 
 pub const LOCKS: Item<Locks> = Item::new(LOCKS_NAMESPACE);
 

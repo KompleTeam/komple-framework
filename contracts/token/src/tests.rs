@@ -1,4 +1,4 @@
-use crate::state::{CollectionConfig, Contracts};
+use crate::state::{CollectionConfig, SubModules};
 use crate::{msg::ConfigResponse, ContractError};
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo},
@@ -599,7 +599,7 @@ mod actions {
                 .unwrap();
 
             let msg = Cw721QueryMsg::Extension {
-                msg: QueryMsg::ContractOperators {},
+                msg: QueryMsg::ModuleOperators {},
             };
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
@@ -1416,9 +1416,9 @@ mod actions {
                 assert!(res.is_err());
 
                 let msg = Cw721QueryMsg::Extension {
-                    msg: QueryMsg::Contracts {},
+                    msg: QueryMsg::SubModules {},
                 };
-                let res: ResponseWrapper<Contracts> = app
+                let res: ResponseWrapper<SubModules> = app
                     .wrap()
                     .query_wasm_smart(token_module_addr, &msg)
                     .unwrap();
@@ -1573,9 +1573,9 @@ mod actions {
                 assert_eq!(res, coin(1_000_000, NATIVE_DENOM));
 
                 let msg = Cw721QueryMsg::Extension {
-                    msg: QueryMsg::Contracts {},
+                    msg: QueryMsg::SubModules {},
                 };
-                let res: ResponseWrapper<Contracts> = app
+                let res: ResponseWrapper<SubModules> = app
                     .wrap()
                     .query_wasm_smart(token_module_addr, &msg)
                     .unwrap();

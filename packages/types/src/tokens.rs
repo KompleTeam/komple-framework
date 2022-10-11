@@ -17,7 +17,7 @@ pub const TOKEN_LOCKS_NAMESPACE: &str = "token_locks";
 
 pub const LOCKS_NAMESPACE: &str = "locks";
 
-pub const CONTRACTS_NAMESPACE: &str = "contracts";
+pub const SUB_MODULES_NAMESPACE: &str = "sub_modules";
 
 pub const COLLECTION_CONFIG_NAMESPACE: &str = "collection_config";
 

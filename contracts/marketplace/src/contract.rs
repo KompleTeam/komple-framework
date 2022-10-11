@@ -22,13 +22,13 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_utils::{funds::check_single_coin, storage::StorageHelper, check_admin_privileges};
+use komple_utils::{check_admin_privileges, funds::check_single_coin, storage::StorageHelper};
 use semver::Version;
 use std::ops::Mul;
 
-use crate::{error::ContractError, state::OPERATORS};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, FIXED_LISTING, HUB_ADDR};
+use crate::{error::ContractError, state::OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-marketplace-module";
@@ -451,7 +451,6 @@ fn execute_update_operators(
 
     Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {

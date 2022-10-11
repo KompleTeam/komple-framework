@@ -1,4 +1,4 @@
-use crate::state::{CollectionConfig, CollectionInfo, Contracts};
+use crate::state::{CollectionConfig, CollectionInfo, SubModules};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Timestamp, Uint128};
 use cw721::CustomMsg;
@@ -94,12 +94,12 @@ pub enum QueryMsg {
     MintedTokensPerAddress { address: String },
     #[returns(ResponseWrapper<CollectionInfo>)]
     CollectionInfo {},
-    #[returns(ResponseWrapper<Contracts>)]
-    Contracts {},
+    #[returns(ResponseWrapper<SubModules>)]
+    SubModules {},
     #[returns(ResponseWrapper<ConfigResponse>)]
     Config {},
     #[returns(ResponseWrapper<Vec<String>>)]
-    ContractOperators {},
+    ModuleOperators {},
 }
 impl CustomMsg for QueryMsg {}
 

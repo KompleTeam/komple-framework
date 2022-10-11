@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError, StdResult, Addr,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
@@ -414,7 +414,6 @@ fn execute_update_operators(
     Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
-
 fn get_metadata_from_type(
     deps: &DepsMut,
     metadata_type: &MetadataType,
@@ -463,7 +462,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Metadatas { start_after, limit } => {
             to_binary(&query_metadatas(deps, start_after, limit)?)
         }
-        QueryMsg::Operators {  } => to_binary(&query_operators(deps)?),
+        QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
 

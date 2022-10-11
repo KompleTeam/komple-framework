@@ -1,9 +1,9 @@
-use cosmwasm_std::{Empty, Addr, Coin, Uint128};
-use cw_multi_test::{Contract, ContractWrapper, App, AppBuilder, Executor};
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
     ContractError,
 };
+use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -68,7 +68,14 @@ mod instantiate {
             native_denom: NATIVE_DENOM.to_string(),
         };
         let _ = app
-            .instantiate_contract(marketplace_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
+            .instantiate_contract(
+                marketplace_code_id,
+                Addr::unchecked(ADMIN),
+                &msg,
+                &[],
+                "test",
+                None,
+            )
             .unwrap();
     }
 }

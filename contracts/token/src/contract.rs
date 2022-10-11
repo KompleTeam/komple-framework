@@ -19,8 +19,8 @@ use crate::msg::{
     QueryMsg as TokenQueryMsg,
 };
 use crate::state::{
-    CollectionConfig, CollectionInfo, Config, Contracts, COLLECTION_CONFIG, COLLECTION_INFO,
-    CONFIG, CONTRACTS, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, TOKEN_IDS,
+    CollectionConfig, CollectionInfo, Config, SubModules, COLLECTION_CONFIG, COLLECTION_INFO,
+    CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, SUB_MODULES, TOKEN_IDS,
     TOKEN_LOCKS,
 };
 
@@ -115,11 +115,11 @@ pub fn instantiate(
 
     MINT_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    let contracts = Contracts {
+    let sub_modules = SubModules {
         whitelist: None,
         metadata: None,
     };
-    CONTRACTS.save(deps.storage, &contracts)?;
+    SUB_MODULES.save(deps.storage, &sub_modules)?;
 
     let contract_info = ContractInfoResponse {
         name: msg.collection_info.name.clone(),
@@ -397,8 +397,8 @@ pub fn execute_mint(
     MINTED_TOKENS_PER_ADDR.save(deps.storage, &owner, &(total_minted + 1))?;
     TOKEN_IDS.save(deps.storage, &token_id)?;
 
-    let contracts = CONTRACTS.load(deps.storage)?;
-    if contracts.metadata.is_none() {
+    let sub_modules = SUB_MODULES.load(deps.storage)?;
+    if sub_modules.metadata.is_none() {
         return Err(ContractError::MetadataContractNotFound {});
     };
 
@@ -415,7 +415,7 @@ pub fn execute_mint(
 
         let ifps_link = format!("{}/{}", collection_config.ipfs_link.unwrap(), token_id);
 
-        let msg = KompleMetadataModule(contracts.metadata.clone().unwrap()).add_metadata_msg(
+        let msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap()).add_metadata_msg(
             MetadataMetaInfo {
                 image: Some(ifps_link),
                 external_url: None,
@@ -428,7 +428,7 @@ pub fn execute_mint(
         msgs.push(msg.into())
     }
     // Link the metadata
-    let msg = KompleMetadataModule(contracts.metadata.clone().unwrap())
+    let msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap())
         .link_metadata_msg(token_id, metadata_id)?;
     msgs.push(msg.into());
 
@@ -462,12 +462,12 @@ pub fn execute_burn(
         return Err(ContractError::BurnLocked {});
     }
 
-    let contracts = CONTRACTS.load(deps.storage)?;
-    if contracts.metadata.is_none() {
+    let sub_modules = SUB_MODULES.load(deps.storage)?;
+    if sub_modules.metadata.is_none() {
         return Err(ContractError::MetadataContractNotFound {});
     };
 
-    let unlink_metadata_msg = KompleMetadataModule(contracts.metadata.clone().unwrap())
+    let unlink_metadata_msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap())
         .unlink_metadata_msg(token_id.parse::<u32>().unwrap())?;
 
     let res = Cw721Contract::default().execute(deps, env, info, ExecuteMsg::Burn { token_id });
@@ -687,12 +687,12 @@ fn execute_init_whitelist_module(
 }
 
 fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
-    let contracts = CONTRACTS.load(deps.storage)?;
+    let sub_modules = SUB_MODULES.load(deps.storage)?;
 
-    if contracts.whitelist.is_none() {
+    if sub_modules.whitelist.is_none() {
         return Ok(());
     }
-    let whitelist = contracts.whitelist.unwrap();
+    let whitelist = sub_modules.whitelist.unwrap();
 
     let whitelist_config: ResponseWrapper<WhitelistConfigResponse> = deps
         .querier
@@ -725,17 +725,17 @@ fn get_mint_price(
     deps: &DepsMut,
     collection_config: &CollectionConfig,
 ) -> Result<Option<Coin>, ContractError> {
-    let contracts = CONTRACTS.load(deps.storage)?;
+    let sub_modules = SUB_MODULES.load(deps.storage)?;
 
     let collection_price = collection_config
         .unit_price
         .and_then(|price| Some(coin(price.u128(), &collection_config.native_denom)));
 
-    if contracts.whitelist.is_none() {
+    if sub_modules.whitelist.is_none() {
         return Ok(collection_price);
     };
 
-    let whitelist = contracts.whitelist.unwrap();
+    let whitelist = sub_modules.whitelist.unwrap();
 
     let res: ResponseWrapper<WhitelistConfigResponse> = deps
         .querier
@@ -764,8 +764,8 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 to_binary(&query_minted_tokens_per_address(deps, address)?)
             }
             TokenQueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
-            TokenQueryMsg::Contracts {} => to_binary(&query_contracts(deps)?),
-            TokenQueryMsg::ContractOperators {} => to_binary(&query_contract_operators(deps)?),
+            TokenQueryMsg::SubModules {} => to_binary(&query_contracts(deps)?),
+            TokenQueryMsg::ModuleOperators {} => to_binary(&query_contract_operators(deps)?),
         },
         _ => Cw721Contract::default().query(deps, env, msg.into()),
     }
@@ -810,9 +810,9 @@ fn query_collection_info(deps: Deps) -> StdResult<ResponseWrapper<CollectionInfo
     Ok(ResponseWrapper::new("collection_info", collection_info))
 }
 
-fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<Contracts>> {
-    let contracts = CONTRACTS.load(deps.storage)?;
-    Ok(ResponseWrapper::new("contracts", contracts))
+fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<SubModules>> {
+    let sub_modules = SUB_MODULES.load(deps.storage)?;
+    Ok(ResponseWrapper::new("sub_modules", sub_modules))
 }
 
 fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
@@ -834,22 +834,22 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
     let reply = parse_reply_instantiate_data(msg.clone());
     match reply {
         Ok(res) => {
-            let mut contracts = CONTRACTS.load(deps.storage)?;
-            let contract: &str;
+            let mut sub_modules = SUB_MODULES.load(deps.storage)?;
+            let sub_module: &str;
             match msg.id {
                 METADATA_MODULE_INSTANTIATE_REPLY_ID => {
-                    contracts.metadata = Some(Addr::unchecked(res.contract_address));
-                    contract = "metadata";
+                    sub_modules.metadata = Some(Addr::unchecked(res.contract_address));
+                    sub_module = "metadata";
                 }
                 WHITELIST_MODULE_INSTANTIATE_REPLY_ID => {
-                    contracts.whitelist = Some(Addr::unchecked(res.contract_address));
-                    contract = "whitelist";
+                    sub_modules.whitelist = Some(Addr::unchecked(res.contract_address));
+                    sub_module = "whitelist";
                 }
                 _ => unreachable!(),
             }
-            CONTRACTS.save(deps.storage, &contracts)?;
+            SUB_MODULES.save(deps.storage, &sub_modules)?;
             Ok(Response::default()
-                .add_attribute("action", format!("instantiate_{}_reply", contract)))
+                .add_attribute("action", format!("instantiate_{}_reply", sub_module)))
         }
         Err(_) => Err(ContractError::ContractsInstantiateError {}),
     }

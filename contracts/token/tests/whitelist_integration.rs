@@ -4,7 +4,7 @@ use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
-use komple_token_module::state::{CollectionConfig, CollectionInfo, Contracts};
+use komple_token_module::state::{CollectionConfig, CollectionInfo, SubModules as TokenSubModules};
 use komple_token_module::ContractError;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
@@ -97,9 +97,9 @@ fn setup_whitelist(
         .unwrap();
 
     let msg = Cw721QueryMsg::Extension {
-        msg: QueryMsg::Contracts {},
+        msg: QueryMsg::SubModules {},
     };
-    let res: ResponseWrapper<Contracts> = app
+    let res: ResponseWrapper<TokenSubModules> = app
         .wrap()
         .query_wasm_smart(token_module_addr.clone(), &msg)
         .unwrap();
@@ -195,9 +195,9 @@ mod initialization {
             .unwrap();
 
         let msg = Cw721QueryMsg::Extension {
-            msg: QueryMsg::Contracts {},
+            msg: QueryMsg::SubModules {},
         };
-        let res: ResponseWrapper<Contracts> = app
+        let res: ResponseWrapper<TokenSubModules> = app
             .wrap()
             .query_wasm_smart(token_module_addr.clone(), &msg)
             .unwrap();
