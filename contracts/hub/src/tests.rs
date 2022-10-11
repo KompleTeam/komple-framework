@@ -666,7 +666,11 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
 
             let msg = ExecuteMsg::UpdateOperators {
-                addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
+                addrs: vec![
+                    "juno..first".to_string(),
+                    "juno..second".to_string(),
+                    "juno..first".to_string(),
+                ],
             };
             let _ = app
                 .execute_contract(

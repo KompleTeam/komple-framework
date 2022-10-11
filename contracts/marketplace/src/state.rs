@@ -1,6 +1,6 @@
 use komple_types::{
     marketplace::FIXED_LISTING_NAMESPACE,
-    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -25,3 +25,5 @@ pub struct FixedListing {
     pub owner: Addr,
 }
 pub const FIXED_LISTING: Map<(u32, u32), FixedListing> = Map::new(FIXED_LISTING_NAMESPACE);
+
+pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

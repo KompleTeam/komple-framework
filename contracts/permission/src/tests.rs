@@ -118,7 +118,7 @@ mod actions {
             let permission_module_addr = proper_instantiate(&mut app);
 
             let msg = ExecuteMsg::UpdateOperators {
-                addrs: vec![RANDOM.to_string()],
+                addrs: vec![RANDOM.to_string(), RANDOM.to_string()],
             };
             let _ = app
                 .execute_contract(

@@ -235,7 +235,7 @@ fn execute_update_operators(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    addrs: Vec<String>,
+    mut addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
@@ -248,16 +248,12 @@ fn execute_update_operators(
         operators,
     )?;
 
-    let response: Response<Empty> =
-        Response::new().add_attribute("action", "execute_update_operators");
+    addrs.sort_unstable();
+    addrs.dedup();
 
     let addrs = addrs
         .iter()
-        .enumerate()
-        .map(|(index, addr)| -> StdResult<Addr> {
-            response
-                .clone()
-                .add_attribute(format!("operator_{}", index.to_string()), addr);
+        .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
             Ok(addr)
         })

@@ -151,7 +151,7 @@ fn execute_update_operators(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    addrs: Vec<String>,
+    mut addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -164,6 +164,9 @@ fn execute_update_operators(
         hub_addr,
         operators,
     )?;
+
+    addrs.sort_unstable();
+    addrs.dedup();
 
     let addrs = addrs
         .iter()

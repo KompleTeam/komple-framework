@@ -22,11 +22,11 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_utils::{funds::check_single_coin, storage::StorageHelper};
+use komple_utils::{funds::check_single_coin, storage::StorageHelper, check_admin_privileges};
 use semver::Version;
 use std::ops::Mul;
 
-use crate::error::ContractError;
+use crate::{error::ContractError, state::OPERATORS};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, FixedListing, CONFIG, FIXED_LISTING, HUB_ADDR};
 
@@ -92,6 +92,7 @@ pub fn execute(
             collection_id,
             token_id,
         } => execute_buy(deps, env, info, listing_type, collection_id, token_id),
+        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
     }
 }
 
@@ -418,6 +419,40 @@ fn check_locks(locks: Locks) -> Result<(), TokenContractError> {
     Ok(())
 }
 
+fn execute_update_operators(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    mut addrs: Vec<String>,
+) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        operators,
+    )?;
+
+    addrs.sort_unstable();
+    addrs.dedup();
+
+    let addrs = addrs
+        .iter()
+        .map(|addr| -> StdResult<Addr> {
+            let addr = deps.api.addr_validate(addr)?;
+            Ok(addr)
+        })
+        .collect::<StdResult<Vec<Addr>>>()?;
+
+    OPERATORS.save(deps.storage, &addrs)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+}
+
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -436,6 +471,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             start_after,
             limit,
         )?),
+        QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
 
@@ -474,6 +510,15 @@ fn query_fixed_listings(
         .collect::<Vec<FixedListing>>();
 
     Ok(ResponseWrapper::new("listings", listings))
+}
+
+fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = OPERATORS.may_load(deps.storage)?;
+    let addrs = match addrs {
+        Some(addrs) => addrs.iter().map(|a| a.to_string()).collect(),
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new("operators", addrs))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

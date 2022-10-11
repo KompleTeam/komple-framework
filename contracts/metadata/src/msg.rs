@@ -42,6 +42,9 @@ pub enum ExecuteMsg {
         token_id: u32,
         trait_type: String,
     },
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
 }
 
 #[cw_serde]
@@ -63,7 +66,8 @@ pub enum QueryMsg {
         start_after: Option<u32>,
         limit: Option<u8>,
     },
-    // MetadataLock { token_id: u32 },
+    #[returns(ResponseWrapper<Vec<String>>)]
+    Operators {},
 }
 
 #[cw_serde]

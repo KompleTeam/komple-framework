@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError, StdResult,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError, StdResult, Addr,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
@@ -14,7 +14,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataResponse, MigrateMsg, QueryMsg};
 use crate::state::{
     Config, MetaInfo, Metadata, Trait, COLLECTION_ADDR, CONFIG, DYNAMIC_LINKED_METADATA,
-    LINKED_METADATA, METADATA, METADATA_ID,
+    LINKED_METADATA, METADATA, METADATA_ID, OPERATORS,
 };
 
 // version info for migration info
@@ -82,6 +82,7 @@ pub fn execute(
             token_id,
             trait_type,
         } => execute_remove_attribute(deps, env, info, token_id, trait_type),
+        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
     }
 }
 
@@ -380,17 +381,39 @@ fn execute_unlink_metadata(
     Ok(Response::new().add_attribute("action", "execute_unlink_metadata"))
 }
 
-// fn check_metadata_lock(
-//     deps: &DepsMut,
-//     config: &Config,
-//     token_id: &str,
-// ) -> Result<(), ContractError> {
-//     let metadata_lock = METADATA_LOCK.may_load(deps.storage, token_id)?;
-//     if config.update_lock || (metadata_lock.is_some() && metadata_lock.unwrap()) {
-//         return Err(ContractError::UpdateLocked {});
-//     }
-//     Ok(())
-// }
+fn execute_update_operators(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    mut addrs: Vec<String>,
+) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        operators,
+    )?;
+
+    addrs.sort_unstable();
+    addrs.dedup();
+
+    let addrs = addrs
+        .iter()
+        .map(|addr| -> StdResult<Addr> {
+            let addr = deps.api.addr_validate(addr)?;
+            Ok(addr)
+        })
+        .collect::<StdResult<Vec<Addr>>>()?;
+
+    OPERATORS.save(deps.storage, &addrs)?;
+
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+}
+
 
 fn get_metadata_from_type(
     deps: &DepsMut,
@@ -439,7 +462,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
         QueryMsg::Metadatas { start_after, limit } => {
             to_binary(&query_metadatas(deps, start_after, limit)?)
-        } // QueryMsg::MetadataLock { token_id } => to_binary(&query_metadata_lock(deps, token_id)?),
+        }
+        QueryMsg::Operators {  } => to_binary(&query_operators(deps)?),
     }
 }
 
@@ -543,10 +567,14 @@ fn query_metadatas(
     Ok(ResponseWrapper::new("metadatas", metadatas))
 }
 
-// fn query_metadata_lock(deps: Deps, token_id: String) -> StdResult<LockResponse> {
-//     let locked = METADATA_LOCK.load(deps.storage, &token_id)?;
-//     Ok(LockResponse { locked })
-// }
+fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = OPERATORS.may_load(deps.storage)?;
+    let addrs = match addrs {
+        Some(addrs) => addrs.iter().map(|a| a.to_string()).collect(),
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new("operators", addrs))
+}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {

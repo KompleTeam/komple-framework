@@ -33,6 +33,9 @@ pub enum ExecuteMsg {
         collection_id: u32,
         token_id: u32,
     },
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
 }
 
 #[cw_serde]
@@ -48,6 +51,8 @@ pub enum QueryMsg {
         start_after: Option<u32>,
         limit: Option<u32>,
     },
+    #[returns(ResponseWrapper<Vec<String>>)]
+    Operators {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

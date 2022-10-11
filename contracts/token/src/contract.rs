@@ -237,7 +237,7 @@ pub fn execute_update_operators(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    addrs: Vec<String>,
+    mut addrs: Vec<String>,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -250,6 +250,9 @@ pub fn execute_update_operators(
         mint_module_addr,
         operators,
     )?;
+
+    addrs.sort_unstable();
+    addrs.dedup();
 
     let addrs = addrs
         .iter()

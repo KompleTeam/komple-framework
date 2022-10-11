@@ -9,7 +9,7 @@ use komple_types::{
         Metadata as MetadataType, COLLECTION_ADDR_NAMESPACE, DYNAMIC_LINKED_METADATA_NAMESPACE,
         LINKED_METADATA_NAMESPACE, METADATA_ID_NAMESPACE, METADATA_NAMESPACE,
     },
-    shared::CONFIG_NAMESPACE,
+    shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
@@ -50,3 +50,5 @@ pub const METADATA_ID: Item<u32> = Item::new(METADATA_ID_NAMESPACE);
 pub const LINKED_METADATA: Map<u32, u32> = Map::new(LINKED_METADATA_NAMESPACE);
 
 pub const DYNAMIC_LINKED_METADATA: Map<u32, Metadata> = Map::new(DYNAMIC_LINKED_METADATA_NAMESPACE);
+
+pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
