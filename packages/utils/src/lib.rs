@@ -2,6 +2,7 @@ use cosmwasm_std::{Addr, StdError};
 use std::str::Utf8Error;
 use thiserror::Error;
 
+pub mod event;
 pub mod funds;
 pub mod storage;
 
