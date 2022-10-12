@@ -140,13 +140,11 @@ fn execute_register_module(
     // This will be loaded in reply handler for registering the correct module
     MODULE_TO_REGISTER.save(deps.storage, &module)?;
 
-    Ok(Response::new()
-        .add_event(
-            Event::new("komple_hub_module")
-                .add_attribute("action", "register_module")
-                .add_attribute("module", module),
-        )
-        .add_submessage(sub_msg))
+    Ok(Response::new().add_submessage(sub_msg).add_event(
+        Event::new("komple_hub_module")
+            .add_attribute("action", "register_module")
+            .add_attribute("module", module),
+    ))
 }
 
 fn execute_update_hub_info(

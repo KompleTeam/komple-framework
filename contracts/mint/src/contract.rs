@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply, ReplyOn,
-    Response, StdError, StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, Order,
+    Reply, ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
@@ -11,6 +11,7 @@ use cw_utils::parse_reply_instantiate_data;
 use komple_token_module::{helper::KompleTokenModule, msg::InstantiateMsg as TokenInstantiateMsg};
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 
@@ -51,7 +52,17 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_attribute("action", "instantiate"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", "instantiate")
+            .add_attribute("admin", config.admin.to_string())
+            .add_attribute(
+                "public_collection_creation",
+                config.public_collection_creation.to_string(),
+            )
+            .add_attribute("mint_lock", config.mint_lock.to_string())
+            .get(),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -166,9 +177,11 @@ pub fn execute_create_collection(
 
     COLLECTION_ID.save(deps.storage, &collection_id)?;
 
-    Ok(Response::new()
-        .add_submessage(sub_msg)
-        .add_attribute("action", "create_collection"))
+    Ok(Response::new().add_submessage(sub_msg).add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", "create_collection")
+            .get(),
+    ))
 }
 
 pub fn execute_update_public_collection_creation(
@@ -192,12 +205,15 @@ pub fn execute_update_public_collection_creation(
     config.public_collection_creation = public_collection_creation;
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "update_public_collection_creation")
-        .add_attribute(
-            "public_collection_creation",
-            public_collection_creation.to_string(),
-        ))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", "update_public_collection_creation")
+            .add_attribute(
+                "public_collection_creation",
+                public_collection_creation.to_string(),
+            )
+            .get(),
+    ))
 }
 
 pub fn execute_update_mint_lock(
@@ -222,9 +238,12 @@ pub fn execute_update_mint_lock(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "update_mint_lock")
-        .add_attribute("mint_lock", lock.to_string()))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", "update_mint_lock")
+            .add_attribute("mint_lock", lock.to_string())
+            .get(),
+    ))
 }
 
 fn execute_mint(
@@ -332,7 +351,27 @@ fn _execute_mint(
 ) -> Result<Response, ContractError> {
     let mut mint_msgs: Vec<WasmMsg> = vec![];
 
-    for msg in msgs {
+    let mut event_attributes: Vec<Attribute> = vec![];
+
+    for (index, msg) in msgs.iter().enumerate() {
+        event_attributes.push(Attribute {
+            key: format!("mint_msg_{}", index.to_string()),
+            value: format!("collection_id/{}", msg.collection_id),
+        });
+        if msg.metadata_id.is_some() {
+            event_attributes.push(Attribute {
+                key: format!("mint_msg_{}", index.to_string()),
+                value: format!(
+                    "metadata_id/{}",
+                    msg.metadata_id.as_ref().unwrap().to_string()
+                ),
+            });
+        }
+        event_attributes.push(Attribute {
+            key: format!("mint_msg_{}", index.to_string()),
+            value: format!("owner/{}", msg.owner),
+        });
+
         let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
 
         let msg = KompleTokenModule(collection_addr).mint_msg(
@@ -343,9 +382,12 @@ fn _execute_mint(
         mint_msgs.push(msg);
     }
 
-    Ok(Response::new()
-        .add_messages(mint_msgs)
-        .add_attribute("action", action))
+    Ok(Response::new().add_messages(mint_msgs).add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", action)
+            .add_attributes(event_attributes)
+            .get(),
+    ))
 }
 
 fn execute_update_operators(
@@ -369,17 +411,27 @@ fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
+    let mut event_attributes: Vec<Attribute> = vec![];
+
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
+            event_attributes.push(Attribute {
+                key: "addrs".to_string(),
+                value: addr.to_string(),
+            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+    Ok(Response::new().add_event(
+        Event::new("komple_mint_module")
+            .add_attribute("action".to_string(), "update_operators".to_string())
+            .add_attributes(event_attributes),
+    ))
 }
 
 fn execute_update_linked_collections(
@@ -444,9 +496,12 @@ fn execute_whitelist_collection(
     BLACKLIST_COLLECTION_ADDRS.remove(deps.storage, collection_id);
     COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
 
-    Ok(Response::new()
-        .add_attribute("action", "execute_whitelist_collection")
-        .add_attribute("collection_id", collection_id.to_string()))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", "whitelist_collection")
+            .add_attribute("collection_id", collection_id.to_string())
+            .get(),
+    ))
 }
 
 fn execute_blacklist_collection(
@@ -479,9 +534,12 @@ fn execute_blacklist_collection(
     COLLECTION_ADDRS.remove(deps.storage, collection_id);
     BLACKLIST_COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
 
-    Ok(Response::new()
-        .add_attribute("action", "execute_blacklist_collection")
-        .add_attribute("collection_id", collection_id.to_string()))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", "blacklist_collection")
+            .add_attribute("collection_id", collection_id.to_string())
+            .get(),
+    ))
 }
 
 fn check_collection_ids_exists(
