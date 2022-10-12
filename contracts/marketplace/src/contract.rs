@@ -262,10 +262,10 @@ fn _execute_buy_fixed_listing(
         process_marketplace_fees(
             &deps,
             &config,
+            &mut sub_msgs,
             &marbu_fee_module,
             fixed_listing.price,
             &mut marketplace_fee,
-            &mut sub_msgs,
             Some(vec![FeeModuleCustomPaymentAddress {
                 fee_name: "hub_admin".to_string(),
                 address: config.admin.to_string(),
@@ -281,10 +281,10 @@ fn _execute_buy_fixed_listing(
         process_marketplace_fees(
             &deps,
             &config,
+            &mut sub_msgs,
             &fee_module_addr.as_ref().unwrap(),
             fixed_listing.price,
             &mut marketplace_fee,
-            &mut sub_msgs,
             None,
         )?;
 
@@ -361,10 +361,10 @@ fn _execute_buy_fixed_listing(
 fn process_marketplace_fees(
     deps: &DepsMut,
     config: &Config,
+    sub_msgs: &mut Vec<SubMsg>,
     fee_module_addr: &Addr,
     listing_price: Uint128,
     marketplace_fee: &mut Uint128,
-    sub_msgs: &mut Vec<SubMsg>,
     custom_payment_addresses: Option<Vec<FeeModuleCustomPaymentAddress>>,
 ) -> Result<(), ContractError> {
     let query = FeeModuleQueryMsg::TotalPercentageFees {

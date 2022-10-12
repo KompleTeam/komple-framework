@@ -604,8 +604,6 @@ dependencies = [
  "cw2 0.14.0",
  "komple-types",
  "komple-utils",
- "schemars",
- "serde",
  "thiserror",
 ]
 
@@ -632,9 +630,7 @@ dependencies = [
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
@@ -656,9 +652,7 @@ dependencies = [
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
@@ -678,9 +672,7 @@ dependencies = [
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
@@ -696,9 +688,7 @@ dependencies = [
  "cw2 0.13.4",
  "komple-types",
  "komple-utils",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
@@ -722,9 +712,7 @@ dependencies = [
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
@@ -740,8 +728,6 @@ dependencies = [
  "cw2 0.15.1",
  "komple-types",
  "komple-utils",
- "schemars",
- "serde",
  "thiserror",
 ]
 
@@ -765,9 +751,7 @@ dependencies = [
  "komple-token-module",
  "komple-types",
  "komple-utils",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
@@ -788,9 +772,7 @@ dependencies = [
  "komple-types",
  "komple-utils",
  "komple-whitelist-module",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
@@ -829,9 +811,7 @@ dependencies = [
  "cw-utils 0.13.4",
  "cw2 0.13.4",
  "komple-types",
- "schemars",
  "semver",
- "serde",
  "thiserror",
 ]
 
