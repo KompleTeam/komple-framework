@@ -275,8 +275,6 @@ fn make_mint_messages(
     merge_msg: &MergeMsg,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
-    let burn_collection_ids: Vec<u32> = merge_msg.burn.iter().map(|m| m.collection_id).collect();
-
     // Keeping the linked collections list inside a hashmap
     // Used for saving multiple queries on same collection id
     let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
@@ -299,7 +297,7 @@ fn make_mint_messages(
         // They have to be in the burn message
         if !linked_collections.is_empty() {
             for linked_collection_id in linked_collections {
-                if !burn_collection_ids.contains(&linked_collection_id) {
+                if !merge_msg.burn.iter().map(|m| m.collection_id).any(|x| x == linked_collection_id) {
                     return Err(ContractError::LinkedCollectionNotFound {});
                 }
             }

@@ -298,13 +298,13 @@ fn _execute_buy_fixed_listing(
     // Process fee module fees if exists on Hub
     let fee_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
-    if fee_module_addr.is_ok() {
+    if let Ok(fee_module_addr) = fee_module_addr {
         // Marketplace fees
         process_marketplace_fees(
             &deps,
             &config,
             &mut sub_msgs,
-            fee_module_addr.as_ref().unwrap(),
+            &fee_module_addr,
             fixed_listing.price,
             &mut marketplace_fee,
             None,
@@ -317,7 +317,7 @@ fn _execute_buy_fixed_listing(
         };
         let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> = deps
             .querier
-            .query_wasm_smart(fee_module_addr.unwrap(), &query);
+            .query_wasm_smart(fee_module_addr, &query);
         if let Ok(percentage_fee) = res {
             royalty_fee = percentage_fee.data.value.mul(fixed_listing.price);
 
