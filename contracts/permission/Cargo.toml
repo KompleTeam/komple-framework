@@ -56,9 +56,9 @@ cw-utils = "0.13.2"
 [dev-dependencies]
 cosmwasm-schema = "1.0.0"
 cw-multi-test = "0.13.2"
-komple-ownership-permission-module = { path = "../ownership-permission" }
-komple-metadata-module = { path = "../metadata" }
-komple-token-module = { path = "../token" }
-komple-mint-module = { path = "../mint" }
-komple-hub-module = { path = "../hub" }
+komple-ownership-permission-module = { path = "../ownership-permission", features = ["library"] }
+komple-metadata-module = { path = "../metadata", features = ["library"] }
+komple-token-module = { path = "../token", features = ["library"] }
+komple-mint-module = { path = "../mint", features = ["library"] }
+komple-hub-module = { path = "../hub", features = ["library"] }
 cw721-base = "0.15.0"
