@@ -150,7 +150,7 @@ mod actions {
                 image: Some("https://example.com/image.png".to_string()),
                 external_url: None,
                 description: None,
-                animation_url: None,
+                animation_url: Some("https://example.com/animation.mp4".to_string()),
                 youtube_url: None,
             };
             let msg = ExecuteMsg::AddMetadata {
