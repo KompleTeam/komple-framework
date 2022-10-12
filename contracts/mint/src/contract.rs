@@ -428,9 +428,10 @@ fn execute_update_operators(
     OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_mint_module")
+        EventHelper::new("komple_mint_module")
             .add_attribute("action".to_string(), "update_operators".to_string())
-            .add_attributes(event_attributes),
+            .add_attributes(event_attributes)
+            .get(),
     ))
 }
 

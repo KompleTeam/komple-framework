@@ -22,7 +22,9 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_utils::{check_admin_privileges, funds::check_single_coin, storage::StorageHelper};
+use komple_utils::{
+    check_admin_privileges, event::EventHelper, funds::check_single_coin, storage::StorageHelper,
+};
 use semver::Version;
 use std::ops::Mul;
 
@@ -488,9 +490,10 @@ fn execute_update_operators(
     OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_marketplace_module")
+        EventHelper::new("komple_marketplace_module")
             .add_attribute("action".to_string(), "update_operators".to_string())
-            .add_attributes(event_attributes),
+            .add_attributes(event_attributes)
+            .get(),
     ))
 }
 

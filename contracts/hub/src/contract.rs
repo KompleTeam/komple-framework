@@ -9,6 +9,7 @@ use cw_utils::parse_reply_instantiate_data;
 
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
+use komple_utils::event::EventHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -320,9 +321,10 @@ fn execute_update_operators(
     OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_hub_module")
+        EventHelper::new("komple_hub_module")
             .add_attribute("action".to_string(), "update_operators".to_string())
-            .add_attributes(event_attributes),
+            .add_attributes(event_attributes)
+            .get(),
     ))
 }
 

@@ -13,6 +13,7 @@ use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::helper::KompleTokenModule;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 use std::collections::HashMap;
@@ -186,9 +187,10 @@ fn execute_update_operators(
     OPERATORS.save(deps.storage, &addrs)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_merge_module")
+        EventHelper::new("komple_merge_module")
             .add_attribute("action".to_string(), "update_operators".to_string())
-            .add_attributes(event_attributes),
+            .add_attributes(event_attributes)
+            .get(),
     ))
 }
 
