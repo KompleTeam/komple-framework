@@ -210,7 +210,7 @@ fn make_merge_msg(
     let merge_msg: MergeMsg = from_binary(&msg)?;
 
     // Throw an error if there are no burn messages
-    if merge_msg.burn.len() == 0 {
+    if merge_msg.burn.is_empty() {
         return Err(ContractError::BurnNotFound {});
     }
 
@@ -222,7 +222,7 @@ fn make_merge_msg(
     }
 
     // Pushes the burn messages inside msgs list
-    make_burn_messages(&deps, event_attributes, &mint_module_addr, &merge_msg, msgs)?;
+    make_burn_messages(deps, event_attributes, &mint_module_addr, &merge_msg, msgs)?;
 
     // Pushes the mint messages inside msgs list
     make_mint_messages(
@@ -247,7 +247,7 @@ fn make_burn_messages(
     for (index, burn_msg) in merge_msg.burn.iter().enumerate() {
         let collection_addr = StorageHelper::query_collection_address(
             &deps.querier,
-            &mint_module_addr,
+            mint_module_addr,
             &burn_msg.collection_id,
         )?;
 
@@ -257,11 +257,11 @@ fn make_burn_messages(
 
         event_attributes.push(Attribute::new(
             format!("burn_msg/{}", index),
-            format!("token_id/{}", burn_msg.token_id.to_string()),
+            format!("token_id/{}", burn_msg.token_id),
         ));
         event_attributes.push(Attribute::new(
             format!("burn_msg/{}", index),
-            format!("collection_id/{}", burn_msg.collection_id.to_string()),
+            format!("collection_id/{}", burn_msg.collection_id),
         ));
     }
     Ok(())
@@ -282,12 +282,12 @@ fn make_mint_messages(
     let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
 
     for (index, collection_id) in merge_msg.mint.iter().enumerate() {
-        let linked_collections = match linked_collection_map.contains_key(&collection_id) {
-            true => linked_collection_map.get(&collection_id).unwrap().clone(),
+        let linked_collections = match linked_collection_map.contains_key(collection_id) {
+            true => linked_collection_map.get(collection_id).unwrap().clone(),
             false => {
                 let collections = StorageHelper::query_linked_collections(
                     &deps.querier,
-                    &mint_module_addr,
+                    mint_module_addr,
                     *collection_id,
                 )?;
                 linked_collection_map.insert(*collection_id, collections.clone());
@@ -297,7 +297,7 @@ fn make_mint_messages(
 
         // If there are some linked collections
         // They have to be in the burn message
-        if linked_collections.len() > 0 {
+        if !linked_collections.is_empty() {
             for linked_collection_id in linked_collections {
                 if !burn_collection_ids.contains(&linked_collection_id) {
                     return Err(ContractError::LinkedCollectionNotFound {});
@@ -309,7 +309,7 @@ fn make_mint_messages(
             .metadata_ids
             .as_ref()
             .as_ref()
-            .and_then(|ids| Some(ids[index]));
+            .map(|ids| ids[index]);
 
         let msg = KompleMintModule(mint_module_addr.clone()).mint_to_msg(
             info.sender.to_string(),

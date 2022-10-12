@@ -41,18 +41,16 @@ fn proper_instantiate(app: &mut App) -> Addr {
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
     };
-    let permission_module_addr = app
-        .instantiate_contract(
-            permission_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[],
-            "test",
-            None,
-        )
-        .unwrap();
 
-    permission_module_addr
+    app.instantiate_contract(
+        permission_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 mod actions {
@@ -74,7 +72,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     permission_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -95,12 +93,7 @@ mod actions {
                 addrs: vec![RANDOM.to_string()],
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    permission_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), permission_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),

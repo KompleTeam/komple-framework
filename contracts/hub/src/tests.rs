@@ -62,18 +62,16 @@ fn proper_instantiate(app: &mut App) -> Addr {
         },
         marbu_fee_module: None,
     };
-    let hub_module_addr = app
-        .instantiate_contract(
-            hub_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[coin(1_000_000, NATIVE_DENOM)],
-            "test",
-            None,
-        )
-        .unwrap();
 
-    hub_module_addr
+    app.instantiate_contract(
+        hub_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[coin(1_000_000, NATIVE_DENOM)],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 mod instantiate {
@@ -119,7 +117,7 @@ mod instantiate {
             .instantiate_contract(
                 hub_code_id,
                 Addr::unchecked(ADMIN),
-                &msg.clone(),
+                &msg,
                 &[coin(1_000_000, NATIVE_DENOM)],
                 "test",
                 None,
@@ -155,12 +153,7 @@ mod actions {
                 banner_image: Some("ipfs://some-banner".to_string()),
             };
             let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = QueryMsg::Config {};
@@ -187,12 +180,7 @@ mod actions {
                 banner_image: Some("ipfs://some-banner".to_string()),
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), hub_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -225,12 +213,7 @@ mod actions {
                 external_link: Some("https://some-link".to_string()),
             };
             let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = QueryMsg::Config {};
@@ -259,12 +242,7 @@ mod actions {
                 external_link: Some("https://some-link".to_string()),
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), hub_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -289,12 +267,7 @@ mod actions {
                 ],
             };
             let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = QueryMsg::Operators {};
@@ -314,15 +287,13 @@ mod actions {
                     Addr::unchecked("juno..first"),
                     hub_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
             let msg = QueryMsg::Operators {};
-            let res: ResponseWrapper<Vec<String>> = app
-                .wrap()
-                .query_wasm_smart(hub_module_addr.clone(), &msg)
-                .unwrap();
+            let res: ResponseWrapper<Vec<String>> =
+                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
             assert_eq!(res.data.len(), 1);
             assert_eq!(res.data[0], "juno..third");
         }
@@ -336,12 +307,7 @@ mod actions {
                 addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), hub_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -358,21 +324,11 @@ mod actions {
                 addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
             };
             let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
                 .unwrap();
 
             let err = app
-                .execute_contract(
-                    Addr::unchecked("juno..third"),
-                    hub_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked("juno..third"), hub_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),

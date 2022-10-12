@@ -50,18 +50,16 @@ fn proper_instantiate(app: &mut App) -> Addr {
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
     };
-    let permission_module_addr = app
-        .instantiate_contract(
-            permission_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[],
-            "test",
-            None,
-        )
-        .unwrap();
 
-    permission_module_addr
+    app.instantiate_contract(
+        permission_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 mod actions {

@@ -121,7 +121,7 @@ fn execute_set_fee(
 
             event_attributes.push(("value", fixed_payment.value.to_string()));
             if let Some(payment_address) = fixed_payment.address {
-                event_attributes.push(("address", payment_address.to_string()));
+                event_attributes.push(("address", payment_address));
             }
         }
         Fees::Percentage => {
@@ -155,7 +155,7 @@ fn execute_set_fee(
 
             event_attributes.push(("value", percentage_payment.value.to_string()));
             if let Some(payment_address) = percentage_payment.address {
-                event_attributes.push(("address", payment_address.to_string()));
+                event_attributes.push(("address", payment_address));
             }
         }
     }
@@ -234,7 +234,7 @@ fn execute_distribute(
                 })
                 .collect::<Vec<FixedFeeResponse>>();
 
-            if amounts.len() == 0 {
+            if amounts.is_empty() {
                 return Err(ContractError::NoPaymentsFound {});
             }
 
@@ -288,7 +288,7 @@ fn execute_distribute(
                 })
                 .collect::<Vec<PercentageFeeResponse>>();
 
-            if percentages.len() == 0 {
+            if percentages.is_empty() {
                 return Err(ContractError::NoPaymentsFound {});
             }
 

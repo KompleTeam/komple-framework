@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Env, Event, MessageInfo, Order,
-    Reply, ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply,
+    ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
@@ -147,7 +147,7 @@ pub fn execute_create_collection(
         )?;
     };
 
-    let mut msg = token_instantiate_msg.clone();
+    let mut msg = token_instantiate_msg;
     msg.admin = config.admin.to_string();
     msg.creator = info.sender.to_string();
     msg.token_info.minter = env.contract.address.to_string();
@@ -264,7 +264,7 @@ fn execute_mint(
         metadata_id,
     }];
 
-    _execute_mint(deps, info.clone(), "execute_mint", mint_msg)
+    _execute_mint(deps, info, "execute_mint", mint_msg)
 }
 
 fn execute_mint_to(
@@ -332,7 +332,7 @@ fn execute_permission_mint(
             msg: to_binary(&ExecuteMsg::MintTo {
                 collection_id: *collection_id,
                 recipient: info.sender.to_string(),
-                metadata_id: metadata_ids.as_ref().and_then(|ids| Some(ids[index])),
+                metadata_id: metadata_ids.as_ref().map(|ids| ids[index]),
             })?,
             funds: info.funds.clone(),
         }))
@@ -355,20 +355,17 @@ fn _execute_mint(
 
     for (index, msg) in msgs.iter().enumerate() {
         event_attributes.push(Attribute {
-            key: format!("mint_msg_{}", index.to_string()),
+            key: format!("mint_msg_{}", index),
             value: format!("collection_id/{}", msg.collection_id),
         });
         if msg.metadata_id.is_some() {
             event_attributes.push(Attribute {
-                key: format!("mint_msg_{}", index.to_string()),
-                value: format!(
-                    "metadata_id/{}",
-                    msg.metadata_id.as_ref().unwrap().to_string()
-                ),
+                key: format!("mint_msg_{}", index),
+                value: format!("metadata_id/{}", msg.metadata_id.as_ref().unwrap()),
             });
         }
         event_attributes.push(Attribute {
-            key: format!("mint_msg_{}", index.to_string()),
+            key: format!("mint_msg_{}", index),
             value: format!("owner/{}", msg.owner),
         });
 

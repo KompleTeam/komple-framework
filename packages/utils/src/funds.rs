@@ -23,7 +23,7 @@ pub fn check_single_coin(info: &MessageInfo, coin: Coin) -> Result<(), FundsErro
     if sent_fund.denom != coin.denom {
         return Err(FundsError::InvalidDenom {
             got: sent_fund.denom.to_string(),
-            expected: coin.denom.to_string(),
+            expected: coin.denom,
         });
     }
     if sent_fund.amount != coin.amount {

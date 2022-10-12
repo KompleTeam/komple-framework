@@ -102,16 +102,16 @@ pub fn execute_check(
         }
 
         event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index.to_string()),
-            value: format!("collection_id/{}", ownership_msg.collection_id.to_string()),
+            key: format!("check_msg/{}", index),
+            value: format!("collection_id/{}", ownership_msg.collection_id),
         });
         event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index.to_string()),
-            value: format!("token_id/{}", ownership_msg.token_id.to_string()),
+            key: format!("check_msg/{}", index),
+            value: format!("token_id/{}", ownership_msg.token_id),
         });
         event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index.to_string()),
-            value: format!("address/{}", ownership_msg.address.to_string()),
+            key: format!("check_msg/{}", index),
+            value: format!("address/{}", ownership_msg.address),
         });
     }
 
@@ -127,7 +127,7 @@ pub fn execute_check(
 fn query_hub_addr(deps: &DepsMut) -> Result<Addr, ContractError> {
     let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
     let res =
-        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, &HUB_ADDR_NAMESPACE)?;
+        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, HUB_ADDR_NAMESPACE)?;
     Ok(res.unwrap())
 }
 

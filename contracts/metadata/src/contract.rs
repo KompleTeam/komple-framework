@@ -124,7 +124,7 @@ fn execute_add_metadata(
 
     let mut event_attributes: Vec<Attribute> = vec![];
 
-    if metadata.attributes.len() > 0 {
+    if !metadata.attributes.is_empty() {
         for attribute in metadata.attributes {
             event_attributes.push(Attribute::new(
                 "attributes",

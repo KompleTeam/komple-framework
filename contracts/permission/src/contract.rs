@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, Event,
+    from_binary, to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Empty, Env,
     MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
@@ -216,7 +216,7 @@ fn execute_check(
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     let data: Vec<PermissionCheckMsg> = from_binary(&msg)?;
-    if data.len() == 0 {
+    if data.is_empty() {
         return Err(ContractError::InvalidPermissions {});
     }
 

@@ -35,7 +35,7 @@ pub fn instantiate(
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
-    if msg.members.len() == 0 {
+    if msg.members.is_empty() {
         return Err(ContractError::EmptyMemberList {});
     }
 

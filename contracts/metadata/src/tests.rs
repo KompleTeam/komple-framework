@@ -45,18 +45,16 @@ fn proper_instantiate(app: &mut App, metadata_type: MetadataType) -> Addr {
         admin: ADMIN.to_string(),
         metadata_type,
     };
-    let metadata_module_addr = app
-        .instantiate_contract(
-            metadata_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[],
-            "test",
-            None,
-        )
-        .unwrap();
 
-    metadata_module_addr
+    app.instantiate_contract(
+        metadata_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 fn setup_metadata(app: &mut App, metadata_module_addr: Addr) -> (Vec<Trait>, MetaInfo) {
@@ -86,12 +84,7 @@ fn setup_metadata(app: &mut App, metadata_module_addr: Addr) -> (Vec<Trait>, Met
         attributes: attributes.clone(),
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            metadata_module_addr.clone(),
-            &msg,
-            &vec![],
-        )
+        .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
         .unwrap();
     (attributes, meta_info)
 }
@@ -162,14 +155,14 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
             let msg = QueryMsg::RawMetadata { metadata_id: 1 };
             let res: ResponseWrapper<Metadata> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
             assert_eq!(res.data.attributes, attributes);
             assert_eq!(res.data.meta_info, meta_info);
@@ -202,16 +195,11 @@ mod actions {
                 youtube_url: None,
             };
             let msg = ExecuteMsg::AddMetadata {
-                meta_info: meta_info.clone(),
-                attributes: attributes.clone(),
+                meta_info: meta_info,
+                attributes: attributes,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -243,14 +231,14 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.attributes, attributes);
                 assert_eq!(res.data.metadata.meta_info, meta_info);
@@ -277,14 +265,14 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.attributes, attributes);
                 assert_eq!(res.data.metadata.meta_info, meta_info);
@@ -300,12 +288,7 @@ mod actions {
                     metadata_id: None,
                 };
                 let err = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        metadata_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -334,14 +317,14 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.attributes, attributes);
                 assert_eq!(res.data.metadata.meta_info, meta_info);
@@ -357,12 +340,7 @@ mod actions {
                     metadata_id: None,
                 };
                 let err = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        metadata_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -381,12 +359,7 @@ mod actions {
                 metadata_id: None,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -404,12 +377,7 @@ mod actions {
                 metadata_id: None,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -450,7 +418,7 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let _ = app
@@ -458,7 +426,7 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr_2.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
@@ -471,7 +439,7 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let _ = app
@@ -479,19 +447,19 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr_2.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.meta_info, new_meta_info);
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr_2, &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.meta_info, new_meta_info);
             }
@@ -512,27 +480,17 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateMetaInfo {
                     token_id: 1,
-                    meta_info: new_meta_info.clone(),
+                    meta_info: new_meta_info,
                 };
                 let err = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        metadata_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
                     ContractError::MissingMetadata {}.to_string()
                 );
                 let err = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        metadata_module_addr_2.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_2, &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -568,7 +526,7 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
@@ -581,14 +539,14 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
                 let msg = QueryMsg::Metadata { token_id: 1 };
                 let res: ResponseWrapper<MetadataResponse> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.metadata.meta_info, new_meta_info);
             }
@@ -608,15 +566,10 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateMetaInfo {
                     token_id: 1,
-                    meta_info: new_meta_info.clone(),
+                    meta_info: new_meta_info,
                 };
                 let err = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        metadata_module_addr.clone(),
-                        &msg,
-                        &vec![],
-                    )
+                    .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -640,15 +593,10 @@ mod actions {
 
             let msg = ExecuteMsg::UpdateMetaInfo {
                 token_id: 1,
-                meta_info: new_meta_info.clone(),
+                meta_info: new_meta_info,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -685,7 +633,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -693,7 +641,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -701,7 +649,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -714,7 +662,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -722,7 +670,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -730,7 +678,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -747,23 +695,23 @@ mod actions {
                     trait_type: "type_3".to_string(),
                     value: "Banana".to_string(),
                 },
-                attribute.clone(),
+                attribute,
             ];
 
             let msg = QueryMsg::Metadata { token_id: 1 };
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_2, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr_3.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_3, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
         }
@@ -788,7 +736,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -796,7 +744,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -804,7 +752,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -814,39 +762,24 @@ mod actions {
             };
             let msg = ExecuteMsg::AddAttribute {
                 token_id: 1,
-                attribute: attribute.clone(),
+                attribute: attribute,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::AttributeAlreadyExists {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_2, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::AttributeAlreadyExists {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_3, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -867,39 +800,24 @@ mod actions {
             };
             let msg = ExecuteMsg::AddAttribute {
                 token_id: 1,
-                attribute: attribute.clone(),
+                attribute: attribute,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::MissingMetadata {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_2, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::MissingMetadata {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_3, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -936,7 +854,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -944,7 +862,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -952,20 +870,20 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
             let msg = ExecuteMsg::UpdateAttribute {
                 token_id: 1,
-                attribute: attribute.clone(),
+                attribute: attribute,
             };
             let _ = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -973,7 +891,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -981,7 +899,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -1003,17 +921,17 @@ mod actions {
             let msg = QueryMsg::Metadata { token_id: 1 };
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_2, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr_3.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_3, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
         }
@@ -1038,7 +956,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1046,7 +964,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1054,7 +972,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -1064,39 +982,24 @@ mod actions {
             };
             let msg = ExecuteMsg::UpdateAttribute {
                 token_id: 1,
-                attribute: attribute.clone(),
+                attribute: attribute,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::AttributeNotFound {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_2, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::AttributeNotFound {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_3, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -1117,39 +1020,24 @@ mod actions {
             };
             let msg = ExecuteMsg::UpdateAttribute {
                 token_id: 1,
-                attribute: attribute.clone(),
+                attribute: attribute,
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::MissingMetadata {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_2, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::MissingMetadata {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_3, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -1181,7 +1069,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1189,7 +1077,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1197,7 +1085,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -1210,7 +1098,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1218,7 +1106,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1226,7 +1114,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -1244,17 +1132,17 @@ mod actions {
             let msg = QueryMsg::Metadata { token_id: 1 };
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr_2.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_2, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
             let res: ResponseWrapper<MetadataResponse> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr_3.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr_3, &msg)
                 .unwrap();
             assert_eq!(res.data.metadata.attributes, new_attributes);
         }
@@ -1279,7 +1167,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1287,7 +1175,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_2.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
             let _ = app
@@ -1295,7 +1183,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr_3.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -1304,36 +1192,21 @@ mod actions {
                 trait_type: "random_type".to_string(),
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::AttributeNotFound {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_2, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::AttributeNotFound {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_3, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -1353,36 +1226,21 @@ mod actions {
                 trait_type: "new_trait".to_string(),
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::MissingMetadata {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_2, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
                 ContractError::MissingMetadata {}.to_string()
             );
             let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr_3, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -1413,7 +1271,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
@@ -1434,14 +1292,14 @@ mod actions {
                     Addr::unchecked("juno..first"),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
             let msg = QueryMsg::Operators {};
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 1);
             assert_eq!(res.data[0], "juno..third");
@@ -1456,12 +1314,7 @@ mod actions {
                 addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), metadata_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -1482,16 +1335,16 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     metadata_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
             let err = app
                 .execute_contract(
                     Addr::unchecked("juno..third"),
-                    metadata_module_addr.clone(),
+                    metadata_module_addr,
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap_err();
             assert_eq!(
@@ -1534,7 +1387,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
             }
@@ -1545,7 +1398,7 @@ mod queries {
             };
             let res: ResponseWrapper<Vec<MetadataResponse>> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 30);
             assert_eq!(
@@ -1590,7 +1443,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
             }
@@ -1624,7 +1477,7 @@ mod queries {
             };
             let res: ResponseWrapper<Vec<MetadataResponse>> = app
                 .wrap()
-                .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 7);
             assert_eq!(
@@ -1676,7 +1529,7 @@ mod queries {
                             Addr::unchecked(ADMIN),
                             metadata_module_addr.clone(),
                             &msg,
-                            &vec![],
+                            &[],
                         )
                         .unwrap();
                 }
@@ -1690,7 +1543,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let msg = ExecuteMsg::LinkMetadata {
@@ -1702,7 +1555,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let msg = ExecuteMsg::LinkMetadata {
@@ -1714,7 +1567,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let msg = ExecuteMsg::LinkMetadata {
@@ -1726,7 +1579,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
@@ -1736,7 +1589,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 4);
                 assert_eq!(
@@ -1757,7 +1610,7 @@ mod queries {
                     MetadataResponse {
                         metadata_id: 53,
                         metadata: Metadata {
-                            meta_info: meta_info.clone(),
+                            meta_info: meta_info,
                             attributes: vec![Trait {
                                 trait_type: "trait_type_46".to_string(),
                                 value: "10".to_string(),
@@ -1794,7 +1647,7 @@ mod queries {
                             Addr::unchecked(ADMIN),
                             metadata_module_addr.clone(),
                             &msg,
-                            &vec![],
+                            &[],
                         )
                         .unwrap();
                 }
@@ -1809,7 +1662,7 @@ mod queries {
                             Addr::unchecked(ADMIN),
                             metadata_module_addr.clone(),
                             &msg,
-                            &vec![],
+                            &[],
                         )
                         .unwrap();
                 }
@@ -1820,7 +1673,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 5);
                 assert_eq!(
@@ -1841,7 +1694,7 @@ mod queries {
                     MetadataResponse {
                         metadata_id: 19,
                         metadata: Metadata {
-                            meta_info: meta_info.clone(),
+                            meta_info: meta_info,
                             attributes: vec![Trait {
                                 trait_type: "trait_type_19".to_string(),
                                 value: "10".to_string(),
@@ -1882,7 +1735,7 @@ mod queries {
                             Addr::unchecked(ADMIN),
                             metadata_module_addr.clone(),
                             &msg,
-                            &vec![],
+                            &[],
                         )
                         .unwrap();
                 }
@@ -1896,7 +1749,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let msg = ExecuteMsg::LinkMetadata {
@@ -1908,7 +1761,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let msg = ExecuteMsg::LinkMetadata {
@@ -1920,7 +1773,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
                 let msg = ExecuteMsg::LinkMetadata {
@@ -1932,7 +1785,7 @@ mod queries {
                         Addr::unchecked(ADMIN),
                         metadata_module_addr.clone(),
                         &msg,
-                        &vec![],
+                        &[],
                     )
                     .unwrap();
 
@@ -1942,7 +1795,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 4);
                 assert_eq!(
@@ -1963,7 +1816,7 @@ mod queries {
                     MetadataResponse {
                         metadata_id: 53,
                         metadata: Metadata {
-                            meta_info: meta_info.clone(),
+                            meta_info: meta_info,
                             attributes: vec![Trait {
                                 trait_type: "trait_type_46".to_string(),
                                 value: "10".to_string(),
@@ -2000,7 +1853,7 @@ mod queries {
                             Addr::unchecked(ADMIN),
                             metadata_module_addr.clone(),
                             &msg,
-                            &vec![],
+                            &[],
                         )
                         .unwrap();
                 }
@@ -2015,7 +1868,7 @@ mod queries {
                             Addr::unchecked(ADMIN),
                             metadata_module_addr.clone(),
                             &msg,
-                            &vec![],
+                            &[],
                         )
                         .unwrap();
                 }
@@ -2026,7 +1879,7 @@ mod queries {
                 };
                 let res: ResponseWrapper<Vec<MetadataResponse>> = app
                     .wrap()
-                    .query_wasm_smart(metadata_module_addr.clone(), &msg)
+                    .query_wasm_smart(metadata_module_addr, &msg)
                     .unwrap();
                 assert_eq!(res.data.len(), 5);
                 assert_eq!(
@@ -2047,7 +1900,7 @@ mod queries {
                     MetadataResponse {
                         metadata_id: 19,
                         metadata: Metadata {
-                            meta_info: meta_info.clone(),
+                            meta_info: meta_info,
                             attributes: vec![Trait {
                                 trait_type: "trait_type_19".to_string(),
                                 value: "10".to_string(),

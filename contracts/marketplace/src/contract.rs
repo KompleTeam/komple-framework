@@ -263,7 +263,7 @@ fn _execute_buy_fixed_listing(
 
     // Check for the sent funds
     check_single_coin(
-        &info,
+        info,
         coin(fixed_listing.price.u128(), config.native_denom.clone()),
     )?;
 
@@ -304,7 +304,7 @@ fn _execute_buy_fixed_listing(
             &deps,
             &config,
             &mut sub_msgs,
-            &fee_module_addr.as_ref().unwrap(),
+            fee_module_addr.as_ref().unwrap(),
             fixed_listing.price,
             &mut marketplace_fee,
             None,
@@ -313,7 +313,7 @@ fn _execute_buy_fixed_listing(
         // Collection royalty fees
         let query = FeeModuleQueryMsg::PercentageFee {
             module_name: Modules::Mint.to_string(),
-            fee_name: format!("collection_{}_royalty", collection_id.to_string()),
+            fee_name: format!("collection_{}_royalty", collection_id),
         };
         let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> = deps
             .querier
@@ -442,13 +442,13 @@ fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, C
 
 fn check_locks(locks: Locks) -> Result<(), TokenContractError> {
     if locks.transfer_lock {
-        return Err(TokenContractError::TransferLocked {}.into());
+        return Err(TokenContractError::TransferLocked {});
     };
     if locks.send_lock {
-        return Err(TokenContractError::SendLocked {}.into());
+        return Err(TokenContractError::SendLocked {});
     };
     if locks.burn_lock {
-        return Err(TokenContractError::BurnLocked {}.into());
+        return Err(TokenContractError::BurnLocked {});
     };
     Ok(())
 }

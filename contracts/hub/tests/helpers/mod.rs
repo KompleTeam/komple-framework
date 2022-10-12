@@ -172,18 +172,16 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
         },
         marbu_fee_module: None,
     };
-    let hub_module_addr = app
-        .instantiate_contract(
-            hub_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[coin(1_000_000, NATIVE_DENOM)],
-            "test",
-            None,
-        )
-        .unwrap();
 
-    hub_module_addr
+    app.instantiate_contract(
+        hub_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[coin(1_000_000, NATIVE_DENOM)],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
@@ -199,7 +197,7 @@ pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
         code_id: mint_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &[])
         .unwrap();
 }
 
@@ -216,7 +214,7 @@ pub fn setup_merge_module(app: &mut App, hub_addr: Addr) {
         code_id: merge_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &[])
         .unwrap();
 }
 
@@ -233,7 +231,7 @@ pub fn setup_permission_module(app: &mut App, hub_addr: Addr) {
         code_id: permission_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &[])
         .unwrap();
 }
 
@@ -251,7 +249,7 @@ pub fn setup_marketplace_module(app: &mut App, hub_addr: Addr) {
         code_id: marketplace_module_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr, &msg, &[])
         .unwrap();
 }
 
@@ -259,7 +257,7 @@ pub fn setup_all_modules(app: &mut App, hub_addr: Addr) {
     setup_mint_module(app, hub_addr.clone());
     setup_merge_module(app, hub_addr.clone());
     setup_permission_module(app, hub_addr.clone());
-    setup_marketplace_module(app, hub_addr.clone());
+    setup_marketplace_module(app, hub_addr);
 }
 
 pub fn create_collection(
@@ -309,7 +307,7 @@ pub fn create_collection(
         linked_collections,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &[])
         .unwrap();
 }
 
@@ -319,21 +317,21 @@ pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sen
         metadata_id: None,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(sender), mint_module_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(sender), mint_module_addr, &msg, &[])
         .unwrap();
 }
 
 pub fn setup_mint_module_operators(app: &mut App, mint_module_addr: Addr, addrs: Vec<String>) {
     let msg = MintExecuteMsg::UpdateOperators { addrs };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &[])
         .unwrap();
 }
 
 pub fn setup_token_module_operators(app: &mut App, token_module_addr: Addr, addrs: Vec<String>) {
     let msg = TokenExecuteMsg::UpdateOperators { addrs };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
         .unwrap();
 }
 
@@ -348,7 +346,7 @@ pub fn give_approval_to_module(
         expires: None,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(owner), token_module_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(owner), token_module_addr, &msg, &[])
         .unwrap();
 }
 
@@ -358,18 +356,16 @@ pub fn setup_ownership_permission_module(app: &mut App) -> Addr {
     let msg = OwnershipModuleInstantiateMsg {
         admin: ADMIN.to_string(),
     };
-    let ownership_permission_module_addr = app
-        .instantiate_contract(
-            ownership_permission_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[],
-            "test",
-            None,
-        )
-        .unwrap();
 
-    ownership_permission_module_addr
+    app.instantiate_contract(
+        ownership_permission_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 pub fn setup_module_permissions(
@@ -387,7 +383,7 @@ pub fn setup_module_permissions(
             Addr::unchecked(ADMIN),
             permission_module_addr.clone(),
             &msg,
-            &vec![],
+            &[],
         )
         .unwrap();
 }
@@ -424,27 +420,22 @@ pub fn link_collections(
         linked_collections,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
+        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &[])
         .unwrap();
 }
 
 pub fn get_modules_addresses(app: &mut App, hub_addr: &Addr) -> (Addr, Addr, Addr, Addr) {
-    let mint_module_addr: Addr;
-    let merge_module_addr: Addr;
-    let permission_module_addr: Addr;
-    let marketplace_module_addr: Addr;
-
     let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Mint);
-    mint_module_addr = res.unwrap();
+    let mint_module_addr: Addr = res.unwrap();
 
     let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Merge);
-    merge_module_addr = res.unwrap();
+    let merge_module_addr: Addr = res.unwrap();
 
     let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Permission);
-    permission_module_addr = res.unwrap();
+    let permission_module_addr: Addr = res.unwrap();
 
     let res = StorageHelper::query_module_address(&app.wrap(), hub_addr, Modules::Marketplace);
-    marketplace_module_addr = res.unwrap();
+    let marketplace_module_addr: Addr = res.unwrap();
 
     (
         mint_module_addr,
@@ -461,7 +452,7 @@ pub fn setup_marketplace_listing(
     token_id: u32,
     price: Uint128,
 ) {
-    let (mint_module_addr, _, _, marketplace_module_addr) = get_modules_addresses(app, &hub_addr);
+    let (mint_module_addr, _, _, marketplace_module_addr) = get_modules_addresses(app, hub_addr);
 
     let collection_addr =
         StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &collection_id)
@@ -469,7 +460,7 @@ pub fn setup_marketplace_listing(
 
     setup_token_module_operators(
         app,
-        collection_addr.clone(),
+        collection_addr,
         vec![marketplace_module_addr.to_string()],
     );
 
@@ -479,11 +470,6 @@ pub fn setup_marketplace_listing(
         price,
     };
     let _ = app
-        .execute_contract(
-            Addr::unchecked(USER),
-            marketplace_module_addr.clone(),
-            &msg,
-            &vec![],
-        )
+        .execute_contract(Addr::unchecked(USER), marketplace_module_addr, &msg, &[])
         .unwrap();
 }

@@ -208,9 +208,7 @@ pub fn execute(
         _ => {
             match msg {
                 // We are not allowing for normal mint endpoint
-                Cw721ExecuteMsg::Mint(_mint_msg) => {
-                    return Err(ContractError::Unauthorized {}.into())
-                }
+                Cw721ExecuteMsg::Mint(_mint_msg) => Err(ContractError::Unauthorized {}),
                 Cw721ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
                 Cw721ExecuteMsg::SendNft {
                     token_id,
@@ -222,7 +220,7 @@ pub fn execute(
                     recipient,
                 } => execute_transfer(deps, env, info, token_id, recipient),
                 _ => {
-                    let res = Cw721Contract::default().execute(deps, env, info, msg.into());
+                    let res = Cw721Contract::default().execute(deps, env, info, msg);
                     match res {
                         Ok(res) => Ok(res),
                         Err(e) => Err(e.into()),
@@ -428,7 +426,7 @@ pub fn execute_mint(
         msgs.push(msg.into())
     }
     // Link the metadata
-    let msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap())
+    let msg = KompleMetadataModule(sub_modules.metadata.unwrap())
         .link_metadata_msg(token_id, metadata_id)?;
     msgs.push(msg.into());
 
@@ -467,7 +465,7 @@ pub fn execute_burn(
         return Err(ContractError::MetadataContractNotFound {});
     };
 
-    let unlink_metadata_msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap())
+    let unlink_metadata_msg = KompleMetadataModule(sub_modules.metadata.unwrap())
         .unlink_metadata_msg(token_id.parse::<u32>().unwrap())?;
 
     let res = Cw721Contract::default().execute(deps, env, info, ExecuteMsg::Burn { token_id });
@@ -522,7 +520,7 @@ pub fn execute_admin_transfer(
 
     check_admin_privileges(
         &info.sender,
-        &&env.contract.address,
+        &env.contract.address,
         &config.admin,
         mint_module_addr,
         operators,
@@ -729,7 +727,7 @@ fn get_mint_price(
 
     let collection_price = collection_config
         .unit_price
-        .and_then(|price| Some(coin(price.u128(), &collection_config.native_denom)));
+        .map(|price| coin(price.u128(), &collection_config.native_denom));
 
     if sub_modules.whitelist.is_none() {
         return Ok(collection_price);
@@ -739,15 +737,15 @@ fn get_mint_price(
 
     let res: ResponseWrapper<WhitelistConfigResponse> = deps
         .querier
-        .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
+        .query_wasm_smart(whitelist, &WhitelistQueryMsg::Config {})?;
 
     if res.data.is_active {
-        return Ok(Some(coin(
+        Ok(Some(coin(
             res.data.unit_price.u128(),
             &collection_config.native_denom,
-        )));
+        )))
     } else {
-        return Ok(collection_price);
+        Ok(collection_price)
     }
 }
 
@@ -767,7 +765,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             TokenQueryMsg::SubModules {} => to_binary(&query_contracts(deps)?),
             TokenQueryMsg::ModuleOperators {} => to_binary(&query_contract_operators(deps)?),
         },
-        _ => Cw721Contract::default().query(deps, env, msg.into()),
+        _ => Cw721Contract::default().query(deps, env, msg),
     }
 }
 
@@ -816,7 +814,7 @@ fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<SubModules>> {
 }
 
 fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
-    let operators = OPERATORS.load(deps.storage).unwrap_or(vec![]);
+    let operators = OPERATORS.load(deps.storage).unwrap_or_default();
     Ok(ResponseWrapper::new(
         "contract_operators",
         operators.iter().map(|o| o.to_string()).collect(),
