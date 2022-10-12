@@ -12,7 +12,6 @@ use komple_types::{
 #[cw_serde]
 pub struct Config {
     pub admin: Addr,
-    pub update_lock: bool,
     pub metadata_type: MetadataType,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
