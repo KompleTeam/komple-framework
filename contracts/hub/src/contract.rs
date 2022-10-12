@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdError,
-    StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, Event, MessageInfo, Reply, ReplyOn,
+    Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -56,9 +56,11 @@ pub fn instantiate(
 
     MODULE_ID.save(deps.storage, &0)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "instantiate")
-        .add_attribute("admin", config.admin.to_string()))
+    Ok(Response::new().add_event(
+        Event::new("komple_hub_module")
+            .add_attribute("action", "instantiate")
+            .add_attribute("admin", config.admin.to_string()),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -139,9 +141,12 @@ fn execute_register_module(
     MODULE_TO_REGISTER.save(deps.storage, &module)?;
 
     Ok(Response::new()
-        .add_submessage(sub_msg)
-        .add_attribute("action", "execute_register_module")
-        .add_attribute("module", module.as_str()))
+        .add_event(
+            Event::new("komple_hub_module")
+                .add_attribute("action", "register_module")
+                .add_attribute("module", module),
+        )
+        .add_submessage(sub_msg))
 }
 
 fn execute_update_hub_info(
@@ -165,14 +170,29 @@ fn execute_update_hub_info(
     )?;
 
     let hub_info = HubInfo {
-        name,
-        description,
-        image,
-        external_link,
+        name: name.clone(),
+        description: description.clone(),
+        image: image.clone(),
+        external_link: external_link.clone(),
     };
     HUB_INFO.save(deps.storage, &hub_info)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_hub_info"))
+    let mut event_attributes: Vec<Attribute> = vec![];
+    if external_link.is_some() {
+        event_attributes.push(Attribute {
+            key: "external_link".to_string(),
+            value: external_link.as_ref().unwrap().to_string(),
+        });
+    };
+
+    Ok(Response::new().add_event(
+        Event::new("komple_hub_module")
+            .add_attribute("action", "update_hub_info")
+            .add_attribute("name", name)
+            .add_attribute("description", description)
+            .add_attribute("image", image)
+            .add_attributes(event_attributes),
+    ))
 }
 
 fn execute_update_website_config(
@@ -195,13 +215,37 @@ fn execute_update_website_config(
     )?;
 
     let website_config = WebsiteConfig {
-        background_color,
-        background_image,
-        banner_image,
+        background_color: background_color.clone(),
+        background_image: background_image.clone(),
+        banner_image: banner_image.clone(),
     };
     WEBSITE_CONFIG.save(deps.storage, &website_config)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_website_config"))
+    let mut event_attributes: Vec<Attribute> = vec![];
+    if background_color.is_some() {
+        event_attributes.push(Attribute {
+            key: "background_color".to_string(),
+            value: background_color.as_ref().unwrap().to_string(),
+        });
+    };
+    if background_image.is_some() {
+        event_attributes.push(Attribute {
+            key: "background_image".to_string(),
+            value: background_image.as_ref().unwrap().to_string(),
+        });
+    };
+    if banner_image.is_some() {
+        event_attributes.push(Attribute {
+            key: "banner_image".to_string(),
+            value: banner_image.as_ref().unwrap().to_string(),
+        });
+    };
+
+    Ok(Response::new().add_event(
+        Event::new("komple_hub_module")
+            .add_attribute("action".to_string(), "update_website_config".to_string())
+            .add_attributes(event_attributes),
+    ))
 }
 
 fn execute_deregister_module(
@@ -226,9 +270,11 @@ fn execute_deregister_module(
 
     MODULE_ADDRS.remove(deps.storage, &module);
 
-    Ok(Response::new()
-        .add_attribute("action", "execute_deregister_module")
-        .add_attribute("module", module.as_str()))
+    Ok(Response::new().add_event(
+        Event::new("komple_hub_module")
+            .add_attribute("action", "deregister_module")
+            .add_attribute("module", module),
+    ))
 }
 
 fn execute_update_operators(
@@ -251,17 +297,27 @@ fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
+    let mut event_attributes: Vec<Attribute> = vec![];
+
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
+            event_attributes.push(Attribute {
+                key: "addrs".to_string(),
+                value: addr.to_string(),
+            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+    Ok(Response::new().add_event(
+        Event::new("komple_hub_module")
+            .add_attribute("action".to_string(), "update_operators".to_string())
+            .add_attributes(event_attributes),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
