@@ -170,27 +170,27 @@ fn execute_update_hub_info(
     )?;
 
     let hub_info = HubInfo {
-        name: name.clone(),
-        description: description.clone(),
-        image: image.clone(),
-        external_link: external_link.clone(),
+        name,
+        description,
+        image,
+        external_link,
     };
     HUB_INFO.save(deps.storage, &hub_info)?;
 
     let mut event_attributes: Vec<Attribute> = vec![];
-    if external_link.is_some() {
+    if hub_info.external_link.is_some() {
         event_attributes.push(Attribute {
             key: "external_link".to_string(),
-            value: external_link.as_ref().unwrap().to_string(),
+            value: hub_info.external_link.as_ref().unwrap().to_string(),
         });
     };
 
     Ok(Response::new().add_event(
         Event::new("komple_hub_module")
             .add_attribute("action", "update_hub_info")
-            .add_attribute("name", name)
-            .add_attribute("description", description)
-            .add_attribute("image", image)
+            .add_attribute("name", hub_info.name)
+            .add_attribute("description", hub_info.description)
+            .add_attribute("image", hub_info.image)
             .add_attributes(event_attributes),
     ))
 }
@@ -215,29 +215,37 @@ fn execute_update_website_config(
     )?;
 
     let website_config = WebsiteConfig {
-        background_color: background_color.clone(),
-        background_image: background_image.clone(),
-        banner_image: banner_image.clone(),
+        background_color,
+        background_image,
+        banner_image,
     };
     WEBSITE_CONFIG.save(deps.storage, &website_config)?;
 
     let mut event_attributes: Vec<Attribute> = vec![];
-    if background_color.is_some() {
+    if website_config.background_color.is_some() {
         event_attributes.push(Attribute {
             key: "background_color".to_string(),
-            value: background_color.as_ref().unwrap().to_string(),
+            value: website_config
+                .background_color
+                .as_ref()
+                .unwrap()
+                .to_string(),
         });
     };
-    if background_image.is_some() {
+    if website_config.background_image.is_some() {
         event_attributes.push(Attribute {
             key: "background_image".to_string(),
-            value: background_image.as_ref().unwrap().to_string(),
+            value: website_config
+                .background_image
+                .as_ref()
+                .unwrap()
+                .to_string(),
         });
     };
-    if banner_image.is_some() {
+    if website_config.banner_image.is_some() {
         event_attributes.push(Attribute {
             key: "banner_image".to_string(),
-            value: banner_image.as_ref().unwrap().to_string(),
+            value: website_config.banner_image.as_ref().unwrap().to_string(),
         });
     };
 

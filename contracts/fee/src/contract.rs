@@ -45,7 +45,7 @@ pub fn instantiate(
     Ok(Response::new().add_event(
         Event::new("komple_fee_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", info.sender.clone())
+            .add_attribute("admin", config.admin.to_string())
             .add_attribute("hub_addr", info.sender),
     ))
 }
