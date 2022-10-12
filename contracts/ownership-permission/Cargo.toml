@@ -51,3 +51,10 @@ komple-utils = { path = "../../packages/utils" }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
+komple-permission-module = { path = "../permission", features = ["library"] }
+komple-metadata-module = { path = "../metadata", features = ["library"] }
+komple-token-module = { path = "../token", features = ["library"] }
+komple-mint-module = { path = "../mint", features = ["library"] }
+komple-hub-module = { path = "../hub", features = ["library"] }
+cw721-base = { version = "0.15.0", features = ["library"] }
+cw721 = "0.15.0"
