@@ -4,8 +4,8 @@ use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
-    StdResult, WasmMsg,
+    from_binary, to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, Event, MessageInfo,
+    Response, StdError, StdResult, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use komple_mint_module::helper::KompleMintModule;
@@ -40,7 +40,12 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_attribute("action", "instantiate"))
+    Ok(Response::new().add_event(
+        Event::new("komple_merge_module")
+            .add_attribute("action", "instantiate")
+            .add_attribute("admin", config.admin.to_string())
+            .add_attribute("hub_addr", info.sender),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -83,9 +88,11 @@ fn execute_update_merge_lock(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "execute_update_merge_lock")
-        .add_attribute("merge_lock", lock.to_string()))
+    Ok(Response::new().add_event(
+        Event::new("komple_merge_module")
+            .add_attribute("action", "update_merge_lock")
+            .add_attribute("admin", lock.to_string()),
+    ))
 }
 
 fn execute_merge(
@@ -96,11 +103,15 @@ fn execute_merge(
 ) -> Result<Response, ContractError> {
     let mut msgs: Vec<WasmMsg> = vec![];
 
-    make_merge_msg(&deps, &info, msg, &mut msgs)?;
+    let mut event_attributes: Vec<Attribute> = vec![];
 
-    Ok(Response::new()
-        .add_messages(msgs)
-        .add_attribute("action", "execute_merge"))
+    make_merge_msg(&deps, &info, &mut event_attributes, msg, &mut msgs)?;
+
+    Ok(Response::new().add_messages(msgs).add_event(
+        Event::new("komple_merge_module")
+            .add_attribute("action", "merge")
+            .add_attributes(event_attributes),
+    ))
 }
 
 fn execute_permission_merge(
@@ -126,11 +137,15 @@ fn execute_permission_merge(
         funds: info.funds.clone(),
     });
 
-    make_merge_msg(&deps, &info, merge_msg, &mut msgs)?;
+    let mut event_attributes: Vec<Attribute> = vec![];
 
-    Ok(Response::new()
-        .add_messages(msgs)
-        .add_attribute("action", "execute_permission_merge"))
+    make_merge_msg(&deps, &info, &mut event_attributes, merge_msg, &mut msgs)?;
+
+    Ok(Response::new().add_messages(msgs).add_event(
+        Event::new("komple_merge_module")
+            .add_attribute("action", "permission_merge")
+            .add_attributes(event_attributes),
+    ))
 }
 
 fn execute_update_operators(
@@ -154,23 +169,34 @@ fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
+    let mut event_attributes: Vec<Attribute> = vec![];
+
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
+            event_attributes.push(Attribute {
+                key: "addrs".to_string(),
+                value: addr.to_string(),
+            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+    Ok(Response::new().add_event(
+        Event::new("komple_merge_module")
+            .add_attribute("action".to_string(), "update_operators".to_string())
+            .add_attributes(event_attributes),
+    ))
 }
 
 /// Constructs the mint and burn messages
 fn make_merge_msg(
     deps: &DepsMut,
     info: &MessageInfo,
+    event_attributes: &mut Vec<Attribute>,
     msg: Binary,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
@@ -194,16 +220,24 @@ fn make_merge_msg(
     }
 
     // Pushes the burn messages inside msgs list
-    make_burn_messages(&deps, &mint_module_addr, &merge_msg, msgs)?;
+    make_burn_messages(&deps, event_attributes, &mint_module_addr, &merge_msg, msgs)?;
 
     // Pushes the mint messages inside msgs list
-    make_mint_messages(deps, info, &mint_module_addr, &merge_msg, msgs)?;
+    make_mint_messages(
+        deps,
+        info,
+        event_attributes,
+        &mint_module_addr,
+        &merge_msg,
+        msgs,
+    )?;
 
     Ok(())
 }
 
 fn make_burn_messages(
     deps: &DepsMut,
+    event_attributes: &mut Vec<Attribute>,
     mint_module_addr: &Addr,
     merge_msg: &MergeMsg,
     msgs: &mut Vec<WasmMsg>,
@@ -218,6 +252,8 @@ fn make_burn_messages(
         let lock_msg =
             KompleTokenModule(collection_addr).burn_msg(burn_msg.token_id.to_string())?;
         msgs.push(lock_msg);
+
+        event_attributes.push(Attribute::new("burn_ids", burn_msg.token_id.to_string()));
     }
     Ok(())
 }
@@ -225,6 +261,7 @@ fn make_burn_messages(
 fn make_mint_messages(
     deps: &DepsMut,
     info: &MessageInfo,
+    event_attributes: &mut Vec<Attribute>,
     mint_module_addr: &Addr,
     merge_msg: &MergeMsg,
     msgs: &mut Vec<WasmMsg>,
@@ -259,17 +296,27 @@ fn make_mint_messages(
             }
         }
 
+        let metadata_id = merge_msg
+            .metadata_ids
+            .as_ref()
+            .as_ref()
+            .and_then(|ids| Some(ids[index]));
+
         let msg = KompleMintModule(mint_module_addr.clone()).mint_to_msg(
             info.sender.to_string(),
             *collection_id,
-            merge_msg
-                .metadata_ids
-                .as_ref()
-                .as_ref()
-                .and_then(|ids| Some(ids[index])),
+            metadata_id,
             info.funds.clone(),
         )?;
         msgs.push(msg);
+
+        event_attributes.push(Attribute::new("mint_ids", collection_id.to_string()));
+        if metadata_id.is_some() {
+            event_attributes.push(Attribute::new(
+                "metadata_ids",
+                metadata_id.as_ref().unwrap().to_string(),
+            ));
+        }
     }
 
     Ok(())
