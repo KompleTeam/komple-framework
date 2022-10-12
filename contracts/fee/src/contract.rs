@@ -9,7 +9,6 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
 use komple_types::fee::Fees;
-use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
 use komple_utils::funds::{check_single_amount, FundsError};
@@ -44,10 +43,10 @@ pub fn instantiate(
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_framework")
-            .add_attribute("module", Modules::Fee.as_str())
+        Event::new("komple_fee_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", info.sender),
+            .add_attribute("admin", info.sender.clone())
+            .add_attribute("hub_addr", info.sender),
     ))
 }
 
@@ -162,8 +161,7 @@ fn execute_set_fee(
     }
 
     Ok(Response::new().add_event(
-        Event::new("komple_framework")
-            .add_attribute("module", "fee_module")
+        Event::new("komple_fee_module")
             .add_attribute("action", "set_fee")
             .add_attribute("fee_type", fee_type.as_str())
             .add_attribute("module_name", &module_name)
@@ -196,8 +194,7 @@ fn execute_remove_fee(
     }
 
     Ok(Response::new().add_event(
-        Event::new("komple_framework")
-            .add_attribute("module", "fee_module")
+        Event::new("komple_fee_module")
             .add_attribute("action", "remove_fee")
             .add_attribute("fee_type", fee_type.as_str())
             .add_attribute("module_name", &module_name)
@@ -341,8 +338,7 @@ fn execute_distribute(
     }
 
     Ok(Response::new().add_messages(msgs).add_event(
-        Event::new("komple_framework")
-            .add_attribute("module", Modules::Fee.as_str())
+        Event::new("komple_fee_module")
             .add_attribute("action", "distribute")
             .add_attribute("fee_type", fee_type.as_str())
             .add_attribute("module_name", &module_name),
