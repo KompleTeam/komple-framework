@@ -15,6 +15,9 @@ impl Listing {
             Listing::Auction => "auction",
         }
     }
+    pub fn to_string(&self) -> String {
+        self.as_str().to_string()
+    }
 }
 
 pub const FIXED_LISTING_NAMESPACE: &str = "fixed_listing";

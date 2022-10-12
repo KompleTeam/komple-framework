@@ -17,6 +17,9 @@ impl Metadata {
             Metadata::Dynamic => "dynamic",
         }
     }
+    pub fn to_string(&self) -> String {
+        self.as_str().to_string()
+    }
 }
 
 pub const METADATA_NAMESPACE: &str = "metadata";
