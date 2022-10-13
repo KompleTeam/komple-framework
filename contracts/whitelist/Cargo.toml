@@ -44,12 +44,12 @@ semver = "1"
 cosmwasm-std = "1.1.0"
 cosmwasm-storage = "1.1.0"
 cosmwasm-schema = "1.1.0"
-cw-storage-plus = "0.13.2"
-cw2 = "0.13.2"
+cw-storage-plus = "0.15.1"
+cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-cw-utils = "0.13.2"
+cw-utils = "0.15.1"
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
 
 [dev-dependencies]
-cw-multi-test = "0.13.2"
+cw-multi-test = "0.15.1"

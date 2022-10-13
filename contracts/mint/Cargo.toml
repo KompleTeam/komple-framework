@@ -44,18 +44,18 @@ semver = "1"
 cosmwasm-std = "1.1.0"
 cosmwasm-storage = "1.1.0"
 cosmwasm-schema = "1.1.0"
-cw-storage-plus = "0.13.2"
-cw2 = "0.13.2"
+cw-storage-plus = "0.15.1"
+cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 komple-token-module = { path = "../token", features = ["library"] }
 komple-permission-module = { path = "../permission", features = ["library"] }
-cw-utils = "0.13.2"
+cw-utils = "0.15.1"
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
 cw721-base = { version = "0.15.0", features = ["library"] }
 
 [dev-dependencies]
-cw-multi-test = "0.13.2"
+cw-multi-test = "0.15.1"
 komple-metadata-module = { path = "../metadata", features = ["library"] }
 komple-hub-module = { path = "../hub", features = ["library"] }
 cw721 = "0.15.0"

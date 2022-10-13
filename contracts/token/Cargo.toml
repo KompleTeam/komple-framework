@@ -44,8 +44,8 @@ semver = "1"
 cosmwasm-std = "1.1.0"
 cosmwasm-storage = "1.1.0"
 cosmwasm-schema = "1.1.0"
-cw-storage-plus = "0.13.2"
-cw2 = "0.13.2"
+cw-storage-plus = "0.15.1"
+cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
@@ -53,7 +53,7 @@ komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
 komple-metadata-module = { path = "../metadata", features = ["library"] }
 komple-whitelist-module = { path = "../whitelist", features = ["library"]  }
-cw-utils = "0.13.2"
+cw-utils = "0.15.1"
 
 [dev-dependencies]
-cw-multi-test = "0.13.2"
+cw-multi-test = "0.15.1"

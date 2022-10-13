@@ -44,8 +44,8 @@ semver = "1"
 cosmwasm-std = "1.1.0"
 cosmwasm-storage = "1.1.0"
 cosmwasm-schema = "1.1.0"
-cw-storage-plus = "0.13.2"
-cw2 = "0.13.2"
+cw-storage-plus = "0.15.1"
+cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 komple-token-module = { path = "../token", features = ["library"] }
 komple-permission-module = { path = "../permission", features = ["library"] }
@@ -55,4 +55,4 @@ komple-types = { path = "../../packages/types" }
 cw721-base = { version = "0.15.0", features = ["library"] }
 
 [dev-dependencies]
-cw-multi-test = "0.13.2"
+cw-multi-test = "0.15.1"
