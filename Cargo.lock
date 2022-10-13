@@ -812,6 +812,7 @@ dependencies = [
  "cw-utils 0.13.4",
  "cw2 0.13.4",
  "komple-types",
+ "komple-utils",
  "semver",
  "thiserror",
 ]

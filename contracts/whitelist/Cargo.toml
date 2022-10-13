@@ -49,6 +49,7 @@ cw2 = "0.13.2"
 thiserror = { version = "1.0.31" }
 cw-utils = "0.13.2"
 komple-types = { path = "../../packages/types" }
+komple-utils = { path = "../../packages/utils" }
 
 [dev-dependencies]
 cw-multi-test = "0.13.2"
