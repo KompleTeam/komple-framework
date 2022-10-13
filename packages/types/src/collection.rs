@@ -1,4 +1,5 @@
 use cosmwasm_schema::cw_serde;
+use std::fmt;
 
 #[cw_serde]
 pub enum Collections {
@@ -14,8 +15,14 @@ impl Collections {
             Collections::Linked => "linked",
         }
     }
-    pub fn to_string(&self) -> String {
-        self.as_str().to_string()
+}
+
+impl fmt::Display for Collections {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Collections::Standard => write!(f, "standard"),
+            Collections::Linked => write!(f, "linked"),
+        }
     }
 }
 

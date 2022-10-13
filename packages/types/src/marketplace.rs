@@ -1,4 +1,5 @@
 use cosmwasm_schema::cw_serde;
+use std::fmt;
 
 #[cw_serde]
 pub enum Listing {
@@ -13,8 +14,14 @@ impl Listing {
             Listing::Auction => "auction",
         }
     }
-    pub fn to_string(&self) -> String {
-        self.as_str().to_string()
+}
+
+impl fmt::Display for Listing {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Listing::Fixed => write!(f, "fixed"),
+            Listing::Auction => write!(f, "auction"),
+        }
     }
 }
 

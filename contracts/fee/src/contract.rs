@@ -128,7 +128,7 @@ fn execute_set_fee(
             if let Some(payment_address) = fixed_payment.address {
                 event_attributes.push(Attribute {
                     key: "address".to_string(),
-                    value: payment_address.to_string(),
+                    value: payment_address,
                 });
             }
         }
@@ -168,7 +168,7 @@ fn execute_set_fee(
             if let Some(payment_address) = percentage_payment.address {
                 event_attributes.push(Attribute {
                     key: "address".to_string(),
-                    value: payment_address.to_string(),
+                    value: payment_address,
                 });
             }
         }

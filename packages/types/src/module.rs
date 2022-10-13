@@ -1,4 +1,5 @@
 use cosmwasm_schema::cw_serde;
+use std::fmt;
 
 #[cw_serde]
 pub enum Modules {
@@ -23,8 +24,19 @@ impl Modules {
             Modules::Fee => "fee",
         }
     }
-    pub fn to_string(&self) -> String {
-        self.as_str().to_string()
+}
+
+impl fmt::Display for Modules {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Modules::Hub => write!(f, "hub"),
+            Modules::Mint => write!(f, "mint"),
+            Modules::Permission => write!(f, "permission"),
+            Modules::Swap => write!(f, "swap"),
+            Modules::Merge => write!(f, "merge"),
+            Modules::Marketplace => write!(f, "marketplace"),
+            Modules::Fee => write!(f, "fee"),
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 use cosmwasm_schema::cw_serde;
+use std::fmt;
 
 #[cw_serde]
 pub enum Permissions {
@@ -13,8 +14,14 @@ impl Permissions {
             Permissions::Attribute => "attribute",
         }
     }
-    pub fn to_string(&self) -> String {
-        self.as_str().to_string()
+}
+
+impl fmt::Display for Permissions {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Permissions::Ownership => write!(f, "ownership"),
+            Permissions::Attribute => write!(f, "attribute"),
+        }
     }
 }
 
