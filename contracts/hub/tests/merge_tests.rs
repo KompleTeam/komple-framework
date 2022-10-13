@@ -36,7 +36,7 @@ mod initialization {
             msg: instantiate_msg,
             code_id: merge_module_code_id,
         };
-        let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![]);
+        let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[]);
 
         let res =
             StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge).unwrap();
@@ -59,7 +59,7 @@ mod initialization {
             code_id: merge_module_code_id,
         };
         let err = app
-            .execute_contract(Addr::unchecked(USER), hub_addr.clone(), &msg, &vec![])
+            .execute_contract(Addr::unchecked(USER), hub_addr, &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -133,12 +133,7 @@ mod normal_merge {
             USER,
             &merge_module_addr,
         );
-        give_approval_to_module(
-            &mut app,
-            collection_3_addr.clone(),
-            USER,
-            &merge_module_addr,
-        );
+        give_approval_to_module(&mut app, collection_3_addr, USER, &merge_module_addr);
 
         let merge_msg = MergeMsg {
             mint: vec![2],
@@ -162,7 +157,7 @@ mod normal_merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let _ = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &vec![])
+            .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
             .unwrap();
 
         let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
@@ -178,7 +173,7 @@ mod normal_merge {
             include_expired: None,
         };
         let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
-            app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
+            app.wrap().query_wasm_smart(collection_1_addr, &msg);
         assert!(res.is_err());
 
         let collection_2_addr =
@@ -190,7 +185,7 @@ mod normal_merge {
         };
         let res: OwnerOfResponse = app
             .wrap()
-            .query_wasm_smart(collection_2_addr.clone(), &msg)
+            .query_wasm_smart(collection_2_addr, &msg)
             .unwrap();
         assert_eq!(res.owner, USER);
     }
@@ -236,12 +231,7 @@ mod normal_merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let err = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                merge_module_addr.clone(),
-                &msg,
-                &vec![],
-            )
+            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -260,12 +250,7 @@ mod normal_merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let err = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                merge_module_addr.clone(),
-                &msg,
-                &vec![],
-            )
+            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -284,12 +269,7 @@ mod normal_merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let err = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                merge_module_addr.clone(),
-                &msg,
-                &vec![],
-            )
+            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().source().unwrap().to_string(),
@@ -303,12 +283,7 @@ mod normal_merge {
         );
 
         let err = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                merge_module_addr.clone(),
-                &msg,
-                &vec![],
-            )
+            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().source().unwrap().to_string(),
@@ -318,20 +293,10 @@ mod normal_merge {
         setup_mint_module_operators(&mut app, mint_module_addr.clone(), vec![]);
         let collection_1_addr =
             StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-        give_approval_to_module(
-            &mut app,
-            collection_1_addr.clone(),
-            USER,
-            &merge_module_addr,
-        );
+        give_approval_to_module(&mut app, collection_1_addr, USER, &merge_module_addr);
 
         let err = app
-            .execute_contract(
-                Addr::unchecked(USER),
-                merge_module_addr.clone(),
-                &msg,
-                &vec![],
-            )
+            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().source().unwrap().to_string(),
@@ -414,12 +379,7 @@ mod permission_merge {
             let collection_3_addr =
                 StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3)
                     .unwrap();
-            give_approval_to_module(
-                &mut app,
-                collection_3_addr.clone(),
-                USER,
-                &merge_module_addr,
-            );
+            give_approval_to_module(&mut app, collection_3_addr, USER, &merge_module_addr);
             setup_ownership_permission_module(&mut app);
             register_permission(&mut app, &permission_module_addr);
             setup_module_permissions(
@@ -470,7 +430,7 @@ mod permission_merge {
                 merge_msg,
             };
             let _ = app
-                .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &vec![])
+                .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
                 .unwrap();
 
             let msg: Cw721QueryMsg<TokenQueryMsg> = Cw721QueryMsg::OwnerOf {
@@ -486,7 +446,7 @@ mod permission_merge {
                 include_expired: None,
             };
             let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
-                app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
+                app.wrap().query_wasm_smart(collection_1_addr, &msg);
             assert!(res.is_err());
 
             let collection_2_addr =
@@ -499,7 +459,7 @@ mod permission_merge {
             };
             let res: OwnerOfResponse = app
                 .wrap()
-                .query_wasm_smart(collection_2_addr.clone(), &msg)
+                .query_wasm_smart(collection_2_addr, &msg)
                 .unwrap();
             assert_eq!(res.owner, USER);
         }

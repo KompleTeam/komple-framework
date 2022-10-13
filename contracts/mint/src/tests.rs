@@ -71,18 +71,16 @@ fn proper_instantiate(app: &mut App) -> Addr {
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
     };
-    let minter_contract_addr = app
-        .instantiate_contract(
-            minter_code_id,
-            Addr::unchecked(ADMIN),
-            &msg,
-            &[],
-            "test",
-            None,
-        )
-        .unwrap();
 
-    minter_contract_addr
+    app.instantiate_contract(
+        minter_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 fn setup_collection(
@@ -134,7 +132,7 @@ fn setup_collection(
         linked_collections,
     };
     let _ = app
-        .execute_contract(sender, minter_addr.clone(), &msg, &vec![])
+        .execute_contract(sender, minter_addr.clone(), &msg, &[])
         .unwrap();
 }
 
@@ -176,7 +174,7 @@ mod actions {
                     Addr::unchecked(USER),
                     minter_addr.clone(),
                     &msg,
-                    &vec![coin(50_000, NATIVE_DENOM)],
+                    &[coin(50_000, NATIVE_DENOM)],
                 )
                 .unwrap();
 
@@ -205,7 +203,7 @@ mod actions {
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = ExecuteMsg::Mint {
@@ -213,7 +211,7 @@ mod actions {
                 metadata_id: None,
             };
             let err = app
-                .execute_contract(Addr::unchecked(USER), minter_addr, &msg, &vec![])
+                .execute_contract(Addr::unchecked(USER), minter_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -238,7 +236,7 @@ mod actions {
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = QueryMsg::Config {};
@@ -307,7 +305,7 @@ mod actions {
                     linked_collections: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let msg = QueryMsg::CollectionAddress(1);
@@ -362,7 +360,7 @@ mod actions {
                     linked_collections: None,
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
+                    .execute_contract(Addr::unchecked(USER), minter_addr, &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -379,7 +377,7 @@ mod actions {
                     public_collection_creation: true,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                     .unwrap();
 
                 setup_collection(&mut app, &minter_addr, Addr::unchecked(USER), None, None);
@@ -403,7 +401,7 @@ mod actions {
                     public_collection_creation: true,
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
+                    .execute_contract(Addr::unchecked(USER), minter_addr, &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -433,7 +431,7 @@ mod actions {
                 linked_collections: vec![1, 3],
             };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = QueryMsg::LinkedCollections { collection_id: 2 };
@@ -464,7 +462,7 @@ mod actions {
                 linked_collections: vec![10],
             };
             let err = app
-                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -472,7 +470,7 @@ mod actions {
             );
 
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -484,7 +482,7 @@ mod actions {
                 linked_collections: vec![2],
             };
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -496,7 +494,7 @@ mod actions {
                 linked_collections: vec![10],
             };
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr, &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -560,7 +558,7 @@ mod actions {
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
             let res =
@@ -594,7 +592,7 @@ mod actions {
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let err = app
-                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -610,10 +608,10 @@ mod actions {
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -629,7 +627,7 @@ mod actions {
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 2 };
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -649,12 +647,12 @@ mod actions {
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
             let _ = StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
@@ -668,7 +666,7 @@ mod actions {
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
-                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -684,7 +682,7 @@ mod actions {
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -700,7 +698,7 @@ mod actions {
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 2 };
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &vec![])
+                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -725,12 +723,7 @@ mod actions {
                 ],
             };
             let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    mint_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), mint_module_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = QueryMsg::Operators {};
@@ -750,15 +743,13 @@ mod actions {
                     Addr::unchecked("juno..first"),
                     mint_module_addr.clone(),
                     &msg,
-                    &vec![],
+                    &[],
                 )
                 .unwrap();
 
             let msg = QueryMsg::Operators {};
-            let res: ResponseWrapper<Vec<String>> = app
-                .wrap()
-                .query_wasm_smart(mint_module_addr.clone(), &msg)
-                .unwrap();
+            let res: ResponseWrapper<Vec<String>> =
+                app.wrap().query_wasm_smart(mint_module_addr, &msg).unwrap();
             assert_eq!(res.data.len(), 1);
             assert_eq!(res.data[0], "juno..third");
         }
@@ -772,12 +763,7 @@ mod actions {
                 addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
             };
             let err = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    mint_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(USER), mint_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -794,21 +780,11 @@ mod actions {
                 addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
             };
             let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    mint_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked(ADMIN), mint_module_addr.clone(), &msg, &[])
                 .unwrap();
 
             let err = app
-                .execute_contract(
-                    Addr::unchecked("juno..third"),
-                    mint_module_addr.clone(),
-                    &msg,
-                    &vec![],
-                )
+                .execute_contract(Addr::unchecked("juno..third"), mint_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),

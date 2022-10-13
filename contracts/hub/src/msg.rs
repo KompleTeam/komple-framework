@@ -2,8 +2,6 @@ use crate::state::{HubInfo, WebsiteConfig};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use komple_types::query::ResponseWrapper;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -52,12 +50,12 @@ pub enum QueryMsg {
     Operators {},
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct ConfigResponse {
     pub admin: String,
     pub hub_info: HubInfo,
     pub website_config: Option<WebsiteConfig>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {}

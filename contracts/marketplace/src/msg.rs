@@ -2,8 +2,6 @@ use crate::state::{Config, FixedListing};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
 use komple_types::{marketplace::Listing, query::ResponseWrapper};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -55,5 +53,5 @@ pub enum QueryMsg {
     Operators {},
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MigrateMsg {}

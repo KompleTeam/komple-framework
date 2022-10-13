@@ -1,8 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env,
-    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
+    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env,
+    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128,
+    WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -10,6 +11,7 @@ use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
+use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, funds::check_single_coin};
 use semver::Version;
 
@@ -83,7 +85,7 @@ pub fn instantiate(
     }
     let collection_info = CollectionInfo {
         collection_type: msg.collection_info.collection_type,
-        name: msg.collection_info.name.clone(),
+        name: msg.collection_info.name,
         description: msg.collection_info.description,
         image: msg.collection_info.image,
         external_link: msg.collection_info.external_link,
@@ -122,8 +124,8 @@ pub fn instantiate(
     SUB_MODULES.save(deps.storage, &sub_modules)?;
 
     let contract_info = ContractInfoResponse {
-        name: msg.collection_info.name.clone(),
-        symbol: msg.token_info.symbol,
+        name: collection_info.name.clone(),
+        symbol: msg.token_info.symbol.clone(),
     };
     Cw721Contract::default()
         .contract_info
@@ -149,11 +151,71 @@ pub fn instantiate(
         reply_on: ReplyOn::Success,
     };
 
-    Ok(Response::new()
-        .add_submessage(sub_msg)
-        .add_attribute("action", "instantiate")
-        .add_attribute("minter", msg.token_info.minter)
-        .add_attribute("collection_name", msg.collection_info.name))
+    Ok(Response::new().add_submessage(sub_msg).add_event(
+        EventHelper::new("komple_token_module")
+            .add_attribute("action", "instantiate")
+            .add_attribute("mint_module_addr", info.sender)
+            .add_attribute("creator", config.creator)
+            .add_attribute("minter", minter)
+            .add_attribute("symbol", contract_info.symbol)
+            .add_attribute(
+                "collection_type",
+                collection_info.collection_type.to_string(),
+            )
+            .add_attribute("name", collection_info.name)
+            .add_attribute("description", collection_info.description)
+            .add_attribute("image", collection_info.image)
+            .check_add_attribute(
+                &collection_info.external_link,
+                "external_link",
+                collection_info
+                    .external_link
+                    .as_ref()
+                    .unwrap_or(&String::from("")),
+            )
+            .add_attribute("native_denom", msg.collection_config.native_denom)
+            .check_add_attribute(
+                &msg.collection_config.start_time,
+                "start_time",
+                msg.collection_config
+                    .start_time
+                    .unwrap_or(Timestamp::from_nanos(0))
+                    .to_string(),
+            )
+            .check_add_attribute(
+                &msg.collection_config.max_token_limit,
+                "max_token_limit",
+                msg.collection_config
+                    .max_token_limit
+                    .unwrap_or(0)
+                    .to_string(),
+            )
+            .check_add_attribute(
+                &msg.collection_config.per_address_limit,
+                "per_address_limit",
+                msg.collection_config
+                    .per_address_limit
+                    .unwrap_or(0)
+                    .to_string(),
+            )
+            .check_add_attribute(
+                &msg.collection_config.unit_price,
+                "unit_price",
+                msg.collection_config
+                    .unit_price
+                    .unwrap_or(Uint128::zero())
+                    .to_string(),
+            )
+            .check_add_attribute(
+                &msg.collection_config.ipfs_link,
+                "ipfs_link",
+                msg.collection_config
+                    .ipfs_link
+                    .as_ref()
+                    .unwrap_or(&String::from("")),
+            )
+            .get(),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -192,8 +254,8 @@ pub fn execute(
                 execute_update_start_time(deps, env, info, start_time)
             }
             // ADMIN MESSAGES
-            TokenExecuteMsg::UpdateOperators { addrs } => {
-                execute_update_operators(deps, env, info, addrs)
+            TokenExecuteMsg::UpdateModuleOperators { addrs } => {
+                execute_update_module_operators(deps, env, info, addrs)
             }
             TokenExecuteMsg::AdminTransferNft {
                 recipient,
@@ -208,9 +270,7 @@ pub fn execute(
         _ => {
             match msg {
                 // We are not allowing for normal mint endpoint
-                Cw721ExecuteMsg::Mint(_mint_msg) => {
-                    return Err(ContractError::Unauthorized {}.into())
-                }
+                Cw721ExecuteMsg::Mint(_mint_msg) => Err(ContractError::Unauthorized {}),
                 Cw721ExecuteMsg::Burn { token_id } => execute_burn(deps, env, info, token_id),
                 Cw721ExecuteMsg::SendNft {
                     token_id,
@@ -222,7 +282,7 @@ pub fn execute(
                     recipient,
                 } => execute_transfer(deps, env, info, token_id, recipient),
                 _ => {
-                    let res = Cw721Contract::default().execute(deps, env, info, msg.into());
+                    let res = Cw721Contract::default().execute(deps, env, info, msg);
                     match res {
                         Ok(res) => Ok(res),
                         Err(e) => Err(e.into()),
@@ -233,7 +293,7 @@ pub fn execute(
     }
 }
 
-pub fn execute_update_operators(
+pub fn execute_update_module_operators(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -254,17 +314,28 @@ pub fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
+    let mut event_attributes: Vec<Attribute> = vec![];
+
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
+            event_attributes.push(Attribute {
+                key: "addrs".to_string(),
+                value: addr.to_string(),
+            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_token_module")
+            .add_attribute("action", "update_module_operators")
+            .add_attributes(event_attributes)
+            .get(),
+    ))
 }
 
 pub fn execute_update_locks(
@@ -287,12 +358,15 @@ pub fn execute_update_locks(
 
     LOCKS.save(deps.storage, &locks)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "execute_update_locks")
-        .add_attribute("mint_lock", locks.mint_lock.to_string())
-        .add_attribute("burn_lock", locks.burn_lock.to_string())
-        .add_attribute("transfer_lock", locks.transfer_lock.to_string())
-        .add_attribute("send_lock", locks.send_lock.to_string()))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_token_module")
+            .add_attribute("action", "update_locks")
+            .add_attribute("mint_lock", locks.mint_lock.to_string())
+            .add_attribute("burn_lock", locks.burn_lock.to_string())
+            .add_attribute("transfer_lock", locks.transfer_lock.to_string())
+            .add_attribute("send_lock", locks.send_lock.to_string())
+            .get(),
+    ))
 }
 
 pub fn execute_update_token_locks(
@@ -320,13 +394,16 @@ pub fn execute_update_token_locks(
 
     TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "execute_update_token_locks")
-        .add_attribute("token_id", token_id)
-        .add_attribute("mint_lock", locks.mint_lock.to_string())
-        .add_attribute("burn_lock", locks.burn_lock.to_string())
-        .add_attribute("transfer_lock", locks.transfer_lock.to_string())
-        .add_attribute("send_lock", locks.send_lock.to_string()))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_token_module")
+            .add_attribute("action", "update_token_locks")
+            .add_attribute("token_id", token_id)
+            .add_attribute("mint_lock", locks.mint_lock.to_string())
+            .add_attribute("burn_lock", locks.burn_lock.to_string())
+            .add_attribute("transfer_lock", locks.transfer_lock.to_string())
+            .add_attribute("send_lock", locks.send_lock.to_string())
+            .get(),
+    ))
 }
 
 pub fn execute_mint(
@@ -428,7 +505,7 @@ pub fn execute_mint(
         msgs.push(msg.into())
     }
     // Link the metadata
-    let msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap())
+    let msg = KompleMetadataModule(sub_modules.metadata.unwrap())
         .link_metadata_msg(token_id, metadata_id)?;
     msgs.push(msg.into());
 
@@ -441,7 +518,14 @@ pub fn execute_mint(
     };
 
     match res {
-        Ok(res) => Ok(res.add_messages(msgs)),
+        Ok(res) => Ok(res.add_messages(msgs).add_event(
+            EventHelper::new("komple_token_module")
+                .add_attribute("action", "mint")
+                .add_attribute("token_id", token_id.to_string())
+                .add_attribute("owner", owner)
+                .add_attribute("metadata_id", metadata_id.unwrap_or(0).to_string())
+                .get(),
+        )),
         Err(e) => Err(e.into()),
     }
 }
@@ -467,12 +551,24 @@ pub fn execute_burn(
         return Err(ContractError::MetadataContractNotFound {});
     };
 
-    let unlink_metadata_msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap())
+    let unlink_metadata_msg = KompleMetadataModule(sub_modules.metadata.unwrap())
         .unlink_metadata_msg(token_id.parse::<u32>().unwrap())?;
 
-    let res = Cw721Contract::default().execute(deps, env, info, ExecuteMsg::Burn { token_id });
+    let res = Cw721Contract::default().execute(
+        deps,
+        env,
+        info,
+        ExecuteMsg::Burn {
+            token_id: token_id.clone(),
+        },
+    );
     match res {
-        Ok(res) => Ok(res.add_message(unlink_metadata_msg)),
+        Ok(res) => Ok(res.add_message(unlink_metadata_msg).add_event(
+            EventHelper::new("komple_token_module")
+                .add_attribute("action", "burn")
+                .add_attribute("token_id", token_id)
+                .get(),
+        )),
         Err(e) => Err(e.into()),
     }
 }
@@ -499,12 +595,18 @@ pub fn execute_transfer(
         env,
         info,
         ExecuteMsg::TransferNft {
-            recipient,
-            token_id,
+            recipient: recipient.clone(),
+            token_id: token_id.clone(),
         },
     );
     match res {
-        Ok(res) => Ok(res),
+        Ok(res) => Ok(res.add_event(
+            EventHelper::new("komple_token_module")
+                .add_attribute("action", "transfer")
+                .add_attribute("token_id", token_id)
+                .add_attribute("recipient", recipient)
+                .get(),
+        )),
         Err(e) => Err(e.into()),
     }
 }
@@ -522,7 +624,7 @@ pub fn execute_admin_transfer(
 
     check_admin_privileges(
         &info.sender,
-        &&env.contract.address,
+        &env.contract.address,
         &config.admin,
         mint_module_addr,
         operators,
@@ -533,12 +635,18 @@ pub fn execute_admin_transfer(
         env,
         info,
         ExecuteMsg::TransferNft {
-            recipient,
-            token_id,
+            recipient: recipient.clone(),
+            token_id: token_id.clone(),
         },
     );
     match res {
-        Ok(res) => Ok(res),
+        Ok(res) => Ok(res.add_event(
+            EventHelper::new("komple_token_module")
+                .add_attribute("action", "admin_transfer")
+                .add_attribute("token_id", token_id)
+                .add_attribute("recipient", recipient)
+                .get(),
+        )),
         Err(e) => Err(e.into()),
     }
 }
@@ -566,13 +674,19 @@ pub fn execute_send(
         env,
         info,
         ExecuteMsg::SendNft {
-            contract,
-            token_id,
+            contract: contract.clone(),
+            token_id: contract.clone(),
             msg,
         },
     );
     match res {
-        Ok(res) => Ok(res),
+        Ok(res) => Ok(res.add_event(
+            EventHelper::new("komple_token_module")
+                .add_attribute("action", "send")
+                .add_attribute("token_id", token_id)
+                .add_attribute("contract", contract)
+                .get(),
+        )),
         Err(e) => Err(e.into()),
     }
 }
@@ -604,7 +718,15 @@ pub fn execute_update_per_address_limit(
     collection_config.per_address_limit = per_address_limit;
     COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_per_address_limit"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_token_module")
+            .add_attribute("action", "update_per_address_limit")
+            .add_attribute(
+                "per_address_limit",
+                per_address_limit.unwrap_or(0).to_string(),
+            )
+            .get(),
+    ))
 }
 
 fn execute_update_start_time(
@@ -645,7 +767,15 @@ fn execute_update_start_time(
 
     COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_start_time"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_token_module")
+            .add_attribute("action", "update_start_time")
+            .add_attribute(
+                "start_time",
+                start_time.unwrap_or(Timestamp::from_seconds(0)).to_string(),
+            )
+            .get(),
+    ))
 }
 
 fn execute_init_whitelist_module(
@@ -683,7 +813,10 @@ fn execute_init_whitelist_module(
 
     Ok(Response::new()
         .add_submessage(sub_msg)
-        .add_attribute("action", "execute_init_whitelist_module"))
+        .add_event(EventHelper::new("komple_token_module")
+            .add_attribute("action", "init_whitelist_module")
+            .get())
+        )
 }
 
 fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
@@ -729,7 +862,7 @@ fn get_mint_price(
 
     let collection_price = collection_config
         .unit_price
-        .and_then(|price| Some(coin(price.u128(), &collection_config.native_denom)));
+        .map(|price| coin(price.u128(), &collection_config.native_denom));
 
     if sub_modules.whitelist.is_none() {
         return Ok(collection_price);
@@ -739,15 +872,15 @@ fn get_mint_price(
 
     let res: ResponseWrapper<WhitelistConfigResponse> = deps
         .querier
-        .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
+        .query_wasm_smart(whitelist, &WhitelistQueryMsg::Config {})?;
 
     if res.data.is_active {
-        return Ok(Some(coin(
+        Ok(Some(coin(
             res.data.unit_price.u128(),
             &collection_config.native_denom,
-        )));
+        )))
     } else {
-        return Ok(collection_price);
+        Ok(collection_price)
     }
 }
 
@@ -767,7 +900,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             TokenQueryMsg::SubModules {} => to_binary(&query_contracts(deps)?),
             TokenQueryMsg::ModuleOperators {} => to_binary(&query_contract_operators(deps)?),
         },
-        _ => Cw721Contract::default().query(deps, env, msg.into()),
+        _ => Cw721Contract::default().query(deps, env, msg),
     }
 }
 
@@ -816,7 +949,7 @@ fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<SubModules>> {
 }
 
 fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
-    let operators = OPERATORS.load(deps.storage).unwrap_or(vec![]);
+    let operators = OPERATORS.load(deps.storage).unwrap_or_default();
     Ok(ResponseWrapper::new(
         "contract_operators",
         operators.iter().map(|o| o.to_string()).collect(),

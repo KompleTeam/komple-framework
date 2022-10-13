@@ -45,11 +45,16 @@ cosmwasm-storage = "1.1.0"
 cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
-schemars = "0.8.8"
-serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils" }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
+komple-permission-module = { path = "../permission", features = ["library"] }
+komple-metadata-module = { path = "../metadata", features = ["library"] }
+komple-token-module = { path = "../token", features = ["library"] }
+komple-mint-module = { path = "../mint", features = ["library"] }
+komple-hub-module = { path = "../hub", features = ["library"] }
+cw721-base = { version = "0.15.0", features = ["library"] }
+cw721 = "0.15.0"
