@@ -1,10 +1,11 @@
-use cosmwasm_schema::cw_serde;
 use komple_types::{permission::PERMISSION_MODULE_ADDR_NAMESPACE, shared::CONFIG_NAMESPACE};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::Item;
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
 }

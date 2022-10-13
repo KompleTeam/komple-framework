@@ -134,16 +134,18 @@ fn setup_hub_module(app: &mut App) -> Addr {
         },
         marbu_fee_module: None,
     };
+    let hub_addr = app
+        .instantiate_contract(
+            hub_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[coin(1_000_000, NATIVE_DENOM)],
+            "test",
+            None,
+        )
+        .unwrap();
 
-    app.instantiate_contract(
-        hub_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[coin(1_000_000, NATIVE_DENOM)],
-        "test",
-        None,
-    )
-    .unwrap()
+    hub_addr
 }
 
 fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
@@ -160,7 +162,7 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
         code_id: mint_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
     let instantiate_msg = to_binary(&PermissionInstantiateMsg {
         admin: ADMIN.to_string(),
@@ -172,7 +174,7 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
         code_id: permission_code_id,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
+        .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &vec![])
         .unwrap();
 
     let msg = HubQueryMsg::ModuleAddress {
@@ -184,7 +186,7 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
         module: Modules::Permission.to_string(),
     };
     let permission_res: ResponseWrapper<Addr> =
-        app.wrap().query_wasm_smart(hub_addr, &msg).unwrap();
+        app.wrap().query_wasm_smart(hub_addr.clone(), &msg).unwrap();
 
     (mint_res.data, permission_res.data)
 }
@@ -231,7 +233,7 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
         linked_collections: None,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &[])
+        .execute_contract(Addr::unchecked(ADMIN), mint_module_addr, &msg, &vec![])
         .unwrap();
 }
 
@@ -241,7 +243,7 @@ pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sen
         metadata_id: None,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(sender), mint_module_addr, &msg, &[])
+        .execute_contract(Addr::unchecked(sender), mint_module_addr, &msg, &vec![])
         .unwrap();
 }
 
@@ -251,16 +253,18 @@ fn setup_ownership_permission_module(app: &mut App) -> Addr {
     let msg = OwnershipModuleInstantiateMsg {
         admin: ADMIN.to_string(),
     };
+    let ownership_permission_module_addr = app
+        .instantiate_contract(
+            ownership_permission_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
 
-    app.instantiate_contract(
-        ownership_permission_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
+    ownership_permission_module_addr
 }
 
 fn setup_module_permissions(
@@ -278,7 +282,7 @@ fn setup_module_permissions(
             Addr::unchecked(ADMIN),
             permission_module_addr.clone(),
             &msg,
-            &[],
+            &vec![],
         )
         .unwrap();
 }
@@ -308,7 +312,7 @@ fn register_permission(app: &mut App, permission_module_addr: &Addr) {
 fn test_update_module_permissions() {
     let mut app = mock_app();
     let hub_addr = setup_hub_module(&mut app);
-    let (_, permission_module_addr) = setup_modules(&mut app, hub_addr);
+    let (_, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
 
     setup_ownership_permission_module(&mut app);
     register_permission(&mut app, &permission_module_addr);
@@ -322,7 +326,7 @@ fn test_update_module_permissions() {
             Addr::unchecked(USER),
             permission_module_addr.clone(),
             &msg,
-            &[],
+            &vec![],
         )
         .unwrap_err();
     assert_eq!(
@@ -339,7 +343,7 @@ fn test_update_module_permissions() {
             Addr::unchecked(ADMIN),
             permission_module_addr.clone(),
             &msg,
-            &[],
+            &vec![],
         )
         .unwrap();
 
@@ -352,7 +356,7 @@ fn test_update_module_permissions() {
             Addr::unchecked(ADMIN),
             permission_module_addr.clone(),
             &msg,
-            &[],
+            &vec![],
         )
         .unwrap_err();
     assert_eq!(
@@ -365,12 +369,13 @@ fn test_update_module_permissions() {
 fn test_permission_check() {
     let mut app = mock_app();
     let hub_addr = setup_hub_module(&mut app);
-    let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+    let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr.clone());
     let token_module_code_id = app.store_code(token_module());
     create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
     let collection_addr =
-        StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
-    mint_token(&mut app, mint_module_addr, 1, USER);
+        StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr.clone(), &1)
+            .unwrap();
+    mint_token(&mut app, mint_module_addr.clone(), 1, USER);
     setup_ownership_permission_module(&mut app);
     register_permission(&mut app, &permission_module_addr);
     setup_module_permissions(

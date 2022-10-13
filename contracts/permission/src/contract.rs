@@ -1,15 +1,14 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Empty, Env,
-    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
+    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
+    ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
-use komple_utils::event::EventHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -41,13 +40,7 @@ pub fn instantiate(
 
     PERMISSION_ID.save(deps.storage, &0)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_permission_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin)
-            .add_attribute("hub_addr", info.sender)
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -112,12 +105,10 @@ fn execute_register_permission(
     // This will be loaded in reply handler for registering the correct module
     PERMISSION_TO_REGISTER.save(deps.storage, &permission)?;
 
-    Ok(Response::new().add_submessage(sub_msg).add_event(
-        EventHelper::new("komple_permission_module")
-            .add_attribute("action", "register_permission")
-            .add_attribute("module", permission)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("action", "execute_register_permission")
+        .add_attribute("module", permission.as_str()))
 }
 
 fn execute_update_module_permissions(
@@ -138,27 +129,22 @@ fn execute_update_module_permissions(
         operators,
     )?;
 
-    let mut event_attributes: Vec<Attribute> = vec![];
-
     for permission in &permissions {
         if !PERMISSIONS.has(deps.storage, permission) {
             return Err(ContractError::InvalidPermissions {});
         };
-        event_attributes.push(Attribute {
-            key: "permission".to_string(),
-            value: permission.to_string(),
-        });
     }
 
     MODULE_PERMISSIONS.save(deps.storage, &module, &permissions)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_permission_module")
-            .add_attribute("action", "update_module_permissions")
-            .add_attribute("module", module)
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("action", "execute_update_module_permissions")
+        .add_attributes(
+            permissions
+                .iter()
+                .map(|p| ("permission", p.as_str()))
+                .collect::<Vec<(&str, &str)>>(),
+        ))
 }
 
 fn execute_update_operators(
@@ -182,28 +168,17 @@ fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
-    let mut event_attributes: Vec<Attribute> = vec![];
-
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
-            event_attributes.push(Attribute {
-                key: "addrs".to_string(),
-                value: addr.to_string(),
-            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_permission_module")
-            .add_attribute("action", "update_operators".to_string())
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
 fn execute_check(
@@ -216,7 +191,7 @@ fn execute_check(
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     let data: Vec<PermissionCheckMsg> = from_binary(&msg)?;
-    if data.is_empty() {
+    if data.len() == 0 {
         return Err(ContractError::InvalidPermissions {});
     }
 
@@ -225,8 +200,6 @@ fn execute_check(
         Some(permissions) => permissions,
         None => return Err(ContractError::NoPermissionsForModule {}),
     };
-
-    let mut event_attributes: Vec<Attribute> = vec![];
 
     for permission in data {
         if !expected_permissions.contains(&permission.permission_type) {
@@ -239,20 +212,16 @@ fn execute_check(
             funds: vec![],
         });
         msgs.push(permission_msg);
-
-        event_attributes.push(Attribute {
-            key: "permission".to_string(),
-            value: permission.permission_type,
-        });
     }
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_permission_module")
-            .add_attribute("action", "check")
-            .add_attribute("module", module)
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("action", "execute_check_permission")
+        .add_attributes(
+            expected_permissions
+                .iter()
+                .map(|p| ("permission", p.as_str()))
+                .collect::<Vec<(&str, &str)>>(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

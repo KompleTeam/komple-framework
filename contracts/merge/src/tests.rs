@@ -44,16 +44,18 @@ fn proper_instantiate(app: &mut App) -> Addr {
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
     };
+    let merge_module_addr = app
+        .instantiate_contract(
+            merge_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
 
-    app.instantiate_contract(
-        merge_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
+    merge_module_addr
 }
 
 mod merge_lock {
@@ -66,7 +68,12 @@ mod merge_lock {
 
         let msg = ExecuteMsg::UpdateMergeLock { lock: true };
         let _ = app
-            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(
+                Addr::unchecked(ADMIN),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap();
 
         let msg = QueryMsg::Config {};
@@ -80,12 +87,22 @@ mod merge_lock {
             addrs: vec![USER.to_string()],
         };
         let _ = app
-            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(
+                Addr::unchecked(ADMIN),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap();
 
         let msg = ExecuteMsg::UpdateMergeLock { lock: false };
         let _ = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap();
 
         let msg = QueryMsg::Config {};
@@ -103,7 +120,12 @@ mod merge_lock {
 
         let msg = ExecuteMsg::UpdateMergeLock { lock: true };
         let err = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -124,7 +146,12 @@ mod whitelist_addresses {
             addrs: vec![RANDOM.to_string()],
         };
         let _ = app
-            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(
+                Addr::unchecked(ADMIN),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap();
 
         let msg = QueryMsg::Operators {};
@@ -144,7 +171,12 @@ mod whitelist_addresses {
             addrs: vec![RANDOM.to_string()],
         };
         let err = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -169,7 +201,12 @@ mod update_operators {
             ],
         };
         let _ = app
-            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(
+                Addr::unchecked(ADMIN),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap();
 
         let msg = QueryMsg::Operators {};
@@ -189,14 +226,14 @@ mod update_operators {
                 Addr::unchecked("juno..first"),
                 merge_module_addr.clone(),
                 &msg,
-                &[],
+                &vec![],
             )
             .unwrap();
 
         let msg = QueryMsg::Operators {};
         let res: ResponseWrapper<Vec<String>> = app
             .wrap()
-            .query_wasm_smart(merge_module_addr, &msg)
+            .query_wasm_smart(merge_module_addr.clone(), &msg)
             .unwrap();
         assert_eq!(res.data.len(), 1);
         assert_eq!(res.data[0], "juno..third");
@@ -211,7 +248,12 @@ mod update_operators {
             addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
         };
         let err = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
+            .execute_contract(
+                Addr::unchecked(USER),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -228,11 +270,21 @@ mod update_operators {
             addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
         };
         let _ = app
-            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(
+                Addr::unchecked(ADMIN),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap();
 
         let err = app
-            .execute_contract(Addr::unchecked("juno..third"), merge_module_addr, &msg, &[])
+            .execute_contract(
+                Addr::unchecked("juno..third"),
+                merge_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),

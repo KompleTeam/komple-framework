@@ -1,6 +1,9 @@
-use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
 use cw_storage_plus::{Item, Map};
+
 use komple_types::{
     metadata::{
         Metadata as MetadataType, COLLECTION_ADDR_NAMESPACE, DYNAMIC_LINKED_METADATA_NAMESPACE,
@@ -9,9 +12,10 @@ use komple_types::{
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct Config {
     pub admin: Addr,
+    pub update_lock: bool,
     pub metadata_type: MetadataType,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
@@ -20,13 +24,13 @@ pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 pub const COLLECTION_ADDR: Item<Addr> = Item::new(COLLECTION_ADDR_NAMESPACE);
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct Trait {
     // pub display_type: Option<String>,
     pub trait_type: String,
     pub value: String,
 }
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct MetaInfo {
     pub image: Option<String>,
     pub external_url: Option<String>,
@@ -34,7 +38,7 @@ pub struct MetaInfo {
     pub animation_url: Option<String>,
     pub youtube_url: Option<String>,
 }
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct Metadata {
     pub meta_info: MetaInfo,
     pub attributes: Vec<Trait>,
