@@ -48,9 +48,9 @@ pub fn instantiate(
     Ok(Response::new().add_event(
         EventHelper::new("komple_metadata_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin.to_string())
+            .add_attribute("admin", config.admin)
             .add_attribute("metadata_type", config.metadata_type.to_string())
-            .add_attribute("collection_addr", info.sender.to_string())
+            .add_attribute("collection_addr", info.sender)
             .get(),
     ))
 }
@@ -138,7 +138,7 @@ fn execute_add_metadata(
         .check_add_attribute(
             &metadata.meta_info.image,
             "meta_info",
-            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap()),
+            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap_or(&String::from(""))),
         )
         .check_add_attribute(
             &metadata.meta_info.external_url,
@@ -288,7 +288,7 @@ fn execute_update_meta_info(
         .check_add_attribute(
             &metadata.meta_info.image,
             "meta_info",
-            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap()),
+            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap_or(&String::from(""))),
         )
         .check_add_attribute(
             &metadata.meta_info.external_url,
@@ -391,7 +391,7 @@ fn execute_add_attribute(
             .add_attribute("token_id", token_id.to_string())
             .add_attribute(
                 "attribute",
-                format!("{}-{}", attribute.trait_type, attribute.value),
+                format!("{}/{}", attribute.trait_type, attribute.value),
             )
             .get(),
     ))
@@ -453,7 +453,7 @@ fn execute_update_attribute(
             .add_attribute("token_id", token_id.to_string())
             .add_attribute(
                 "attribute",
-                format!("{}-{}", attribute.trait_type, attribute.value),
+                format!("{}/{}", attribute.trait_type, attribute.value),
             )
             .get(),
     ))
@@ -594,7 +594,7 @@ fn execute_update_operators(
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_metadata_module")
-            .add_attribute("action".to_string(), "update_operators".to_string())
+            .add_attribute("action", "update_operators".to_string())
             .add_attributes(event_attributes)
             .get(),
     ))

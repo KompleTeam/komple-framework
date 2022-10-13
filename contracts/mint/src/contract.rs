@@ -55,7 +55,7 @@ pub fn instantiate(
     Ok(Response::new().add_event(
         EventHelper::new("komple_mint_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin.to_string())
+            .add_attribute("admin", config.admin)
             .add_attribute(
                 "public_collection_creation",
                 config.public_collection_creation.to_string(),

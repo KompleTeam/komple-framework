@@ -44,7 +44,7 @@ pub fn instantiate(
     Ok(Response::new().add_event(
         Event::new("komple_merge_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin.to_string())
+            .add_attribute("admin", config.admin)
             .add_attribute("hub_addr", info.sender),
     ))
 }
@@ -92,7 +92,7 @@ fn execute_update_merge_lock(
     Ok(Response::new().add_event(
         Event::new("komple_merge_module")
             .add_attribute("action", "update_merge_lock")
-            .add_attribute("admin", lock.to_string()),
+            .add_attribute("lock", lock.to_string()),
     ))
 }
 

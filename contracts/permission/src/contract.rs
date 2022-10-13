@@ -44,8 +44,8 @@ pub fn instantiate(
     Ok(Response::new().add_event(
         EventHelper::new("komple_permission_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin.to_string())
-            .add_attribute("hub_addr", info.sender.to_string())
+            .add_attribute("admin", config.admin)
+            .add_attribute("hub_addr", info.sender)
             .get(),
     ))
 }
@@ -115,7 +115,7 @@ fn execute_register_permission(
     Ok(Response::new().add_submessage(sub_msg).add_event(
         EventHelper::new("komple_permission_module")
             .add_attribute("action", "register_permission")
-            .add_attribute("module", permission.as_str())
+            .add_attribute("module", permission)
             .get(),
     ))
 }
@@ -200,7 +200,7 @@ fn execute_update_operators(
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_permission_module")
-            .add_attribute("action".to_string(), "update_operators".to_string())
+            .add_attribute("action", "update_operators".to_string())
             .add_attributes(event_attributes)
             .get(),
     ))

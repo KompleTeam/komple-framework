@@ -322,7 +322,7 @@ fn execute_update_operators(
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_hub_module")
-            .add_attribute("action".to_string(), "update_operators".to_string())
+            .add_attribute("action", "update_operators".to_string())
             .add_attributes(event_attributes)
             .get(),
     ))

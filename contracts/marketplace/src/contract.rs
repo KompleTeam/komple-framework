@@ -58,7 +58,7 @@ pub fn instantiate(
     Ok(Response::new().add_event(
         Event::new("komple_marketplace_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin.to_string())
+            .add_attribute("admin", config.admin)
             .add_attribute("native_denom", config.native_denom)
             .add_attribute("hub_addr", info.sender),
     ))
@@ -380,7 +380,7 @@ fn _execute_buy_fixed_listing(
                 .add_attribute("collection_id", collection_id.to_string())
                 .add_attribute("token_id", token_id.to_string())
                 .add_attribute("price", fixed_listing.price.to_string())
-                .add_attribute("owner", fixed_listing.owner.to_string())
+                .add_attribute("owner", fixed_listing.owner)
                 .add_attribute("buyer", info.sender.to_string())
                 .add_attribute("marketplace_fee", marketplace_fee.to_string())
                 .add_attribute("royalty_fee", royalty_fee.to_string())

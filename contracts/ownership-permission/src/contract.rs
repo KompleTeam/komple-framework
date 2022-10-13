@@ -41,8 +41,8 @@ pub fn instantiate(
     Ok(Response::new().add_event(
         EventHelper::new("komple_ownership_permission_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", admin.to_string())
-            .add_attribute("permission_module_addr", info.sender.to_string())
+            .add_attribute("admin", admin)
+            .add_attribute("permission_module_addr", info.sender)
             .get(),
     ))
 }
