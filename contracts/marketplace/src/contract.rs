@@ -315,9 +315,8 @@ fn _execute_buy_fixed_listing(
             module_name: Modules::Mint.to_string(),
             fee_name: format!("collection_{}_royalty", collection_id),
         };
-        let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> = deps
-            .querier
-            .query_wasm_smart(fee_module_addr, &query);
+        let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> =
+            deps.querier.query_wasm_smart(fee_module_addr, &query);
         if let Ok(percentage_fee) = res {
             royalty_fee = percentage_fee.data.value.mul(fixed_listing.price);
 

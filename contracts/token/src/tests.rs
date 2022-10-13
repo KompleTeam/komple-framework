@@ -583,7 +583,7 @@ mod actions {
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::UpdateOperators {
+                msg: ExecuteMsg::UpdateModuleOperators {
                     addrs: vec![RANDOM.to_string(), RANDOM_2.to_string(), RANDOM.to_string()],
                 },
             };
@@ -615,7 +615,7 @@ mod actions {
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::UpdateOperators {
+                msg: ExecuteMsg::UpdateModuleOperators {
                     addrs: vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 },
             };

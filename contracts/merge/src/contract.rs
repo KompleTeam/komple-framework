@@ -297,7 +297,12 @@ fn make_mint_messages(
         // They have to be in the burn message
         if !linked_collections.is_empty() {
             for linked_collection_id in linked_collections {
-                if !merge_msg.burn.iter().map(|m| m.collection_id).any(|x| x == linked_collection_id) {
+                if !merge_msg
+                    .burn
+                    .iter()
+                    .map(|m| m.collection_id)
+                    .any(|x| x == linked_collection_id)
+                {
                     return Err(ContractError::LinkedCollectionNotFound {});
                 }
             }

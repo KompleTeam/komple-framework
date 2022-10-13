@@ -16,7 +16,7 @@ impl EventHelper {
         &mut self,
         check: &Option<T>,
         key: &str,
-        value: T,
+        value: impl Into<String>,
     ) -> EventHelper {
         if check.is_none() {
             return Self {
@@ -24,7 +24,7 @@ impl EventHelper {
             };
         };
         Self {
-            event: self.get().add_attribute(key, value.to_string()),
+            event: self.get().add_attribute(key, value),
         }
     }
 

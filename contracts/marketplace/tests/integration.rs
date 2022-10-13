@@ -349,7 +349,7 @@ pub fn mint_token(app: &mut App, mint_module_addr: Addr, collection_id: u32, sen
 
 pub fn setup_token_module_operators(app: &mut App, token_module_addr: Addr, addrs: Vec<String>) {
     let msg: Cw721ExecuteMsg<Empty, TokenExecuteMsg> = Cw721ExecuteMsg::Extension {
-        msg: TokenExecuteMsg::UpdateOperators { addrs },
+        msg: TokenExecuteMsg::UpdateModuleOperators { addrs },
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])

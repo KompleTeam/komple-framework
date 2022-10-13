@@ -329,7 +329,7 @@ pub fn setup_mint_module_operators(app: &mut App, mint_module_addr: Addr, addrs:
 }
 
 pub fn setup_token_module_operators(app: &mut App, token_module_addr: Addr, addrs: Vec<String>) {
-    let msg = TokenExecuteMsg::UpdateOperators { addrs };
+    let msg = TokenExecuteMsg::UpdateModuleOperators { addrs };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
         .unwrap();

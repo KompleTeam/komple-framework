@@ -16,6 +16,9 @@ impl Collections {
             Collections::Linked => "linked",
         }
     }
+    pub fn to_string(&self) -> String {
+        self.as_str().to_string()
+    }
 }
 
 pub const COLLECTION_ADDRS_NAMESPACE: &str = "collection_addrs";
