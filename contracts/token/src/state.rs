@@ -1,4 +1,3 @@
-use cosmwasm_schema::cw_serde;
 use komple_types::{
     collection::Collections,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
@@ -8,11 +7,13 @@ use komple_types::{
         TOKEN_IDS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
     },
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, Timestamp, Uint128};
 use cw_storage_plus::{Item, Map};
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CollectionInfo {
     pub collection_type: Collections,
     pub name: String,
@@ -22,14 +23,14 @@ pub struct CollectionInfo {
 }
 pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new(COLLECTION_INFO_NAMESPACE);
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
     pub creator: Addr,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct CollectionConfig {
     pub native_denom: String,
     pub per_address_limit: Option<u32>,
@@ -40,7 +41,7 @@ pub struct CollectionConfig {
 }
 pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new(COLLECTION_CONFIG_NAMESPACE);
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SubModules {
     pub metadata: Option<Addr>,
     pub whitelist: Option<Addr>,

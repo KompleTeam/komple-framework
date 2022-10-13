@@ -1,14 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError,
-    StdResult, Timestamp,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError, StdResult,
+    Timestamp,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 use komple_types::query::ResponseWrapper;
-use komple_utils::event::EventHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -36,7 +35,7 @@ pub fn instantiate(
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
-    if msg.members.is_empty() {
+    if msg.members.len() == 0 {
         return Err(ContractError::EmptyMemberList {});
     }
 
@@ -56,17 +55,11 @@ pub fn instantiate(
     msg.members.sort_unstable();
     msg.members.dedup();
 
-    let mut event_attributes: Vec<Attribute> = vec![];
-
     let member_num = msg.members.len() as u16;
 
     for member in msg.members.into_iter() {
         let addr = deps.api.addr_validate(&member.clone())?;
         WHITELIST.save(deps.storage, addr, &true)?;
-        event_attributes.push(Attribute {
-            key: "member".to_string(),
-            value: member,
-        });
     }
 
     let whitelist_config = WhitelistConfig {
@@ -79,20 +72,7 @@ pub fn instantiate(
     };
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("start_time", whitelist_config.start_time.to_string())
-            .add_attribute("end_time", whitelist_config.end_time.to_string())
-            .add_attribute("unit_price", whitelist_config.unit_price.to_string())
-            .add_attribute(
-                "per_address_limit",
-                whitelist_config.per_address_limit.to_string(),
-            )
-            .add_attribute("member_limit", whitelist_config.member_limit.to_string())
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -142,12 +122,7 @@ fn execute_update_start_time(
     whitelist_config.start_time = start_time;
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "update_start_time")
-            .add_attribute("start_time", whitelist_config.start_time.to_string())
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_update_start_time"))
 }
 
 fn execute_update_end_time(
@@ -176,12 +151,7 @@ fn execute_update_end_time(
     whitelist_config.end_time = end_time;
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "update_end_time")
-            .add_attribute("end_time", whitelist_config.end_time.to_string())
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_update_end_time"))
 }
 
 fn execute_add_members(
@@ -203,8 +173,6 @@ fn execute_add_members(
     members.sort_unstable();
     members.dedup();
 
-    let mut event_attributes: Vec<Attribute> = vec![];
-
     for member in members {
         if whitelist_config.member_num >= whitelist_config.member_limit {
             return Err(ContractError::MemberLimitExceeded {});
@@ -215,21 +183,11 @@ fn execute_add_members(
         }
         WHITELIST.save(deps.storage, addr, &true)?;
         whitelist_config.member_num += 1;
-
-        event_attributes.push(Attribute {
-            key: "member".to_string(),
-            value: member,
-        });
     }
 
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "add_members")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_add_members"))
 }
 
 fn execute_remove_members(
@@ -251,8 +209,6 @@ fn execute_remove_members(
     members.sort_unstable();
     members.dedup();
 
-    let mut event_attributes: Vec<Attribute> = vec![];
-
     for member in members {
         let addr = deps.api.addr_validate(&member)?;
         if !WHITELIST.has(deps.storage, addr.clone()) {
@@ -260,21 +216,11 @@ fn execute_remove_members(
         }
         WHITELIST.remove(deps.storage, addr);
         whitelist_config.member_num -= 1;
-
-        event_attributes.push(Attribute {
-            key: "member".to_string(),
-            value: member,
-        });
     }
 
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "remove_members")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_add_members"))
 }
 
 fn execute_update_per_address_limit(
@@ -300,15 +246,7 @@ fn execute_update_per_address_limit(
     whitelist_config.per_address_limit = limit;
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "update_per_address_limit")
-            .add_attribute(
-                "per_address_limit",
-                whitelist_config.per_address_limit.to_string(),
-            )
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_update_per_address_limit"))
 }
 
 fn execute_update_member_limit(
@@ -333,12 +271,7 @@ fn execute_update_member_limit(
     whitelist_config.member_limit = limit;
     WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "update_member_limit")
-            .add_attribute("member_limit", whitelist_config.member_limit.to_string())
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_update_member_limit"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

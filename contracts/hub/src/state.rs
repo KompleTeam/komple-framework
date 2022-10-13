@@ -1,4 +1,3 @@
-use cosmwasm_schema::cw_serde;
 use komple_types::{
     hub::{
         HUB_INFO_NAMESPACE, MARBU_FEE_MODULE_NAMESPACE, MODULE_ID_NAMESPACE,
@@ -7,12 +6,14 @@ use komple_types::{
     module::MODULE_ADDRS_NAMESPACE,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 
 // These info also used for website profile
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct HubInfo {
     pub name: String,
     pub description: String,
@@ -21,7 +22,7 @@ pub struct HubInfo {
 }
 pub const HUB_INFO: Item<HubInfo> = Item::new(HUB_INFO_NAMESPACE);
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
 }
@@ -30,7 +31,7 @@ pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 pub const MODULE_ADDRS: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);
 
 // Contains the configuration for website profile
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WebsiteConfig {
     pub background_color: Option<String>,
     pub background_image: Option<String>,

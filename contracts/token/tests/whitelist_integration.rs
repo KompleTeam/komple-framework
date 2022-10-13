@@ -88,7 +88,12 @@ fn setup_whitelist(
         },
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            token_module_addr.clone(),
+            &msg,
+            &vec![],
+        )
         .unwrap();
 
     let msg = Cw721QueryMsg::Extension {
@@ -96,7 +101,7 @@ fn setup_whitelist(
     };
     let res: ResponseWrapper<TokenSubModules> = app
         .wrap()
-        .query_wasm_smart(token_module_addr, &msg)
+        .query_wasm_smart(token_module_addr.clone(), &msg)
         .unwrap();
 
     res.data.whitelist.unwrap()
@@ -140,16 +145,18 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         collection_config,
         metadata_info,
     };
+    let token_module_addr = app
+        .instantiate_contract(
+            token_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
 
-    app.instantiate_contract(
-        token_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
+    token_module_addr
 }
 
 mod initialization {
@@ -179,7 +186,12 @@ mod initialization {
             },
         };
         let _ = app
-            .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+            .execute_contract(
+                Addr::unchecked(ADMIN),
+                token_module_addr.clone(),
+                &msg,
+                &vec![],
+            )
             .unwrap();
 
         let msg = Cw721QueryMsg::Extension {
@@ -187,7 +199,7 @@ mod initialization {
         };
         let res: ResponseWrapper<TokenSubModules> = app
             .wrap()
-            .query_wasm_smart(token_module_addr, &msg)
+            .query_wasm_smart(token_module_addr.clone(), &msg)
             .unwrap();
         assert_eq!(res.data.whitelist.unwrap(), "contract2")
     }
@@ -237,7 +249,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     token_module_addr.clone(),
                     &random_mint,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
             let _ = app
@@ -245,7 +257,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     token_module_addr.clone(),
                     &random_2_mint,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
             let _ = app
@@ -253,7 +265,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     token_module_addr.clone(),
                     &random_mint,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
             let _ = app
@@ -261,7 +273,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     token_module_addr.clone(),
                     &random_2_mint,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
 
@@ -311,7 +323,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     token_module_addr,
                     &msg,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap_err();
             assert_eq!(
@@ -352,7 +364,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     token_module_addr.clone(),
                     &msg,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
             let _ = app
@@ -360,16 +372,16 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     token_module_addr.clone(),
                     &msg,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
 
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_module_addr,
+                    token_module_addr.clone(),
                     &msg,
-                    &[coin(100, NATIVE_DENOM)],
+                    &vec![coin(100, NATIVE_DENOM)],
                 )
                 .unwrap_err();
             assert_eq!(
@@ -403,13 +415,23 @@ mod actions {
                 },
             };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    token_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
                 .unwrap();
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
             let err = app
-                .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    token_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -419,9 +441,9 @@ mod actions {
             let err = app
                 .execute_contract(
                     Addr::unchecked(ADMIN),
-                    token_module_addr,
+                    token_module_addr.clone(),
                     &msg,
-                    &[coin(50, NATIVE_DENOM)],
+                    &vec![coin(50, NATIVE_DENOM)],
                 )
                 .unwrap_err();
             assert_eq!(

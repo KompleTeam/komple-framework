@@ -1,4 +1,3 @@
-use cosmwasm_schema::cw_serde;
 use komple_types::{
     collection::{
         BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE, COLLECTION_ID_NAMESPACE,
@@ -6,11 +5,13 @@ use komple_types::{
     },
     shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
     pub public_collection_creation: bool,

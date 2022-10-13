@@ -5,4 +5,5 @@ function optimize() {
   cosmwasm/workspace-optimizer-arm64:0.12.8
 }
 
+cd ..
 optimize

@@ -116,16 +116,18 @@ fn proper_instantiate(
         collection_info,
         metadata_info,
     };
+    let token_module_addr = app
+        .instantiate_contract(
+            token_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
 
-    app.instantiate_contract(
-        token_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
+    token_module_addr
 }
 
 mod initialization {
@@ -243,8 +245,8 @@ mod initialization {
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
-            token_info: token_info,
-            collection_info: collection_info,
+            token_info: token_info.clone(),
+            collection_info: collection_info.clone(),
             collection_config,
             metadata_info,
         };
@@ -583,12 +585,17 @@ mod actions {
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::UpdateModuleOperators {
+                msg: ExecuteMsg::UpdateOperators {
                     addrs: vec![RANDOM.to_string(), RANDOM_2.to_string(), RANDOM.to_string()],
                 },
             };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    token_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
                 .unwrap();
 
             let msg = Cw721QueryMsg::Extension {
@@ -596,7 +603,7 @@ mod actions {
             };
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
-                .query_wasm_smart(token_module_addr, &msg)
+                .query_wasm_smart(token_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data, vec![RANDOM.to_string(), RANDOM_2.to_string()]);
         }
@@ -615,12 +622,17 @@ mod actions {
             );
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::UpdateModuleOperators {
+                msg: ExecuteMsg::UpdateOperators {
                     addrs: vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 },
             };
             let err = app
-                .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    token_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -660,7 +672,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg = Cw721QueryMsg::Extension {
@@ -668,7 +685,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<Locks> = app
                     .wrap()
-                    .query_wasm_smart(token_module_addr, &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data, locks);
             }
@@ -693,10 +710,17 @@ mod actions {
                     send_lock: false,
                 };
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateLocks { locks: locks },
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -728,7 +752,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let locks = Locks {
@@ -744,7 +773,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg = Cw721QueryMsg::Extension {
@@ -754,7 +788,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<Locks> = app
                     .wrap()
-                    .query_wasm_smart(token_module_addr, &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data, locks);
             }
@@ -781,11 +815,16 @@ mod actions {
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdateTokenLocks {
                         token_id: "1".to_string(),
-                        locks: locks,
+                        locks: locks.clone(),
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -815,11 +854,16 @@ mod actions {
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdateTokenLocks {
                         token_id: "1".to_string(),
-                        locks: locks,
+                        locks: locks.clone(),
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -850,7 +894,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg = Cw721QueryMsg::Extension {
@@ -858,7 +907,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(token_module_addr, &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.per_address_limit, Some(5));
             }
@@ -882,7 +931,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -909,7 +963,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -940,7 +999,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg = Cw721QueryMsg::Extension {
@@ -948,7 +1012,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(token_module_addr, &msg)
+                    .query_wasm_smart(token_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(
                     res.data.start_time,
@@ -975,7 +1039,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1007,7 +1076,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1022,7 +1096,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1058,7 +1137,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1068,7 +1152,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let res =
@@ -1096,7 +1185,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let locks = Locks {
@@ -1113,7 +1207,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1123,7 +1222,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1131,10 +1235,17 @@ mod actions {
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateLocks { locks: locks },
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1144,7 +1255,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1176,7 +1292,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::ApproveAll {
@@ -1184,7 +1305,12 @@ mod actions {
                     expires: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1194,7 +1320,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let res =
@@ -1222,7 +1353,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1254,7 +1390,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1263,7 +1404,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let res = StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1);
@@ -1304,7 +1450,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let locks = Locks {
@@ -1321,7 +1472,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1330,7 +1486,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1338,10 +1499,17 @@ mod actions {
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateLocks { locks: locks },
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1350,7 +1518,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1388,7 +1561,7 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         token_module_addr.clone(),
                         &msg,
-                        &[coin(1_000_000, NATIVE_DENOM)],
+                        &vec![coin(1_000_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
@@ -1449,10 +1622,17 @@ mod actions {
                 };
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateLocks { locks: locks },
+                    msg: ExecuteMsg::UpdateLocks {
+                        locks: locks.clone(),
+                    },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1462,7 +1642,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1490,7 +1675,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1500,7 +1690,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1510,7 +1705,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1538,7 +1738,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1548,7 +1753,12 @@ mod actions {
                     },
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1558,7 +1768,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1587,7 +1802,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1617,9 +1837,9 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(RANDOM),
-                        token_module_addr,
+                        token_module_addr.clone(),
                         &msg,
-                        &[coin(100, TEST_DENOM)],
+                        &vec![coin(100, TEST_DENOM)],
                     )
                     .unwrap_err();
                 assert_eq!(
@@ -1648,7 +1868,12 @@ mod actions {
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        token_module_addr.clone(),
+                        &msg,
+                        &vec![],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1664,9 +1889,9 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        token_module_addr,
+                        token_module_addr.clone(),
                         &msg,
-                        &[coin(50, NATIVE_DENOM)],
+                        &vec![coin(50, NATIVE_DENOM)],
                     )
                     .unwrap_err();
                 assert_eq!(

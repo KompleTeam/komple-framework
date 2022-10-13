@@ -57,16 +57,18 @@ fn proper_instantiate(
         per_address_limit,
         member_limit,
     };
+    let whitelist_module_addr = app
+        .instantiate_contract(
+            whitelist_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
 
-    app.instantiate_contract(
-        whitelist_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
+    whitelist_module_addr
 }
 
 mod initialization {
@@ -343,7 +345,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_module_addr, &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.start_time, app.block_info().time.plus_seconds(5));
             }
@@ -365,7 +367,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateStartTime(app.block_info().time.plus_seconds(5));
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -434,7 +441,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateStartTime(app.block_info().time.plus_seconds(11));
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -474,7 +486,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_module_addr, &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.end_time, app.block_info().time.plus_seconds(5));
             }
@@ -496,7 +508,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateEndTime(app.block_info().time.plus_seconds(8));
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -565,7 +582,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateEndTime(app.block_info().time.plus_seconds(11));
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -612,7 +634,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<Vec<String>> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_module_addr, &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(
                     res.data,
@@ -641,7 +663,12 @@ mod actions {
 
                 let msg = ExecuteMsg::AddMembers(vec![RANDOM_2.to_string()]);
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -668,7 +695,12 @@ mod actions {
 
                 let msg = ExecuteMsg::AddMembers(vec![RANDOM_2.to_string()]);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -693,7 +725,12 @@ mod actions {
 
                 let msg = ExecuteMsg::AddMembers(vec![RANDOM.to_string()]);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -718,7 +755,12 @@ mod actions {
 
                 let msg = ExecuteMsg::AddMembers(vec![RANDOM_3.to_string()]);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -765,7 +807,7 @@ mod actions {
                 };
                 let res: ResponseWrapper<Vec<String>> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_module_addr, &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data, vec![RANDOM.to_string(), RANDOM_3.to_string()]);
             }
@@ -787,7 +829,12 @@ mod actions {
 
                 let msg = ExecuteMsg::RemoveMembers(vec![RANDOM_2.to_string()]);
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -814,7 +861,12 @@ mod actions {
 
                 let msg = ExecuteMsg::RemoveMembers(vec![RANDOM_2.to_string()]);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -839,7 +891,12 @@ mod actions {
 
                 let msg = ExecuteMsg::RemoveMembers(vec![RANDOM_2.to_string()]);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -883,7 +940,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_module_addr, &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.per_address_limit, 10);
             }
@@ -905,7 +962,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdatePerAddressLimit(10);
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -932,7 +994,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdatePerAddressLimit(10);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -957,7 +1024,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdatePerAddressLimit(0);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -997,7 +1069,7 @@ mod actions {
                 let msg = QueryMsg::Config {};
                 let res: ResponseWrapper<ConfigResponse> = app
                     .wrap()
-                    .query_wasm_smart(whitelist_module_addr, &msg)
+                    .query_wasm_smart(whitelist_module_addr.clone(), &msg)
                     .unwrap();
                 assert_eq!(res.data.member_limit, 20);
             }
@@ -1019,7 +1091,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateMemberLimit(20);
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1046,7 +1123,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateMemberLimit(20);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1071,7 +1153,12 @@ mod actions {
 
                 let msg = ExecuteMsg::UpdateMemberLimit(0);
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        whitelist_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),

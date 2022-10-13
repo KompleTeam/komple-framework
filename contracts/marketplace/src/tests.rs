@@ -41,16 +41,18 @@ fn proper_instantiate(app: &mut App) -> Addr {
         admin: ADMIN.to_string(),
         native_denom: NATIVE_DENOM.to_string(),
     };
+    let marketplace_module_addr = app
+        .instantiate_contract(
+            marketplace_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
 
-    app.instantiate_contract(
-        marketplace_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
+    marketplace_module_addr
 }
 
 mod instantiate {
@@ -103,7 +105,7 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     marketplace_module_addr.clone(),
                     &msg,
-                    &[],
+                    &vec![],
                 )
                 .unwrap();
 
@@ -124,14 +126,14 @@ mod actions {
                     Addr::unchecked("juno..first"),
                     marketplace_module_addr.clone(),
                     &msg,
-                    &[],
+                    &vec![],
                 )
                 .unwrap();
 
             let msg = QueryMsg::Operators {};
             let res: ResponseWrapper<Vec<String>> = app
                 .wrap()
-                .query_wasm_smart(marketplace_module_addr, &msg)
+                .query_wasm_smart(marketplace_module_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(res.data.len(), 1);
             assert_eq!(res.data[0], "juno..third");
@@ -146,7 +148,12 @@ mod actions {
                 addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
             };
             let err = app
-                .execute_contract(Addr::unchecked(USER), marketplace_module_addr, &msg, &[])
+                .execute_contract(
+                    Addr::unchecked(USER),
+                    marketplace_module_addr.clone(),
+                    &msg,
+                    &vec![],
+                )
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -167,16 +174,16 @@ mod actions {
                     Addr::unchecked(ADMIN),
                     marketplace_module_addr.clone(),
                     &msg,
-                    &[],
+                    &vec![],
                 )
                 .unwrap();
 
             let err = app
                 .execute_contract(
                     Addr::unchecked("juno..third"),
-                    marketplace_module_addr,
+                    marketplace_module_addr.clone(),
                     &msg,
-                    &[],
+                    &vec![],
                 )
                 .unwrap_err();
             assert_eq!(

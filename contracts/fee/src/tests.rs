@@ -45,9 +45,11 @@ fn setup_fee_contract(app: &mut App) -> Addr {
     let msg = InstantiateMsg {
         admin: ADMIN.to_string(),
     };
+    let addr = app
+        .instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &vec![], "test", None)
+        .unwrap();
 
-    app.instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
-        .unwrap()
+    addr
 }
 
 fn setup_fee(
@@ -65,7 +67,7 @@ fn setup_fee(
         data,
     };
     let _ = app
-        .execute_contract(Addr::unchecked(ADMIN), contract, &msg, &[])
+        .execute_contract(Addr::unchecked(ADMIN), contract, &msg, &vec![])
         .unwrap();
 }
 
@@ -81,7 +83,7 @@ mod instantiation {
             admin: ADMIN.to_string(),
         };
         let addr = app
-            .instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
+            .instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &vec![], "test", None)
             .unwrap();
 
         let msg = QueryMsg::Config {};
@@ -115,7 +117,7 @@ mod actions {
                     .unwrap(),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                     .unwrap();
 
                 let msg = QueryMsg::PercentageFee {
@@ -123,7 +125,7 @@ mod actions {
                     fee_name: "komple".to_string(),
                 };
                 let res: ResponseWrapper<PercentageFeeResponse> =
-                    app.wrap().query_wasm_smart(addr, &msg).unwrap();
+                    app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
                 assert_eq!(res.data.module_name, Modules::Marketplace.as_str());
                 assert_eq!(res.data.fee_name, "komple");
                 assert_eq!(res.data.address, Some(KOMPLE.to_string()));
@@ -146,7 +148,7 @@ mod actions {
                     .unwrap(),
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(PAYMENT), addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(PAYMENT), addr.clone(), &msg, &vec![])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -170,7 +172,7 @@ mod actions {
                     .unwrap(),
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -219,7 +221,7 @@ mod actions {
                     .unwrap(),
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -237,7 +239,7 @@ mod actions {
                     .unwrap(),
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -265,7 +267,7 @@ mod actions {
                     .unwrap(),
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                     .unwrap();
 
                 let msg = QueryMsg::FixedFee {
@@ -273,7 +275,7 @@ mod actions {
                     fee_name: "creation".to_string(),
                 };
                 let res: ResponseWrapper<FixedFeeResponse> =
-                    app.wrap().query_wasm_smart(addr, &msg).unwrap();
+                    app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
                 assert_eq!(res.data.module_name, Modules::Hub.as_str());
                 assert_eq!(res.data.fee_name, "creation");
                 assert_eq!(res.data.address, Some(COMMUNITY.to_string()));
@@ -296,7 +298,7 @@ mod actions {
                     .unwrap(),
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(PAYMENT), addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(PAYMENT), addr.clone(), &msg, &vec![])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -320,7 +322,7 @@ mod actions {
                     .unwrap(),
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -357,7 +359,7 @@ mod actions {
                 fee_name: "komple".to_string(),
             };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &[])
+                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                 .unwrap();
 
             let msg = QueryMsg::PercentageFee {
@@ -393,7 +395,7 @@ mod actions {
                 fee_name: "creation".to_string(),
             };
             let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &[])
+                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
                 .unwrap();
 
             let msg = QueryMsg::PercentageFee {
@@ -429,7 +431,7 @@ mod actions {
                 fee_name: "creation".to_string(),
             };
             let err = app
-                .execute_contract(Addr::unchecked(PAYMENT), addr, &msg, &[])
+                .execute_contract(Addr::unchecked(PAYMENT), addr.clone(), &msg, &vec![])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),
@@ -496,7 +498,7 @@ mod actions {
                         Addr::unchecked(ADMIN),
                         addr.clone(),
                         &msg,
-                        &[coin(360_000, NATIVE_DENOM)],
+                        &vec![coin(360_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
@@ -521,9 +523,9 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        addr,
+                        addr.clone(),
                         &msg,
-                        &[coin(630_000, NATIVE_DENOM)],
+                        &vec![coin(630_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
@@ -603,9 +605,9 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        addr,
+                        addr.clone(),
                         &msg,
-                        &[coin(360_000, NATIVE_DENOM)],
+                        &vec![coin(360_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
@@ -648,9 +650,9 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        addr,
+                        addr.clone(),
                         &msg,
-                        &[coin(360_000, NATIVE_DENOM)],
+                        &vec![coin(360_000, NATIVE_DENOM)],
                     )
                     .unwrap_err();
                 assert_eq!(
@@ -715,9 +717,9 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        addr,
+                        addr.clone(),
                         &msg,
-                        &[coin(1_750_000, NATIVE_DENOM)],
+                        &vec![coin(1_750_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
@@ -793,9 +795,9 @@ mod actions {
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        addr,
+                        addr.clone(),
                         &msg,
-                        &[coin(1_750_000, NATIVE_DENOM)],
+                        &vec![coin(1_750_000, NATIVE_DENOM)],
                     )
                     .unwrap();
 
@@ -838,9 +840,9 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        addr,
+                        addr.clone(),
                         &msg,
-                        &[coin(1_750_000, NATIVE_DENOM)],
+                        &vec![coin(1_750_000, NATIVE_DENOM)],
                     )
                     .unwrap_err();
                 assert_eq!(
@@ -912,9 +914,9 @@ mod actions {
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
-                        addr,
+                        addr.clone(),
                         &msg,
-                        &[coin(1_000_000, NATIVE_DENOM)],
+                        &vec![coin(1_000_000, NATIVE_DENOM)],
                     )
                     .unwrap_err();
                 assert_eq!(
@@ -981,7 +983,8 @@ mod queries {
             let msg = QueryMsg::TotalPercentageFees {
                 module_name: Modules::Marketplace.to_string(),
             };
-            let res: ResponseWrapper<Decimal> = app.wrap().query_wasm_smart(addr, &msg).unwrap();
+            let res: ResponseWrapper<Decimal> =
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
             assert_eq!(res.data, Decimal::from_str("0.09").unwrap());
         }
 
@@ -1030,7 +1033,8 @@ mod queries {
             let msg = QueryMsg::TotalFixedFees {
                 module_name: Modules::Hub.to_string(),
             };
-            let res: ResponseWrapper<Uint128> = app.wrap().query_wasm_smart(addr, &msg).unwrap();
+            let res: ResponseWrapper<Uint128> =
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
             assert_eq!(res.data, Uint128::new(1_750_000));
         }
     }
@@ -1159,7 +1163,7 @@ mod queries {
                 limit: Some(1),
             };
             let res: ResponseWrapper<Vec<PercentageFeeResponse>> =
-                app.wrap().query_wasm_smart(addr, &msg).unwrap();
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
             assert_eq!(res.data.len(), 1);
             assert_eq!(res.data[0].fee_name, "komple");
             assert_eq!(res.data[0].address, Some(KOMPLE.to_string()));
@@ -1291,7 +1295,7 @@ mod queries {
                 limit: Some(1),
             };
             let res: ResponseWrapper<Vec<FixedFeeResponse>> =
-                app.wrap().query_wasm_smart(addr, &msg).unwrap();
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
             assert_eq!(res.data.len(), 1);
             assert_eq!(res.data[0].fee_name, "module_register");
             assert_eq!(res.data[0].address, Some(COMMUNITY.to_string()));
@@ -1408,7 +1412,7 @@ mod queries {
                     limit: Some(2),
                 };
                 let res: ResponseWrapper<Vec<String>> =
-                    app.wrap().query_wasm_smart(addr, &msg).unwrap();
+                    app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
                 assert_eq!(res.data.len(), 2);
                 assert_eq!(res.data[0], "marketplace");
                 assert_eq!(res.data[1], "mint");
@@ -1521,7 +1525,7 @@ mod queries {
                     limit: Some(2),
                 };
                 let res: ResponseWrapper<Vec<String>> =
-                    app.wrap().query_wasm_smart(addr, &msg).unwrap();
+                    app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
                 assert_eq!(res.data.len(), 2);
                 assert_eq!(res.data[0], "marketplace");
                 assert_eq!(res.data[1], "mint");

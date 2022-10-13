@@ -20,7 +20,7 @@ impl StorageHelper {
         module: Modules,
     ) -> StdResult<Addr> {
         let key = Self::get_map_storage_key(MODULE_ADDRS_NAMESPACE, module.as_str().as_bytes())?;
-        let res = Self::query_storage::<Addr>(querier, hub_addr, &key)?;
+        let res = Self::query_storage::<Addr>(&querier, &hub_addr, &key)?;
         match res {
             Some(res) => Ok(res),
             None => Err(StdError::NotFound {
@@ -36,7 +36,7 @@ impl StorageHelper {
     ) -> StdResult<Addr> {
         let key =
             Self::get_map_storage_key(COLLECTION_ADDRS_NAMESPACE, &collection_id.to_be_bytes())?;
-        let res = Self::query_storage::<Addr>(querier, mint_module_address, &key)?;
+        let res = Self::query_storage::<Addr>(&querier, &mint_module_address, &key)?;
         match res {
             Some(res) => Ok(res),
             None => Err(StdError::NotFound {
@@ -52,7 +52,7 @@ impl StorageHelper {
     ) -> StdResult<Vec<u32>> {
         let key =
             Self::get_map_storage_key(LINKED_COLLECTIONS_NAMESPACE, &collection_id.to_be_bytes())?;
-        let res = Self::query_storage::<Vec<u32>>(querier, mint_module_address, &key)?;
+        let res = Self::query_storage::<Vec<u32>>(&querier, &mint_module_address, &key)?;
         match res {
             Some(res) => Ok(res),
             None => Ok(vec![]),
@@ -65,7 +65,7 @@ impl StorageHelper {
         token_id: &u32,
     ) -> StdResult<Addr> {
         let key = Self::get_map_storage_key(TOKENS_NAMESPACE, token_id.to_string().as_bytes())?;
-        let res = Self::query_storage::<TokenInfo<Empty>>(querier, collection_addr, &key)?;
+        let res = Self::query_storage::<TokenInfo<Empty>>(&querier, &collection_addr, &key)?;
         match res {
             Some(res) => Ok(Addr::unchecked(res.owner)),
             None => Err(StdError::NotFound {
@@ -78,7 +78,7 @@ impl StorageHelper {
         querier: &QuerierWrapper,
         collection_addr: &Addr,
     ) -> StdResult<Locks> {
-        let res = Self::query_storage::<Locks>(querier, collection_addr, LOCKS_NAMESPACE)?;
+        let res = Self::query_storage::<Locks>(&querier, &collection_addr, LOCKS_NAMESPACE)?;
         match res {
             Some(res) => Ok(res),
             None => Err(StdError::NotFound {
@@ -94,7 +94,7 @@ impl StorageHelper {
     ) -> StdResult<Locks> {
         let key =
             Self::get_map_storage_key(TOKEN_LOCKS_NAMESPACE, token_id.to_string().as_bytes())?;
-        let res = Self::query_storage::<Locks>(querier, collection_addr, &key)?;
+        let res = Self::query_storage::<Locks>(&querier, &collection_addr, &key)?;
         match res {
             Some(res) => Ok(res),
             None => Ok(Locks {

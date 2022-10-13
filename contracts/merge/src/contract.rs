@@ -4,8 +4,8 @@ use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, Event, MessageInfo,
-    Response, StdError, StdResult, WasmMsg,
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use komple_mint_module::helper::KompleMintModule;
@@ -13,7 +13,6 @@ use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::helper::KompleTokenModule;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 use std::collections::HashMap;
@@ -41,12 +40,7 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_event(
-        Event::new("komple_merge_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin)
-            .add_attribute("hub_addr", info.sender),
-    ))
+    Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -89,11 +83,9 @@ fn execute_update_merge_lock(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        Event::new("komple_merge_module")
-            .add_attribute("action", "update_merge_lock")
-            .add_attribute("lock", lock.to_string()),
-    ))
+    Ok(Response::new()
+        .add_attribute("action", "execute_update_merge_lock")
+        .add_attribute("merge_lock", lock.to_string()))
 }
 
 fn execute_merge(
@@ -104,15 +96,11 @@ fn execute_merge(
 ) -> Result<Response, ContractError> {
     let mut msgs: Vec<WasmMsg> = vec![];
 
-    let mut event_attributes: Vec<Attribute> = vec![];
+    make_merge_msg(&deps, &info, msg, &mut msgs)?;
 
-    make_merge_msg(&deps, &info, &mut event_attributes, msg, &mut msgs)?;
-
-    Ok(Response::new().add_messages(msgs).add_event(
-        Event::new("komple_merge_module")
-            .add_attribute("action", "merge")
-            .add_attributes(event_attributes),
-    ))
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("action", "execute_merge"))
 }
 
 fn execute_permission_merge(
@@ -138,15 +126,11 @@ fn execute_permission_merge(
         funds: info.funds.clone(),
     });
 
-    let mut event_attributes: Vec<Attribute> = vec![];
+    make_merge_msg(&deps, &info, merge_msg, &mut msgs)?;
 
-    make_merge_msg(&deps, &info, &mut event_attributes, merge_msg, &mut msgs)?;
-
-    Ok(Response::new().add_messages(msgs).add_event(
-        Event::new("komple_merge_module")
-            .add_attribute("action", "permission_merge")
-            .add_attributes(event_attributes),
-    ))
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("action", "execute_permission_merge"))
 }
 
 fn execute_update_operators(
@@ -170,35 +154,23 @@ fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
-    let mut event_attributes: Vec<Attribute> = vec![];
-
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
-            event_attributes.push(Attribute {
-                key: "addrs".to_string(),
-                value: addr.to_string(),
-            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_merge_module")
-            .add_attribute("action".to_string(), "update_operators".to_string())
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new().add_attribute("action", "execute_update_operators"))
 }
 
 /// Constructs the mint and burn messages
 fn make_merge_msg(
     deps: &DepsMut,
     info: &MessageInfo,
-    event_attributes: &mut Vec<Attribute>,
     msg: Binary,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
@@ -210,7 +182,7 @@ fn make_merge_msg(
     let merge_msg: MergeMsg = from_binary(&msg)?;
 
     // Throw an error if there are no burn messages
-    if merge_msg.burn.is_empty() {
+    if merge_msg.burn.len() == 0 {
         return Err(ContractError::BurnNotFound {});
     }
 
@@ -222,47 +194,30 @@ fn make_merge_msg(
     }
 
     // Pushes the burn messages inside msgs list
-    make_burn_messages(deps, event_attributes, &mint_module_addr, &merge_msg, msgs)?;
+    make_burn_messages(&deps, &mint_module_addr, &merge_msg, msgs)?;
 
     // Pushes the mint messages inside msgs list
-    make_mint_messages(
-        deps,
-        info,
-        event_attributes,
-        &mint_module_addr,
-        &merge_msg,
-        msgs,
-    )?;
+    make_mint_messages(deps, info, &mint_module_addr, &merge_msg, msgs)?;
 
     Ok(())
 }
 
 fn make_burn_messages(
     deps: &DepsMut,
-    event_attributes: &mut Vec<Attribute>,
     mint_module_addr: &Addr,
     merge_msg: &MergeMsg,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
-    for (index, burn_msg) in merge_msg.burn.iter().enumerate() {
+    for burn_msg in &merge_msg.burn {
         let collection_addr = StorageHelper::query_collection_address(
             &deps.querier,
-            mint_module_addr,
+            &mint_module_addr,
             &burn_msg.collection_id,
         )?;
 
         let lock_msg =
             KompleTokenModule(collection_addr).burn_msg(burn_msg.token_id.to_string())?;
         msgs.push(lock_msg);
-
-        event_attributes.push(Attribute::new(
-            format!("burn_msg/{}", index),
-            format!("token_id/{}", burn_msg.token_id),
-        ));
-        event_attributes.push(Attribute::new(
-            format!("burn_msg/{}", index),
-            format!("collection_id/{}", burn_msg.collection_id),
-        ));
     }
     Ok(())
 }
@@ -270,22 +225,23 @@ fn make_burn_messages(
 fn make_mint_messages(
     deps: &DepsMut,
     info: &MessageInfo,
-    event_attributes: &mut Vec<Attribute>,
     mint_module_addr: &Addr,
     merge_msg: &MergeMsg,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
+    let burn_collection_ids: Vec<u32> = merge_msg.burn.iter().map(|m| m.collection_id).collect();
+
     // Keeping the linked collections list inside a hashmap
     // Used for saving multiple queries on same collection id
     let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
 
     for (index, collection_id) in merge_msg.mint.iter().enumerate() {
-        let linked_collections = match linked_collection_map.contains_key(collection_id) {
-            true => linked_collection_map.get(collection_id).unwrap().clone(),
+        let linked_collections = match linked_collection_map.contains_key(&collection_id) {
+            true => linked_collection_map.get(&collection_id).unwrap().clone(),
             false => {
                 let collections = StorageHelper::query_linked_collections(
                     &deps.querier,
-                    mint_module_addr,
+                    &mint_module_addr,
                     *collection_id,
                 )?;
                 linked_collection_map.insert(*collection_id, collections.clone());
@@ -295,40 +251,25 @@ fn make_mint_messages(
 
         // If there are some linked collections
         // They have to be in the burn message
-        if !linked_collections.is_empty() {
+        if linked_collections.len() > 0 {
             for linked_collection_id in linked_collections {
-                if !merge_msg
-                    .burn
-                    .iter()
-                    .map(|m| m.collection_id)
-                    .any(|x| x == linked_collection_id)
-                {
+                if !burn_collection_ids.contains(&linked_collection_id) {
                     return Err(ContractError::LinkedCollectionNotFound {});
                 }
             }
         }
 
-        let metadata_id = merge_msg
-            .metadata_ids
-            .as_ref()
-            .as_ref()
-            .map(|ids| ids[index]);
-
         let msg = KompleMintModule(mint_module_addr.clone()).mint_to_msg(
             info.sender.to_string(),
             *collection_id,
-            metadata_id,
+            merge_msg
+                .metadata_ids
+                .as_ref()
+                .as_ref()
+                .and_then(|ids| Some(ids[index])),
             info.funds.clone(),
         )?;
         msgs.push(msg);
-
-        event_attributes.push(Attribute::new("mint_ids", collection_id.to_string()));
-        if metadata_id.is_some() {
-            event_attributes.push(Attribute::new(
-                "metadata_ids",
-                metadata_id.as_ref().unwrap().to_string(),
-            ));
-        }
     }
 
     Ok(())

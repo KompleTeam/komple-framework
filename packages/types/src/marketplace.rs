@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Listing {
     Fixed,
@@ -14,9 +14,6 @@ impl Listing {
             Listing::Fixed => "fixed",
             Listing::Auction => "auction",
         }
-    }
-    pub fn to_string(&self) -> String {
-        self.as_str().to_string()
     }
 }
 

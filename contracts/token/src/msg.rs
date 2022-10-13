@@ -49,7 +49,7 @@ pub enum ExecuteMsg {
     },
 
     // ADMIN MESSAGES
-    UpdateModuleOperators {
+    UpdateOperators {
         addrs: Vec<String>,
     },
     AdminTransferNft {

@@ -1,18 +1,20 @@
-use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Timestamp, Uint128};
-use cw_storage_plus::{Item, Map};
 use komple_types::{
     shared::CONFIG_NAMESPACE,
     whitelist::{WHITELIST_CONFIG_NAMESPACE, WHITELIST_NAMESPACE},
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
-#[cw_serde]
+use cosmwasm_std::{Addr, Timestamp, Uint128};
+use cw_storage_plus::{Item, Map};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: Addr,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WhitelistConfig {
     pub start_time: Timestamp,
     pub end_time: Timestamp,

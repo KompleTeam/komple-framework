@@ -1,14 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Response,
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response,
     StdResult,
 };
 use cw2::set_contract_version;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::HUB_ADDR_NAMESPACE;
-use komple_utils::event::EventHelper;
 use komple_utils::storage::StorageHelper;
 use std::collections::HashMap;
 
@@ -38,13 +37,10 @@ pub fn instantiate(
 
     PERMISSION_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_ownership_permission_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", admin)
-            .add_attribute("permission_module_addr", info.sender)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("action", "instantiate")
+        .add_attribute("admin", admin.to_string())
+        .add_attribute("permission_module_addr", info.sender.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -71,10 +67,10 @@ pub fn execute_check(
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
-    let mut event_attributes: Vec<Attribute> = vec![];
+    // TODO: Check if HashMap makes sense in this context
     let mut collection_map: HashMap<u32, Addr> = HashMap::new();
 
-    for (index, ownership_msg) in msgs.iter().enumerate() {
+    for ownership_msg in msgs {
         let collection_addr = match collection_map.contains_key(&ownership_msg.collection_id) {
             true => collection_map
                 .get(&ownership_msg.collection_id)
@@ -100,34 +96,17 @@ pub fn execute_check(
         if owner != ownership_msg.address {
             return Err(ContractError::InvalidOwnership {});
         }
-
-        event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index),
-            value: format!("collection_id/{}", ownership_msg.collection_id),
-        });
-        event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index),
-            value: format!("token_id/{}", ownership_msg.token_id),
-        });
-        event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index),
-            value: format!("address/{}", ownership_msg.address),
-        });
     }
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_ownership_permission_module")
-            .add_attribute("action", "check")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_event(Event::new("komple_framework").add_attribute("module", "ownership_permission")))
 }
 
 // Queries the hub address from permission modules storage
 fn query_hub_addr(deps: &DepsMut) -> Result<Addr, ContractError> {
     let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
     let res =
-        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, HUB_ADDR_NAMESPACE)?;
+        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, &HUB_ADDR_NAMESPACE)?;
     Ok(res.unwrap())
 }
 
