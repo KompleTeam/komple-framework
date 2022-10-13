@@ -811,12 +811,11 @@ fn execute_init_whitelist_module(
         reply_on: ReplyOn::Success,
     };
 
-    Ok(Response::new()
-        .add_submessage(sub_msg)
-        .add_event(EventHelper::new("komple_token_module")
+    Ok(Response::new().add_submessage(sub_msg).add_event(
+        EventHelper::new("komple_token_module")
             .add_attribute("action", "init_whitelist_module")
-            .get())
-        )
+            .get(),
+    ))
 }
 
 fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {

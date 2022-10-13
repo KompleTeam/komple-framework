@@ -138,7 +138,15 @@ fn execute_add_metadata(
         .check_add_attribute(
             &metadata.meta_info.image,
             "meta_info",
-            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap_or(&String::from(""))),
+            format!(
+                "{}/{}",
+                "image",
+                metadata
+                    .meta_info
+                    .image
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
         )
         .check_add_attribute(
             &metadata.meta_info.external_url,
@@ -288,7 +296,15 @@ fn execute_update_meta_info(
         .check_add_attribute(
             &metadata.meta_info.image,
             "meta_info",
-            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap_or(&String::from(""))),
+            format!(
+                "{}/{}",
+                "image",
+                metadata
+                    .meta_info
+                    .image
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
         )
         .check_add_attribute(
             &metadata.meta_info.external_url,

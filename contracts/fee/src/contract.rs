@@ -3,14 +3,15 @@ use std::ops::Mul;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, from_binary, to_binary, BankMsg, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, Event,
-    MessageInfo, Order, Response, StdResult, Uint128,
+    coin, from_binary, to_binary, Attribute, BankMsg, Binary, CosmosMsg, Decimal, Deps, DepsMut,
+    Env, MessageInfo, Order, Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
 use komple_types::fee::Fees;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
+use komple_utils::event::EventHelper;
 use komple_utils::funds::{check_single_amount, FundsError};
 
 use crate::error::ContractError;
@@ -43,10 +44,11 @@ pub fn instantiate(
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_fee_module")
+        EventHelper::new("komple_fee_module")
             .add_attribute("action", "instantiate")
             .add_attribute("admin", config.admin.to_string())
-            .add_attribute("hub_addr", info.sender),
+            .add_attribute("hub_addr", info.sender)
+            .get(),
     ))
 }
 
@@ -103,7 +105,7 @@ fn execute_set_fee(
         None,
     )?;
 
-    let mut event_attributes: Vec<(&str, String)> = vec![];
+    let mut event_attributes: Vec<Attribute> = vec![];
 
     match fee_type {
         Fees::Fixed => {
@@ -119,9 +121,15 @@ fn execute_set_fee(
 
             FIXED_FEES.save(deps.storage, (&module_name, &fee_name), &fixed_payment)?;
 
-            event_attributes.push(("value", fixed_payment.value.to_string()));
+            event_attributes.push(Attribute {
+                key: "value".to_string(),
+                value: fixed_payment.value.to_string(),
+            });
             if let Some(payment_address) = fixed_payment.address {
-                event_attributes.push(("address", payment_address));
+                event_attributes.push(Attribute {
+                    key: "address".to_string(),
+                    value: payment_address.to_string(),
+                });
             }
         }
         Fees::Percentage => {
@@ -153,20 +161,27 @@ fn execute_set_fee(
 
             PERCENTAGE_FEES.save(deps.storage, (&module_name, &fee_name), &percentage_payment)?;
 
-            event_attributes.push(("value", percentage_payment.value.to_string()));
+            event_attributes.push(Attribute {
+                key: "value".to_string(),
+                value: percentage_payment.value.to_string(),
+            });
             if let Some(payment_address) = percentage_payment.address {
-                event_attributes.push(("address", payment_address));
+                event_attributes.push(Attribute {
+                    key: "address".to_string(),
+                    value: payment_address.to_string(),
+                });
             }
         }
     }
 
     Ok(Response::new().add_event(
-        Event::new("komple_fee_module")
+        EventHelper::new("komple_fee_module")
             .add_attribute("action", "set_fee")
             .add_attribute("fee_type", fee_type.as_str())
             .add_attribute("module_name", &module_name)
             .add_attribute("fee_name", &fee_name)
-            .add_attributes(event_attributes),
+            .add_attributes(event_attributes)
+            .get(),
     ))
 }
 
@@ -194,11 +209,12 @@ fn execute_remove_fee(
     }
 
     Ok(Response::new().add_event(
-        Event::new("komple_fee_module")
+        EventHelper::new("komple_fee_module")
             .add_attribute("action", "remove_fee")
             .add_attribute("fee_type", fee_type.as_str())
             .add_attribute("module_name", &module_name)
-            .add_attribute("fee_name", &fee_name),
+            .add_attribute("fee_name", &fee_name)
+            .get(),
     ))
 }
 
@@ -338,10 +354,11 @@ fn execute_distribute(
     }
 
     Ok(Response::new().add_messages(msgs).add_event(
-        Event::new("komple_fee_module")
+        EventHelper::new("komple_fee_module")
             .add_attribute("action", "distribute")
             .add_attribute("fee_type", fee_type.as_str())
-            .add_attribute("module_name", &module_name),
+            .add_attribute("module_name", &module_name)
+            .get(),
     ))
 }
 

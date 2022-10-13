@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, Event, MessageInfo, Reply, ReplyOn,
-    Response, StdError, StdResult, SubMsg, WasmMsg,
+    to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response,
+    StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -58,9 +58,10 @@ pub fn instantiate(
     MODULE_ID.save(deps.storage, &0)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_hub_module")
+        EventHelper::new("komple_hub_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin.to_string()),
+            .add_attribute("admin", config.admin)
+            .get(),
     ))
 }
 
@@ -142,9 +143,10 @@ fn execute_register_module(
     MODULE_TO_REGISTER.save(deps.storage, &module)?;
 
     Ok(Response::new().add_submessage(sub_msg).add_event(
-        Event::new("komple_hub_module")
+        EventHelper::new("komple_hub_module")
             .add_attribute("action", "register_module")
-            .add_attribute("module", module),
+            .add_attribute("module", module)
+            .get(),
     ))
 }
 
@@ -185,12 +187,13 @@ fn execute_update_hub_info(
     };
 
     Ok(Response::new().add_event(
-        Event::new("komple_hub_module")
+        EventHelper::new("komple_hub_module")
             .add_attribute("action", "update_hub_info")
             .add_attribute("name", hub_info.name)
             .add_attribute("description", hub_info.description)
             .add_attribute("image", hub_info.image)
-            .add_attributes(event_attributes),
+            .add_attributes(event_attributes)
+            .get(),
     ))
 }
 
@@ -249,9 +252,10 @@ fn execute_update_website_config(
     };
 
     Ok(Response::new().add_event(
-        Event::new("komple_hub_module")
+        EventHelper::new("komple_hub_module")
             .add_attribute("action".to_string(), "update_website_config".to_string())
-            .add_attributes(event_attributes),
+            .add_attributes(event_attributes)
+            .get(),
     ))
 }
 
@@ -278,9 +282,10 @@ fn execute_deregister_module(
     MODULE_ADDRS.remove(deps.storage, &module);
 
     Ok(Response::new().add_event(
-        Event::new("komple_hub_module")
+        EventHelper::new("komple_hub_module")
             .add_attribute("action", "deregister_module")
-            .add_attribute("module", module),
+            .add_attribute("module", module)
+            .get(),
     ))
 }
 

@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, Event,
+    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env,
     MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
@@ -56,11 +56,12 @@ pub fn instantiate(
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
     Ok(Response::new().add_event(
-        Event::new("komple_marketplace_module")
+        EventHelper::new("komple_marketplace_module")
             .add_attribute("action", "instantiate")
             .add_attribute("admin", config.admin)
             .add_attribute("native_denom", config.native_denom)
-            .add_attribute("hub_addr", info.sender),
+            .add_attribute("hub_addr", info.sender)
+            .get(),
     ))
 }
 
@@ -148,11 +149,12 @@ fn execute_list_fixed_token(
     )?;
 
     Ok(Response::new().add_message(lock_msg).add_event(
-        Event::new("komple_marketplace_module")
+        EventHelper::new("komple_marketplace_module")
             .add_attribute("action", "list_fixed_token")
             .add_attribute("collection_id", collection_id.to_string())
             .add_attribute("token_id", token_id.to_string())
-            .add_attribute("price", price.to_string()),
+            .add_attribute("price", price.to_string())
+            .get(),
     ))
 }
 
@@ -190,10 +192,11 @@ fn execute_delist_fixed_token(
     )?;
 
     Ok(Response::new().add_message(unlock_msg).add_event(
-        Event::new("komple_marketplace_module")
+        EventHelper::new("komple_marketplace_module")
             .add_attribute("action", "delist_fixed_token")
             .add_attribute("collection_id", collection_id.to_string())
-            .add_attribute("token_id", token_id.to_string()),
+            .add_attribute("token_id", token_id.to_string())
+            .get(),
     ))
 }
 
@@ -224,12 +227,13 @@ fn execute_update_price(
     }
 
     Ok(Response::new().add_event(
-        Event::new("komple_marketplace_module")
+        EventHelper::new("komple_marketplace_module")
             .add_attribute("action", "update_price")
             .add_attribute("listing_type", listing_type.to_string())
             .add_attribute("collection_id", collection_id.to_string())
             .add_attribute("token_id", token_id.to_string())
-            .add_attribute("price", price.to_string()),
+            .add_attribute("price", price.to_string())
+            .get(),
     ))
 }
 
@@ -374,7 +378,7 @@ fn _execute_buy_fixed_listing(
         .add_submessages(sub_msgs)
         .add_messages(vec![transfer_msg, unlock_msg])
         .add_event(
-            Event::new("komple_marketplace_module")
+            EventHelper::new("komple_marketplace_module")
                 .add_attribute("action", "buy")
                 .add_attribute("listing_type", "fixed")
                 .add_attribute("collection_id", collection_id.to_string())
@@ -384,7 +388,8 @@ fn _execute_buy_fixed_listing(
                 .add_attribute("buyer", info.sender.to_string())
                 .add_attribute("marketplace_fee", marketplace_fee.to_string())
                 .add_attribute("royalty_fee", royalty_fee.to_string())
-                .add_attribute("payout", payout.to_string()),
+                .add_attribute("payout", payout.to_string())
+                .get(),
         ))
 }
 
