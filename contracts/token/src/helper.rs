@@ -2,7 +2,7 @@ use crate::msg::ExecuteMsg;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Addr, Coin, Empty, StdResult, WasmMsg};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
-use komple_types::tokens::Locks;
+use komple_types::token::Locks;
 
 #[cw_serde]
 pub struct KompleTokenModule(pub Addr);

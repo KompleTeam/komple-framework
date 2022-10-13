@@ -2,7 +2,7 @@ use cosmwasm_schema::cw_serde;
 use komple_types::{
     collection::Collections,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
-    tokens::{
+    token::{
         Locks, COLLECTION_CONFIG_NAMESPACE, COLLECTION_INFO_NAMESPACE, LOCKS_NAMESPACE,
         MINTED_TOKENS_PER_ADDR_NAMESPACE, MINT_MODULE_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE,
         TOKEN_IDS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,

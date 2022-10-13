@@ -3,7 +3,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Timestamp, Uint128};
 use cw721::CustomMsg;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_types::{query::ResponseWrapper, tokens::Locks};
+use komple_types::{query::ResponseWrapper, token::Locks};
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 #[cw_serde]

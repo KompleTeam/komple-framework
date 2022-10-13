@@ -13,7 +13,7 @@ use komple_metadata_module::{
 };
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
-    tokens::Locks,
+    token::Locks,
 };
 use komple_utils::{funds::FundsError, storage::StorageHelper};
 

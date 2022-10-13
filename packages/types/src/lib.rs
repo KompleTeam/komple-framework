@@ -7,5 +7,5 @@ pub mod module;
 pub mod permission;
 pub mod query;
 pub mod shared;
-pub mod tokens;
+pub mod token;
 pub mod whitelist;

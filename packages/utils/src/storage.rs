@@ -4,7 +4,7 @@ use cw_storage_plus::Path;
 use komple_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
-    tokens::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
+    token::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
 };
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};

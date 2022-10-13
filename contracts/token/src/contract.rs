@@ -10,7 +10,7 @@ use cw_utils::parse_reply_instantiate_data;
 use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
-use komple_types::tokens::Locks;
+use komple_types::token::Locks;
 use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, funds::check_single_coin};
 use semver::Version;

@@ -20,7 +20,7 @@ use komple_types::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::tokens::Locks;
+use komple_types::token::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
 use komple_utils::{
     check_admin_privileges, event::EventHelper, funds::check_single_coin, storage::StorageHelper,
