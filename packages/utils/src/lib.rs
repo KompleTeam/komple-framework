@@ -2,6 +2,7 @@ use cosmwasm_std::{Addr, StdError};
 use std::str::Utf8Error;
 use thiserror::Error;
 
+pub mod event;
 pub mod funds;
 pub mod storage;
 
@@ -18,12 +19,23 @@ pub fn check_admin_privileges(
         has_privileges = true;
     }
 
-    if !has_privileges && parent_addr.is_some() {
-        has_privileges = sender == &parent_addr.unwrap();
+    if !has_privileges {
+        if let Some(parent) = parent_addr {
+            if sender == &parent {
+                has_privileges = true;
+            }
+        }
     }
 
-    if !has_privileges && operators.is_some() {
-        has_privileges = operators.unwrap().contains(sender);
+    if !has_privileges {
+        if let Some(operators) = operators {
+            for operator in operators {
+                if sender == &operator {
+                    has_privileges = true;
+                    break;
+                }
+            }
+        }
     }
 
     match has_privileges {

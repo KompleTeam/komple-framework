@@ -1,13 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError, StdResult,
+    to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError,
+    StdResult,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
+use komple_utils::event::EventHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -34,7 +36,6 @@ pub fn instantiate(
 
     let config = Config {
         admin,
-        update_lock: false,
         metadata_type: msg.metadata_type,
     };
 
@@ -44,7 +45,14 @@ pub fn instantiate(
 
     METADATA_ID.save(deps.storage, &0)?;
 
-    Ok(Response::new().add_attribute("action", "instantiate"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_metadata_module")
+            .add_attribute("action", "instantiate")
+            .add_attribute("admin", config.admin)
+            .add_attribute("metadata_type", config.metadata_type.to_string())
+            .add_attribute("collection_addr", info.sender)
+            .get(),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -114,7 +122,80 @@ fn execute_add_metadata(
     METADATA.save(deps.storage, metadata_id, &metadata)?;
     METADATA_ID.save(deps.storage, &metadata_id)?;
 
-    Ok(Response::new().add_attribute("action", "execute_add_metadata"))
+    let mut event_attributes: Vec<Attribute> = vec![];
+
+    if !metadata.attributes.is_empty() {
+        for attribute in metadata.attributes {
+            event_attributes.push(Attribute::new(
+                "attributes",
+                format!("{}/{}", attribute.trait_type, attribute.value),
+            ));
+        }
+    }
+
+    let event = EventHelper::new("komple_metadata_module")
+        .add_attribute("action", "add_metadata")
+        .check_add_attribute(
+            &metadata.meta_info.image,
+            "meta_info",
+            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap_or(&String::from(""))),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.external_url,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "external_url",
+                metadata
+                    .meta_info
+                    .external_url
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.description,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "description",
+                metadata
+                    .meta_info
+                    .description
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.animation_url,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "animation_url",
+                metadata
+                    .meta_info
+                    .animation_url
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.youtube_url,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "youtube_url",
+                metadata
+                    .meta_info
+                    .youtube_url
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .add_attributes(event_attributes)
+        .get();
+
+    Ok(Response::new().add_event(event))
 }
 
 fn execute_link_metadata(
@@ -160,7 +241,13 @@ fn execute_link_metadata(
         }
     };
 
-    Ok(Response::new().add_attribute("action", "execute_link_metadata"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_metadata_module")
+            .add_attribute("action", "link_metadata")
+            .add_attribute("token_id", token_id.to_string())
+            .add_attribute("metadata_id", metadata_id.to_string())
+            .get(),
+    ))
 }
 
 fn execute_update_meta_info(
@@ -180,7 +267,6 @@ fn execute_update_meta_info(
         collection_addr,
         None,
     )?;
-    // check_metadata_lock(&deps, &config, &token_id)?;
 
     let (metadata_id, mut metadata) =
         get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
@@ -196,7 +282,69 @@ fn execute_update_meta_info(
         }
     };
 
-    Ok(Response::new().add_attribute("action", "execute_update_meta_info"))
+    let event = EventHelper::new("komple_metadata_module")
+        .add_attribute("action", "update_meta_info")
+        .add_attribute("token_id", token_id.to_string())
+        .check_add_attribute(
+            &metadata.meta_info.image,
+            "meta_info",
+            format!("{}/{}", "image", metadata.meta_info.image.as_ref().unwrap_or(&String::from(""))),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.external_url,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "external_url",
+                metadata
+                    .meta_info
+                    .external_url
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.description,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "description",
+                metadata
+                    .meta_info
+                    .description
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.animation_url,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "animation_url",
+                metadata
+                    .meta_info
+                    .animation_url
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .check_add_attribute(
+            &metadata.meta_info.youtube_url,
+            "meta_info",
+            format!(
+                "{}/{}",
+                "youtube_url",
+                metadata
+                    .meta_info
+                    .youtube_url
+                    .as_ref()
+                    .unwrap_or(&String::from(""))
+            ),
+        )
+        .get();
+
+    Ok(Response::new().add_event(event))
 }
 
 fn execute_add_attribute(
@@ -225,19 +373,28 @@ fn execute_add_attribute(
             if check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeAlreadyExists {});
             }
-            metadata.attributes.push(attribute);
+            metadata.attributes.push(attribute.clone());
             METADATA.save(deps.storage, metadata_id, &metadata)?;
         }
         MetadataType::Dynamic => {
             if check_attribute_exists(&metadata, &attribute.trait_type) {
                 return Err(ContractError::AttributeAlreadyExists {});
             }
-            metadata.attributes.push(attribute);
+            metadata.attributes.push(attribute.clone());
             DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
         }
     };
 
-    Ok(Response::new().add_attribute("action", "execute_add_attribute"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_metadata_module")
+            .add_attribute("action", "add_attribute")
+            .add_attribute("token_id", token_id.to_string())
+            .add_attribute(
+                "attribute",
+                format!("{}/{}", attribute.trait_type, attribute.value),
+            )
+            .get(),
+    ))
 }
 
 fn execute_update_attribute(
@@ -257,7 +414,6 @@ fn execute_update_attribute(
         collection_addr,
         None,
     )?;
-    // check_metadata_lock(&deps, &config, &token_id)?;
 
     let (metadata_id, mut metadata) =
         get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
@@ -270,7 +426,7 @@ fn execute_update_attribute(
 
             for item in metadata.attributes.iter_mut() {
                 if item.trait_type == attribute.trait_type {
-                    *item = attribute;
+                    *item = attribute.clone();
                     break;
                 }
             }
@@ -283,7 +439,7 @@ fn execute_update_attribute(
 
             for item in metadata.attributes.iter_mut() {
                 if item.trait_type == attribute.trait_type {
-                    *item = attribute;
+                    *item = attribute.clone();
                     break;
                 }
             }
@@ -291,7 +447,16 @@ fn execute_update_attribute(
         }
     };
 
-    Ok(Response::new().add_attribute("action", "execute_update_attribute"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_metadata_module")
+            .add_attribute("action", "update_attribute")
+            .add_attribute("token_id", token_id.to_string())
+            .add_attribute(
+                "attribute",
+                format!("{}/{}", attribute.trait_type, attribute.value),
+            )
+            .get(),
+    ))
 }
 
 fn execute_remove_attribute(
@@ -311,7 +476,6 @@ fn execute_remove_attribute(
         collection_addr,
         None,
     )?;
-    // check_metadata_lock(&deps, &config, &token_id)?;
 
     let (metadata_id, mut metadata) =
         get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
@@ -343,7 +507,13 @@ fn execute_remove_attribute(
         }
     };
 
-    Ok(Response::new().add_attribute("action", "execute_remove_attribute"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_metadata_module")
+            .add_attribute("action", "remove_attribute")
+            .add_attribute("token_id", token_id.to_string())
+            .add_attribute("trait_type", trait_type)
+            .get(),
+    ))
 }
 
 fn execute_unlink_metadata(
@@ -378,7 +548,12 @@ fn execute_unlink_metadata(
         }
     }
 
-    Ok(Response::new().add_attribute("action", "execute_unlink_metadata"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_metadata_module")
+            .add_attribute("action", "unlink_metadata")
+            .add_attribute("token_id", token_id.to_string())
+            .get(),
+    ))
 }
 
 fn execute_update_operators(
@@ -401,17 +576,28 @@ fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
+    let mut event_attributes: Vec<Attribute> = vec![];
+
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
+            event_attributes.push(Attribute {
+                key: "addrs".to_string(),
+                value: addr.to_string(),
+            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_metadata_module")
+            .add_attribute("action", "update_operators".to_string())
+            .add_attributes(event_attributes)
+            .get(),
+    ))
 }
 
 fn get_metadata_from_type(

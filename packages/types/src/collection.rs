@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Collections {
     Standard,
@@ -15,6 +15,9 @@ impl Collections {
             Collections::Standard => "standard",
             Collections::Linked => "linked",
         }
+    }
+    pub fn to_string(&self) -> String {
+        self.as_str().to_string()
     }
 }
 

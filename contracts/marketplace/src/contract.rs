@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, MessageInfo, Order,
-    Response, StdError, StdResult, SubMsg, Uint128,
+    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, Event,
+    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
@@ -22,7 +22,9 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::tokens::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_utils::{check_admin_privileges, funds::check_single_coin, storage::StorageHelper};
+use komple_utils::{
+    check_admin_privileges, event::EventHelper, funds::check_single_coin, storage::StorageHelper,
+};
 use semver::Version;
 use std::ops::Mul;
 
@@ -53,7 +55,13 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_attribute("action", "instantiate"))
+    Ok(Response::new().add_event(
+        Event::new("komple_marketplace_module")
+            .add_attribute("action", "instantiate")
+            .add_attribute("admin", config.admin)
+            .add_attribute("native_denom", config.native_denom)
+            .add_attribute("hub_addr", info.sender),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -139,9 +147,13 @@ fn execute_list_fixed_token(
         },
     )?;
 
-    Ok(Response::new()
-        .add_message(lock_msg)
-        .add_attribute("action", "execute_list_fixed_token"))
+    Ok(Response::new().add_message(lock_msg).add_event(
+        Event::new("komple_marketplace_module")
+            .add_attribute("action", "list_fixed_token")
+            .add_attribute("collection_id", collection_id.to_string())
+            .add_attribute("token_id", token_id.to_string())
+            .add_attribute("price", price.to_string()),
+    ))
 }
 
 fn execute_delist_fixed_token(
@@ -177,9 +189,12 @@ fn execute_delist_fixed_token(
         },
     )?;
 
-    Ok(Response::new()
-        .add_message(unlock_msg)
-        .add_attribute("action", "execute_delist_fixed_token"))
+    Ok(Response::new().add_message(unlock_msg).add_event(
+        Event::new("komple_marketplace_module")
+            .add_attribute("action", "delist_fixed_token")
+            .add_attribute("collection_id", collection_id.to_string())
+            .add_attribute("token_id", token_id.to_string()),
+    ))
 }
 
 fn execute_update_price(
@@ -208,7 +223,14 @@ fn execute_update_price(
         Listing::Auction => unimplemented!(),
     }
 
-    Ok(Response::new().add_attribute("action", "execute_update_price"))
+    Ok(Response::new().add_event(
+        Event::new("komple_marketplace_module")
+            .add_attribute("action", "update_price")
+            .add_attribute("listing_type", listing_type.to_string())
+            .add_attribute("collection_id", collection_id.to_string())
+            .add_attribute("token_id", token_id.to_string())
+            .add_attribute("price", price.to_string()),
+    ))
 }
 
 fn execute_buy(
@@ -241,7 +263,7 @@ fn _execute_buy_fixed_listing(
 
     // Check for the sent funds
     check_single_coin(
-        &info,
+        info,
         coin(fixed_listing.price.u128(), config.native_denom.clone()),
     )?;
 
@@ -276,13 +298,13 @@ fn _execute_buy_fixed_listing(
     // Process fee module fees if exists on Hub
     let fee_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
-    if fee_module_addr.is_ok() {
+    if let Ok(fee_module_addr) = fee_module_addr {
         // Marketplace fees
         process_marketplace_fees(
             &deps,
             &config,
             &mut sub_msgs,
-            &fee_module_addr.as_ref().unwrap(),
+            &fee_module_addr,
             fixed_listing.price,
             &mut marketplace_fee,
             None,
@@ -291,11 +313,10 @@ fn _execute_buy_fixed_listing(
         // Collection royalty fees
         let query = FeeModuleQueryMsg::PercentageFee {
             module_name: Modules::Mint.to_string(),
-            fee_name: format!("collection_{}_royalty", collection_id.to_string()),
+            fee_name: format!("collection_{}_royalty", collection_id),
         };
-        let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> = deps
-            .querier
-            .query_wasm_smart(fee_module_addr.unwrap(), &query);
+        let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> =
+            deps.querier.query_wasm_smart(fee_module_addr, &query);
         if let Ok(percentage_fee) = res {
             royalty_fee = percentage_fee.data.value.mul(fixed_listing.price);
 
@@ -352,7 +373,19 @@ fn _execute_buy_fixed_listing(
     Ok(Response::new()
         .add_submessages(sub_msgs)
         .add_messages(vec![transfer_msg, unlock_msg])
-        .add_attribute("action", "execute_buy"))
+        .add_event(
+            Event::new("komple_marketplace_module")
+                .add_attribute("action", "buy")
+                .add_attribute("listing_type", "fixed")
+                .add_attribute("collection_id", collection_id.to_string())
+                .add_attribute("token_id", token_id.to_string())
+                .add_attribute("price", fixed_listing.price.to_string())
+                .add_attribute("owner", fixed_listing.owner)
+                .add_attribute("buyer", info.sender.to_string())
+                .add_attribute("marketplace_fee", marketplace_fee.to_string())
+                .add_attribute("royalty_fee", royalty_fee.to_string())
+                .add_attribute("payout", payout.to_string()),
+        ))
 }
 
 // Gets the current fee percentage from fee module
@@ -408,13 +441,13 @@ fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, C
 
 fn check_locks(locks: Locks) -> Result<(), TokenContractError> {
     if locks.transfer_lock {
-        return Err(TokenContractError::TransferLocked {}.into());
+        return Err(TokenContractError::TransferLocked {});
     };
     if locks.send_lock {
-        return Err(TokenContractError::SendLocked {}.into());
+        return Err(TokenContractError::SendLocked {});
     };
     if locks.burn_lock {
-        return Err(TokenContractError::BurnLocked {}.into());
+        return Err(TokenContractError::BurnLocked {});
     };
     Ok(())
 }
@@ -439,17 +472,28 @@ fn execute_update_operators(
     addrs.sort_unstable();
     addrs.dedup();
 
+    let mut event_attributes: Vec<Attribute> = vec![];
+
     let addrs = addrs
         .iter()
         .map(|addr| -> StdResult<Addr> {
             let addr = deps.api.addr_validate(addr)?;
+            event_attributes.push(Attribute {
+                key: "addrs".to_string(),
+                value: addr.to_string(),
+            });
             Ok(addr)
         })
         .collect::<StdResult<Vec<Addr>>>()?;
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_operators"))
+    Ok(Response::new().add_event(
+        EventHelper::new("komple_marketplace_module")
+            .add_attribute("action".to_string(), "update_operators".to_string())
+            .add_attributes(event_attributes)
+            .get(),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
