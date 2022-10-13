@@ -51,7 +51,7 @@ komple-token-module = { path = "../token", features = ["library"] }
 komple-permission-module = { path = "../permission", features = ["library"] }
 cw-utils = "0.15.1"
 komple-types = { path = "../../packages/types" }
-komple-utils = { path = "../../packages/utils" }
+komple-utils = { path = "../../packages/utils", features = ["event", "storage"] }
 cw721-base = { version = "0.15.0", features = ["library"] }
 
 [dev-dependencies]

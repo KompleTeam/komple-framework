@@ -4,11 +4,22 @@ version = "0.0.1"
 authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
 edition = "2018"
 
+[features]
+event = []
+funds = []
+storage = [
+    "dep:komple-types",
+    "dep:cw721-base",
+    "dep:schemars",
+    "dep:serde",
+    "dep:cw-storage-plus",
+]
+
 [dependencies]
 cosmwasm-std = { version = "1.1.0" }
-komple-types = { path = "../types" }
+komple-types = { path = "../types", optional = true }
 thiserror = "1.0.30"
-cw721-base = { version = "0.15.0", features = ["library"] }
-schemars = "0.8.8"
-serde = { version = "1.0.137", default-features = false, features = ["derive"] }
-cw-storage-plus = "0.15.1"
+cw721-base = { version = "0.15.0", features = ["library"], optional = true }
+schemars = { version = "0.8.8", optional = true }
+serde = { version = "1.0.137", default-features = false, features = ["derive"], optional = true }
+cw-storage-plus = { version = "0.15.1", optional = true }

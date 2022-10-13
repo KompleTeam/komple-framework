@@ -47,7 +47,7 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-utils = { path = "../../packages/utils" }
+komple-utils = { path = "../../packages/utils", features = ["event"] }
 komple-types = { path = "../../packages/types" }
 
 [dev-dependencies]

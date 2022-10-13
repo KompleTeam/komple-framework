@@ -1,9 +1,11 @@
 use cosmwasm_std::{Addr, StdError};
-use std::str::Utf8Error;
 use thiserror::Error;
 
+#[cfg(feature = "event")]
 pub mod event;
+#[cfg(feature = "funds")]
 pub mod funds;
+#[cfg(feature = "storage")]
 pub mod storage;
 
 pub fn check_admin_privileges(
@@ -51,7 +53,4 @@ pub enum UtilError {
 
     #[error("Unauthorized")]
     Unauthorized {},
-
-    #[error("{0}")]
-    Utf8(#[from] Utf8Error),
 }

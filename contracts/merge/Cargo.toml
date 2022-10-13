@@ -50,7 +50,7 @@ thiserror = { version = "1.0.31" }
 komple-token-module = { path = "../token", features = ["library"] }
 komple-permission-module = { path = "../permission", features = ["library"] }
 komple-mint-module = { path = "../mint", features = ["library"] }
-komple-utils = { path = "../../packages/utils" }
+komple-utils = { path = "../../packages/utils", features = ["storage"] }
 komple-types = { path = "../../packages/types" }
 cw721-base = { version = "0.15.0", features = ["library"] }
 
