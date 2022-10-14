@@ -431,7 +431,8 @@ mod actions {
                     .unwrap();
 
                 let msg = ExecuteMsg::UpdateMetaInfo {
-                    token_id: 1,
+                    raw_metadata: false,
+                    id: 1,
                     meta_info: new_meta_info.clone(),
                 };
                 let _ = app
@@ -479,7 +480,8 @@ mod actions {
                 };
 
                 let msg = ExecuteMsg::UpdateMetaInfo {
-                    token_id: 1,
+                    raw_metadata: false,
+                    id: 1,
                     meta_info: new_meta_info,
                 };
                 let err = app
@@ -531,7 +533,8 @@ mod actions {
                     .unwrap();
 
                 let msg = ExecuteMsg::UpdateMetaInfo {
-                    token_id: 1,
+                    raw_metadata: false,
+                    id: 1,
                     meta_info: new_meta_info.clone(),
                 };
                 let _ = app
@@ -565,7 +568,8 @@ mod actions {
                 };
 
                 let msg = ExecuteMsg::UpdateMetaInfo {
-                    token_id: 1,
+                    raw_metadata: false,
+                    id: 1,
                     meta_info: new_meta_info,
                 };
                 let err = app
@@ -592,7 +596,8 @@ mod actions {
             };
 
             let msg = ExecuteMsg::UpdateMetaInfo {
-                token_id: 1,
+                raw_metadata: false,
+                id: 1,
                 meta_info: new_meta_info,
             };
             let err = app
@@ -624,37 +629,9 @@ mod actions {
                 value: "some_value".to_string(),
             };
 
-            let msg = ExecuteMsg::LinkMetadata {
-                token_id: 1,
-                metadata_id: Some(1),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-
             let msg = ExecuteMsg::AddAttribute {
-                token_id: 1,
+                raw_metadata: true,
+                id: 1,
                 attribute: attribute.clone(),
             };
             let _ = app
@@ -698,22 +675,22 @@ mod actions {
                 attribute,
             ];
 
-            let msg = QueryMsg::Metadata { token_id: 1 };
-            let res: ResponseWrapper<MetadataResponse> = app
+            let msg = QueryMsg::RawMetadata { metadata_id: 1 };
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
-            let res: ResponseWrapper<MetadataResponse> = app
+            assert_eq!(res.data.attributes, new_attributes);
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr_2, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
-            let res: ResponseWrapper<MetadataResponse> = app
+            assert_eq!(res.data.attributes, new_attributes);
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr_3, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
+            assert_eq!(res.data.attributes, new_attributes);
         }
 
         #[test]
@@ -727,42 +704,14 @@ mod actions {
             setup_metadata(&mut app, metadata_module_addr_2.clone());
             setup_metadata(&mut app, metadata_module_addr_3.clone());
 
-            let msg = ExecuteMsg::LinkMetadata {
-                token_id: 1,
-                metadata_id: Some(1),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-
             let attribute = Trait {
                 trait_type: "type_1".to_string(),
                 value: "some_value".to_string(),
             };
             let msg = ExecuteMsg::AddAttribute {
-                token_id: 1,
-                attribute: attribute,
+                raw_metadata: true,
+                id: 1,
+                attribute,
             };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
@@ -799,7 +748,8 @@ mod actions {
                 value: "some_value".to_string(),
             };
             let msg = ExecuteMsg::AddAttribute {
-                token_id: 1,
+                raw_metadata: false,
+                id: 1,
                 attribute: attribute,
             };
             let err = app
@@ -845,38 +795,10 @@ mod actions {
                 value: "some_value".to_string(),
             };
 
-            let msg = ExecuteMsg::LinkMetadata {
-                token_id: 1,
-                metadata_id: Some(1),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-
             let msg = ExecuteMsg::UpdateAttribute {
-                token_id: 1,
-                attribute: attribute,
+                raw_metadata: true,
+                id: 1,
+                attribute,
             };
             let _ = app
                 .execute_contract(
@@ -918,22 +840,22 @@ mod actions {
                 },
             ];
 
-            let msg = QueryMsg::Metadata { token_id: 1 };
-            let res: ResponseWrapper<MetadataResponse> = app
+            let msg = QueryMsg::RawMetadata { metadata_id: 1 };
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
-            let res: ResponseWrapper<MetadataResponse> = app
+            assert_eq!(res.data.attributes, new_attributes);
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr_2, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
-            let res: ResponseWrapper<MetadataResponse> = app
+            assert_eq!(res.data.attributes, new_attributes);
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr_3, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
+            assert_eq!(res.data.attributes, new_attributes);
         }
 
         #[test]
@@ -947,42 +869,14 @@ mod actions {
             setup_metadata(&mut app, metadata_module_addr_2.clone());
             setup_metadata(&mut app, metadata_module_addr_3.clone());
 
-            let msg = ExecuteMsg::LinkMetadata {
-                token_id: 1,
-                metadata_id: Some(1),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-
             let attribute = Trait {
                 trait_type: "random".to_string(),
                 value: "some_value".to_string(),
             };
             let msg = ExecuteMsg::UpdateAttribute {
-                token_id: 1,
-                attribute: attribute,
+                raw_metadata: true,
+                id: 1,
+                attribute,
             };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
@@ -1019,8 +913,9 @@ mod actions {
                 value: "some_value".to_string(),
             };
             let msg = ExecuteMsg::UpdateAttribute {
-                token_id: 1,
-                attribute: attribute,
+                raw_metadata: false,
+                id: 1,
+                attribute,
             };
             let err = app
                 .execute_contract(Addr::unchecked(ADMIN), metadata_module_addr, &msg, &[])
@@ -1060,37 +955,9 @@ mod actions {
             setup_metadata(&mut app, metadata_module_addr_2.clone());
             setup_metadata(&mut app, metadata_module_addr_3.clone());
 
-            let msg = ExecuteMsg::LinkMetadata {
-                token_id: 1,
-                metadata_id: Some(1),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-
             let msg = ExecuteMsg::RemoveAttribute {
-                token_id: 1,
+                raw_metadata: true,
+                id: 1,
                 trait_type: "type_2".to_string(),
             };
             let _ = app
@@ -1129,22 +996,22 @@ mod actions {
                 },
             ];
 
-            let msg = QueryMsg::Metadata { token_id: 1 };
-            let res: ResponseWrapper<MetadataResponse> = app
+            let msg = QueryMsg::RawMetadata { metadata_id: 1 };
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
-            let res: ResponseWrapper<MetadataResponse> = app
+            assert_eq!(res.data.attributes, new_attributes);
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr_2, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
-            let res: ResponseWrapper<MetadataResponse> = app
+            assert_eq!(res.data.attributes, new_attributes);
+            let res: ResponseWrapper<Metadata> = app
                 .wrap()
                 .query_wasm_smart(metadata_module_addr_3, &msg)
                 .unwrap();
-            assert_eq!(res.data.metadata.attributes, new_attributes);
+            assert_eq!(res.data.attributes, new_attributes);
         }
 
         #[test]
@@ -1158,37 +1025,9 @@ mod actions {
             setup_metadata(&mut app, metadata_module_addr_2.clone());
             setup_metadata(&mut app, metadata_module_addr_3.clone());
 
-            let msg = ExecuteMsg::LinkMetadata {
-                token_id: 1,
-                metadata_id: Some(1),
-            };
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_2.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    metadata_module_addr_3.clone(),
-                    &msg,
-                    &[],
-                )
-                .unwrap();
-
             let msg = ExecuteMsg::RemoveAttribute {
-                token_id: 1,
+                raw_metadata: true,
+                id: 1,
                 trait_type: "random_type".to_string(),
             };
             let err = app
@@ -1222,7 +1061,8 @@ mod actions {
             let metadata_module_addr_3 = proper_instantiate(&mut app, MetadataType::Dynamic);
 
             let msg = ExecuteMsg::RemoveAttribute {
-                token_id: 1,
+                raw_metadata: false,
+                id: 1,
                 trait_type: "new_trait".to_string(),
             };
             let err = app

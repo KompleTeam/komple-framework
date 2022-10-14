@@ -75,21 +75,25 @@ pub fn execute(
             execute_unlink_metadata(deps, env, info, token_id)
         }
         ExecuteMsg::UpdateMetaInfo {
-            token_id,
+            raw_metadata,
+            id,
             meta_info,
-        } => execute_update_meta_info(deps, env, info, token_id, meta_info),
+        } => execute_update_meta_info(deps, env, info, raw_metadata, id, meta_info),
         ExecuteMsg::AddAttribute {
-            token_id,
+            raw_metadata,
+            id,
             attribute,
-        } => execute_add_attribute(deps, env, info, token_id, attribute),
+        } => execute_add_attribute(deps, env, info, raw_metadata, id, attribute),
         ExecuteMsg::UpdateAttribute {
-            token_id,
+            raw_metadata,
+            id,
             attribute,
-        } => execute_update_attribute(deps, env, info, token_id, attribute),
+        } => execute_update_attribute(deps, env, info, raw_metadata, id, attribute),
         ExecuteMsg::RemoveAttribute {
-            token_id,
+            raw_metadata,
+            id,
             trait_type,
-        } => execute_remove_attribute(deps, env, info, token_id, trait_type),
+        } => execute_remove_attribute(deps, env, info, raw_metadata, id, trait_type),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
     }
 }
@@ -262,7 +266,8 @@ fn execute_update_meta_info(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    token_id: u32,
+    raw_metadata: bool,
+    id: u32,
     meta_info: MetaInfo,
 ) -> Result<Response, ContractError> {
     let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
@@ -276,23 +281,32 @@ fn execute_update_meta_info(
         None,
     )?;
 
-    let (metadata_id, mut metadata) =
-        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
-
-    match config.metadata_type {
-        MetadataType::Standard | MetadataType::Shared => {
-            metadata.meta_info = meta_info;
-            METADATA.save(deps.storage, metadata_id, &metadata)?;
+    let (metadata_id, mut metadata) = match raw_metadata {
+        true => {
+            let metadata = METADATA.may_load(deps.storage, id)?;
+            if metadata.is_none() {
+                return Err(ContractError::MissingMetadata {});
+            }
+            (id, metadata.unwrap())
         }
-        MetadataType::Dynamic => {
-            metadata.meta_info = meta_info;
-            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
-        }
+        false => get_metadata_with_token_id(&deps, &config.metadata_type, id)?,
     };
+
+    metadata.meta_info = meta_info;
+
+    if raw_metadata
+        || config.metadata_type == MetadataType::Standard
+        || config.metadata_type == MetadataType::Shared
+    {
+        METADATA.save(deps.storage, metadata_id, &metadata)?;
+    } else {
+        DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
+    }
 
     let event = EventHelper::new("komple_metadata_module")
         .add_attribute("action", "update_meta_info")
-        .add_attribute("token_id", token_id.to_string())
+        .add_attribute("raw_metadata", raw_metadata.to_string())
+        .add_attribute("id", id.to_string())
         .check_add_attribute(
             &metadata.meta_info.image,
             "meta_info",
@@ -367,7 +381,8 @@ fn execute_add_attribute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    token_id: u32,
+    raw_metadata: bool,
+    id: u32,
     attribute: Trait,
 ) -> Result<Response, ContractError> {
     let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
@@ -381,30 +396,36 @@ fn execute_add_attribute(
         None,
     )?;
 
-    let (metadata_id, mut metadata) =
-        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
-
-    match config.metadata_type {
-        MetadataType::Standard | MetadataType::Shared => {
-            if check_attribute_exists(&metadata, &attribute.trait_type) {
-                return Err(ContractError::AttributeAlreadyExists {});
+    let (metadata_id, mut metadata) = match raw_metadata {
+        true => {
+            let metadata = METADATA.may_load(deps.storage, id)?;
+            if metadata.is_none() {
+                return Err(ContractError::MissingMetadata {});
             }
-            metadata.attributes.push(attribute.clone());
-            METADATA.save(deps.storage, metadata_id, &metadata)?;
+            (id, metadata.unwrap())
         }
-        MetadataType::Dynamic => {
-            if check_attribute_exists(&metadata, &attribute.trait_type) {
-                return Err(ContractError::AttributeAlreadyExists {});
-            }
-            metadata.attributes.push(attribute.clone());
-            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
-        }
+        false => get_metadata_with_token_id(&deps, &config.metadata_type, id)?,
     };
+
+    if check_attribute_exists(&metadata, &attribute.trait_type) {
+        return Err(ContractError::AttributeAlreadyExists {});
+    }
+    metadata.attributes.push(attribute.clone());
+
+    if raw_metadata
+        || config.metadata_type == MetadataType::Standard
+        || config.metadata_type == MetadataType::Shared
+    {
+        METADATA.save(deps.storage, metadata_id, &metadata)?;
+    } else {
+        DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
+    }
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_metadata_module")
             .add_attribute("action", "add_attribute")
-            .add_attribute("token_id", token_id.to_string())
+            .add_attribute("raw_metadata", raw_metadata.to_string())
+            .add_attribute("id", id.to_string())
             .add_attribute(
                 "attribute",
                 format!("{}/{}", attribute.trait_type, attribute.value),
@@ -417,7 +438,8 @@ fn execute_update_attribute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    token_id: u32,
+    raw_metadata: bool,
+    id: u32,
     attribute: Trait,
 ) -> Result<Response, ContractError> {
     let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
@@ -431,42 +453,41 @@ fn execute_update_attribute(
         None,
     )?;
 
-    let (metadata_id, mut metadata) =
-        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
-
-    match config.metadata_type {
-        MetadataType::Standard | MetadataType::Shared => {
-            if !check_attribute_exists(&metadata, &attribute.trait_type) {
-                return Err(ContractError::AttributeNotFound {});
+    let (metadata_id, mut metadata) = match raw_metadata {
+        true => {
+            let metadata = METADATA.may_load(deps.storage, id)?;
+            if metadata.is_none() {
+                return Err(ContractError::MissingMetadata {});
             }
-
-            for item in metadata.attributes.iter_mut() {
-                if item.trait_type == attribute.trait_type {
-                    *item = attribute.clone();
-                    break;
-                }
-            }
-            METADATA.save(deps.storage, metadata_id, &metadata)?;
+            (id, metadata.unwrap())
         }
-        MetadataType::Dynamic => {
-            if !check_attribute_exists(&metadata, &attribute.trait_type) {
-                return Err(ContractError::AttributeNotFound {});
-            }
-
-            for item in metadata.attributes.iter_mut() {
-                if item.trait_type == attribute.trait_type {
-                    *item = attribute.clone();
-                    break;
-                }
-            }
-            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
-        }
+        false => get_metadata_with_token_id(&deps, &config.metadata_type, id)?,
     };
+
+    if !check_attribute_exists(&metadata, &attribute.trait_type) {
+        return Err(ContractError::AttributeNotFound {});
+    }
+    for item in metadata.attributes.iter_mut() {
+        if item.trait_type == attribute.trait_type {
+            *item = attribute.clone();
+            break;
+        }
+    }
+
+    if raw_metadata
+        || config.metadata_type == MetadataType::Standard
+        || config.metadata_type == MetadataType::Shared
+    {
+        METADATA.save(deps.storage, metadata_id, &metadata)?;
+    } else {
+        DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
+    }
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_metadata_module")
             .add_attribute("action", "update_attribute")
-            .add_attribute("token_id", token_id.to_string())
+            .add_attribute("raw_metadata", raw_metadata.to_string())
+            .add_attribute("id", id.to_string())
             .add_attribute(
                 "attribute",
                 format!("{}/{}", attribute.trait_type, attribute.value),
@@ -479,7 +500,8 @@ fn execute_remove_attribute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    token_id: u32,
+    raw_metadata: bool,
+    id: u32,
     trait_type: String,
 ) -> Result<Response, ContractError> {
     let collection_addr = COLLECTION_ADDR.may_load(deps.storage)?;
@@ -493,40 +515,40 @@ fn execute_remove_attribute(
         None,
     )?;
 
-    let (metadata_id, mut metadata) =
-        get_metadata_from_type(&deps, &config.metadata_type, token_id)?;
-
-    match config.metadata_type {
-        MetadataType::Standard | MetadataType::Shared => {
-            if !check_attribute_exists(&metadata, &trait_type) {
-                return Err(ContractError::AttributeNotFound {});
+    let (metadata_id, mut metadata) = match raw_metadata {
+        true => {
+            let metadata = METADATA.may_load(deps.storage, id)?;
+            if metadata.is_none() {
+                return Err(ContractError::MissingMetadata {});
             }
-
-            metadata.attributes = metadata
-                .attributes
-                .into_iter()
-                .filter(|a| a.trait_type != trait_type)
-                .collect::<Vec<Trait>>();
-            METADATA.save(deps.storage, metadata_id, &metadata)?;
+            (id, metadata.unwrap())
         }
-        MetadataType::Dynamic => {
-            if !check_attribute_exists(&metadata, &trait_type) {
-                return Err(ContractError::AttributeNotFound {});
-            }
-
-            metadata.attributes = metadata
-                .attributes
-                .into_iter()
-                .filter(|a| a.trait_type != trait_type)
-                .collect::<Vec<Trait>>();
-            DYNAMIC_LINKED_METADATA.save(deps.storage, token_id, &metadata)?;
-        }
+        false => get_metadata_with_token_id(&deps, &config.metadata_type, id)?,
     };
+
+    if !check_attribute_exists(&metadata, &trait_type) {
+        return Err(ContractError::AttributeNotFound {});
+    }
+    metadata.attributes = metadata
+        .attributes
+        .into_iter()
+        .filter(|a| a.trait_type != trait_type)
+        .collect::<Vec<Trait>>();
+
+    if raw_metadata
+        || config.metadata_type == MetadataType::Standard
+        || config.metadata_type == MetadataType::Shared
+    {
+        METADATA.save(deps.storage, metadata_id, &metadata)?;
+    } else {
+        DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
+    }
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_metadata_module")
             .add_attribute("action", "remove_attribute")
-            .add_attribute("token_id", token_id.to_string())
+            .add_attribute("raw_metadata", raw_metadata.to_string())
+            .add_attribute("id", id.to_string())
             .add_attribute("trait_type", trait_type)
             .get(),
     ))
@@ -616,7 +638,7 @@ fn execute_update_operators(
     ))
 }
 
-fn get_metadata_from_type(
+fn get_metadata_with_token_id(
     deps: &DepsMut,
     metadata_type: &MetadataType,
     token_id: u32,

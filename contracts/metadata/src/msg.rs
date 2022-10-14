@@ -27,19 +27,23 @@ pub enum ExecuteMsg {
     },
     // Update the meta info for a metadata
     UpdateMetaInfo {
-        token_id: u32,
+        raw_metadata: bool,
+        id: u32,
         meta_info: MetaInfo,
     },
     AddAttribute {
-        token_id: u32,
+        raw_metadata: bool,
+        id: u32,
         attribute: Trait,
     },
     UpdateAttribute {
-        token_id: u32,
+        raw_metadata: bool,
+        id: u32,
         attribute: Trait,
     },
     RemoveAttribute {
-        token_id: u32,
+        raw_metadata: bool,
+        id: u32,
         trait_type: String,
     },
     UpdateOperators {
