@@ -53,6 +53,7 @@ cw-utils = "0.15.1"
 komple-types = { path = "../../packages/types" }
 komple-utils = { path = "../../packages/utils", features = ["event", "storage"] }
 cw721-base = { version = "0.15.0", features = ["library"] }
+komple-fee-module = { path = "../fee", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"

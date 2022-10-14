@@ -12,20 +12,20 @@ use komple_merge_module::msg::{
 };
 use komple_merge_module::ContractError as MergeContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
-use komple_mint_module::msg::{
-    ExecuteMsg as MintModuleExecuteMsg, InstantiateMsg as MintModuleInstantiateMsg,
+use komple_mint_module::{
+    msg::{ExecuteMsg as MintModuleExecuteMsg, InstantiateMsg as MintModuleInstantiateMsg},
+    state::CollectionInfo,
 };
 use komple_ownership_permission_module::msg::InstantiateMsg as OwnershipModuleInstantiateMsg;
 use komple_permission_module::msg::{
     ExecuteMsg as PermissionModuleExecuteMsg, InstantiateMsg as PermissionModuleInstantiateMsg,
 };
 use komple_token_module::msg::{
-    ExecuteMsg as TokenModuleExecuteMsg, InstantiateMsg as TokenModuleInstantiateMsg,
-    QueryMsg as TokenModuleQueryMsg,
+    ExecuteMsg as TokenModuleExecuteMsg, QueryMsg as TokenModuleQueryMsg,
 };
 use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
-    state::{CollectionConfig, CollectionInfo},
+    state::CollectionConfig,
 };
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, module::Modules,
@@ -277,14 +277,10 @@ pub fn create_collection(
     };
     let msg = MintModuleExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
-        token_instantiate_msg: TokenModuleInstantiateMsg {
-            admin: ADMIN.to_string(),
-            creator: ADMIN.to_string(),
-            collection_info,
-            collection_config,
-            token_info,
-            metadata_info,
-        },
+        collection_config,
+        collection_info,
+        metadata_info,
+        token_info,
         linked_collections,
     };
     let _ = app

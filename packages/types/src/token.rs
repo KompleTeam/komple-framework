@@ -24,4 +24,4 @@ pub const MINT_MODULE_ADDR_NAMESPACE: &str = "mint_module_addr";
 
 pub const MINTED_TOKENS_PER_ADDR_NAMESPACE: &str = "minted_tokens_per_addr";
 
-pub const COLLECTION_INFO_NAMESPACE: &str = "collection_info";
+pub const COLLECTION_TYPE_NAMESPACE: &str = "collection_type";

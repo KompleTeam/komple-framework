@@ -3,7 +3,7 @@ use komple_types::{
     collection::Collections,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
     token::{
-        Locks, COLLECTION_CONFIG_NAMESPACE, COLLECTION_INFO_NAMESPACE, LOCKS_NAMESPACE,
+        Locks, COLLECTION_CONFIG_NAMESPACE, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE,
         MINTED_TOKENS_PER_ADDR_NAMESPACE, MINT_MODULE_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE,
         TOKEN_IDS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
     },
@@ -11,16 +11,6 @@ use komple_types::{
 
 use cosmwasm_std::{Addr, Timestamp, Uint128};
 use cw_storage_plus::{Item, Map};
-
-#[cw_serde]
-pub struct CollectionInfo {
-    pub collection_type: Collections,
-    pub name: String,
-    pub description: String,
-    pub image: String,
-    pub external_link: Option<String>,
-}
-pub const COLLECTION_INFO: Item<CollectionInfo> = Item::new(COLLECTION_INFO_NAMESPACE);
 
 #[cw_serde]
 pub struct Config {
@@ -58,3 +48,5 @@ pub const MINTED_TOKENS_PER_ADDR: Map<&str, u32> = Map::new(MINTED_TOKENS_PER_AD
 pub const MINT_MODULE_ADDR: Item<Addr> = Item::new(MINT_MODULE_ADDR_NAMESPACE);
 
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
+
+pub const COLLECTION_TYPE: Item<Collections> = Item::new(COLLECTION_TYPE_NAMESPACE);

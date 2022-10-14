@@ -1,8 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
     collection::{
-        BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE, COLLECTION_ID_NAMESPACE,
-        LINKED_COLLECTIONS_NAMESPACE,
+        Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
+        COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE,
     },
     shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
@@ -17,6 +17,16 @@ pub struct Config {
     pub mint_lock: bool,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
+
+#[cw_serde]
+pub struct CollectionInfo {
+    pub collection_type: Collections,
+    pub name: String,
+    pub description: String,
+    pub image: String,
+    pub external_link: Option<String>,
+}
+pub const COLLECTION_INFO: Map<u32, CollectionInfo> = Map::new(COLLECTION_INFO_NAMESPACE);
 
 pub const COLLECTION_ADDRS: Map<u32, Addr> = Map::new(COLLECTION_ADDRS_NAMESPACE);
 

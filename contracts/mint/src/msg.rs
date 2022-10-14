@@ -1,7 +1,10 @@
-use crate::state::Config;
+use crate::state::{CollectionInfo, Config};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_token_module::msg::InstantiateMsg as TokenInstantiateMsg;
+use komple_token_module::{
+    msg::{MetadataInfo, TokenInfo},
+    state::CollectionConfig,
+};
 use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
@@ -13,7 +16,10 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     CreateCollection {
         code_id: u64,
-        token_instantiate_msg: TokenInstantiateMsg,
+        collection_info: CollectionInfo,
+        collection_config: CollectionConfig,
+        token_info: TokenInfo,
+        metadata_info: MetadataInfo,
         linked_collections: Option<Vec<u32>>,
     },
     UpdatePublicCollectionCreation {
@@ -58,6 +64,8 @@ pub enum QueryMsg {
     Config {},
     #[returns(ResponseWrapper<String>)]
     CollectionAddress(u32),
+    #[returns(ResponseWrapper<CollectionInfo>)]
+    CollectionInfo { collection_id: u32 },
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
     #[returns(ResponseWrapper<Vec<u32>>)]

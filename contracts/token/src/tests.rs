@@ -1,9 +1,6 @@
+use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use crate::state::{CollectionConfig, SubModules};
-use crate::{msg::ConfigResponse, ContractError};
-use crate::{
-    msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo},
-    state::CollectionInfo,
-};
+use crate::ContractError;
 use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -82,13 +79,6 @@ fn proper_instantiate(
     let token_code_id = app.store_code(token_module());
     let metadata_code_id = app.store_code(metadata_module());
 
-    let collection_info = CollectionInfo {
-        collection_type: Collections::Standard,
-        name: "Test Collection".to_string(),
-        description: "Test Description".to_string(),
-        image: "https://some-image.com".to_string(),
-        external_link: None,
-    };
     let token_info = TokenInfo {
         symbol: "TTT".to_string(),
         minter,
@@ -112,8 +102,9 @@ fn proper_instantiate(
         admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
+        collection_type: Collections::Standard,
+        collection_name: "Test Collection".to_string(),
         collection_config,
-        collection_info,
         metadata_info,
     };
 
@@ -137,13 +128,6 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
 
-        let collection_info = CollectionInfo {
-            collection_type: Collections::Standard,
-            name: "Test Collection".to_string(),
-            description: "Test Description".to_string(),
-            image: "https://some-image.com".to_string(),
-            external_link: None,
-        };
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
@@ -167,8 +151,9 @@ mod initialization {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
+            collection_type: Collections::Standard,
+            collection_name: "Test Collection".to_string(),
             collection_config,
-            collection_info,
             metadata_info,
         };
         let token_module_addr = app
@@ -190,13 +175,6 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
 
-        let collection_info = CollectionInfo {
-            collection_type: Collections::Standard,
-            name: "Test Collection".to_string(),
-            description: "Test Description".to_string(),
-            image: "https://some-image.com".to_string(),
-            external_link: None,
-        };
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
@@ -220,7 +198,8 @@ mod initialization {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info: token_info.clone(),
-            collection_info: collection_info.clone(),
+            collection_type: Collections::Standard,
+            collection_name: "Test Collection".to_string(),
             collection_config: collection_config.clone(),
             metadata_info: metadata_info.clone(),
         };
@@ -243,8 +222,9 @@ mod initialization {
         let msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
-            token_info: token_info,
-            collection_info: collection_info,
+            token_info,
+            collection_type: Collections::Standard,
+            collection_name: "Test Collection".to_string(),
             collection_config,
             metadata_info,
         };
@@ -270,13 +250,6 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
 
-        let collection_info = CollectionInfo {
-            collection_type: Collections::Standard,
-            name: "Test Collection".to_string(),
-            description: "Test Description".to_string(),
-            image: "https://some-image.com".to_string(),
-            external_link: None,
-        };
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
@@ -300,7 +273,8 @@ mod initialization {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            collection_info,
+            collection_type: Collections::Standard,
+            collection_name: "Test Collection".to_string(),
             collection_config,
             metadata_info,
         };
@@ -326,13 +300,6 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
 
-        let collection_info = CollectionInfo {
-            collection_type: Collections::Standard,
-            name: "Test Collection".to_string(),
-            description: "Test Description".to_string(),
-            image: "https://some-image.com".to_string(),
-            external_link: None,
-        };
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
@@ -356,7 +323,8 @@ mod initialization {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            collection_info,
+            collection_type: Collections::Standard,
+            collection_name: "Test Collection".to_string(),
             collection_config,
             metadata_info,
         };
@@ -377,74 +345,11 @@ mod initialization {
     }
 
     #[test]
-    fn test_invalid_description() {
-        let mut app = mock_app();
-        let token_code_id = app.store_code(token_module());
-        let metadata_code_id = app.store_code(metadata_module());
-
-        let collection_info = CollectionInfo {
-            collection_type: Collections::Standard,
-            name: "Test Collection".to_string(),
-            description: "Test DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest Description".to_string(),
-            image: "https://some-image.com".to_string(),
-            external_link: None,
-        };
-        let token_info = TokenInfo {
-            symbol: "TTT".to_string(),
-            minter: ADMIN.to_string(),
-        };
-        let collection_config = CollectionConfig {
-            per_address_limit: Some(5),
-            start_time: Some(app.block_info().time.plus_seconds(1)),
-            max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
-            native_denom: NATIVE_DENOM.to_string(),
-            ipfs_link: Some("some-link".to_string()),
-        };
-        let metadata_info = MetadataInfo {
-            instantiate_msg: MetadataInstantiateMsg {
-                admin: "".to_string(),
-                metadata_type: MetadataType::Standard,
-            },
-            code_id: metadata_code_id,
-        };
-        let msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
-            creator: ADMIN.to_string(),
-            token_info,
-            collection_info,
-            collection_config,
-            metadata_info,
-        };
-        let err = app
-            .instantiate_contract(
-                token_code_id,
-                Addr::unchecked(ADMIN),
-                &msg,
-                &[],
-                "test",
-                None,
-            )
-            .unwrap_err();
-        assert_eq!(
-            err.source().unwrap().to_string(),
-            ContractError::DescriptionTooLong {}.to_string()
-        );
-    }
-
-    #[test]
     fn test_missing_ipfs_link() {
         let mut app = mock_app();
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
 
-        let collection_info = CollectionInfo {
-            collection_type: Collections::Standard,
-            name: "Test Collection".to_string(),
-            description: "Test DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest DescriptionTest Description".to_string(),
-            image: "https://some-image.com".to_string(),
-            external_link: None,
-        };
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
@@ -468,7 +373,8 @@ mod initialization {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            collection_info,
+            collection_type: Collections::Standard,
+            collection_name: "Test Collection".to_string(),
             collection_config,
             metadata_info,
         };
@@ -494,13 +400,6 @@ mod initialization {
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
 
-        let mut collection_info = CollectionInfo {
-            collection_type: Collections::Standard,
-            name: "Test Collection".to_string(),
-            description: "Test Description".to_string(),
-            image: "https://some-image.com".to_string(),
-            external_link: None,
-        };
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
             minter: ADMIN.to_string(),
@@ -513,18 +412,19 @@ mod initialization {
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
-        let mut metadata_info = MetadataInfo {
+        let metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
                 admin: "".to_string(),
                 metadata_type: MetadataType::Dynamic,
             },
             code_id: metadata_code_id,
         };
-        let msg = InstantiateMsg {
+        let mut msg = InstantiateMsg {
             admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
-            collection_info: collection_info.clone(),
+            collection_type: Collections::Standard,
+            collection_name: "Test Collection".to_string(),
             collection_config,
             metadata_info: metadata_info.clone(),
         };
@@ -544,8 +444,8 @@ mod initialization {
             ContractError::InvalidCollectionMetadataType {}.to_string()
         );
 
-        metadata_info.instantiate_msg.metadata_type = MetadataType::Standard;
-        collection_info.collection_type = Collections::Linked;
+        msg.metadata_info.instantiate_msg.metadata_type = MetadataType::Standard;
+        msg.collection_type = Collections::Linked;
         let err = app
             .instantiate_contract(
                 token_code_id,

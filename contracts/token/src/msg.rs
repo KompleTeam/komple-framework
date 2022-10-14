@@ -1,9 +1,9 @@
-use crate::state::{CollectionConfig, CollectionInfo, SubModules};
+use crate::state::{CollectionConfig, SubModules};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Timestamp, Uint128};
 use cw721::CustomMsg;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_types::{query::ResponseWrapper, token::Locks};
+use komple_types::{collection::Collections, query::ResponseWrapper, token::Locks};
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 #[cw_serde]
@@ -23,7 +23,8 @@ pub struct InstantiateMsg {
     pub admin: String,
     pub creator: String,
     pub token_info: TokenInfo,
-    pub collection_info: CollectionInfo,
+    pub collection_name: String,
+    pub collection_type: Collections,
     pub collection_config: CollectionConfig,
     pub metadata_info: MetadataInfo,
 }
@@ -92,8 +93,6 @@ pub enum QueryMsg {
     TokenLocks { token_id: String },
     #[returns(ResponseWrapper<u32>)]
     MintedTokensPerAddress { address: String },
-    #[returns(ResponseWrapper<CollectionInfo>)]
-    CollectionInfo {},
     #[returns(ResponseWrapper<SubModules>)]
     SubModules {},
     #[returns(ResponseWrapper<ConfigResponse>)]

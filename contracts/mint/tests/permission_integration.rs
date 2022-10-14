@@ -7,15 +7,13 @@ use komple_hub_module::msg::{
 use komple_hub_module::state::HubInfo;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_mint_module::state::CollectionInfo;
 use komple_ownership_permission_module::msg::InstantiateMsg as OwnershipModuleInstantiateMsg;
 use komple_permission_module::msg::{
     ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionInstantiateMsg,
 };
+use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_token_module::{
-    msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
-    state::CollectionInfo,
-};
 use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
@@ -212,14 +210,10 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
     };
     let msg = ExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
-        token_instantiate_msg: TokenInstantiateMsg {
-            admin: ADMIN.to_string(),
-            creator: ADMIN.to_string(),
-            collection_info,
-            collection_config,
-            token_info,
-            metadata_info,
-        },
+        collection_config,
+        collection_info,
+        metadata_info,
+        token_info,
         linked_collections: None,
     };
     let _ = app

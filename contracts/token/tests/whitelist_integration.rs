@@ -4,7 +4,7 @@ use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
-use komple_token_module::state::{CollectionConfig, CollectionInfo, SubModules as TokenSubModules};
+use komple_token_module::state::{CollectionConfig, SubModules as TokenSubModules};
 use komple_token_module::ContractError;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
@@ -106,13 +106,6 @@ fn token_module_instantiation(app: &mut App) -> Addr {
     let token_code_id = app.store_code(token_module());
     let metadata_code_id = app.store_code(metadata_module());
 
-    let collection_info = CollectionInfo {
-        collection_type: Collections::Standard,
-        name: "Test Collection".to_string(),
-        description: "Test Collection".to_string(),
-        image: "https://image.com".to_string(),
-        external_link: None,
-    };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
         minter: ADMIN.to_string(),
@@ -136,7 +129,8 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
-        collection_info,
+        collection_type: Collections::Standard,
+        collection_name: "Test Collection".to_string(),
         collection_config,
         metadata_info,
     };

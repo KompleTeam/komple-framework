@@ -2,8 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env,
-    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128,
-    WasmMsg,
+    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -21,9 +20,8 @@ use crate::msg::{
     QueryMsg as TokenQueryMsg,
 };
 use crate::state::{
-    CollectionConfig, CollectionInfo, Config, SubModules, COLLECTION_CONFIG, COLLECTION_INFO,
-    CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, SUB_MODULES, TOKEN_IDS,
-    TOKEN_LOCKS,
+    CollectionConfig, Config, SubModules, COLLECTION_CONFIG, COLLECTION_TYPE, CONFIG, LOCKS,
+    MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::ContractInfoResponse;
@@ -43,8 +41,6 @@ pub type QueryMsg = cw721_base::QueryMsg<TokenQueryMsg>;
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-token-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-
-const MAX_DESCRIPTION_LENGTH: u32 = 512;
 
 const METADATA_MODULE_INSTANTIATE_REPLY_ID: u64 = 1;
 const WHITELIST_MODULE_INSTANTIATE_REPLY_ID: u64 = 2;
@@ -73,32 +69,20 @@ pub fn instantiate(
     {
         return Err(ContractError::InvalidPerAddressLimit {});
     };
-    if msg.collection_info.collection_type == Collections::Standard
-        && msg.collection_config.ipfs_link.is_none()
-    {
+    if msg.collection_type == Collections::Standard && msg.collection_config.ipfs_link.is_none() {
         return Err(ContractError::IpfsNotFound {});
     };
     COLLECTION_CONFIG.save(deps.storage, &msg.collection_config)?;
 
-    if msg.collection_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
-        return Err(ContractError::DescriptionTooLong {});
-    }
-    let collection_info = CollectionInfo {
-        collection_type: msg.collection_info.collection_type,
-        name: msg.collection_info.name,
-        description: msg.collection_info.description,
-        image: msg.collection_info.image,
-        external_link: msg.collection_info.external_link,
-    };
-    COLLECTION_INFO.save(deps.storage, &collection_info)?;
-
-    if (collection_info.collection_type == Collections::Standard
+    if (msg.collection_type == Collections::Standard
         && msg.metadata_info.instantiate_msg.metadata_type != MetadataType::Standard)
-        || (collection_info.collection_type != Collections::Standard
+        || (msg.collection_type != Collections::Standard
             && msg.metadata_info.instantiate_msg.metadata_type == MetadataType::Standard)
     {
         return Err(ContractError::InvalidCollectionMetadataType {});
     }
+
+    COLLECTION_TYPE.save(deps.storage, &msg.collection_type)?;
 
     let admin = deps.api.addr_validate(&msg.admin)?;
     let creator = deps.api.addr_validate(&msg.creator)?;
@@ -124,7 +108,7 @@ pub fn instantiate(
     SUB_MODULES.save(deps.storage, &sub_modules)?;
 
     let contract_info = ContractInfoResponse {
-        name: collection_info.name.clone(),
+        name: msg.collection_name.clone(),
         symbol: msg.token_info.symbol.clone(),
     };
     Cw721Contract::default()
@@ -157,63 +141,6 @@ pub fn instantiate(
             .add_attribute("mint_module_addr", info.sender)
             .add_attribute("creator", config.creator)
             .add_attribute("minter", minter)
-            .add_attribute("symbol", contract_info.symbol)
-            .add_attribute(
-                "collection_type",
-                collection_info.collection_type.to_string(),
-            )
-            .add_attribute("name", collection_info.name)
-            .add_attribute("description", collection_info.description)
-            .add_attribute("image", collection_info.image)
-            .check_add_attribute(
-                &collection_info.external_link,
-                "external_link",
-                collection_info
-                    .external_link
-                    .as_ref()
-                    .unwrap_or(&String::from("")),
-            )
-            .add_attribute("native_denom", msg.collection_config.native_denom)
-            .check_add_attribute(
-                &msg.collection_config.start_time,
-                "start_time",
-                msg.collection_config
-                    .start_time
-                    .unwrap_or(Timestamp::from_nanos(0))
-                    .to_string(),
-            )
-            .check_add_attribute(
-                &msg.collection_config.max_token_limit,
-                "max_token_limit",
-                msg.collection_config
-                    .max_token_limit
-                    .unwrap_or(0)
-                    .to_string(),
-            )
-            .check_add_attribute(
-                &msg.collection_config.per_address_limit,
-                "per_address_limit",
-                msg.collection_config
-                    .per_address_limit
-                    .unwrap_or(0)
-                    .to_string(),
-            )
-            .check_add_attribute(
-                &msg.collection_config.unit_price,
-                "unit_price",
-                msg.collection_config
-                    .unit_price
-                    .unwrap_or(Uint128::zero())
-                    .to_string(),
-            )
-            .check_add_attribute(
-                &msg.collection_config.ipfs_link,
-                "ipfs_link",
-                msg.collection_config
-                    .ipfs_link
-                    .as_ref()
-                    .unwrap_or(&String::from("")),
-            )
             .get(),
     ))
 }
@@ -415,7 +342,7 @@ pub fn execute_mint(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
-    let collection_info = COLLECTION_INFO.load(deps.storage)?;
+    let collection_type = COLLECTION_TYPE.load(deps.storage)?;
 
     let locks = LOCKS.load(deps.storage)?;
     if locks.mint_lock {
@@ -485,7 +412,7 @@ pub fn execute_mint(
 
     // If the collection is standard
     // Execute add_metadata message to save the ifps link to metadata module
-    if collection_info.collection_type == Collections::Standard {
+    if collection_type == Collections::Standard {
         if collection_config.ipfs_link.is_none() {
             return Err(ContractError::IpfsNotFound {});
         };
@@ -895,7 +822,6 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             TokenQueryMsg::MintedTokensPerAddress { address } => {
                 to_binary(&query_minted_tokens_per_address(deps, address)?)
             }
-            TokenQueryMsg::CollectionInfo {} => to_binary(&query_collection_info(deps)?),
             TokenQueryMsg::SubModules {} => to_binary(&query_contracts(deps)?),
             TokenQueryMsg::ModuleOperators {} => to_binary(&query_contract_operators(deps)?),
         },
@@ -935,11 +861,6 @@ fn query_minted_tokens_per_address(deps: Deps, address: String) -> StdResult<Res
         .may_load(deps.storage, &address)?
         .unwrap_or(0);
     Ok(ResponseWrapper::new("minted_tokens_per_address", amount))
-}
-
-fn query_collection_info(deps: Deps) -> StdResult<ResponseWrapper<CollectionInfo>> {
-    let collection_info = COLLECTION_INFO.load(deps.storage)?;
-    Ok(ResponseWrapper::new("collection_info", collection_info))
 }
 
 fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<SubModules>> {

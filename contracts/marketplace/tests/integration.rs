@@ -17,13 +17,13 @@ use komple_hub_module::{
 use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_marketplace_module::ContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
+use komple_mint_module::{
+    msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg},
+    state::CollectionInfo,
+};
 use komple_token_module::{
-    msg::{
-        ExecuteMsg as TokenExecuteMsg, InstantiateMsg as TokenInstantiateMsg, MetadataInfo,
-        TokenInfo,
-    },
-    state::{CollectionConfig, CollectionInfo},
+    msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo},
+    state::CollectionConfig,
 };
 use komple_types::collection::Collections;
 use komple_types::fee::Fees;
@@ -322,14 +322,10 @@ pub fn create_collection(
     };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
-        token_instantiate_msg: TokenInstantiateMsg {
-            admin: "".to_string(),
-            creator: "".to_string(),
-            collection_info,
-            collection_config,
-            token_info,
-            metadata_info,
-        },
+        collection_config,
+        collection_info,
+        metadata_info,
+        token_info,
         linked_collections: None,
     };
     let _ = app

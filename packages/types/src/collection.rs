@@ -33,3 +33,5 @@ pub const LINKED_COLLECTIONS_NAMESPACE: &str = "linked_collections";
 pub const COLLECTION_ID_NAMESPACE: &str = "collection_id";
 
 pub const BLACKLIST_COLLECTION_ADDRS_NAMESPACE: &str = "blacklist_collection_addrs";
+
+pub const COLLECTION_INFO_NAMESPACE: &str = "collection_info";

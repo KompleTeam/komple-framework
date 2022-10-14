@@ -2,12 +2,14 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply,
-    ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
+    ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
+use komple_token_module::msg::{MetadataInfo, TokenInfo};
+use komple_token_module::state::CollectionConfig;
 use komple_token_module::{helper::KompleTokenModule, msg::InstantiateMsg as TokenInstantiateMsg};
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -20,8 +22,8 @@ use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use crate::error::ContractError;
 use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
-    Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID, CONFIG, HUB_ADDR,
-    LINKED_COLLECTIONS, OPERATORS,
+    CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID,
+    COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
 };
 
 // version info for migration info
@@ -75,14 +77,20 @@ pub fn execute(
     match msg {
         ExecuteMsg::CreateCollection {
             code_id,
-            token_instantiate_msg,
+            collection_config,
+            collection_info,
+            metadata_info,
+            token_info,
             linked_collections,
         } => execute_create_collection(
             deps,
             env,
             info,
             code_id,
-            token_instantiate_msg,
+            collection_config,
+            collection_info,
+            metadata_info,
+            token_info,
             linked_collections,
         ),
         ExecuteMsg::UpdatePublicCollectionCreation {
@@ -129,7 +137,10 @@ pub fn execute_create_collection(
     env: Env,
     info: MessageInfo,
     code_id: u64,
-    token_instantiate_msg: TokenInstantiateMsg,
+    collection_config: CollectionConfig,
+    collection_info: CollectionInfo,
+    metadata_info: MetadataInfo,
+    mut token_info: TokenInfo,
     linked_collections: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
@@ -147,16 +158,22 @@ pub fn execute_create_collection(
         )?;
     };
 
-    let mut msg = token_instantiate_msg;
-    msg.admin = config.admin.to_string();
-    msg.creator = info.sender.to_string();
-    msg.token_info.minter = env.contract.address.to_string();
+    token_info.minter = env.contract.address.to_string();
+    let token_instantiate_msg = TokenInstantiateMsg {
+        admin: config.admin.to_string(),
+        creator: info.sender.to_string(),
+        collection_config: collection_config.clone(),
+        collection_type: collection_info.clone().collection_type,
+        collection_name: collection_info.clone().name,
+        metadata_info,
+        token_info,
+    };
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&msg)?,
+            msg: to_binary(&token_instantiate_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: String::from("Komple Framework Token Module"),
@@ -177,9 +194,67 @@ pub fn execute_create_collection(
 
     COLLECTION_ID.save(deps.storage, &collection_id)?;
 
+    COLLECTION_INFO.save(deps.storage, collection_id, &collection_info)?;
+
     Ok(Response::new().add_submessage(sub_msg).add_event(
         EventHelper::new("komple_mint_module")
             .add_attribute("action", "create_collection")
+            .add_attribute("creator", token_instantiate_msg.creator)
+            .add_attribute("minter", token_instantiate_msg.token_info.minter)
+            .add_attribute("symbol", token_instantiate_msg.token_info.symbol)
+            .add_attribute(
+                "collection_type",
+                token_instantiate_msg.collection_type.to_string(),
+            )
+            .add_attribute("collection_name", token_instantiate_msg.collection_name)
+            .add_attribute("description", collection_info.description)
+            .add_attribute("image", collection_info.image)
+            .check_add_attribute(
+                &collection_info.external_link,
+                "external_link",
+                collection_info
+                    .external_link
+                    .as_ref()
+                    .unwrap_or(&String::from("")),
+            )
+            .add_attribute(
+                "native_denom",
+                token_instantiate_msg.collection_config.native_denom,
+            )
+            .check_add_attribute(
+                &collection_config.start_time,
+                "start_time",
+                collection_config
+                    .start_time
+                    .unwrap_or(Timestamp::from_nanos(0))
+                    .to_string(),
+            )
+            .check_add_attribute(
+                &collection_config.max_token_limit,
+                "max_token_limit",
+                collection_config.max_token_limit.unwrap_or(0).to_string(),
+            )
+            .check_add_attribute(
+                &collection_config.per_address_limit,
+                "per_address_limit",
+                collection_config.per_address_limit.unwrap_or(0).to_string(),
+            )
+            .check_add_attribute(
+                &collection_config.unit_price,
+                "unit_price",
+                collection_config
+                    .unit_price
+                    .unwrap_or(Uint128::zero())
+                    .to_string(),
+            )
+            .check_add_attribute(
+                &collection_config.ipfs_link,
+                "ipfs_link",
+                collection_config
+                    .ipfs_link
+                    .as_ref()
+                    .unwrap_or(&String::from("")),
+            )
             .get(),
     ))
 }
@@ -559,6 +634,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::CollectionAddress(collection_id) => {
             to_binary(&query_collection_address(deps, collection_id)?)
         }
+        QueryMsg::CollectionInfo { collection_id } => {
+            to_binary(&query_collection_info(deps, collection_id)?)
+        }
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
         QueryMsg::LinkedCollections { collection_id } => {
             to_binary(&query_linked_collections(deps, collection_id)?)
@@ -579,6 +657,14 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
 fn query_collection_address(deps: Deps, collection_id: u32) -> StdResult<ResponseWrapper<String>> {
     let addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
     Ok(ResponseWrapper::new("collection_address", addr.to_string()))
+}
+
+fn query_collection_info(
+    deps: Deps,
+    collection_id: u32,
+) -> StdResult<ResponseWrapper<CollectionInfo>> {
+    let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
+    Ok(ResponseWrapper::new("collection_info", collection_info))
 }
 
 fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {

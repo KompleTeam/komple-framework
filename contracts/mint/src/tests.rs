@@ -1,15 +1,13 @@
 use crate::msg::QueryMsg;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::state::CollectionInfo;
 use crate::ContractError;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_token_module::{
-    msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
-    state::CollectionInfo,
-};
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
@@ -44,8 +42,8 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-const USER: &str = "juno1shfqtuup76mngspx29gcquykjvvlx9na4kymlm";
-const ADMIN: &str = "juno1qamfln8u5w8d3vlhp5t9mhmylfkgad4jz6t7cv";
+const USER: &str = "juno..user";
+const ADMIN: &str = "juno..admin";
 // const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
 const NATIVE_DENOM: &str = "denom";
 
@@ -121,14 +119,10 @@ fn setup_collection(
     };
     let msg = ExecuteMsg::CreateCollection {
         code_id: token_code_id,
-        token_instantiate_msg: TokenInstantiateMsg {
-            admin: ADMIN.to_string(),
-            creator: ADMIN.to_string(),
-            collection_info,
-            collection_config,
-            token_info,
-            metadata_info,
-        },
+        collection_config,
+        collection_info,
+        metadata_info,
+        token_info,
         linked_collections,
     };
     let _ = app
@@ -294,14 +288,10 @@ mod actions {
                 };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
-                    token_instantiate_msg: TokenInstantiateMsg {
-                        admin: ADMIN.to_string(),
-                        creator: ADMIN.to_string(),
-                        collection_info,
-                        collection_config,
-                        token_info,
-                        metadata_info,
-                    },
+                    collection_config,
+                    collection_info,
+                    metadata_info,
+                    token_info,
                     linked_collections: None,
                 };
                 let _ = app
@@ -309,9 +299,17 @@ mod actions {
                     .unwrap();
 
                 let msg = QueryMsg::CollectionAddress(1);
-                let res: ResponseWrapper<String> =
-                    app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+                let res: ResponseWrapper<String> = app
+                    .wrap()
+                    .query_wasm_smart(minter_addr.clone(), &msg)
+                    .unwrap();
                 assert_eq!(res.data, "contract1");
+
+                let msg = QueryMsg::CollectionInfo { collection_id: 1 };
+                let res: ResponseWrapper<CollectionInfo> =
+                    app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+                assert_eq!(res.data.name, "Test Collection");
+                assert_eq!(res.data.collection_type, Collections::Standard);
             }
 
             #[test]
@@ -349,14 +347,10 @@ mod actions {
                 };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
-                    token_instantiate_msg: TokenInstantiateMsg {
-                        admin: ADMIN.to_string(),
-                        creator: ADMIN.to_string(),
-                        collection_info,
-                        collection_config,
-                        token_info,
-                        metadata_info,
-                    },
+                    collection_config,
+                    collection_info,
+                    metadata_info,
+                    token_info,
                     linked_collections: None,
                 };
                 let err = app
