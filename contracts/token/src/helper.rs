@@ -1,6 +1,6 @@
 use crate::msg::ExecuteMsg;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Addr, Coin, Empty, StdResult, WasmMsg};
+use cosmwasm_std::{to_binary, Addr, Empty, StdResult, WasmMsg};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use komple_types::token::Locks;
 
@@ -63,19 +63,14 @@ impl KompleTokenModule {
         })
     }
 
-    pub fn mint_msg(
-        &self,
-        owner: String,
-        metadata_id: Option<u32>,
-        funds: Vec<Coin>,
-    ) -> StdResult<WasmMsg> {
+    pub fn mint_msg(&self, owner: String, metadata_id: Option<u32>) -> StdResult<WasmMsg> {
         let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
             msg: ExecuteMsg::Mint { owner, metadata_id },
         };
         Ok(WasmMsg::Execute {
             contract_addr: self.0.to_string(),
             msg: to_binary(&msg)?,
-            funds,
+            funds: vec![],
         })
     }
 }

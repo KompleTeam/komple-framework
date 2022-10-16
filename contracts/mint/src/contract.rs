@@ -1,23 +1,30 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply,
-    ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128, WasmMsg,
+    coins, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
+    MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128,
+    WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
-use komple_token_module::msg::{MetadataInfo, TokenInfo};
-use komple_token_module::state::CollectionConfig;
-use komple_token_module::{helper::KompleTokenModule, msg::InstantiateMsg as TokenInstantiateMsg};
+use cw721_base::msg::QueryMsg as Cw721QueryMsg;
+use komple_fee_module::msg::{FixedFeeResponse, QueryMsg as FeeQueryMsg};
+use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_token_module::{
+    helper::KompleTokenModule,
+    msg::{
+        ConfigResponse as TokenConfigResponse, InstantiateMsg as TokenInstantiateMsg, MetadataInfo,
+        QueryMsg as TokenQueryMsg, TokenInfo,
+    },
+    state::CollectionConfig,
+};
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
+use komple_utils::{event::EventHelper, funds::check_single_coin};
 use semver::Version;
-
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
@@ -328,18 +335,59 @@ fn execute_mint(
     collection_id: u32,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
     if config.mint_lock {
         return Err(ContractError::LockedMint {});
     }
 
+    let mut msgs: Vec<CosmosMsg> = vec![];
     let mint_msg = vec![MintMsg {
         collection_id,
         owner: info.sender.to_string(),
         metadata_id,
     }];
 
-    _execute_mint(deps, info, "execute_mint", mint_msg)
+    let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
+    if let Ok(fee_module_addr) = res {
+        let msg = FeeQueryMsg::FixedFee {
+            module_name: Modules::Mint.to_string(),
+            fee_name: format!("collection_{}", collection_id.to_string()),
+        };
+        let res: Result<ResponseWrapper<FixedFeeResponse>, StdError> =
+            deps.querier.query_wasm_smart(fee_module_addr, &msg);
+        if let Ok(fixed_fee_response) = res {
+            // TODO: Storage is used in here and in _execute_mint
+            // Change this logic to use only one storage
+            let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
+            let token_config: ResponseWrapper<TokenConfigResponse> =
+                deps.querier.query_wasm_smart(
+                    collection_addr,
+                    &Cw721QueryMsg::Extension {
+                        msg: TokenQueryMsg::Config {},
+                    },
+                )?;
+
+            check_single_coin(
+                &info,
+                Coin {
+                    amount: fixed_fee_response.data.value,
+                    denom: token_config.data.native_denom.to_string(),
+                },
+            )?;
+
+            let msg = BankMsg::Send {
+                to_address: config.admin.to_string(),
+                amount: coins(
+                    fixed_fee_response.data.value.u128(),
+                    token_config.data.native_denom.to_string(),
+                ),
+            };
+            msgs.push(msg.into());
+        }
+    }
+
+    _execute_mint(deps, "execute_mint", msgs, mint_msg)
 }
 
 fn execute_mint_to(
@@ -364,13 +412,14 @@ fn execute_mint_to(
 
     let owner = deps.api.addr_validate(&recipient)?;
 
+    let msgs: Vec<CosmosMsg> = vec![];
     let mint_msg = vec![MintMsg {
         collection_id,
         owner: owner.to_string(),
         metadata_id,
     }];
 
-    _execute_mint(deps, info, "execute_mint_to", mint_msg)
+    _execute_mint(deps, "execute_mint_to", msgs, mint_msg)
 }
 
 fn execute_permission_mint(
@@ -420,15 +469,13 @@ fn execute_permission_mint(
 
 fn _execute_mint(
     deps: DepsMut,
-    info: MessageInfo,
     action: &str,
-    msgs: Vec<MintMsg>,
+    mut msgs: Vec<CosmosMsg>,
+    mint_msgs: Vec<MintMsg>,
 ) -> Result<Response, ContractError> {
-    let mut mint_msgs: Vec<WasmMsg> = vec![];
-
     let mut event_attributes: Vec<Attribute> = vec![];
 
-    for (index, msg) in msgs.iter().enumerate() {
+    for (index, msg) in mint_msgs.iter().enumerate() {
         event_attributes.push(Attribute {
             key: format!("mint_msg_{}", index),
             value: format!("collection_id/{}", msg.collection_id),
@@ -446,15 +493,12 @@ fn _execute_mint(
 
         let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
 
-        let msg = KompleTokenModule(collection_addr).mint_msg(
-            msg.owner.clone(),
-            msg.metadata_id,
-            info.funds.clone(),
-        )?;
-        mint_msgs.push(msg);
+        let msg =
+            KompleTokenModule(collection_addr).mint_msg(msg.owner.clone(), msg.metadata_id)?;
+        msgs.push(msg.into());
     }
-
-    Ok(Response::new().add_messages(mint_msgs).add_event(
+    println!("msgs: {:?}", msgs);
+    Ok(Response::new().add_messages(msgs).add_event(
         EventHelper::new("komple_mint_module")
             .add_attribute("action", action)
             .add_attributes(event_attributes)
