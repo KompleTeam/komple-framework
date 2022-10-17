@@ -1,12 +1,9 @@
 use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Uint128};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::{
-    msg::{
-        ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
-        QueryMsg as FeeModuleQueryMsg,
-    },
-    state::PercentagePayment as FeeModulePercentagePayment,
+use komple_fee_module::msg::{
+    ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
+    QueryMsg as FeeModuleQueryMsg,
 };
 use komple_hub_module::{
     msg::{
@@ -24,7 +21,7 @@ use komple_mint_module::{
 use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
-use komple_types::fee::Fees;
+use komple_types::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;

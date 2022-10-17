@@ -1,6 +1,6 @@
 use crate::msg::{CustomPaymentAddress, FixedFeeResponse, PercentageFeeResponse};
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, FixedPayment, PercentagePayment};
+use crate::state::Config;
 use crate::ContractError;
 use cosmwasm_std::Decimal;
 use cosmwasm_std::StdError;
@@ -8,7 +8,10 @@ use cosmwasm_std::{coin, Addr, Empty, Uint128};
 use cosmwasm_std::{to_binary, Binary};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_types::query::ResponseWrapper;
-use komple_types::{fee::Fees, module::Modules};
+use komple_types::{
+    fee::{Fees, FixedPayment, PercentagePayment},
+    module::Modules,
+};
 use std::str::FromStr;
 
 const ADMIN: &str = "juno..admin";

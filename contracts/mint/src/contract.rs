@@ -8,7 +8,6 @@ use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
-use komple_fee_module::msg::{FixedFeeResponse, QueryMsg as FeeQueryMsg};
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::{
     helper::KompleTokenModule,
@@ -338,19 +337,19 @@ fn execute_mint(
     // If absent mint is free
     let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if let Ok(fee_module_addr) = res {
-        let msg = FeeQueryMsg::FixedFee {
-            module_name: Modules::Mint.to_string(),
-            fee_name: format!("collection_{}", collection_id.to_string()),
-        };
-        let res: Result<ResponseWrapper<FixedFeeResponse>, StdError> =
-            deps.querier.query_wasm_smart(fee_module_addr, &msg);
+        let res = StorageHelper::query_fixed_fee(
+            &deps.querier,
+            &fee_module_addr,
+            Modules::Mint.to_string(),
+            format!("collection_{}", collection_id.to_string()),
+        );
         if let Ok(fixed_fee_response) = res {
             let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
 
             check_single_coin(
                 &info,
                 Coin {
-                    amount: fixed_fee_response.data.value,
+                    amount: fixed_fee_response.value,
                     denom: collection_info.native_denom.to_string(),
                 },
             )?;
@@ -358,7 +357,7 @@ fn execute_mint(
             let msg = BankMsg::Send {
                 to_address: config.admin.to_string(),
                 amount: coins(
-                    fixed_fee_response.data.value.u128(),
+                    fixed_fee_response.value.u128(),
                     collection_info.native_denom.to_string(),
                 ),
             };

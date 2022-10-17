@@ -9,7 +9,7 @@ use komple_mint_module::state::CollectionInfo;
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
-use komple_types::fee::Fees;
+use komple_types::fee::{Fees, FixedPayment};
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_utils::storage::StorageHelper;
@@ -104,8 +104,6 @@ mod execute {
     use super::*;
 
     mod mint {
-        use komple_fee_module::state::FixedPayment;
-
         use super::*;
 
         #[test]

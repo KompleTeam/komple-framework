@@ -8,7 +8,7 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
-use komple_types::fee::Fees;
+use komple_types::fee::{Fees, FixedPayment, PercentagePayment};
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
@@ -19,9 +19,7 @@ use crate::msg::{
     CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, InstantiateMsg, PercentageFeeResponse,
     QueryMsg,
 };
-use crate::state::{
-    Config, FixedPayment, PercentagePayment, CONFIG, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES,
-};
+use crate::state::{Config, CONFIG, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-fee-module";

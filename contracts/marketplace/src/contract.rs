@@ -8,10 +8,7 @@ use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use komple_fee_module::{
     helper::KompleFeeModule,
-    msg::{
-        CustomPaymentAddress as FeeModuleCustomPaymentAddress, PercentageFeeResponse,
-        QueryMsg as FeeModuleQueryMsg,
-    },
+    msg::{CustomPaymentAddress as FeeModuleCustomPaymentAddress, QueryMsg as FeeModuleQueryMsg},
 };
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
@@ -315,14 +312,14 @@ fn _execute_buy_fixed_listing(
         )?;
 
         // Collection royalty fees
-        let query = FeeModuleQueryMsg::PercentageFee {
-            module_name: Modules::Mint.to_string(),
-            fee_name: format!("collection_{}_royalty", collection_id),
-        };
-        let res: Result<ResponseWrapper<PercentageFeeResponse>, StdError> =
-            deps.querier.query_wasm_smart(fee_module_addr, &query);
+        let res = StorageHelper::query_percentage_fee(
+            &deps.querier,
+            &fee_module_addr,
+            Modules::Mint.to_string(),
+            format!("collection_{}_royalty", collection_id),
+        );
         if let Ok(percentage_fee) = res {
-            royalty_fee = percentage_fee.data.value.mul(fixed_listing.price);
+            royalty_fee = percentage_fee.value.mul(fixed_listing.price);
 
             let res = StorageHelper::query_storage::<TokenConfig>(
                 &deps.querier,
