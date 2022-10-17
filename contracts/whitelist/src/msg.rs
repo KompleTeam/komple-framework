@@ -1,25 +1,23 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Timestamp, Uint128};
+use cosmwasm_std::Timestamp;
 use komple_types::query::ResponseWrapper;
+
+use crate::state::WhitelistConfig;
 
 #[cw_serde]
 pub struct InstantiateMsg {
     pub members: Vec<String>,
-    pub start_time: Timestamp,
-    pub end_time: Timestamp,
-    pub unit_price: Uint128,
-    pub per_address_limit: u8,
-    pub member_limit: u16,
+    pub config: WhitelistConfig,
 }
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    UpdateStartTime(Timestamp),
-    UpdateEndTime(Timestamp),
-    AddMembers(Vec<String>),
-    RemoveMembers(Vec<String>),
-    UpdatePerAddressLimit(u8),
-    UpdateMemberLimit(u16),
+    UpdateStartTime { start_time: Timestamp },
+    UpdateEndTime { end_time: Timestamp },
+    AddMembers { members: Vec<String> },
+    RemoveMembers { members: Vec<String> },
+    UpdatePerAddressLimit { limit: u8 },
+    UpdateMemberLimit { limit: u16 },
 }
 
 #[cw_serde]
@@ -47,7 +45,6 @@ pub struct ConfigResponse {
     pub admin: String,
     pub start_time: Timestamp,
     pub end_time: Timestamp,
-    pub unit_price: Uint128,
     pub per_address_limit: u8,
     pub member_limit: u16,
     pub member_num: u16,

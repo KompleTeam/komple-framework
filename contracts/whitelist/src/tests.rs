@@ -1,4 +1,5 @@
 use crate::msg::{ConfigResponse, ExecuteMsg, QueryMsg};
+use crate::state::WhitelistConfig;
 use crate::ContractError;
 use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -43,7 +44,6 @@ fn proper_instantiate(
     members: Vec<String>,
     start_time: Timestamp,
     end_time: Timestamp,
-    unit_price: Uint128,
     per_address_limit: u8,
     member_limit: u16,
 ) -> Addr {
@@ -51,11 +51,12 @@ fn proper_instantiate(
 
     let msg = InstantiateMsg {
         members,
-        start_time,
-        end_time,
-        unit_price,
-        per_address_limit,
-        member_limit,
+        config: WhitelistConfig {
+            start_time,
+            end_time,
+            per_address_limit,
+            member_limit,
+        },
     };
 
     app.instantiate_contract(
@@ -79,11 +80,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time.plus_seconds(1),
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time.plus_seconds(1),
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 10,
+            },
         };
         let _ = app
             .instantiate_contract(
@@ -104,11 +106,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time,
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 0,
+            config: WhitelistConfig {
+                start_time: app.block_info().time,
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 0,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -133,11 +136,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time,
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 0,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time,
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 0,
+                member_limit: 10,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -162,11 +166,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![],
-            start_time: app.block_info().time,
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time,
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 10,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -191,11 +196,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time.minus_seconds(10),
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time.minus_seconds(10),
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 10,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -214,11 +220,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time,
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time,
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 10,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -237,11 +244,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time.plus_seconds(1),
-            end_time: app.block_info().time.minus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time.plus_seconds(1),
+                end_time: app.block_info().time.minus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 10,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -260,11 +268,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time.plus_seconds(10),
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time.plus_seconds(10),
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 10,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -283,11 +292,12 @@ mod initialization {
 
         let msg = InstantiateMsg {
             members: vec![RANDOM.to_string()],
-            start_time: app.block_info().time.plus_seconds(15),
-            end_time: app.block_info().time.plus_seconds(10),
-            unit_price: Uint128::new(100),
-            per_address_limit: 5,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time: app.block_info().time.plus_seconds(15),
+                end_time: app.block_info().time.plus_seconds(10),
+                per_address_limit: 5,
+                member_limit: 10,
+            },
         };
         let err = app
             .instantiate_contract(
@@ -325,12 +335,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime(app.block_info().time.plus_seconds(5));
+                let msg = ExecuteMsg::UpdateStartTime {
+                    start_time: app.block_info().time.plus_seconds(5),
+                };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -358,12 +369,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime(app.block_info().time.plus_seconds(5));
+                let msg = ExecuteMsg::UpdateStartTime {
+                    start_time: app.block_info().time.plus_seconds(5),
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -383,12 +395,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime(app.block_info().time.minus_seconds(10));
+                let msg = ExecuteMsg::UpdateStartTime {
+                    start_time: app.block_info().time.minus_seconds(10),
+                };
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -402,7 +415,9 @@ mod actions {
                     ContractError::InvalidStartTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime(app.block_info().time);
+                let msg = ExecuteMsg::UpdateStartTime {
+                    start_time: app.block_info().time,
+                };
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -416,7 +431,9 @@ mod actions {
                     ContractError::InvalidStartTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime(app.block_info().time.plus_seconds(11));
+                let msg = ExecuteMsg::UpdateStartTime {
+                    start_time: app.block_info().time.plus_seconds(11),
+                };
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -432,7 +449,9 @@ mod actions {
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdateStartTime(app.block_info().time.plus_seconds(11));
+                let msg = ExecuteMsg::UpdateStartTime {
+                    start_time: app.block_info().time.plus_seconds(11),
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -456,12 +475,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime(app.block_info().time.plus_seconds(5));
+                let msg = ExecuteMsg::UpdateEndTime {
+                    end_time: app.block_info().time.plus_seconds(5),
+                };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -489,12 +509,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime(app.block_info().time.plus_seconds(8));
+                let msg = ExecuteMsg::UpdateEndTime {
+                    end_time: app.block_info().time.plus_seconds(8),
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -514,12 +535,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime(app.block_info().time.minus_seconds(10));
+                let msg = ExecuteMsg::UpdateEndTime {
+                    end_time: app.block_info().time.minus_seconds(10),
+                };
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -533,7 +555,9 @@ mod actions {
                     ContractError::InvalidEndTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime(app.block_info().time);
+                let msg = ExecuteMsg::UpdateEndTime {
+                    end_time: app.block_info().time,
+                };
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -547,7 +571,9 @@ mod actions {
                     ContractError::InvalidEndTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime(app.block_info().time.plus_seconds(1));
+                let msg = ExecuteMsg::UpdateEndTime {
+                    end_time: app.block_info().time.plus_seconds(1),
+                };
                 let err = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -563,7 +589,9 @@ mod actions {
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdateEndTime(app.block_info().time.plus_seconds(11));
+                let msg = ExecuteMsg::UpdateEndTime {
+                    end_time: app.block_info().time.plus_seconds(11),
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -591,12 +619,13 @@ mod actions {
                     vec![RANDOM.to_string(), RANDOM_3.to_string(), RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::AddMembers(vec![RANDOM_2.to_string()]);
+                let msg = ExecuteMsg::AddMembers {
+                    members: vec![RANDOM_2.to_string()],
+                };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -634,12 +663,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::AddMembers(vec![RANDOM_2.to_string()]);
+                let msg = ExecuteMsg::AddMembers {
+                    members: vec![RANDOM_2.to_string()],
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -659,14 +689,15 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::AddMembers(vec![RANDOM_2.to_string()]);
+                let msg = ExecuteMsg::AddMembers {
+                    members: vec![RANDOM_2.to_string()],
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -686,12 +717,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::AddMembers(vec![RANDOM.to_string()]);
+                let msg = ExecuteMsg::AddMembers {
+                    members: vec![RANDOM.to_string()],
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -711,12 +743,13 @@ mod actions {
                     vec![RANDOM.to_string(), RANDOM_2.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     2,
                 );
 
-                let msg = ExecuteMsg::AddMembers(vec![RANDOM_3.to_string()]);
+                let msg = ExecuteMsg::AddMembers {
+                    members: vec![RANDOM_3.to_string()],
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -744,12 +777,13 @@ mod actions {
                     ],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::RemoveMembers(vec![RANDOM_2.to_string()]);
+                let msg = ExecuteMsg::RemoveMembers {
+                    members: vec![RANDOM_2.to_string()],
+                };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -780,12 +814,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::RemoveMembers(vec![RANDOM_2.to_string()]);
+                let msg = ExecuteMsg::RemoveMembers {
+                    members: vec![RANDOM_2.to_string()],
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -805,14 +840,15 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::RemoveMembers(vec![RANDOM_2.to_string()]);
+                let msg = ExecuteMsg::RemoveMembers {
+                    members: vec![RANDOM_2.to_string()],
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -832,12 +868,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::RemoveMembers(vec![RANDOM_2.to_string()]);
+                let msg = ExecuteMsg::RemoveMembers {
+                    members: vec![RANDOM_2.to_string()],
+                };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -865,12 +902,11 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit(10);
+                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 10 };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -898,12 +934,11 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit(10);
+                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 10 };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -923,14 +958,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit(10);
+                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 10 };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -950,12 +984,11 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit(0);
+                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 0 };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -979,12 +1012,11 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateMemberLimit(20);
+                let msg = ExecuteMsg::UpdateMemberLimit { limit: 20 };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -1012,12 +1044,11 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateMemberLimit(20);
+                let msg = ExecuteMsg::UpdateMemberLimit { limit: 20 };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -1037,14 +1068,13 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdateMemberLimit(20);
+                let msg = ExecuteMsg::UpdateMemberLimit { limit: 20 };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -1064,12 +1094,11 @@ mod actions {
                     vec![RANDOM.to_string()],
                     start_time,
                     end_time,
-                    Uint128::new(100),
                     5,
                     10,
                 );
 
-                let msg = ExecuteMsg::UpdateMemberLimit(0);
+                let msg = ExecuteMsg::UpdateMemberLimit { limit: 0 };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();

@@ -11,6 +11,7 @@ use komple_types::{
 };
 use komple_utils::storage::StorageHelper;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_whitelist_module::state::WhitelistConfig;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -68,18 +69,18 @@ fn setup_whitelist(
     members: Vec<String>,
     start_time: Timestamp,
     end_time: Timestamp,
-    unit_price: Uint128,
     per_address_limit: u8,
 ) -> Addr {
     let whitelist_code_id = app.store_code(whitelist_module());
 
     let instantiate_msg = WhitelistInstantiateMsg {
-        start_time,
-        end_time,
         members,
-        unit_price,
-        per_address_limit,
-        member_limit: 10,
+        config: WhitelistConfig {
+            start_time,
+            end_time,
+            per_address_limit,
+            member_limit: 10,
+        },
     };
     let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
         msg: ExecuteMsg::InitWhitelistContract {
@@ -157,12 +158,13 @@ mod initialization {
         let end_time = app.block_info().time.plus_seconds(10);
 
         let instantiate_msg = WhitelistInstantiateMsg {
-            start_time,
-            end_time,
             members: vec![RANDOM.to_string(), RANDOM_2.to_string()],
-            unit_price: Uint128::new(100),
-            per_address_limit: 2,
-            member_limit: 10,
+            config: WhitelistConfig {
+                start_time,
+                end_time,
+                per_address_limit: 2,
+                member_limit: 10,
+            },
         };
         let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
             msg: ExecuteMsg::InitWhitelistContract {
@@ -205,7 +207,6 @@ mod actions {
                 vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 start_time,
                 end_time,
-                Uint128::new(100),
                 2,
             );
 
@@ -284,7 +285,6 @@ mod actions {
                 vec![RANDOM.to_string(), RANDOM_2.to_string()],
                 start_time,
                 end_time,
-                Uint128::new(100),
                 2,
             );
 
@@ -324,7 +324,6 @@ mod actions {
                 vec![USER.to_string()],
                 start_time,
                 end_time,
-                Uint128::new(100),
                 2,
             );
 

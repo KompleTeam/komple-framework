@@ -332,7 +332,10 @@ fn execute_mint(
         metadata_id,
     }];
 
-    // TODO: Check for whitelist price too
+    // TODO:
+    // Check if whitelist is active
+    // Get the correct price
+    // If absent mint is free
     let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if let Ok(fee_module_addr) = res {
         let msg = FeeQueryMsg::FixedFee {
