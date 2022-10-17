@@ -32,7 +32,7 @@ pub enum ExecuteMsg {
         collection_id: u32,
         metadata_id: Option<u32>,
     },
-    MintTo {
+    AdminMint {
         collection_id: u32,
         recipient: String,
         metadata_id: Option<u32>,

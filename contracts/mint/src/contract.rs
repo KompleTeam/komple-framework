@@ -103,7 +103,7 @@ pub fn execute(
             collection_id,
             metadata_id,
         } => execute_mint(deps, env, info, collection_id, metadata_id),
-        ExecuteMsg::MintTo {
+        ExecuteMsg::AdminMint {
             collection_id,
             recipient,
             metadata_id,
@@ -459,7 +459,7 @@ fn execute_permission_mint(
     for (index, collection_id) in collection_ids.iter().enumerate() {
         msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: env.contract.address.to_string(),
-            msg: to_binary(&ExecuteMsg::MintTo {
+            msg: to_binary(&ExecuteMsg::AdminMint {
                 collection_id: *collection_id,
                 recipient: info.sender.to_string(),
                 metadata_id: metadata_ids.as_ref().map(|ids| ids[index]),

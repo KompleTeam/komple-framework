@@ -17,7 +17,7 @@ impl KompleMintModule {
         metadata_id: Option<u32>,
         funds: Vec<Coin>,
     ) -> StdResult<WasmMsg> {
-        let msg = ExecuteMsg::MintTo {
+        let msg = ExecuteMsg::AdminMint {
             recipient,
             collection_id,
             metadata_id,
