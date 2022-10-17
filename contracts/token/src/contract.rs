@@ -10,8 +10,10 @@ use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::token::Locks;
+use komple_types::whitelist::WHITELIST_NAMESPACE;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
+use komple_utils::storage::StorageHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -733,13 +735,10 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
         return Ok(());
     }
 
-    let res: ResponseWrapper<bool> = deps.querier.query_wasm_smart(
-        whitelist,
-        &WhitelistQueryMsg::HasMember {
-            member: owner.to_string(),
-        },
-    )?;
-    if !res.data {
+    // Query whitelist storage with owner address
+    let query_key = StorageHelper::get_map_storage_key(WHITELIST_NAMESPACE, &[owner.as_bytes()])?;
+    let res = StorageHelper::query_storage::<bool>(&deps.querier, &whitelist, &query_key)?;
+    if res.is_none() {
         return Err(ContractError::NotWhitelisted {});
     }
 

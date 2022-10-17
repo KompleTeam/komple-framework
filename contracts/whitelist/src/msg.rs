@@ -22,19 +22,15 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     #[returns(ResponseWrapper<ConfigResponse>)]
     Config {},
-    #[returns(ResponseWrapper<bool>)]
-    HasStarted {},
-    #[returns(ResponseWrapper<bool>)]
-    HasEnded {},
-    #[returns(ResponseWrapper<bool>)]
-    IsActive {},
     #[returns(ResponseWrapper<Vec<String>>)]
     Members {
         start_after: Option<String>,
         limit: Option<u8>,
     },
     #[returns(ResponseWrapper<bool>)]
-    HasMember { member: String },
+    IsActive {},
+    #[returns(ResponseWrapper<bool>)]
+    IsMember { member: String },
 }
 
 #[cw_serde]

@@ -272,13 +272,11 @@ fn execute_remove_members(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps, env)?),
-        QueryMsg::HasStarted {} => to_binary(&query_has_started(deps, env)?),
-        QueryMsg::HasEnded {} => to_binary(&query_has_ended(deps, env)?),
         QueryMsg::IsActive {} => to_binary(&query_is_active(deps, env)?),
         QueryMsg::Members { start_after, limit } => {
             to_binary(&query_members(deps, start_after, limit)?)
         }
-        QueryMsg::HasMember { member } => to_binary(&query_has_member(deps, member)?),
+        QueryMsg::IsMember { member } => to_binary(&query_is_member(deps, member)?),
     }
 }
 
@@ -294,22 +292,6 @@ fn query_config(deps: Deps, env: Env) -> StdResult<ResponseWrapper<ConfigRespons
         is_active: get_active_status(deps, env)?,
     };
     Ok(ResponseWrapper::new("config", config_res))
-}
-
-fn query_has_started(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
-    let config = CONFIG.load(deps.storage)?;
-    Ok(ResponseWrapper::new(
-        "has_started",
-        env.block.time >= config.start_time,
-    ))
-}
-
-fn query_has_ended(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
-    let config = CONFIG.load(deps.storage)?;
-    Ok(ResponseWrapper::new(
-        "has_end",
-        env.block.time >= config.end_time,
-    ))
 }
 
 fn query_is_active(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
@@ -335,10 +317,10 @@ fn query_members(
     Ok(ResponseWrapper::new("members", members))
 }
 
-fn query_has_member(deps: Deps, member: String) -> StdResult<ResponseWrapper<bool>> {
+fn query_is_member(deps: Deps, member: String) -> StdResult<ResponseWrapper<bool>> {
     let addr = deps.api.addr_validate(&member)?;
     let exists = WHITELIST.has(deps.storage, addr);
-    Ok(ResponseWrapper::new("has_member", exists))
+    Ok(ResponseWrapper::new("is_member", exists))
 }
 
 fn get_active_status(deps: Deps, env: Env) -> StdResult<bool> {
