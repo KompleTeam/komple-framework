@@ -3,32 +3,33 @@ use komple_types::{
     collection::Collections,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
     token::{
-        Locks, COLLECTION_CONFIG_NAMESPACE, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE,
-        MINTED_TOKENS_PER_ADDR_NAMESPACE, MINT_MODULE_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE,
-        TOKEN_IDS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
+        Locks, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE, MINTED_TOKENS_PER_ADDR_NAMESPACE,
+        MINT_MODULE_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE, TOKEN_IDS_NAMESPACE,
+        TOKEN_LOCKS_NAMESPACE,
     },
 };
 
-use cosmwasm_std::{Addr, Timestamp, Uint128};
+use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
 
 #[cw_serde]
 pub struct Config {
     pub admin: Addr,
     pub creator: Addr,
+    pub per_address_limit: Option<u32>,
+    pub start_time: Option<Timestamp>,
+    pub max_token_limit: Option<u32>,
+    pub ipfs_link: Option<String>,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 #[cw_serde]
 pub struct CollectionConfig {
-    pub native_denom: String,
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Uint128>,
     pub ipfs_link: Option<String>,
 }
-pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new(COLLECTION_CONFIG_NAMESPACE);
 
 #[cw_serde]
 pub struct SubModules {

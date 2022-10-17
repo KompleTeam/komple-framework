@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Empty, Env,
-    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
+    to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
+    ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -10,18 +10,17 @@ use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::token::Locks;
+use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
-use komple_utils::{check_admin_privileges, funds::check_single_coin};
 use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{
-    ConfigResponse, ExecuteMsg as TokenExecuteMsg, InstantiateMsg, MigrateMsg,
-    QueryMsg as TokenQueryMsg,
+    ExecuteMsg as TokenExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg as TokenQueryMsg,
 };
 use crate::state::{
-    CollectionConfig, Config, SubModules, COLLECTION_CONFIG, COLLECTION_TYPE, CONFIG, LOCKS,
-    MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS, SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
+    Config, SubModules, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR,
+    OPERATORS, SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::ContractInfoResponse;
@@ -72,7 +71,6 @@ pub fn instantiate(
     if msg.collection_type == Collections::Standard && msg.collection_config.ipfs_link.is_none() {
         return Err(ContractError::IpfsNotFound {});
     };
-    COLLECTION_CONFIG.save(deps.storage, &msg.collection_config)?;
 
     if (msg.collection_type == Collections::Standard
         && msg.metadata_info.instantiate_msg.metadata_type != MetadataType::Standard)
@@ -86,7 +84,14 @@ pub fn instantiate(
 
     let admin = deps.api.addr_validate(&msg.admin)?;
     let creator = deps.api.addr_validate(&msg.creator)?;
-    let config = Config { admin, creator };
+    let config = Config {
+        admin,
+        creator,
+        start_time: msg.collection_config.start_time,
+        max_token_limit: msg.collection_config.max_token_limit,
+        per_address_limit: msg.collection_config.per_address_limit,
+        ipfs_link: msg.collection_config.ipfs_link,
+    };
     CONFIG.save(deps.storage, &config)?;
 
     let locks = Locks {
@@ -341,7 +346,6 @@ pub fn execute_mint(
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
     let collection_type = COLLECTION_TYPE.load(deps.storage)?;
 
     let locks = LOCKS.load(deps.storage)?;
@@ -356,9 +360,7 @@ pub fn execute_mint(
         return Err(ContractError::MintLocked {});
     }
 
-    if collection_config.max_token_limit.is_some()
-        && token_id > collection_config.max_token_limit.unwrap()
-    {
+    if config.max_token_limit.is_some() && token_id > config.max_token_limit.unwrap() {
         return Err(ContractError::TokenLimitReached {});
     }
 
@@ -368,27 +370,12 @@ pub fn execute_mint(
         .may_load(deps.storage, &owner)?
         .unwrap_or(0);
 
-    if collection_config.per_address_limit.is_some()
-        && total_minted + 1 > collection_config.per_address_limit.unwrap()
-    {
+    if config.per_address_limit.is_some() && total_minted + 1 > config.per_address_limit.unwrap() {
         return Err(ContractError::TokenLimitReached {});
     }
 
-    if collection_config.start_time.is_some()
-        && env.block.time < collection_config.start_time.unwrap()
-    {
+    if config.start_time.is_some() && env.block.time < config.start_time.unwrap() {
         return Err(ContractError::MintingNotStarted {});
-    }
-
-    let mint_price = get_mint_price(&deps, &collection_config)?;
-    if mint_price.is_some() {
-        check_single_coin(
-            &info,
-            coin(
-                mint_price.as_ref().unwrap().amount.u128(),
-                collection_config.native_denom,
-            ),
-        )?;
     }
 
     let mint_msg = MintMsg {
@@ -413,11 +400,11 @@ pub fn execute_mint(
     // If the collection is standard
     // Execute add_metadata message to save the ifps link to metadata module
     if collection_type == Collections::Standard {
-        if collection_config.ipfs_link.is_none() {
+        if config.ipfs_link.is_none() {
             return Err(ContractError::IpfsNotFound {});
         };
 
-        let ifps_link = format!("{}/{}", collection_config.ipfs_link.unwrap(), token_id);
+        let ifps_link = format!("{}/{}", config.ipfs_link.unwrap(), token_id);
 
         let msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap()).add_metadata_msg(
             MetadataMetaInfo {
@@ -435,14 +422,6 @@ pub fn execute_mint(
     let msg = KompleMetadataModule(sub_modules.metadata.unwrap())
         .link_metadata_msg(token_id, metadata_id)?;
     msgs.push(msg.into());
-
-    if mint_price.is_some() {
-        let payment_msg: CosmosMsg<Empty> = CosmosMsg::Bank(BankMsg::Send {
-            to_address: config.admin.to_string(),
-            amount: vec![mint_price.unwrap()],
-        });
-        msgs.push(payment_msg);
-    };
 
     match res {
         Ok(res) => Ok(res.add_messages(msgs).add_event(
@@ -626,7 +605,7 @@ pub fn execute_update_per_address_limit(
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
@@ -636,14 +615,12 @@ pub fn execute_update_per_address_limit(
         operators,
     )?;
 
-    let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
-
     if per_address_limit.is_some() && per_address_limit.unwrap() == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
-    collection_config.per_address_limit = per_address_limit;
-    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
+    config.per_address_limit = per_address_limit;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_token_module")
@@ -664,7 +641,7 @@ fn execute_update_start_time(
 ) -> Result<Response, ContractError> {
     let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
@@ -674,11 +651,7 @@ fn execute_update_start_time(
         operators,
     )?;
 
-    let mut collection_config = COLLECTION_CONFIG.load(deps.storage)?;
-
-    if collection_config.start_time.is_some()
-        && env.block.time >= collection_config.start_time.unwrap()
-    {
+    if config.start_time.is_some() && env.block.time >= config.start_time.unwrap() {
         return Err(ContractError::AlreadyStarted {});
     }
 
@@ -687,12 +660,12 @@ fn execute_update_start_time(
             if env.block.time >= time {
                 return Err(ContractError::InvalidStartTime {});
             }
-            collection_config.start_time = start_time;
+            config.start_time = start_time;
         }
-        None => collection_config.start_time = None,
+        None => config.start_time = None,
     }
 
-    COLLECTION_CONFIG.save(deps.storage, &collection_config)?;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_token_module")
@@ -780,35 +753,35 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     Ok(())
 }
 
-fn get_mint_price(
-    deps: &DepsMut,
-    collection_config: &CollectionConfig,
-) -> Result<Option<Coin>, ContractError> {
-    let sub_modules = SUB_MODULES.load(deps.storage)?;
+// fn get_mint_price(
+//     deps: &DepsMut,
+//     collection_config: &CollectionConfig,
+// ) -> Result<Option<Coin>, ContractError> {
+//     let sub_modules = SUB_MODULES.load(deps.storage)?;
 
-    let collection_price = collection_config
-        .unit_price
-        .map(|price| coin(price.u128(), &collection_config.native_denom));
+//     let collection_price = collection_config
+//         .unit_price
+//         .map(|price| coin(price.u128(), &collection_config.native_denom));
 
-    if sub_modules.whitelist.is_none() {
-        return Ok(collection_price);
-    };
+//     if sub_modules.whitelist.is_none() {
+//         return Ok(collection_price);
+//     };
 
-    let whitelist = sub_modules.whitelist.unwrap();
+//     let whitelist = sub_modules.whitelist.unwrap();
 
-    let res: ResponseWrapper<WhitelistConfigResponse> = deps
-        .querier
-        .query_wasm_smart(whitelist, &WhitelistQueryMsg::Config {})?;
+//     let res: ResponseWrapper<WhitelistConfigResponse> = deps
+//         .querier
+//         .query_wasm_smart(whitelist, &WhitelistQueryMsg::Config {})?;
 
-    if res.data.is_active {
-        Ok(Some(coin(
-            res.data.unit_price.u128(),
-            &collection_config.native_denom,
-        )))
-    } else {
-        Ok(collection_price)
-    }
-}
+//     if res.data.is_active {
+//         Ok(Some(coin(
+//             res.data.unit_price.u128(),
+//             &collection_config.native_denom,
+//         )))
+//     } else {
+//         Ok(collection_price)
+//     }
+// }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
@@ -829,21 +802,9 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
+fn query_config(deps: Deps) -> StdResult<ResponseWrapper<Config>> {
     let config = CONFIG.load(deps.storage)?;
-    let collection_config = COLLECTION_CONFIG.load(deps.storage)?;
-    Ok(ResponseWrapper::new(
-        "locks",
-        ConfigResponse {
-            admin: config.admin.to_string(),
-            creator: config.creator.to_string(),
-            native_denom: collection_config.native_denom,
-            per_address_limit: collection_config.per_address_limit,
-            start_time: collection_config.start_time,
-            max_token_limit: collection_config.max_token_limit,
-            unit_price: collection_config.unit_price,
-        },
-    ))
+    Ok(ResponseWrapper::new("locks", config))
 }
 
 fn query_locks(deps: Deps) -> StdResult<ResponseWrapper<Locks>> {

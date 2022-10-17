@@ -15,21 +15,21 @@ pub fn check_single_amount(info: &MessageInfo, amount: Uint128) -> Result<(), Fu
     Ok(())
 }
 
-pub fn check_single_coin(info: &MessageInfo, coin: Coin) -> Result<(), FundsError> {
+pub fn check_single_coin(info: &MessageInfo, expected: Coin) -> Result<(), FundsError> {
     if info.funds.len() != 1 {
         return Err(FundsError::MissingFunds {});
     };
     let sent_fund = info.funds.get(0).unwrap();
-    if sent_fund.denom != coin.denom {
+    if sent_fund.denom != expected.denom {
         return Err(FundsError::InvalidDenom {
             got: sent_fund.denom.to_string(),
-            expected: coin.denom,
+            expected: expected.denom,
         });
     }
-    if sent_fund.amount != coin.amount {
+    if sent_fund.amount != expected.amount {
         return Err(FundsError::InvalidFunds {
             got: sent_fund.amount.to_string(),
-            expected: coin.amount.to_string(),
+            expected: expected.amount.to_string(),
         });
     }
     Ok(())

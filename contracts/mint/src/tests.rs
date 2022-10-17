@@ -6,8 +6,10 @@ use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_token_module::msg::{MetadataInfo, TokenInfo};
-use komple_token_module::state::CollectionConfig;
+use komple_token_module::{
+    msg::{MetadataInfo, TokenInfo},
+    state::CollectionConfig,
+};
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
@@ -86,7 +88,6 @@ fn setup_collection(
     minter_addr: &Addr,
     sender: Addr,
     linked_collections: Option<Vec<u32>>,
-    unit_price: Option<Uint128>,
 ) {
     let token_code_id = app.store_code(token_module());
     let metadata_code_id = app.store_code(metadata_module());
@@ -97,6 +98,7 @@ fn setup_collection(
         description: "Test Description".to_string(),
         image: "ipfs://xyz".to_string(),
         external_link: None,
+        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
@@ -105,9 +107,7 @@ fn setup_collection(
     let collection_config = CollectionConfig {
         per_address_limit: None,
         start_time: None,
-        unit_price,
         max_token_limit: None,
-        native_denom: NATIVE_DENOM.to_string(),
         ipfs_link: Some("some-link".to_string()),
     };
     let metadata_info = MetadataInfo {
@@ -139,7 +139,6 @@ mod actions {
             msg::{ExecuteMsg, QueryMsg},
             ContractError,
         };
-        use cosmwasm_std::coin;
         use cw721::OwnerOfResponse;
         use komple_token_module::msg::QueryMsg as TokenQueryMsg;
         use komple_types::query::ResponseWrapper;
@@ -148,28 +147,14 @@ mod actions {
         fn test_happy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(
-                &mut app,
-                &minter_addr,
-                Addr::unchecked(ADMIN),
-                None,
-                Some(Uint128::new(50_000)),
-            );
-
-            let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-            assert_eq!(res.amount, Uint128::new(0));
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::Mint {
                 collection_id: 1,
                 metadata_id: None,
             };
             let _ = app
-                .execute_contract(
-                    Addr::unchecked(USER),
-                    minter_addr.clone(),
-                    &msg,
-                    &[coin(50_000, NATIVE_DENOM)],
-                )
+                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
             let msg = QueryMsg::CollectionAddress(1);
@@ -184,16 +169,13 @@ mod actions {
             let response: OwnerOfResponse =
                 app.wrap().query_wasm_smart(token_address, &msg).unwrap();
             assert_eq!(response.owner, USER.to_string());
-
-            let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-            assert_eq!(res.amount, Uint128::new(50_000));
         }
 
         #[test]
         fn test_locked_minting() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::UpdateMintLock { lock: true };
             let _ = app
@@ -266,6 +248,7 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
+                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -274,8 +257,6 @@ mod actions {
                 let collection_config = CollectionConfig {
                     per_address_limit: None,
                     start_time: None,
-                    unit_price: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                     max_token_limit: None,
                     ipfs_link: Some("some-link".to_string()),
                 };
@@ -325,6 +306,7 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
+                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -333,8 +315,6 @@ mod actions {
                 let collection_config = CollectionConfig {
                     per_address_limit: None,
                     start_time: None,
-                    unit_price: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                     max_token_limit: None,
                     ipfs_link: None,
                 };
@@ -374,7 +354,7 @@ mod actions {
                     .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                     .unwrap();
 
-                setup_collection(&mut app, &minter_addr, Addr::unchecked(USER), None, None);
+                setup_collection(&mut app, &minter_addr, Addr::unchecked(USER), None);
 
                 let msg = QueryMsg::CollectionAddress(1);
                 let res: ResponseWrapper<String> =
@@ -409,16 +389,15 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
             setup_collection(
                 &mut app,
                 &minter_addr,
                 Addr::unchecked(ADMIN),
                 Some(vec![1]),
-                None,
             );
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::UpdateLinkedCollections {
                 collection_id: 4,
@@ -446,10 +425,10 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::UpdateLinkedCollections {
                 collection_id: 5,
@@ -501,13 +480,13 @@ mod actions {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = QueryMsg::Collections {
                 blacklist: false,
@@ -546,7 +525,7 @@ mod actions {
         fn test_happy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
             let collection_addr =
                 StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
 
@@ -582,7 +561,7 @@ mod actions {
         fn test_invalid_admin() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let err = app
@@ -598,7 +577,7 @@ mod actions {
         fn test_existing_blacklist() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -617,7 +596,7 @@ mod actions {
         fn test_absent_collection() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 2 };
             let err = app
@@ -637,7 +616,7 @@ mod actions {
         fn test_happy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
             let _ = app
@@ -656,7 +635,7 @@ mod actions {
         fn test_invalid_admin() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
@@ -672,7 +651,7 @@ mod actions {
         fn test_existing_whitelist() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
             let err = app
@@ -688,7 +667,7 @@ mod actions {
         fn test_absent_collection() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None, None);
+            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
             let msg = ExecuteMsg::WhitelistCollection { collection_id: 2 };
             let err = app

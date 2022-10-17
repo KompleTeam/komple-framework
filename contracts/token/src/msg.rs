@@ -1,6 +1,6 @@
-use crate::state::{CollectionConfig, SubModules};
+use crate::state::{CollectionConfig, Config, SubModules};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Binary, Timestamp, Uint128};
+use cosmwasm_std::{Binary, Timestamp};
 use cw721::CustomMsg;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_types::{collection::Collections, query::ResponseWrapper, token::Locks};
@@ -95,23 +95,12 @@ pub enum QueryMsg {
     MintedTokensPerAddress { address: String },
     #[returns(ResponseWrapper<SubModules>)]
     SubModules {},
-    #[returns(ResponseWrapper<ConfigResponse>)]
+    #[returns(ResponseWrapper<Config>)]
     Config {},
     #[returns(ResponseWrapper<Vec<String>>)]
     ModuleOperators {},
 }
 impl CustomMsg for QueryMsg {}
-
-#[cw_serde]
-pub struct ConfigResponse {
-    pub admin: String,
-    pub creator: String,
-    pub native_denom: String,
-    pub per_address_limit: Option<u32>,
-    pub start_time: Option<Timestamp>,
-    pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Uint128>,
-}
 
 #[cw_serde]
 pub struct LocksReponse {

@@ -13,7 +13,7 @@ use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, WhitelistConfig, CONFIG, WHITELIST, WHITELIST_CONFIG};
+use crate::state::{Config, CONFIG, WHITELIST};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-whitelist-module";
@@ -28,11 +28,11 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    if msg.member_limit == 0 {
+    if msg.config.member_limit == 0 {
         return Err(ContractError::InvalidMemberLimit {});
     }
 
-    if msg.per_address_limit == 0 {
+    if msg.config.per_address_limit == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
@@ -40,18 +40,15 @@ pub fn instantiate(
         return Err(ContractError::EmptyMemberList {});
     }
 
-    if msg.start_time <= env.block.time {
+    if msg.config.start_time <= env.block.time {
         return Err(ContractError::InvalidStartTime {});
     }
-    if msg.end_time < env.block.time {
+    if msg.config.end_time < env.block.time {
         return Err(ContractError::InvalidEndTime {});
     }
-    if msg.start_time >= msg.end_time {
+    if msg.config.start_time >= msg.config.end_time {
         return Err(ContractError::InvalidStartTime {});
     }
-
-    let config = Config { admin: info.sender };
-    CONFIG.save(deps.storage, &config)?;
 
     msg.members.sort_unstable();
     msg.members.dedup();
@@ -59,6 +56,15 @@ pub fn instantiate(
     let mut event_attributes: Vec<Attribute> = vec![];
 
     let member_num = msg.members.len() as u16;
+    let config = Config {
+        admin: info.sender,
+        start_time: msg.config.start_time,
+        end_time: msg.config.end_time,
+        per_address_limit: msg.config.per_address_limit,
+        member_limit: msg.config.member_limit,
+        member_num,
+    };
+    CONFIG.save(deps.storage, &config)?;
 
     for member in msg.members.into_iter() {
         let addr = deps.api.addr_validate(&member.clone())?;
@@ -69,27 +75,13 @@ pub fn instantiate(
         });
     }
 
-    let whitelist_config = WhitelistConfig {
-        start_time: msg.start_time,
-        end_time: msg.end_time,
-        unit_price: msg.unit_price,
-        per_address_limit: msg.per_address_limit,
-        member_limit: msg.member_limit,
-        member_num,
-    };
-    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
-
     Ok(Response::new().add_event(
         EventHelper::new("komple_whitelist_module")
             .add_attribute("action", "instantiate")
-            .add_attribute("start_time", whitelist_config.start_time.to_string())
-            .add_attribute("end_time", whitelist_config.end_time.to_string())
-            .add_attribute("unit_price", whitelist_config.unit_price.to_string())
-            .add_attribute(
-                "per_address_limit",
-                whitelist_config.per_address_limit.to_string(),
-            )
-            .add_attribute("member_limit", whitelist_config.member_limit.to_string())
+            .add_attribute("start_time", config.start_time.to_string())
+            .add_attribute("end_time", config.end_time.to_string())
+            .add_attribute("per_address_limit", config.per_address_limit.to_string())
+            .add_attribute("member_limit", config.member_limit.to_string())
             .add_attributes(event_attributes)
             .get(),
     ))
@@ -103,16 +95,20 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdateStartTime(start_time) => {
+        ExecuteMsg::UpdateStartTime { start_time } => {
             execute_update_start_time(deps, env, info, start_time)
         }
-        ExecuteMsg::UpdateEndTime(end_time) => execute_update_end_time(deps, env, info, end_time),
-        ExecuteMsg::AddMembers(members) => execute_add_members(deps, env, info, members),
-        ExecuteMsg::RemoveMembers(members) => execute_remove_members(deps, env, info, members),
-        ExecuteMsg::UpdatePerAddressLimit(limit) => {
+        ExecuteMsg::UpdateEndTime { end_time } => {
+            execute_update_end_time(deps, env, info, end_time)
+        }
+        ExecuteMsg::AddMembers { members } => execute_add_members(deps, env, info, members),
+        ExecuteMsg::RemoveMembers { members } => execute_remove_members(deps, env, info, members),
+        ExecuteMsg::UpdatePerAddressLimit { limit } => {
             execute_update_per_address_limit(deps, env, info, limit)
         }
-        ExecuteMsg::UpdateMemberLimit(limit) => execute_update_member_limit(deps, env, info, limit),
+        ExecuteMsg::UpdateMemberLimit { limit } => {
+            execute_update_member_limit(deps, env, info, limit)
+        }
     }
 }
 
@@ -122,30 +118,28 @@ fn execute_update_start_time(
     info: MessageInfo,
     start_time: Timestamp,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-
-    if env.block.time >= whitelist_config.start_time {
+    if env.block.time >= config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
     if start_time <= env.block.time {
         return Err(ContractError::InvalidStartTime {});
     }
-    if start_time >= whitelist_config.end_time {
+    if start_time >= config.end_time {
         return Err(ContractError::InvalidStartTime {});
     }
 
-    whitelist_config.start_time = start_time;
-    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
+    config.start_time = start_time;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_whitelist_module")
             .add_attribute("action", "update_start_time")
-            .add_attribute("start_time", whitelist_config.start_time.to_string())
+            .add_attribute("start_time", config.start_time.to_string())
             .get(),
     ))
 }
@@ -156,30 +150,28 @@ fn execute_update_end_time(
     info: MessageInfo,
     end_time: Timestamp,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-
-    if env.block.time >= whitelist_config.start_time {
+    if env.block.time >= config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
     if end_time <= env.block.time {
         return Err(ContractError::InvalidEndTime {});
     }
-    if end_time <= whitelist_config.start_time {
+    if end_time <= config.start_time {
         return Err(ContractError::InvalidEndTime {});
     }
 
-    whitelist_config.end_time = end_time;
-    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
+    config.end_time = end_time;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_whitelist_module")
             .add_attribute("action", "update_end_time")
-            .add_attribute("end_time", whitelist_config.end_time.to_string())
+            .add_attribute("end_time", config.end_time.to_string())
             .get(),
     ))
 }
@@ -190,13 +182,12 @@ fn execute_add_members(
     info: MessageInfo,
     mut members: Vec<String>,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    if env.block.time >= whitelist_config.start_time {
+    if env.block.time >= config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
 
@@ -206,7 +197,7 @@ fn execute_add_members(
     let mut event_attributes: Vec<Attribute> = vec![];
 
     for member in members {
-        if whitelist_config.member_num >= whitelist_config.member_limit {
+        if config.member_num >= config.member_limit {
             return Err(ContractError::MemberLimitExceeded {});
         }
         let addr = deps.api.addr_validate(&member)?;
@@ -214,7 +205,7 @@ fn execute_add_members(
             return Err(ContractError::MemberExists {});
         }
         WHITELIST.save(deps.storage, addr, &true)?;
-        whitelist_config.member_num += 1;
+        config.member_num += 1;
 
         event_attributes.push(Attribute {
             key: "member".to_string(),
@@ -222,7 +213,7 @@ fn execute_add_members(
         });
     }
 
-    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_whitelist_module")
@@ -238,13 +229,12 @@ fn execute_remove_members(
     info: MessageInfo,
     mut members: Vec<String>,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    if env.block.time >= whitelist_config.start_time {
+    if env.block.time >= config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
 
@@ -259,7 +249,7 @@ fn execute_remove_members(
             return Err(ContractError::MemberNotFound {});
         }
         WHITELIST.remove(deps.storage, addr);
-        whitelist_config.member_num -= 1;
+        config.member_num -= 1;
 
         event_attributes.push(Attribute {
             key: "member".to_string(),
@@ -267,7 +257,7 @@ fn execute_remove_members(
         });
     }
 
-    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_whitelist_module")
@@ -283,13 +273,12 @@ fn execute_update_per_address_limit(
     info: MessageInfo,
     limit: u8,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    if env.block.time >= whitelist_config.start_time {
+    if env.block.time >= config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
 
@@ -297,16 +286,13 @@ fn execute_update_per_address_limit(
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
-    whitelist_config.per_address_limit = limit;
-    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
+    config.per_address_limit = limit;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_whitelist_module")
             .add_attribute("action", "update_per_address_limit")
-            .add_attribute(
-                "per_address_limit",
-                whitelist_config.per_address_limit.to_string(),
-            )
+            .add_attribute("per_address_limit", config.per_address_limit.to_string())
             .get(),
     ))
 }
@@ -317,26 +303,25 @@ fn execute_update_member_limit(
     info: MessageInfo,
     limit: u16,
 ) -> Result<Response, ContractError> {
-    let config = CONFIG.load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
     if config.admin != info.sender {
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    if env.block.time >= whitelist_config.start_time {
+    if env.block.time >= config.start_time {
         return Err(ContractError::AlreadyStarted {});
     }
     if limit == 0 {
         return Err(ContractError::InvalidMemberLimit {});
     }
 
-    whitelist_config.member_limit = limit;
-    WHITELIST_CONFIG.save(deps.storage, &whitelist_config)?;
+    config.member_limit = limit;
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_event(
         EventHelper::new("komple_whitelist_module")
             .add_attribute("action", "update_member_limit")
-            .add_attribute("member_limit", whitelist_config.member_limit.to_string())
+            .add_attribute("member_limit", config.member_limit.to_string())
             .get(),
     ))
 }
@@ -357,33 +342,31 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn query_config(deps: Deps, env: Env) -> StdResult<ResponseWrapper<ConfigResponse>> {
     let config = CONFIG.load(deps.storage)?;
-    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
     let config_res = ConfigResponse {
         admin: config.admin.to_string(),
-        start_time: whitelist_config.start_time,
-        end_time: whitelist_config.end_time,
-        unit_price: whitelist_config.unit_price,
-        per_address_limit: whitelist_config.per_address_limit,
-        member_limit: whitelist_config.member_limit,
-        member_num: whitelist_config.member_num,
+        start_time: config.start_time,
+        end_time: config.end_time,
+        per_address_limit: config.per_address_limit,
+        member_limit: config.member_limit,
+        member_num: config.member_num,
         is_active: get_active_status(deps, env)?,
     };
     Ok(ResponseWrapper::new("config", config_res))
 }
 
 fn query_has_started(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
-    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
     Ok(ResponseWrapper::new(
         "has_started",
-        env.block.time >= whitelist_config.start_time,
+        env.block.time >= config.start_time,
     ))
 }
 
 fn query_has_ended(deps: Deps, env: Env) -> StdResult<ResponseWrapper<bool>> {
-    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
     Ok(ResponseWrapper::new(
         "has_end",
-        env.block.time >= whitelist_config.end_time,
+        env.block.time >= config.end_time,
     ))
 }
 
@@ -417,8 +400,8 @@ fn query_has_member(deps: Deps, member: String) -> StdResult<ResponseWrapper<boo
 }
 
 fn get_active_status(deps: Deps, env: Env) -> StdResult<bool> {
-    let whitelist_config = WHITELIST_CONFIG.load(deps.storage)?;
-    Ok(env.block.time >= whitelist_config.start_time && env.block.time < whitelist_config.end_time)
+    let config = CONFIG.load(deps.storage)?;
+    Ok(env.block.time >= config.start_time && env.block.time < config.end_time)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
