@@ -175,14 +175,6 @@ fn setup_fee_module(app: &mut App, fee_module_addr: &Addr) {
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), fee_module_addr.clone(), &msg, &[])
         .unwrap();
-
-    let msg = FeeModuleQueryMsg::TotalPercentageFees {
-        module_name: Modules::Marketplace.to_string(),
-    };
-    let _: ResponseWrapper<Decimal> = app
-        .wrap()
-        .query_wasm_smart(fee_module_addr.clone(), &msg)
-        .unwrap();
 }
 
 fn set_royalties(app: &mut App, fee_module_addr: &Addr, collection_id: &u32, royalty: &str) {

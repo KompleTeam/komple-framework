@@ -1313,6 +1313,13 @@ mod queries {
                 let mut app = mock_app();
                 let addr = setup_fee_contract(&mut app);
 
+                let msg = QueryMsg::TotalPercentageFees {
+                    module_name: Modules::Marketplace.to_string(),
+                };
+                let res: ResponseWrapper<Decimal> =
+                    app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
+                assert!(res.data.is_zero());
+
                 setup_fee(
                     &mut app,
                     addr.clone(),
@@ -1425,6 +1432,13 @@ mod queries {
             fn test_happy_path() {
                 let mut app = mock_app();
                 let addr = setup_fee_contract(&mut app);
+
+                let msg = QueryMsg::TotalFixedFees {
+                    module_name: Modules::Marketplace.to_string(),
+                };
+                let res: ResponseWrapper<Uint128> =
+                    app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
+                assert!(res.data.is_zero());
 
                 setup_fee(
                     &mut app,

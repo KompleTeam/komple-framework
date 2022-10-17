@@ -1,14 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env,
-    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128,
+    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo,
+    Order, Response, StdError, StdResult, SubMsg, Uint128,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use komple_fee_module::{
-    helper::KompleFeeModule,
-    msg::{CustomPaymentAddress as FeeModuleCustomPaymentAddress, QueryMsg as FeeModuleQueryMsg},
+    helper::KompleFeeModule, msg::CustomPaymentAddress as FeeModuleCustomPaymentAddress,
 };
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
@@ -402,14 +401,11 @@ fn process_marketplace_fees(
     marketplace_fee: &mut Uint128,
     custom_payment_addresses: Option<Vec<FeeModuleCustomPaymentAddress>>,
 ) -> Result<(), ContractError> {
-    let query = FeeModuleQueryMsg::TotalPercentageFees {
-        module_name: Modules::Marketplace.to_string(),
-    };
-    let res: Result<ResponseWrapper<Decimal>, StdError> =
-        deps.querier.query_wasm_smart(fee_module_addr, &query);
+    let fee_percentage = KompleFeeModule(fee_module_addr.to_owned())
+        .query_total_percentage_fees(&deps.querier, Modules::Marketplace.as_str())?;
 
-    if let Ok(fee_percentage) = res {
-        let fee_to_send = fee_percentage.data.mul(listing_price);
+    if !fee_percentage.is_zero() {
+        let fee_to_send = fee_percentage.mul(listing_price);
 
         if !fee_to_send.is_zero() {
             *marketplace_fee += fee_to_send;
