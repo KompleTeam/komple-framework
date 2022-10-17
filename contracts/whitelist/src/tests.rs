@@ -330,18 +330,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: app.block_info().time.plus_seconds(5),
-                };
+                whitelist_config.start_time = app.block_info().time.plus_seconds(5);
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -364,18 +369,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: app.block_info().time.plus_seconds(5),
-                };
+                whitelist_config.start_time = app.block_info().time.plus_seconds(5);
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -390,17 +400,24 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: app.block_info().time.minus_seconds(10),
+                whitelist_config.start_time = app.block_info().time.minus_seconds(10);
+                let msg = ExecuteMsg::UpdateWhitelistConfig {
+                    whitelist_config: whitelist_config.clone(),
                 };
                 let err = app
                     .execute_contract(
@@ -415,8 +432,9 @@ mod actions {
                     ContractError::InvalidStartTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: app.block_info().time,
+                whitelist_config.start_time = app.block_info().time;
+                let msg = ExecuteMsg::UpdateWhitelistConfig {
+                    whitelist_config: whitelist_config.clone(),
                 };
                 let err = app
                     .execute_contract(
@@ -431,8 +449,9 @@ mod actions {
                     ContractError::InvalidStartTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: app.block_info().time.plus_seconds(11),
+                whitelist_config.start_time = app.block_info().time.plus_seconds(11);
+                let msg = ExecuteMsg::UpdateWhitelistConfig {
+                    whitelist_config: whitelist_config.clone(),
                 };
                 let err = app
                     .execute_contract(
@@ -449,9 +468,8 @@ mod actions {
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdateStartTime {
-                    start_time: app.block_info().time.plus_seconds(11),
-                };
+                whitelist_config.start_time = app.block_info().time.plus_seconds(11);
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -470,18 +488,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime {
-                    end_time: app.block_info().time.plus_seconds(5),
-                };
+                whitelist_config.end_time = app.block_info().time.plus_seconds(5);
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -504,18 +527,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(5);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime {
-                    end_time: app.block_info().time.plus_seconds(8),
-                };
+                whitelist_config.end_time = app.block_info().time.plus_seconds(8);
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -530,17 +558,24 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime {
-                    end_time: app.block_info().time.minus_seconds(10),
+                whitelist_config.end_time = app.block_info().time.minus_seconds(10);
+                let msg = ExecuteMsg::UpdateWhitelistConfig {
+                    whitelist_config: whitelist_config.clone(),
                 };
                 let err = app
                     .execute_contract(
@@ -555,8 +590,9 @@ mod actions {
                     ContractError::InvalidEndTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime {
-                    end_time: app.block_info().time,
+                whitelist_config.end_time = app.block_info().time;
+                let msg = ExecuteMsg::UpdateWhitelistConfig {
+                    whitelist_config: whitelist_config.clone(),
                 };
                 let err = app
                     .execute_contract(
@@ -571,8 +607,9 @@ mod actions {
                     ContractError::InvalidEndTime {}.to_string()
                 );
 
-                let msg = ExecuteMsg::UpdateEndTime {
-                    end_time: app.block_info().time.plus_seconds(1),
+                whitelist_config.end_time = app.block_info().time.plus_seconds(1);
+                let msg = ExecuteMsg::UpdateWhitelistConfig {
+                    whitelist_config: whitelist_config.clone(),
                 };
                 let err = app
                     .execute_contract(
@@ -589,9 +626,8 @@ mod actions {
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdateEndTime {
-                    end_time: app.block_info().time.plus_seconds(11),
-                };
+                whitelist_config.end_time = app.block_info().time.plus_seconds(11);
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -897,16 +933,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 10 };
+                whitelist_config.per_address_limit = 10;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -929,16 +972,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 10 };
+                whitelist_config.per_address_limit = 10;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -953,18 +1003,25 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 10 };
+                whitelist_config.per_address_limit = 10;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -979,16 +1036,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdatePerAddressLimit { limit: 0 };
+                whitelist_config.per_address_limit = 0;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -1007,16 +1071,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateMemberLimit { limit: 20 };
+                whitelist_config.member_limit = 20;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let _ = app
                     .execute_contract(
                         Addr::unchecked(ADMIN),
@@ -1039,16 +1110,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateMemberLimit { limit: 20 };
+                whitelist_config.member_limit = 20;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(USER), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -1063,18 +1141,25 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
                 app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-                let msg = ExecuteMsg::UpdateMemberLimit { limit: 20 };
+                whitelist_config.member_limit = 20;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();
@@ -1089,16 +1174,23 @@ mod actions {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(1);
                 let end_time = app.block_info().time.plus_seconds(10);
+                let mut whitelist_config = WhitelistConfig {
+                    start_time,
+                    end_time,
+                    per_address_limit: 5,
+                    member_limit: 10,
+                };
                 let whitelist_module_addr = proper_instantiate(
                     &mut app,
                     vec![RANDOM.to_string()],
-                    start_time,
-                    end_time,
-                    5,
-                    10,
+                    whitelist_config.start_time,
+                    whitelist_config.end_time,
+                    whitelist_config.per_address_limit,
+                    whitelist_config.member_limit,
                 );
 
-                let msg = ExecuteMsg::UpdateMemberLimit { limit: 0 };
+                whitelist_config.member_limit = 0;
+                let msg = ExecuteMsg::UpdateWhitelistConfig { whitelist_config };
                 let err = app
                     .execute_contract(Addr::unchecked(ADMIN), whitelist_module_addr, &msg, &[])
                     .unwrap_err();

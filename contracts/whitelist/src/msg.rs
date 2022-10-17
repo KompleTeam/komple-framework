@@ -12,12 +12,9 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    UpdateStartTime { start_time: Timestamp },
-    UpdateEndTime { end_time: Timestamp },
+    UpdateWhitelistConfig { whitelist_config: WhitelistConfig },
     AddMembers { members: Vec<String> },
     RemoveMembers { members: Vec<String> },
-    UpdatePerAddressLimit { limit: u8 },
-    UpdateMemberLimit { limit: u16 },
 }
 
 #[cw_serde]
