@@ -13,12 +13,12 @@ use komple_fee_module::{
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
 };
-use komple_types::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::token::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
+use komple_types::{fee::MarketplaceFees, hub::MARBU_FEE_MODULE_NAMESPACE};
 use komple_utils::{
     check_admin_privileges, event::EventHelper, funds::check_single_coin, storage::StorageHelper,
 };
@@ -290,7 +290,7 @@ fn _execute_buy_fixed_listing(
             fixed_listing.price,
             &mut marketplace_fee,
             Some(vec![FeeModuleCustomPaymentAddress {
-                fee_name: "hub_admin".to_string(),
+                fee_name: MarketplaceFees::HubAdmin.as_str().to_string(),
                 address: config.admin.to_string(),
             }]),
         )?;
@@ -316,7 +316,7 @@ fn _execute_buy_fixed_listing(
             &deps.querier,
             &fee_module_addr,
             Modules::Mint.to_string(),
-            format!("collection_{}_royalty", collection_id),
+            format!("{}/{}", MarketplaceFees::Royalty.as_str(), collection_id),
         );
         if let Ok(percentage_fee) = res {
             royalty_fee = percentage_fee.value.mul(fixed_listing.price);

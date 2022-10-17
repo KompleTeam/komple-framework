@@ -20,11 +20,11 @@ use komple_mint_module::{
 };
 use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_types::collection::Collections;
 use komple_types::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_types::{collection::Collections, fee::MarketplaceFees};
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 use std::str::FromStr;
@@ -137,7 +137,7 @@ fn setup_fee_module(app: &mut App, fee_module_addr: &Addr) {
     let msg = FeeModuleExecuteMsg::SetFee {
         fee_type: Fees::Percentage,
         module_name: Modules::Marketplace.to_string(),
-        fee_name: "komple".to_string(),
+        fee_name: MarketplaceFees::Komple.as_str().to_string(),
         data: to_binary(&FeeModulePercentagePayment {
             address: Some("contract0".to_string()),
             value: Decimal::from_str("0.04").unwrap(),
@@ -151,7 +151,7 @@ fn setup_fee_module(app: &mut App, fee_module_addr: &Addr) {
     let msg = FeeModuleExecuteMsg::SetFee {
         fee_type: Fees::Percentage,
         module_name: Modules::Marketplace.to_string(),
-        fee_name: "community".to_string(),
+        fee_name: MarketplaceFees::Community.as_str().to_string(),
         data: to_binary(&FeeModulePercentagePayment {
             address: Some("juno..community".to_string()),
             value: Decimal::from_str("0.02").unwrap(),
@@ -165,7 +165,7 @@ fn setup_fee_module(app: &mut App, fee_module_addr: &Addr) {
     let msg = FeeModuleExecuteMsg::SetFee {
         fee_type: Fees::Percentage,
         module_name: Modules::Marketplace.to_string(),
-        fee_name: "hub_admin".to_string(),
+        fee_name: MarketplaceFees::HubAdmin.as_str().to_string(),
         data: to_binary(&FeeModulePercentagePayment {
             address: None,
             value: Decimal::from_str("0.02").unwrap(),
@@ -189,7 +189,7 @@ fn set_royalties(app: &mut App, fee_module_addr: &Addr, collection_id: &u32, roy
     let msg = FeeModuleExecuteMsg::SetFee {
         fee_type: Fees::Percentage,
         module_name: Modules::Mint.to_string(),
-        fee_name: format!("collection_{}_royalty", collection_id),
+        fee_name: format!("{}/{}", MarketplaceFees::Royalty.as_str(), collection_id),
         data: to_binary(&FeeModulePercentagePayment {
             address: None,
             value: Decimal::from_str(royalty).unwrap(),

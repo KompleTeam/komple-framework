@@ -9,6 +9,7 @@ use komple_mint_module::state::CollectionInfo;
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
+use komple_types::fee::MintFees;
 use komple_types::fee::{Fees, FixedPayment};
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
@@ -199,7 +200,7 @@ mod execute {
                 &FeeExecuteMsg::SetFee {
                     fee_type: Fees::Fixed,
                     module_name: Modules::Mint.to_string(),
-                    fee_name: "collection_1".to_string(),
+                    fee_name: format!("{}/{}", MintFees::Price.as_str(), 1),
                     data: to_binary(&FixedPayment {
                         address: Some(ADMIN.to_string()),
                         value: Uint128::new(10),

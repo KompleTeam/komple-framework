@@ -2,7 +2,8 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     coins, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
-    MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
+    MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128,
+    WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
@@ -14,8 +15,8 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_types::{fee::MintFees, module::Modules};
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use komple_utils::{event::EventHelper, funds::check_single_coin};
 use semver::Version;
@@ -331,29 +332,24 @@ fn execute_mint(
         metadata_id,
     }];
 
-    // TODO:
-    // Check if whitelist is active
-    // Get the correct price
-    // If absent mint is free
     let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if let Ok(fee_module_addr) = res {
+        let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
+        let mut total_price = Uint128::zero();
+
+        // TODO: Check for whitelist status
+        // If active check if user is whitelisted
+        // If whitelisted get the price
+        // If absent mint for free
+
+        // Token mint price
         let res = StorageHelper::query_fixed_fee(
             &deps.querier,
             &fee_module_addr,
             Modules::Mint.to_string(),
-            format!("collection_{}", collection_id.to_string()),
+            format!("{}/{}", MintFees::Price.as_str(), collection_id.to_string()),
         );
         if let Ok(fixed_fee_response) = res {
-            let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
-
-            check_single_coin(
-                &info,
-                Coin {
-                    amount: fixed_fee_response.value,
-                    denom: collection_info.native_denom.to_string(),
-                },
-            )?;
-
             let msg = BankMsg::Send {
                 to_address: config.admin.to_string(),
                 amount: coins(
@@ -362,7 +358,39 @@ fn execute_mint(
                 ),
             };
             msgs.push(msg.into());
+            total_price += fixed_fee_response.value;
         }
+
+        // // Mint transaction fee
+        // let res = StorageHelper::query_fixed_fee(
+        //     &deps.querier,
+        //     &fee_module_addr,
+        //     Modules::Mint.to_string(),
+        //     format!("{}/{}", MintFees::Transaction.as_str(), collection_id.to_string()),
+        // );
+        // if let Ok(fixed_fee_response) = res {
+        //     let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
+
+        //     let msg = BankMsg::Send {
+        //         to_address: config.admin.to_string(),
+        //         amount: coins(
+        //             fixed_fee_response.value.u128(),
+        //             collection_info.native_denom.to_string(),
+        //         ),
+        //     };
+        //     msgs.push(msg.into());
+        //     total_price += fixed_fee_response.value;
+        // }
+
+        if !total_price.is_zero() {
+            check_single_coin(
+                &info,
+                Coin {
+                    denom: collection_info.native_denom,
+                    amount: total_price,
+                },
+            )?;
+        };
     }
 
     _execute_mint(deps, "execute_mint", msgs, mint_msg)

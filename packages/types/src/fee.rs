@@ -6,12 +6,45 @@ pub enum Fees {
     Fixed,
     Percentage,
 }
-
 impl Fees {
     pub fn as_str(&self) -> &'static str {
         match self {
             Fees::Fixed => "fixed",
             Fees::Percentage => "percentage",
+        }
+    }
+}
+
+#[cw_serde]
+pub enum MintFees {
+    Price,
+    Whitelist,
+    Transaction,
+}
+impl MintFees {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            MintFees::Price => "price",
+            MintFees::Whitelist => "whitelist",
+            MintFees::Transaction => "transaction",
+        }
+    }
+}
+
+#[cw_serde]
+pub enum MarketplaceFees {
+    Komple,
+    Community,
+    HubAdmin,
+    Royalty,
+}
+impl MarketplaceFees {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            MarketplaceFees::Komple => "komple",
+            MarketplaceFees::Community => "community",
+            MarketplaceFees::HubAdmin => "hub_admin",
+            MarketplaceFees::Royalty => "royalty",
         }
     }
 }
