@@ -380,17 +380,6 @@ pub fn execute_mint(
         return Err(ContractError::MintingNotStarted {});
     }
 
-    let mint_price = get_mint_price(&deps, &collection_config)?;
-    if mint_price.is_some() {
-        check_single_coin(
-            &info,
-            coin(
-                mint_price.as_ref().unwrap().amount.u128(),
-                collection_config.native_denom,
-            ),
-        )?;
-    }
-
     let mint_msg = MintMsg {
         token_id: token_id.to_string(),
         owner: owner.clone(),
@@ -435,14 +424,6 @@ pub fn execute_mint(
     let msg = KompleMetadataModule(sub_modules.metadata.unwrap())
         .link_metadata_msg(token_id, metadata_id)?;
     msgs.push(msg.into());
-
-    if mint_price.is_some() {
-        let payment_msg: CosmosMsg<Empty> = CosmosMsg::Bank(BankMsg::Send {
-            to_address: config.admin.to_string(),
-            amount: vec![mint_price.unwrap()],
-        });
-        msgs.push(payment_msg);
-    };
 
     match res {
         Ok(res) => Ok(res.add_messages(msgs).add_event(
@@ -780,35 +761,35 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     Ok(())
 }
 
-fn get_mint_price(
-    deps: &DepsMut,
-    collection_config: &CollectionConfig,
-) -> Result<Option<Coin>, ContractError> {
-    let sub_modules = SUB_MODULES.load(deps.storage)?;
+// fn get_mint_price(
+//     deps: &DepsMut,
+//     collection_config: &CollectionConfig,
+// ) -> Result<Option<Coin>, ContractError> {
+//     let sub_modules = SUB_MODULES.load(deps.storage)?;
 
-    let collection_price = collection_config
-        .unit_price
-        .map(|price| coin(price.u128(), &collection_config.native_denom));
+//     let collection_price = collection_config
+//         .unit_price
+//         .map(|price| coin(price.u128(), &collection_config.native_denom));
 
-    if sub_modules.whitelist.is_none() {
-        return Ok(collection_price);
-    };
+//     if sub_modules.whitelist.is_none() {
+//         return Ok(collection_price);
+//     };
 
-    let whitelist = sub_modules.whitelist.unwrap();
+//     let whitelist = sub_modules.whitelist.unwrap();
 
-    let res: ResponseWrapper<WhitelistConfigResponse> = deps
-        .querier
-        .query_wasm_smart(whitelist, &WhitelistQueryMsg::Config {})?;
+//     let res: ResponseWrapper<WhitelistConfigResponse> = deps
+//         .querier
+//         .query_wasm_smart(whitelist, &WhitelistQueryMsg::Config {})?;
 
-    if res.data.is_active {
-        Ok(Some(coin(
-            res.data.unit_price.u128(),
-            &collection_config.native_denom,
-        )))
-    } else {
-        Ok(collection_price)
-    }
-}
+//     if res.data.is_active {
+//         Ok(Some(coin(
+//             res.data.unit_price.u128(),
+//             &collection_config.native_denom,
+//         )))
+//     } else {
+//         Ok(collection_price)
+//     }
+// }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
@@ -841,7 +822,6 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
             per_address_limit: collection_config.per_address_limit,
             start_time: collection_config.start_time,
             max_token_limit: collection_config.max_token_limit,
-            unit_price: collection_config.unit_price,
         },
     ))
 }

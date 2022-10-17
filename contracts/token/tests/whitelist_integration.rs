@@ -114,7 +114,6 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         per_address_limit: None,
         start_time: None,
         max_token_limit: None,
-        unit_price: None,
         native_denom: NATIVE_DENOM.to_string(),
         ipfs_link: Some("some-link".to_string()),
     };
@@ -370,62 +369,6 @@ mod actions {
                 err.source().unwrap().to_string(),
                 ContractError::TokenLimitReached {}.to_string()
             )
-        }
-
-        #[test]
-        fn test_token_price() {
-            let mut app = mock_app();
-            let token_module_addr = token_module_instantiation(&mut app);
-
-            let start_time = app.block_info().time.plus_seconds(1);
-            let end_time = app.block_info().time.plus_seconds(10);
-
-            setup_whitelist(
-                &mut app,
-                token_module_addr.clone(),
-                vec![USER.to_string()],
-                start_time,
-                end_time,
-                Uint128::new(100),
-                2,
-            );
-
-            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
-                },
-            };
-            let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-                .unwrap();
-
-            app.update_block(|block| block.time = block.time.plus_seconds(5));
-
-            let err = app
-                .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                FundsError::MissingFunds {}.to_string()
-            );
-
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr,
-                    &msg,
-                    &[coin(50, NATIVE_DENOM)],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                FundsError::InvalidFunds {
-                    got: "50".to_string(),
-                    expected: "100".to_string()
-                }
-                .to_string()
-            );
         }
     }
 }

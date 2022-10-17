@@ -110,7 +110,6 @@ pub struct ConfigResponse {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Uint128>,
 }
 
 #[cw_serde]

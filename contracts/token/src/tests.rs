@@ -73,7 +73,6 @@ fn proper_instantiate(
     per_address_limit: Option<u32>,
     start_time: Option<Timestamp>,
     max_token_limit: Option<u32>,
-    unit_price: Option<Uint128>,
     ipfs_link: Option<String>,
 ) -> Addr {
     let token_code_id = app.store_code(token_module());
@@ -88,7 +87,6 @@ fn proper_instantiate(
         per_address_limit,
         start_time,
         max_token_limit,
-        unit_price,
         ipfs_link,
     };
     let metadata_info = MetadataInfo {
@@ -136,7 +134,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
@@ -183,7 +180,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time),
             max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
@@ -258,7 +254,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(0),
-            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
@@ -308,7 +303,6 @@ mod initialization {
             per_address_limit: Some(0),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
@@ -358,7 +352,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: None,
         };
@@ -408,7 +401,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            unit_price: Some(Uint128::new(100)),
             native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
@@ -478,7 +470,6 @@ mod actions {
                 None,
                 None,
                 None,
-                None,
                 Some("some-link".to_string()),
             );
 
@@ -507,7 +498,6 @@ mod actions {
             let token_module_addr = proper_instantiate(
                 &mut app,
                 ADMIN.to_string(),
-                None,
                 None,
                 None,
                 None,
@@ -541,7 +531,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -582,7 +571,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -614,7 +602,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -668,7 +655,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -699,7 +685,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -740,7 +725,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -772,7 +756,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -796,7 +779,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -827,7 +809,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -865,7 +846,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -892,7 +872,6 @@ mod actions {
                     ADMIN.to_string(),
                     None,
                     Some(start_time),
-                    None,
                     None,
                     Some("some-link".to_string()),
                 );
@@ -947,7 +926,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -982,7 +960,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -1065,7 +1042,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -1111,7 +1087,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -1140,7 +1115,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -1190,7 +1164,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -1273,7 +1246,6 @@ mod actions {
                     None,
                     None,
                     None,
-                    Some(Uint128::new(1_000_000)),
                     Some("some-link".to_string()),
                 );
 
@@ -1295,9 +1267,6 @@ mod actions {
                 let res =
                     StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
                 assert_eq!(res, Addr::unchecked(USER));
-
-                let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-                assert_eq!(res, coin(1_000_000, NATIVE_DENOM));
 
                 let msg = Cw721QueryMsg::Extension {
                     msg: QueryMsg::SubModules {},
@@ -1334,7 +1303,6 @@ mod actions {
                 let token_module_addr = proper_instantiate(
                     &mut app,
                     ADMIN.to_string(),
-                    None,
                     None,
                     None,
                     None,
@@ -1379,7 +1347,6 @@ mod actions {
                     None,
                     None,
                     Some(2),
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -1425,7 +1392,6 @@ mod actions {
                     &mut app,
                     ADMIN.to_string(),
                     Some(2),
-                    None,
                     None,
                     None,
                     Some("some-link".to_string()),
@@ -1476,7 +1442,6 @@ mod actions {
                     None,
                     Some(start_time),
                     None,
-                    None,
                     Some("some-link".to_string()),
                 );
 
@@ -1492,90 +1457,6 @@ mod actions {
                 assert_eq!(
                     err.source().unwrap().to_string(),
                     ContractError::MintingNotStarted {}.to_string()
-                );
-            }
-
-            #[test]
-            fn test_invalid_funds() {
-                let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    RANDOM.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some(Uint128::new(1_000_000)),
-                    Some("some-link".to_string()),
-                );
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(RANDOM),
-                        token_module_addr,
-                        &msg,
-                        &[coin(100, TEST_DENOM)],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    FundsError::InvalidDenom {
-                        got: TEST_DENOM.to_string(),
-                        expected: NATIVE_DENOM.to_string()
-                    }
-                    .to_string()
-                );
-
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some(Uint128::new(100)),
-                    Some("some-link".to_string()),
-                );
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
-                };
-                let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    FundsError::MissingFunds {}.to_string()
-                );
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
-                };
-                let err = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        token_module_addr,
-                        &msg,
-                        &[coin(50, NATIVE_DENOM)],
-                    )
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    FundsError::InvalidFunds {
-                        got: "50".to_string(),
-                        expected: "100".to_string()
-                    }
-                    .to_string()
                 );
             }
         }

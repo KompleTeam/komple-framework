@@ -247,14 +247,6 @@ pub fn execute_create_collection(
                 collection_config.per_address_limit.unwrap_or(0).to_string(),
             )
             .check_add_attribute(
-                &collection_config.unit_price,
-                "unit_price",
-                collection_config
-                    .unit_price
-                    .unwrap_or(Uint128::zero())
-                    .to_string(),
-            )
-            .check_add_attribute(
                 &collection_config.ipfs_link,
                 "ipfs_link",
                 collection_config
@@ -497,7 +489,7 @@ fn _execute_mint(
             KompleTokenModule(collection_addr).mint_msg(msg.owner.clone(), msg.metadata_id)?;
         msgs.push(msg.into());
     }
-    println!("msgs: {:?}", msgs);
+
     Ok(Response::new().add_messages(msgs).add_event(
         EventHelper::new("komple_mint_module")
             .add_attribute("action", action)

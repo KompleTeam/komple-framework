@@ -9,7 +9,7 @@ use komple_types::{
     },
 };
 
-use cosmwasm_std::{Addr, Timestamp, Uint128};
+use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
 
 #[cw_serde]
@@ -25,7 +25,6 @@ pub struct CollectionConfig {
     pub per_address_limit: Option<u32>,
     pub start_time: Option<Timestamp>,
     pub max_token_limit: Option<u32>,
-    pub unit_price: Option<Uint128>,
     pub ipfs_link: Option<String>,
 }
 pub const COLLECTION_CONFIG: Item<CollectionConfig> = Item::new(COLLECTION_CONFIG_NAMESPACE);

@@ -168,7 +168,6 @@ mod execute {
             let collection_config = CollectionConfig {
                 per_address_limit: None,
                 start_time: None,
-                unit_price: None,
                 native_denom: NATIVE_DENOM.to_string(),
                 max_token_limit: None,
                 ipfs_link: Some("some-link".to_string()),
@@ -213,7 +212,21 @@ mod execute {
             )
             .unwrap();
 
-            // Mint token
+            // Throw error if invalid fund
+            app.execute_contract(
+                Addr::unchecked(USER),
+                mint_module_addr.clone(),
+                &ExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
+                },
+                &[Coin {
+                    amount: Uint128::new(5),
+                    denom: NATIVE_DENOM.to_string(),
+                }],
+            )
+            .unwrap_err();
+
             app.execute_contract(
                 Addr::unchecked(USER),
                 mint_module_addr.clone(),
