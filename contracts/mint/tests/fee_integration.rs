@@ -160,6 +160,7 @@ mod execute {
                 description: "Test Collection".to_string(),
                 image: "https://image.com".to_string(),
                 external_link: None,
+                native_denom: NATIVE_DENOM.to_string(),
             };
             let token_info = TokenInfo {
                 symbol: "TEST".to_string(),
@@ -168,7 +169,6 @@ mod execute {
             let collection_config = CollectionConfig {
                 per_address_limit: None,
                 start_time: None,
-                native_denom: NATIVE_DENOM.to_string(),
                 max_token_limit: None,
                 ipfs_link: Some("some-link".to_string()),
             };

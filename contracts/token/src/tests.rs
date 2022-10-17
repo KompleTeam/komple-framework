@@ -1,5 +1,5 @@
-use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
-use crate::state::{CollectionConfig, SubModules};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
+use crate::state::{CollectionConfig, Config as TokenConfig, SubModules};
 use crate::ContractError;
 use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
@@ -12,7 +12,7 @@ use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
     token::Locks,
 };
-use komple_utils::{funds::FundsError, storage::StorageHelper};
+use komple_utils::storage::StorageHelper;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -83,7 +83,6 @@ fn proper_instantiate(
         minter,
     };
     let collection_config = CollectionConfig {
-        native_denom: NATIVE_DENOM.to_string(),
         per_address_limit,
         start_time,
         max_token_limit,
@@ -134,7 +133,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
         let metadata_info = MetadataInfo {
@@ -180,7 +178,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time),
             max_token_limit: Some(100),
-            native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
         let metadata_info = MetadataInfo {
@@ -254,7 +251,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(0),
-            native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
         let metadata_info = MetadataInfo {
@@ -303,7 +299,6 @@ mod initialization {
             per_address_limit: Some(0),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
         let metadata_info = MetadataInfo {
@@ -352,7 +347,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: None,
         };
         let metadata_info = MetadataInfo {
@@ -401,7 +395,6 @@ mod initialization {
             per_address_limit: Some(5),
             start_time: Some(app.block_info().time.plus_seconds(1)),
             max_token_limit: Some(100),
-            native_denom: NATIVE_DENOM.to_string(),
             ipfs_link: Some("some-link".to_string()),
         };
         let metadata_info = MetadataInfo {
@@ -740,7 +733,7 @@ mod actions {
                 let msg = Cw721QueryMsg::Extension {
                     msg: QueryMsg::Config {},
                 };
-                let res: ResponseWrapper<ConfigResponse> = app
+                let res: ResponseWrapper<TokenConfig> = app
                     .wrap()
                     .query_wasm_smart(token_module_addr, &msg)
                     .unwrap();
@@ -827,7 +820,7 @@ mod actions {
                 let msg = Cw721QueryMsg::Extension {
                     msg: QueryMsg::Config {},
                 };
-                let res: ResponseWrapper<ConfigResponse> = app
+                let res: ResponseWrapper<TokenConfig> = app
                     .wrap()
                     .query_wasm_smart(token_module_addr, &msg)
                     .unwrap();

@@ -2,22 +2,17 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     coins, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
-    MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128,
-    WasmMsg,
+    MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
-use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use komple_fee_module::msg::{FixedFeeResponse, QueryMsg as FeeQueryMsg};
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::{
     helper::KompleTokenModule,
-    msg::{
-        ConfigResponse as TokenConfigResponse, InstantiateMsg as TokenInstantiateMsg, MetadataInfo,
-        QueryMsg as TokenQueryMsg, TokenInfo,
-    },
+    msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
 use komple_types::module::Modules;
@@ -224,10 +219,7 @@ pub fn execute_create_collection(
                     .as_ref()
                     .unwrap_or(&String::from("")),
             )
-            .add_attribute(
-                "native_denom",
-                token_instantiate_msg.collection_config.native_denom,
-            )
+            .add_attribute("native_denom", collection_info.native_denom)
             .check_add_attribute(
                 &collection_config.start_time,
                 "start_time",
@@ -340,6 +332,7 @@ fn execute_mint(
         metadata_id,
     }];
 
+    // TODO: Check for whitelist price too
     let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if let Ok(fee_module_addr) = res {
         let msg = FeeQueryMsg::FixedFee {
@@ -349,22 +342,13 @@ fn execute_mint(
         let res: Result<ResponseWrapper<FixedFeeResponse>, StdError> =
             deps.querier.query_wasm_smart(fee_module_addr, &msg);
         if let Ok(fixed_fee_response) = res {
-            // TODO: Storage is used in here and in _execute_mint
-            // Change this logic to use only one storage
-            let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
-            let token_config: ResponseWrapper<TokenConfigResponse> =
-                deps.querier.query_wasm_smart(
-                    collection_addr,
-                    &Cw721QueryMsg::Extension {
-                        msg: TokenQueryMsg::Config {},
-                    },
-                )?;
+            let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
 
             check_single_coin(
                 &info,
                 Coin {
                     amount: fixed_fee_response.data.value,
-                    denom: token_config.data.native_denom.to_string(),
+                    denom: collection_info.native_denom.to_string(),
                 },
             )?;
 
@@ -372,7 +356,7 @@ fn execute_mint(
                 to_address: config.admin.to_string(),
                 amount: coins(
                     fixed_fee_response.data.value.u128(),
-                    token_config.data.native_denom.to_string(),
+                    collection_info.native_denom.to_string(),
                 ),
             };
             msgs.push(msg.into());

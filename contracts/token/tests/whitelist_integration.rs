@@ -114,7 +114,6 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         per_address_limit: None,
         start_time: None,
         max_token_limit: None,
-        native_denom: NATIVE_DENOM.to_string(),
         ipfs_link: Some("some-link".to_string()),
     };
     let metadata_info = MetadataInfo {
@@ -190,8 +189,6 @@ mod actions {
     use super::*;
 
     mod minting {
-        use komple_utils::funds::FundsError;
-
         use super::*;
 
         #[test]

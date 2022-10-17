@@ -25,6 +25,7 @@ pub struct CollectionInfo {
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
+    pub native_denom: String,
 }
 pub const COLLECTION_INFO: Map<u32, CollectionInfo> = Map::new(COLLECTION_INFO_NAMESPACE);
 

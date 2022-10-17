@@ -6,8 +6,10 @@ use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_token_module::msg::{MetadataInfo, TokenInfo};
-use komple_token_module::state::CollectionConfig;
+use komple_token_module::{
+    msg::{MetadataInfo, TokenInfo},
+    state::CollectionConfig,
+};
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
@@ -96,6 +98,7 @@ fn setup_collection(
         description: "Test Description".to_string(),
         image: "ipfs://xyz".to_string(),
         external_link: None,
+        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
@@ -105,7 +108,6 @@ fn setup_collection(
         per_address_limit: None,
         start_time: None,
         max_token_limit: None,
-        native_denom: NATIVE_DENOM.to_string(),
         ipfs_link: Some("some-link".to_string()),
     };
     let metadata_info = MetadataInfo {
@@ -246,6 +248,7 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
+                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -254,7 +257,6 @@ mod actions {
                 let collection_config = CollectionConfig {
                     per_address_limit: None,
                     start_time: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                     max_token_limit: None,
                     ipfs_link: Some("some-link".to_string()),
                 };
@@ -304,6 +306,7 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
+                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -312,7 +315,6 @@ mod actions {
                 let collection_config = CollectionConfig {
                     per_address_limit: None,
                     start_time: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                     max_token_limit: None,
                     ipfs_link: None,
                 };
