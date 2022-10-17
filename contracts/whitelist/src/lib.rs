@@ -3,6 +3,9 @@ mod error;
 pub mod msg;
 pub mod state;
 
+#[cfg(feature = "library")]
+pub mod helper;
+
 #[cfg(test)]
 mod tests;
 

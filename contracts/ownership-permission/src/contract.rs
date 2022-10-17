@@ -65,9 +65,11 @@ pub fn execute_check(
     _info: MessageInfo,
     data: Binary,
 ) -> Result<Response, ContractError> {
-    let hub_addr = query_hub_addr(&deps)?;
+    let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
+    let hub_addr =
+        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, HUB_ADDR_NAMESPACE)?;
     let mint_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+        StorageHelper::query_module_address(&deps.querier, &hub_addr.unwrap(), Modules::Mint)?;
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
@@ -121,14 +123,6 @@ pub fn execute_check(
             .add_attributes(event_attributes)
             .get(),
     ))
-}
-
-// Queries the hub address from permission modules storage
-fn query_hub_addr(deps: &DepsMut) -> Result<Addr, ContractError> {
-    let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
-    let res =
-        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, HUB_ADDR_NAMESPACE)?;
-    Ok(res.unwrap())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

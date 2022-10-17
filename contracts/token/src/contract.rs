@@ -14,6 +14,7 @@ use komple_types::whitelist::WHITELIST_NAMESPACE;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
 use komple_utils::storage::StorageHelper;
+use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -30,8 +31,7 @@ use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 
 use komple_metadata_module::{helper::KompleMetadataModule, state::MetaInfo as MetadataMetaInfo};
 use komple_whitelist_module::msg::{
-    ConfigResponse as WhitelistConfigResponse, InstantiateMsg as WhitelistInstantiateMsg,
-    QueryMsg as WhitelistQueryMsg,
+    InstantiateMsg as WhitelistInstantiateMsg,
 };
 
 pub type Cw721Contract<'a> =
@@ -728,10 +728,8 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     }
     let whitelist = sub_modules.whitelist.unwrap();
 
-    let whitelist_config: ResponseWrapper<WhitelistConfigResponse> = deps
-        .querier
-        .query_wasm_smart(whitelist.clone(), &WhitelistQueryMsg::Config {})?;
-    if !whitelist_config.data.is_active {
+    let whitelist_config = KompleWhitelistHelper::new(whitelist.clone()).query_config(&deps.querier)?;
+    if !whitelist_config.is_active {
         return Ok(());
     }
 
@@ -745,7 +743,7 @@ fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
     let total_minted = MINTED_TOKENS_PER_ADDR
         .may_load(deps.storage, owner)?
         .unwrap_or(0);
-    if total_minted + 1 > (whitelist_config.data.per_address_limit as u32) {
+    if total_minted + 1 > (whitelist_config.per_address_limit as u32) {
         return Err(ContractError::TokenLimitReached {});
     }
 

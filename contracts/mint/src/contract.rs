@@ -190,7 +190,6 @@ pub fn execute_create_collection(
 
     if linked_collections.is_some() {
         check_collection_ids_exists(&deps, &linked_collections.clone().unwrap())?;
-
         LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collections.unwrap())?;
     }
 
@@ -347,7 +346,7 @@ fn execute_mint(
             &deps.querier,
             &fee_module_addr,
             Modules::Mint.to_string(),
-            format!("{}/{}", MintFees::Price.as_str(), collection_id.to_string()),
+            format!("{}/{}", MintFees::Price.as_str(), collection_id),
         );
         if let Ok(fixed_fee_response) = res {
             let msg = BankMsg::Send {
