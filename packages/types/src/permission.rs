@@ -6,7 +6,6 @@ pub enum Permissions {
     Ownership,
     Attribute,
 }
-
 impl Permissions {
     pub fn as_str(&self) -> &str {
         match self {
@@ -15,12 +14,37 @@ impl Permissions {
         }
     }
 }
-
 impl fmt::Display for Permissions {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Permissions::Ownership => write!(f, "ownership"),
             Permissions::Attribute => write!(f, "attribute"),
+        }
+    }
+}
+
+#[cw_serde]
+pub enum AttributeConditions {
+    Exist,
+    Absent,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
+}
+impl AttributeConditions {
+    pub fn as_str(&self) -> &str {
+        match self {
+            AttributeConditions::Exist => "exist",
+            AttributeConditions::Absent => "absent",
+            AttributeConditions::Equal => "equal",
+            AttributeConditions::NotEqual => "not_equal",
+            AttributeConditions::GreaterThan => "greater_than",
+            AttributeConditions::GreaterThanOrEqual => "greater_than_or_equal",
+            AttributeConditions::LessThan => "less_than",
+            AttributeConditions::LessThanOrEqual => "less_than_or_equal",
         }
     }
 }
