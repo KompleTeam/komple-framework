@@ -792,8 +792,8 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             TokenQueryMsg::MintedTokensPerAddress { address } => {
                 to_binary(&query_minted_tokens_per_address(deps, address)?)
             }
-            TokenQueryMsg::SubModules {} => to_binary(&query_contracts(deps)?),
-            TokenQueryMsg::ModuleOperators {} => to_binary(&query_contract_operators(deps)?),
+            TokenQueryMsg::SubModules {} => to_binary(&query_sub_modules(deps)?),
+            TokenQueryMsg::ModuleOperators {} => to_binary(&query_module_operators(deps)?),
         },
         _ => Cw721Contract::default().query(deps, env, msg),
     }
@@ -821,15 +821,15 @@ fn query_minted_tokens_per_address(deps: Deps, address: String) -> StdResult<Res
     Ok(ResponseWrapper::new("minted_tokens_per_address", amount))
 }
 
-fn query_contracts(deps: Deps) -> StdResult<ResponseWrapper<SubModules>> {
+fn query_sub_modules(deps: Deps) -> StdResult<ResponseWrapper<SubModules>> {
     let sub_modules = SUB_MODULES.load(deps.storage)?;
     Ok(ResponseWrapper::new("sub_modules", sub_modules))
 }
 
-fn query_contract_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+fn query_module_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
     let operators = OPERATORS.load(deps.storage).unwrap_or_default();
     Ok(ResponseWrapper::new(
-        "contract_operators",
+        "module_operators",
         operators.iter().map(|o| o.to_string()).collect(),
     ))
 }

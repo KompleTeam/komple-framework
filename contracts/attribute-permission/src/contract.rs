@@ -92,6 +92,7 @@ pub fn execute_check(
             .query_metadata(&deps.querier, msg.token_id)?;
         let attributes = response.metadata.attributes;
 
+        // TODO: Cover other conditions
         match msg.condition {
             AttributeConditions::Exist => attributes
                 .iter()
