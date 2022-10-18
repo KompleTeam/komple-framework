@@ -5,7 +5,10 @@ use komple_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     fee::{FixedPayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
-    token::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE, SubModules, SUB_MODULES_NAMESPACE},
+    token::{
+        Locks, SubModules, LOCKS_NAMESPACE, SUB_MODULES_NAMESPACE, TOKENS_NAMESPACE,
+        TOKEN_LOCKS_NAMESPACE,
+    },
 };
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -188,7 +191,8 @@ impl StorageHelper {
         querier: &QuerierWrapper,
         token_module_addr: &Addr,
     ) -> StdResult<SubModules> {
-        let res = Self::query_storage::<SubModules>(querier, token_module_addr, SUB_MODULES_NAMESPACE)?;
+        let res =
+            Self::query_storage::<SubModules>(querier, token_module_addr, SUB_MODULES_NAMESPACE)?;
         match res {
             Some(res) => Ok(res),
             None => Err(StdError::NotFound {

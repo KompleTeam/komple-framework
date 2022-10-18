@@ -6,7 +6,7 @@ pub enum Collections {
     Standard,
     // TODO: Find a new collection type
     Linked,
-    Komple
+    Komple,
 }
 
 impl Collections {
@@ -14,7 +14,7 @@ impl Collections {
         match self {
             Collections::Standard => "standard",
             Collections::Linked => "linked",
-            Collections::Komple => "komple"
+            Collections::Komple => "komple",
         }
     }
 }
@@ -24,7 +24,7 @@ impl fmt::Display for Collections {
         match self {
             Collections::Standard => write!(f, "standard"),
             Collections::Linked => write!(f, "linked"),
-            Collections::Komple => write!(f, "komple")
+            Collections::Komple => write!(f, "komple"),
         }
     }
 }
