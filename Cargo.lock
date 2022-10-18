@@ -627,6 +627,7 @@ dependencies = [
  "komple-token-module",
  "komple-types",
  "komple-utils",
+ "komple-whitelist-module",
  "semver",
  "thiserror",
 ]

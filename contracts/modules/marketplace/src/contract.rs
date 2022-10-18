@@ -300,15 +300,15 @@ fn _execute_buy_fixed_listing(
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if let Ok(fee_module_addr) = fee_module_addr {
         // Marketplace fees
-        process_marketplace_fees(
-            &deps,
-            &config,
-            &mut sub_msgs,
-            &fee_module_addr,
-            fixed_listing.price,
-            &mut marketplace_fee,
-            None,
-        )?;
+        // process_marketplace_fees(
+        //     &deps,
+        //     &config,
+        //     &mut sub_msgs,
+        //     &fee_module_addr,
+        //     fixed_listing.price,
+        //     &mut marketplace_fee,
+        //     None,
+        // )?;
 
         // Collection royalty fees
         let res = StorageHelper::query_percentage_fee(
@@ -540,6 +540,7 @@ fn query_fixed_listings(
 ) -> StdResult<ResponseWrapper<Vec<FixedListing>>> {
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
+
     let listings = FIXED_LISTING
         .prefix(collection_id)
         .range(deps.storage, start, None, Order::Ascending)

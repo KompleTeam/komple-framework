@@ -15,10 +15,11 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::query::ResponseWrapper;
 use komple_types::{fee::MintFees, module::Modules};
+use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use komple_utils::{event::EventHelper, funds::check_single_coin};
+use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -331,55 +332,92 @@ fn execute_mint(
         metadata_id,
     }];
 
+    // Check for fee module address
     let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
     if let Ok(fee_module_addr) = res {
         let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
+
         let mut total_price = Uint128::zero();
+        let mut is_whitelist = false;
 
-        // TODO: Check for whitelist status
-        // If active check if user is whitelisted
-        // If whitelisted get the price
-        // If absent mint for free
+        // Get sub modules from collection
+        let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
+        let sub_modules = StorageHelper::query_token_sub_modules(&deps.querier, &collection_addr)?;
 
-        // Token mint price
-        let res = StorageHelper::query_fixed_fee(
-            &deps.querier,
-            &fee_module_addr,
-            Modules::Mint.to_string(),
-            format!("{}/{}", MintFees::Price.as_str(), collection_id),
-        );
-        if let Ok(fixed_fee_response) = res {
-            let msg = BankMsg::Send {
-                to_address: config.admin.to_string(),
-                amount: coins(
-                    fixed_fee_response.value.u128(),
-                    collection_info.native_denom.to_string(),
-                ),
-            };
-            msgs.push(msg.into());
-            total_price += fixed_fee_response.value;
+        // Check for whitelist status
+        if let Some(whitelist_addr) = sub_modules.whitelist {
+            let res =
+                KompleWhitelistHelper::new(whitelist_addr.clone()).query_is_active(&deps.querier);
+
+            // Continue if whitelist is active
+            if let Ok(is_active) = res {
+                if is_active {
+                    // Query whitelist storage with owner address
+                    let query_key = StorageHelper::get_map_storage_key(
+                        WHITELIST_NAMESPACE,
+                        &[info.sender.as_bytes()],
+                    )?;
+                    let res = StorageHelper::query_storage::<bool>(
+                        &deps.querier,
+                        &whitelist_addr,
+                        &query_key,
+                    )?;
+                    if res.is_none() {
+                        return Err(ContractError::AddressNotWhitelisted {});
+                    }
+
+                    // Whitelist is active and user is member
+                    let res = StorageHelper::query_fixed_fee(
+                        &deps.querier,
+                        &fee_module_addr,
+                        Modules::Mint.to_string(),
+                        format!("{}/{}", MintFees::Whitelist.as_str(), collection_id),
+                    );
+
+                    let mut whitelist_price = Uint128::zero();
+
+                    // If whitelist price exists
+                    if let Ok(fixed_fee_response) = res {
+                        whitelist_price = fixed_fee_response.value;
+                    }
+                    // Create send message if not zero
+                    if !whitelist_price.is_zero() {
+                        let msg = BankMsg::Send {
+                            to_address: config.admin.to_string(),
+                            amount: coins(
+                                whitelist_price.u128(),
+                                collection_info.native_denom.to_string(),
+                            ),
+                        };
+                        msgs.push(msg.into());
+                        total_price += whitelist_price;
+                    }
+
+                    is_whitelist = true;
+                }
+            }
         }
-
-        // // Mint transaction fee
-        // let res = StorageHelper::query_fixed_fee(
-        //     &deps.querier,
-        //     &fee_module_addr,
-        //     Modules::Mint.to_string(),
-        //     format!("{}/{}", MintFees::Transaction.as_str(), collection_id.to_string()),
-        // );
-        // if let Ok(fixed_fee_response) = res {
-        //     let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
-
-        //     let msg = BankMsg::Send {
-        //         to_address: config.admin.to_string(),
-        //         amount: coins(
-        //             fixed_fee_response.value.u128(),
-        //             collection_info.native_denom.to_string(),
-        //         ),
-        //     };
-        //     msgs.push(msg.into());
-        //     total_price += fixed_fee_response.value;
-        // }
+        // Standard collection mint flow
+        if !is_whitelist {
+            // Token mint price
+            let res = StorageHelper::query_fixed_fee(
+                &deps.querier,
+                &fee_module_addr,
+                Modules::Mint.to_string(),
+                format!("{}/{}", MintFees::Price.as_str(), collection_id),
+            );
+            if let Ok(fixed_fee_response) = res {
+                let msg = BankMsg::Send {
+                    to_address: config.admin.to_string(),
+                    amount: coins(
+                        fixed_fee_response.value.u128(),
+                        collection_info.native_denom.to_string(),
+                    ),
+                };
+                msgs.push(msg.into());
+                total_price += fixed_fee_response.value;
+            }
+        }
 
         if !total_price.is_zero() {
             check_single_coin(

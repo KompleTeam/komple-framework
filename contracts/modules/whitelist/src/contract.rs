@@ -309,11 +309,13 @@ fn query_members(
     let limit = limit.unwrap_or(10) as usize;
     let start_addr = maybe_addr(deps.api, start_after)?;
     let start = start_addr.map(Bound::exclusive);
+
     let members = WHITELIST
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|addr| addr.unwrap().0.to_string())
         .collect::<Vec<String>>();
+
     Ok(ResponseWrapper::new("members", members))
 }
 

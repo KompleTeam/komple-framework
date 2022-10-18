@@ -34,6 +34,12 @@ pub enum ContractError {
     #[error("Collection is already whitelistlisted")]
     AlreadyWhitelistlisted {},
 
+    #[error("Address is not whitelisted")]
+    AddressNotWhitelisted {},
+
+    #[error("Whitelist price is not set")]
+    WhitelistPriceNotSet {},
+
     #[error("{0}")]
     Util(#[from] UtilError),
 

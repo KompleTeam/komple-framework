@@ -731,6 +731,7 @@ fn query_raw_metadatas(
 ) -> StdResult<ResponseWrapper<Vec<MetadataResponse>>> {
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
+
     let metadatas = METADATA
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
@@ -742,6 +743,7 @@ fn query_raw_metadatas(
             }
         })
         .collect::<Vec<MetadataResponse>>();
+
     Ok(ResponseWrapper::new("metadatas", metadatas))
 }
 
@@ -751,7 +753,6 @@ fn query_metadatas(
     limit: Option<u8>,
 ) -> StdResult<ResponseWrapper<Vec<MetadataResponse>>> {
     let config = CONFIG.load(deps.storage)?;
-
     let limit = limit.unwrap_or(30) as usize;
     let start = start_after.map(Bound::exclusive);
 

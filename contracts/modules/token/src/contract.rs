@@ -10,10 +10,8 @@ use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::token::{Locks, SubModules};
-use komple_types::whitelist::WHITELIST_NAMESPACE;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
-use komple_utils::storage::StorageHelper;
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
@@ -348,12 +346,15 @@ pub fn execute_mint(
     let config = CONFIG.load(deps.storage)?;
     let collection_type = COLLECTION_TYPE.load(deps.storage)?;
 
+    let total_minted = MINTED_TOKENS_PER_ADDR
+        .may_load(deps.storage, &owner)?
+        .unwrap_or(0);
+    let token_id = (TOKEN_IDS.load(deps.storage)?) + 1;
+
     let locks = LOCKS.load(deps.storage)?;
     if locks.mint_lock {
         return Err(ContractError::MintLocked {});
     }
-
-    let token_id = (TOKEN_IDS.load(deps.storage)?) + 1;
 
     let token_lock = TOKEN_LOCKS.may_load(deps.storage, &token_id.to_string())?;
     if token_lock.is_some() && token_lock.unwrap().mint_lock {
@@ -364,12 +365,6 @@ pub fn execute_mint(
         return Err(ContractError::TokenLimitReached {});
     }
 
-    check_whitelist(&deps, &owner)?;
-
-    let total_minted = MINTED_TOKENS_PER_ADDR
-        .may_load(deps.storage, &owner)?
-        .unwrap_or(0);
-
     if config.per_address_limit.is_some() && total_minted + 1 > config.per_address_limit.unwrap() {
         return Err(ContractError::TokenLimitReached {});
     }
@@ -377,6 +372,17 @@ pub fn execute_mint(
     if config.start_time.is_some() && env.block.time < config.start_time.unwrap() {
         return Err(ContractError::MintingNotStarted {});
     }
+
+    // Whitelist checks
+    let sub_modules = SUB_MODULES.load(deps.storage)?;
+    if let Some(whitelist_addr) = sub_modules.whitelist {
+        let whitelist_config =
+            KompleWhitelistHelper::new(whitelist_addr).query_config(&deps.querier)?;
+
+        if total_minted + 1 > (whitelist_config.per_address_limit as u32) {
+            return Err(ContractError::TokenLimitReached {});
+        }
+    };
 
     let mint_msg = MintMsg {
         token_id: token_id.to_string(),
@@ -716,37 +722,6 @@ fn execute_init_whitelist_module(
             .add_attribute("action", "init_whitelist_module")
             .get(),
     ))
-}
-
-fn check_whitelist(deps: &DepsMut, owner: &str) -> Result<(), ContractError> {
-    let sub_modules = SUB_MODULES.load(deps.storage)?;
-
-    if sub_modules.whitelist.is_none() {
-        return Ok(());
-    }
-    let whitelist = sub_modules.whitelist.unwrap();
-
-    let whitelist_config =
-        KompleWhitelistHelper::new(whitelist.clone()).query_config(&deps.querier)?;
-    if !whitelist_config.is_active {
-        return Ok(());
-    }
-
-    // Query whitelist storage with owner address
-    let query_key = StorageHelper::get_map_storage_key(WHITELIST_NAMESPACE, &[owner.as_bytes()])?;
-    let res = StorageHelper::query_storage::<bool>(&deps.querier, &whitelist, &query_key)?;
-    if res.is_none() {
-        return Err(ContractError::NotWhitelisted {});
-    }
-
-    let total_minted = MINTED_TOKENS_PER_ADDR
-        .may_load(deps.storage, owner)?
-        .unwrap_or(0);
-    if total_minted + 1 > (whitelist_config.per_address_limit as u32) {
-        return Err(ContractError::TokenLimitReached {});
-    }
-
-    Ok(())
 }
 
 // fn get_mint_price(

@@ -1270,232 +1270,232 @@ mod actions {
                 assert_eq!(balance.amount, Uint128::new(50_000));
             }
 
-            #[test]
-            fn test_happy_path_without_marbu() {
-                let mut app = mock_app();
-                let hub_addr = setup_hub_module(&mut app, false);
+            // #[test]
+            // fn test_happy_path_without_marbu() {
+            //     let mut app = mock_app();
+            //     let hub_addr = setup_hub_module(&mut app, false);
 
-                let (mint_module_addr, marketplace_module_addr) =
-                    setup_modules(&mut app, hub_addr.clone());
+            //     let (mint_module_addr, marketplace_module_addr) =
+            //         setup_modules(&mut app, hub_addr.clone());
 
-                // Register and setup fee module
-                let fee_module_code_id = app.store_code(fee_module());
-                let msg = HubExecuteMsg::RegisterModule {
-                    module: Modules::Fee.to_string(),
-                    msg: to_binary(&FeeModuleInstantiateMsg {
-                        admin: ADMIN.to_string(),
-                    })
-                    .unwrap(),
-                    code_id: fee_module_code_id,
-                };
-                let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
-                    .unwrap();
-                let fee_module_addr =
-                    StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Fee)
-                        .unwrap();
-                setup_fee_module(&mut app, &fee_module_addr);
+            //     // Register and setup fee module
+            //     let fee_module_code_id = app.store_code(fee_module());
+            //     let msg = HubExecuteMsg::RegisterModule {
+            //         module: Modules::Fee.to_string(),
+            //         msg: to_binary(&FeeModuleInstantiateMsg {
+            //             admin: ADMIN.to_string(),
+            //         })
+            //         .unwrap(),
+            //         code_id: fee_module_code_id,
+            //     };
+            //     let _ = app
+            //         .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
+            //         .unwrap();
+            //     let fee_module_addr =
+            //         StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Fee)
+            //             .unwrap();
+            //     setup_fee_module(&mut app, &fee_module_addr);
 
-                // Update public permission settings
-                // Creator will be creating the collection
-                let msg = MintExecuteMsg::UpdatePublicCollectionCreation {
-                    public_collection_creation: true,
-                };
-                let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), mint_module_addr.clone(), &msg, &[])
-                    .unwrap();
+            //     // Update public permission settings
+            //     // Creator will be creating the collection
+            //     let msg = MintExecuteMsg::UpdatePublicCollectionCreation {
+            //         public_collection_creation: true,
+            //     };
+            //     let _ = app
+            //         .execute_contract(Addr::unchecked(ADMIN), mint_module_addr.clone(), &msg, &[])
+            //         .unwrap();
 
-                let token_module_code_id = app.store_code(token_module());
-                create_collection(
-                    &mut app,
-                    mint_module_addr.clone(),
-                    CREATOR,
-                    token_module_code_id,
-                );
+            //     let token_module_code_id = app.store_code(token_module());
+            //     create_collection(
+            //         &mut app,
+            //         mint_module_addr.clone(),
+            //         CREATOR,
+            //         token_module_code_id,
+            //     );
 
-                let collection_addr =
-                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                        .unwrap();
+            //     let collection_addr =
+            //         StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+            //             .unwrap();
 
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
-                mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+            //     mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+            //     mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+            //     mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
-                give_approval_to_module(
-                    &mut app,
-                    collection_addr.clone(),
-                    USER,
-                    &marketplace_module_addr,
-                );
+            //     give_approval_to_module(
+            //         &mut app,
+            //         collection_addr.clone(),
+            //         USER,
+            //         &marketplace_module_addr,
+            //     );
 
-                setup_marketplace_listing(
-                    &mut app,
-                    &mint_module_addr,
-                    &marketplace_module_addr,
-                    1,
-                    1,
-                    Uint128::new(1_000),
-                );
+            //     setup_marketplace_listing(
+            //         &mut app,
+            //         &mint_module_addr,
+            //         &marketplace_module_addr,
+            //         1,
+            //         1,
+            //         Uint128::new(1_000),
+            //     );
 
-                let locks =
-                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
-                assert_eq!(locks.transfer_lock, true);
-                assert_eq!(locks.send_lock, true);
-                assert_eq!(locks.burn_lock, true);
+            //     let locks =
+            //         StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+            //     assert_eq!(locks.transfer_lock, true);
+            //     assert_eq!(locks.send_lock, true);
+            //     assert_eq!(locks.burn_lock, true);
 
-                let msg = MarketplaceExecuteMsg::Buy {
-                    listing_type: Listing::Fixed,
-                    collection_id: 1,
-                    token_id: 1,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(RANDOM),
-                        marketplace_module_addr.clone(),
-                        &msg,
-                        &[coin(1_000, NATIVE_DENOM)],
-                    )
-                    .unwrap();
+            //     let msg = MarketplaceExecuteMsg::Buy {
+            //         listing_type: Listing::Fixed,
+            //         collection_id: 1,
+            //         token_id: 1,
+            //     };
+            //     let _ = app
+            //         .execute_contract(
+            //             Addr::unchecked(RANDOM),
+            //             marketplace_module_addr.clone(),
+            //             &msg,
+            //             &[coin(1_000, NATIVE_DENOM)],
+            //         )
+            //         .unwrap();
 
-                let msg = MarketplaceQueryMsg::FixedListing {
-                    collection_id: 1,
-                    token_id: 1,
-                };
-                let res: Result<Empty, StdError> = app
-                    .wrap()
-                    .query_wasm_smart(marketplace_module_addr.clone(), &msg);
-                assert!(res.is_err());
+            //     let msg = MarketplaceQueryMsg::FixedListing {
+            //         collection_id: 1,
+            //         token_id: 1,
+            //     };
+            //     let res: Result<Empty, StdError> = app
+            //         .wrap()
+            //         .query_wasm_smart(marketplace_module_addr.clone(), &msg);
+            //     assert!(res.is_err());
 
-                let locks =
-                    StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
-                assert_eq!(locks.transfer_lock, false);
-                assert_eq!(locks.send_lock, false);
-                assert_eq!(locks.burn_lock, false);
+            //     let locks =
+            //         StorageHelper::query_token_locks(&app.wrap(), &collection_addr, &1).unwrap();
+            //     assert_eq!(locks.transfer_lock, false);
+            //     assert_eq!(locks.send_lock, false);
+            //     assert_eq!(locks.burn_lock, false);
 
-                let owner =
-                    StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
-                assert_eq!(owner, Addr::unchecked(RANDOM));
+            //     let owner =
+            //         StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+            //     assert_eq!(owner, Addr::unchecked(RANDOM));
 
-                // Buyer balance
-                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(999_000));
+            //     // Buyer balance
+            //     let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(999_000));
 
-                // Owner balance
-                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_000_920));
+            //     // Owner balance
+            //     let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(1_000_920));
 
-                // Komple fee
-                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(40));
+            //     // Komple fee
+            //     let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(40));
 
-                // Community fee
-                let balance = app
-                    .wrap()
-                    .query_balance("juno..community", NATIVE_DENOM)
-                    .unwrap();
-                assert_eq!(balance.amount, Uint128::new(20));
+            //     // Community fee
+            //     let balance = app
+            //         .wrap()
+            //         .query_balance("juno..community", NATIVE_DENOM)
+            //         .unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(20));
 
-                // Setup admin royalty for 10 percent
-                set_royalties(&mut app, &fee_module_addr, &1, "0.1");
+            //     // Setup admin royalty for 10 percent
+            //     set_royalties(&mut app, &fee_module_addr, &1, "0.1");
 
-                setup_marketplace_listing(
-                    &mut app,
-                    &mint_module_addr,
-                    &marketplace_module_addr,
-                    1,
-                    2,
-                    Uint128::new(1_000),
-                );
+            //     setup_marketplace_listing(
+            //         &mut app,
+            //         &mint_module_addr,
+            //         &marketplace_module_addr,
+            //         1,
+            //         2,
+            //         Uint128::new(1_000),
+            //     );
 
-                let msg = MarketplaceExecuteMsg::Buy {
-                    listing_type: Listing::Fixed,
-                    collection_id: 1,
-                    token_id: 2,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(RANDOM),
-                        marketplace_module_addr.clone(),
-                        &msg,
-                        &[coin(1_000, NATIVE_DENOM)],
-                    )
-                    .unwrap();
+            //     let msg = MarketplaceExecuteMsg::Buy {
+            //         listing_type: Listing::Fixed,
+            //         collection_id: 1,
+            //         token_id: 2,
+            //     };
+            //     let _ = app
+            //         .execute_contract(
+            //             Addr::unchecked(RANDOM),
+            //             marketplace_module_addr.clone(),
+            //             &msg,
+            //             &[coin(1_000, NATIVE_DENOM)],
+            //         )
+            //         .unwrap();
 
-                let owner =
-                    StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
-                assert_eq!(owner, Addr::unchecked(RANDOM));
+            //     let owner =
+            //         StorageHelper::query_token_owner(&app.wrap(), &collection_addr, &1).unwrap();
+            //     assert_eq!(owner, Addr::unchecked(RANDOM));
 
-                // Buyer balance
-                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(998_000));
+            //     // Buyer balance
+            //     let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(998_000));
 
-                // Owner balance
-                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_001_740));
+            //     // Owner balance
+            //     let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(1_001_740));
 
-                // Komple fee
-                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(80));
+            //     // Komple fee
+            //     let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(80));
 
-                // Community fee
-                let balance = app
-                    .wrap()
-                    .query_balance("juno..community", NATIVE_DENOM)
-                    .unwrap();
-                assert_eq!(balance.amount, Uint128::new(40));
+            //     // Community fee
+            //     let balance = app
+            //         .wrap()
+            //         .query_balance("juno..community", NATIVE_DENOM)
+            //         .unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(40));
 
-                // Creator royalty fee
-                let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(100));
+            //     // Creator royalty fee
+            //     let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(100));
 
-                set_royalties(&mut app, &fee_module_addr, &1, "0.05");
+            //     set_royalties(&mut app, &fee_module_addr, &1, "0.05");
 
-                setup_marketplace_listing(
-                    &mut app,
-                    &mint_module_addr,
-                    &marketplace_module_addr,
-                    1,
-                    3,
-                    Uint128::new(998_000),
-                );
+            //     setup_marketplace_listing(
+            //         &mut app,
+            //         &mint_module_addr,
+            //         &marketplace_module_addr,
+            //         1,
+            //         3,
+            //         Uint128::new(998_000),
+            //     );
 
-                let msg = MarketplaceExecuteMsg::Buy {
-                    listing_type: Listing::Fixed,
-                    collection_id: 1,
-                    token_id: 3,
-                };
-                let _ = app
-                    .execute_contract(
-                        Addr::unchecked(RANDOM),
-                        marketplace_module_addr.clone(),
-                        &msg,
-                        &[coin(998_000, NATIVE_DENOM)],
-                    )
-                    .unwrap();
+            //     let msg = MarketplaceExecuteMsg::Buy {
+            //         listing_type: Listing::Fixed,
+            //         collection_id: 1,
+            //         token_id: 3,
+            //     };
+            //     let _ = app
+            //         .execute_contract(
+            //             Addr::unchecked(RANDOM),
+            //             marketplace_module_addr.clone(),
+            //             &msg,
+            //             &[coin(998_000, NATIVE_DENOM)],
+            //         )
+            //         .unwrap();
 
-                // Buyer balance
-                let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(0));
+            //     // Buyer balance
+            //     let balance = app.wrap().query_balance(RANDOM, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(0));
 
-                // Owner balance
-                let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(1_870_000));
+            //     // Owner balance
+            //     let balance = app.wrap().query_balance(USER, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(1_870_000));
 
-                // Komple fee
-                let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(40_000));
+            //     // Komple fee
+            //     let balance = app.wrap().query_balance("contract0", NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(40_000));
 
-                // Community fee
-                let balance = app
-                    .wrap()
-                    .query_balance("juno..community", NATIVE_DENOM)
-                    .unwrap();
-                assert_eq!(balance.amount, Uint128::new(20_000));
+            //     // Community fee
+            //     let balance = app
+            //         .wrap()
+            //         .query_balance("juno..community", NATIVE_DENOM)
+            //         .unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(20_000));
 
-                // Creator royalty fee
-                let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
-                assert_eq!(balance.amount, Uint128::new(50_000));
-            }
+            //     // Creator royalty fee
+            //     let balance = app.wrap().query_balance(CREATOR, NATIVE_DENOM).unwrap();
+            //     assert_eq!(balance.amount, Uint128::new(50_000));
+            // }
 
             #[test]
             fn test_invalid_funds() {

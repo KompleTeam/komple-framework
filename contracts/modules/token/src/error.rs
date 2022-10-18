@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use komple_utils::{funds::FundsError, UtilError};
+use komple_utils::UtilError;
 use thiserror::Error;
 
 use cw721_base::ContractError as Cw721ContractError;
@@ -48,9 +48,6 @@ pub enum ContractError {
     #[error("Description too long")]
     DescriptionTooLong {},
 
-    #[error("Address is not whitelisted")]
-    NotWhitelisted {},
-
     #[error("Token_id already claimed")]
     Claimed {},
 
@@ -80,9 +77,6 @@ pub enum ContractError {
 
     #[error("{0}")]
     Util(#[from] UtilError),
-
-    #[error("{0}")]
-    Funds(#[from] FundsError),
 
     #[error("Semver parsing error: {0}")]
     SemVer(String),

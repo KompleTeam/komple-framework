@@ -10,7 +10,6 @@ use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
     token::SubModules as TokenSubModules,
 };
-use komple_utils::storage::StorageHelper;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 use komple_whitelist_module::state::WhitelistConfig;
 
@@ -193,123 +192,6 @@ mod actions {
 
     mod minting {
         use super::*;
-
-        #[test]
-        fn test_happy_path() {
-            let mut app = mock_app();
-            let token_module_addr = token_module_instantiation(&mut app);
-
-            let start_time = app.block_info().time.plus_seconds(1);
-            let end_time = app.block_info().time.plus_seconds(10);
-
-            setup_whitelist(
-                &mut app,
-                token_module_addr.clone(),
-                vec![RANDOM.to_string(), RANDOM_2.to_string()],
-                start_time,
-                end_time,
-                2,
-            );
-
-            let random_mint: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::Mint {
-                    owner: RANDOM.to_string(),
-                    metadata_id: None,
-                },
-            };
-            let random_2_mint: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::Mint {
-                    owner: RANDOM_2.to_string(),
-                    metadata_id: None,
-                },
-            };
-
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
-                    &random_mint,
-                    &[coin(100, NATIVE_DENOM)],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
-                    &random_2_mint,
-                    &[coin(100, NATIVE_DENOM)],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
-                    &random_mint,
-                    &[coin(100, NATIVE_DENOM)],
-                )
-                .unwrap();
-            let _ = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
-                    &random_2_mint,
-                    &[coin(100, NATIVE_DENOM)],
-                )
-                .unwrap();
-
-            let token_1_owner =
-                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &1).unwrap();
-            let token_2_owner =
-                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &2).unwrap();
-            let token_3_owner =
-                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &3).unwrap();
-            let token_4_owner =
-                StorageHelper::query_token_owner(&app.wrap(), &token_module_addr, &4).unwrap();
-
-            assert_eq!(token_1_owner, RANDOM.to_string());
-            assert_eq!(token_2_owner, RANDOM_2.to_string());
-            assert_eq!(token_3_owner, RANDOM.to_string());
-            assert_eq!(token_4_owner, RANDOM_2.to_string());
-        }
-
-        #[test]
-        fn test_invalid_member() {
-            let mut app = mock_app();
-            let token_module_addr = token_module_instantiation(&mut app);
-
-            let start_time = app.block_info().time.plus_seconds(1);
-            let end_time = app.block_info().time.plus_seconds(10);
-
-            setup_whitelist(
-                &mut app,
-                token_module_addr.clone(),
-                vec![RANDOM.to_string(), RANDOM_2.to_string()],
-                start_time,
-                end_time,
-                2,
-            );
-
-            app.update_block(|block| block.time = block.time.plus_seconds(5));
-
-            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
-                },
-            };
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr,
-                    &msg,
-                    &[coin(100, NATIVE_DENOM)],
-                )
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::NotWhitelisted {}.to_string()
-            )
-        }
 
         #[test]
         fn test_token_limit_reached() {
