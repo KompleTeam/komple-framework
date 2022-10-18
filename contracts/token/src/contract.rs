@@ -9,7 +9,7 @@ use cw_utils::parse_reply_instantiate_data;
 use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
-use komple_types::token::Locks;
+use komple_types::token::{Locks, SubModules};
 use komple_types::whitelist::WHITELIST_NAMESPACE;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
@@ -22,7 +22,7 @@ use crate::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg as TokenQueryMsg,
 };
 use crate::state::{
-    Config, SubModules, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR,
+    Config, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR,
     OPERATORS, SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
 };
 

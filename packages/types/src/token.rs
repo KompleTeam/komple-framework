@@ -1,4 +1,5 @@
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct Locks {
@@ -6,6 +7,12 @@ pub struct Locks {
     pub mint_lock: bool,
     pub transfer_lock: bool,
     pub send_lock: bool,
+}
+
+#[cw_serde]
+pub struct SubModules {
+    pub metadata: Option<Addr>,
+    pub whitelist: Option<Addr>,
 }
 
 pub const TOKENS_NAMESPACE: &str = "tokens";

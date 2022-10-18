@@ -4,10 +4,11 @@ use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
-use komple_token_module::state::{CollectionConfig, SubModules as TokenSubModules};
+use komple_token_module::state::{CollectionConfig};
 use komple_token_module::ContractError;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
+    token::SubModules as TokenSubModules,
 };
 use komple_utils::storage::StorageHelper;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;

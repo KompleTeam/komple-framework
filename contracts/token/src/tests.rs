@@ -1,5 +1,5 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
-use crate::state::{CollectionConfig, Config as TokenConfig, SubModules};
+use crate::state::{CollectionConfig, Config as TokenConfig};
 use crate::ContractError;
 use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
@@ -10,7 +10,7 @@ use komple_metadata_module::{
 };
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
-    token::Locks,
+    token::{Locks, SubModules},
 };
 use komple_utils::storage::StorageHelper;
 

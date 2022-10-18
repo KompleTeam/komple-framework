@@ -5,7 +5,7 @@ use komple_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     fee::{FixedPayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
     module::{Modules, MODULE_ADDRS_NAMESPACE},
-    token::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE},
+    token::{Locks, LOCKS_NAMESPACE, TOKENS_NAMESPACE, TOKEN_LOCKS_NAMESPACE, SubModules, SUB_MODULES_NAMESPACE},
 };
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -21,6 +21,37 @@ pub struct PercentagePayment {
 pub struct StorageHelper();
 
 impl StorageHelper {
+    // namespace -> storage key
+    // key_name -> item key
+    pub fn get_map_storage_key(namepspace: &str, key_bytes: &[&[u8]]) -> StdResult<String> {
+        let namespace_bytes = namepspace.as_bytes();
+        let path: Path<Vec<u32>> = Path::new(namespace_bytes, key_bytes);
+        let path_str = from_utf8(path.deref())?;
+        Ok(path_str.to_string())
+    }
+
+    // To find the key value in storage, we need to construct a path to the key
+    // For Map storage this key is generated with get_map_storage_key
+    // For Item storage this key is the namespace value
+    pub fn query_storage<T>(
+        querier: &QuerierWrapper,
+        addr: &Addr,
+        key: &str,
+    ) -> StdResult<Option<T>>
+    where
+        T: DeserializeOwned,
+    {
+        let data = querier.query_wasm_raw(addr, key.as_bytes())?;
+        match data {
+            Some(data) => {
+                let res = from_utf8(&data)?;
+                let res = from_slice(res.as_bytes())?;
+                Ok(Some(res))
+            }
+            None => Ok(None),
+        }
+    }
+
     pub fn query_module_address(
         querier: &QuerierWrapper,
         hub_addr: &Addr,
@@ -153,34 +184,16 @@ impl StorageHelper {
         }
     }
 
-    // namespace -> storage key
-    // key_name -> item key
-    pub fn get_map_storage_key(namepspace: &str, key_bytes: &[&[u8]]) -> StdResult<String> {
-        let namespace_bytes = namepspace.as_bytes();
-        let path: Path<Vec<u32>> = Path::new(namespace_bytes, key_bytes);
-        let path_str = from_utf8(path.deref())?;
-        Ok(path_str.to_string())
-    }
-
-    // To find the key value in storage, we need to construct a path to the key
-    // For Map storage this key is generated with get_map_storage_key
-    // For Item storage this key is the namespace value
-    pub fn query_storage<T>(
+    pub fn query_token_sub_modules(
         querier: &QuerierWrapper,
-        addr: &Addr,
-        key: &str,
-    ) -> StdResult<Option<T>>
-    where
-        T: DeserializeOwned,
-    {
-        let data = querier.query_wasm_raw(addr, key.as_bytes())?;
-        match data {
-            Some(data) => {
-                let res = from_utf8(&data)?;
-                let res = from_slice(res.as_bytes())?;
-                Ok(Some(res))
-            }
-            None => Ok(None),
+        token_module_addr: &Addr,
+    ) -> StdResult<SubModules> {
+        let res = Self::query_storage::<SubModules>(querier, token_module_addr, SUB_MODULES_NAMESPACE)?;
+        match res {
+            Some(res) => Ok(res),
+            None => Err(StdError::NotFound {
+                kind: "Sub modules".to_string(),
+            }),
         }
     }
 }

@@ -5,7 +5,7 @@ use komple_types::{
     token::{
         Locks, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE, MINTED_TOKENS_PER_ADDR_NAMESPACE,
         MINT_MODULE_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE, TOKEN_IDS_NAMESPACE,
-        TOKEN_LOCKS_NAMESPACE,
+        TOKEN_LOCKS_NAMESPACE, SubModules,
     },
 };
 
@@ -31,11 +31,6 @@ pub struct CollectionConfig {
     pub ipfs_link: Option<String>,
 }
 
-#[cw_serde]
-pub struct SubModules {
-    pub metadata: Option<Addr>,
-    pub whitelist: Option<Addr>,
-}
 pub const SUB_MODULES: Item<SubModules> = Item::new(SUB_MODULES_NAMESPACE);
 
 pub const LOCKS: Item<Locks> = Item::new(LOCKS_NAMESPACE);
