@@ -1,9 +1,10 @@
 use crate::{
-    msg::ExecuteMsg,
+    msg::{ExecuteMsg, MetadataResponse, QueryMsg},
     state::{MetaInfo, Trait},
 };
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Addr, StdResult, WasmMsg};
+use cosmwasm_std::{to_binary, Addr, StdResult, WasmMsg, QuerierWrapper};
+use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
 pub struct KompleMetadataModule(pub Addr);
@@ -48,5 +49,12 @@ impl KompleMetadataModule {
             msg: to_binary(&msg)?,
             funds: vec![],
         })
+    }
+
+    // Queries
+    pub fn query_metadata(&self, querier: &QuerierWrapper, token_id: u32) -> StdResult<MetadataResponse> {
+        let msg = QueryMsg::Metadata { token_id };
+        let res: ResponseWrapper<MetadataResponse> = querier.query_wasm_smart(self.0.to_string(), &msg)?;
+        Ok(res.data)
     }
 }
