@@ -145,7 +145,8 @@ fn execute_set_fee(
                 Some(p) => p.value,
                 None => Decimal::zero(),
             };
-            let total_fee = query_total_percentage_fees(deps.as_ref(), module_name.clone())?;
+            let total_fee =
+                query_total_percentage_fees(deps.as_ref(), module_name.clone(), None, None)?;
             if total_fee.data - current_percentage_payment_value + percentage_payment.value
                 >= Decimal::one()
             {
@@ -387,17 +388,31 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             start_after,
             limit,
         } => to_binary(&query_fixed_fees(deps, module_name, start_after, limit)?),
-        QueryMsg::TotalPercentageFees { module_name } => {
-            to_binary(&query_total_percentage_fees(deps, module_name)?)
-        }
-        QueryMsg::TotalFixedFees { module_name } => {
-            to_binary(&query_total_fixed_fees(deps, module_name)?)
-        }
-        QueryMsg::Modules {
-            fee_type,
-            // start_after,
+        QueryMsg::TotalPercentageFees {
+            module_name,
+            start_after,
             limit,
-        } => to_binary(&query_modules(deps, fee_type, limit)?),
+        } => to_binary(&query_total_percentage_fees(
+            deps,
+            module_name,
+            start_after,
+            limit,
+        )?),
+        QueryMsg::TotalFixedFees {
+            module_name,
+            start_after,
+            limit,
+        } => to_binary(&query_total_fixed_fees(
+            deps,
+            module_name,
+            start_after,
+            limit,
+        )?),
+        QueryMsg::Keys {
+            fee_type,
+            start_after,
+            limit,
+        } => to_binary(&query_keys(deps, fee_type, start_after, limit)?),
     }
 }
 
@@ -506,47 +521,60 @@ fn query_fixed_fees(
 fn query_total_percentage_fees(
     deps: Deps,
     module_name: String,
+    start_after: Option<String>,
+    limit: Option<u32>,
 ) -> StdResult<ResponseWrapper<Decimal>> {
-    // TODO: Add filters
+    let limit = limit.unwrap_or(30) as usize;
+    let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
+
     let total_percentage = PERCENTAGE_FEES
         .prefix(&module_name)
-        .range(deps.storage, None, None, Order::Ascending)
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
         .map(|item| {
             let (_, percentage_payment) = item.unwrap();
             percentage_payment.value
         })
         .sum::<Decimal>();
+
     Ok(ResponseWrapper {
         query: "total_percentage_fees".to_string(),
         data: total_percentage,
     })
 }
 
-fn query_total_fixed_fees(deps: Deps, module_name: String) -> StdResult<ResponseWrapper<Uint128>> {
-    // TODO: Add filters
+fn query_total_fixed_fees(
+    deps: Deps,
+    module_name: String,
+    start_after: Option<String>,
+    limit: Option<u32>,
+) -> StdResult<ResponseWrapper<Uint128>> {
+    let limit = limit.unwrap_or(30) as usize;
+    let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
+
     let total_fixed = FIXED_FEES
         .prefix(&module_name)
-        .range(deps.storage, None, None, Order::Ascending)
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
         .map(|item| {
             let (_, fixed_payment) = item.unwrap();
             fixed_payment.value
         })
         .sum::<Uint128>();
+
     Ok(ResponseWrapper {
         query: "total_fixed_fees".to_string(),
         data: total_fixed,
     })
 }
 
-fn query_modules(
+fn query_keys(
     deps: Deps,
     fee_type: Fees,
-    // start_after: Option<String>,
+    _start_after: Option<String>,
     limit: Option<u32>,
 ) -> StdResult<ResponseWrapper<Vec<String>>> {
     let limit = limit.unwrap_or(30) as usize;
-    // TODO: This does not work
-    // None for now but needs fixing
     // let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
     let modules = match fee_type {

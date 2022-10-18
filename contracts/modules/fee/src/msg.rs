@@ -56,13 +56,21 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     #[returns(ResponseWrapper<Decimal>)]
-    TotalPercentageFees { module_name: String },
+    TotalPercentageFees {
+        module_name: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
     #[returns(ResponseWrapper<Uint128>)]
-    TotalFixedFees { module_name: String },
+    TotalFixedFees {
+        module_name: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
     #[returns(ResponseWrapper<Vec<String>>)]
-    Modules {
+    Keys {
         fee_type: Fees,
-        // start_after: Option<String>,
+        start_after: Option<String>,
         limit: Option<u32>,
     },
 }

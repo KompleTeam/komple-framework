@@ -39,6 +39,8 @@ impl KompleFeeModule {
     ) -> StdResult<Decimal> {
         let msg = QueryMsg::TotalPercentageFees {
             module_name: module_name.to_string(),
+            start_after: None,
+            limit: None,
         };
         let res: ResponseWrapper<Decimal> =
             querier.query_wasm_smart(self.addr().to_string(), &msg)?;
@@ -52,6 +54,8 @@ impl KompleFeeModule {
     ) -> StdResult<Uint128> {
         let msg = QueryMsg::TotalFixedFees {
             module_name: module_name.to_string(),
+            start_after: None,
+            limit: None,
         };
         let res: ResponseWrapper<Uint128> =
             querier.query_wasm_smart(self.addr().to_string(), &msg)?;

@@ -13,15 +13,13 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
-// This is used for percentage fees meaning we have decimals
+// This is used for percentage fees meaning we have decimals as values
 // (module_name, fee_name) -> decimal
-// (hub_module, creation_fee) -> 0.1 (%10)
 pub const PERCENTAGE_FEES: Map<(&str, &str), PercentagePayment> =
     Map::new(PERCENTAGE_FEES_NAMESPACE);
 
-// This is used for fixed fees meaning constant values
-// (module_name, fee_name) -> constant value
-// (hub_module, creation_fee) -> 1_000_000 utoken
+// This is used for fixed fees meaning we have integers as values
+// (module_name, fee_name) -> integer value
 pub const FIXED_FEES: Map<(&str, &str), FixedPayment> = Map::new(FIXED_FEES_NAMESPACE);
 
 pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);

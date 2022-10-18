@@ -983,6 +983,8 @@ mod queries {
 
             let msg = QueryMsg::TotalPercentageFees {
                 module_name: Modules::Marketplace.to_string(),
+                start_after: None,
+                limit: None,
             };
             let res: ResponseWrapper<Decimal> = app.wrap().query_wasm_smart(addr, &msg).unwrap();
             assert_eq!(res.data, Decimal::from_str("0.09").unwrap());
@@ -1032,6 +1034,8 @@ mod queries {
 
             let msg = QueryMsg::TotalFixedFees {
                 module_name: Modules::Hub.to_string(),
+                start_after: None,
+                limit: None,
             };
             let res: ResponseWrapper<Uint128> = app.wrap().query_wasm_smart(addr, &msg).unwrap();
             assert_eq!(res.data, Uint128::new(1_750_000));
@@ -1082,6 +1086,18 @@ mod queries {
                 })
                 .unwrap(),
             );
+            setup_fee(
+                &mut app,
+                addr.clone(),
+                Fees::Percentage,
+                Modules::Marketplace.as_str(),
+                "test",
+                to_binary(&PercentagePayment {
+                    value: Decimal::from_str("0.1").unwrap(),
+                    address: Some("test".to_string()),
+                })
+                .unwrap(),
+            );
 
             let msg = QueryMsg::PercentageFees {
                 module_name: Modules::Marketplace.to_string(),
@@ -1089,14 +1105,41 @@ mod queries {
                 limit: None,
             };
             let res: ResponseWrapper<Vec<PercentageFeeResponse>> =
-                app.wrap().query_wasm_smart(addr, &msg).unwrap();
-            assert_eq!(res.data.len(), 3);
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
+            assert_eq!(res.data.len(), 4);
             assert_eq!(res.data[0].fee_name, "community");
             assert_eq!(res.data[0].address, Some(COMMUNITY.to_string()));
             assert_eq!(res.data[0].value, Decimal::from_str("0.02").unwrap());
             assert_eq!(res.data[2].fee_name, "payment");
             assert_eq!(res.data[2].address, Some(PAYMENT.to_string()));
             assert_eq!(res.data[2].value, Decimal::from_str("0.03").unwrap());
+
+            let msg = QueryMsg::PercentageFees {
+                module_name: Modules::Marketplace.to_string(),
+                start_after: Some("community".to_string()),
+                limit: None,
+            };
+            let res: ResponseWrapper<Vec<PercentageFeeResponse>> =
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
+            assert_eq!(res.data.len(), 3);
+            assert_eq!(res.data[0].fee_name, "komple");
+            assert_eq!(res.data[0].address, Some(KOMPLE.to_string()));
+            assert_eq!(res.data[0].value, Decimal::from_str("0.04").unwrap());
+            assert_eq!(res.data[1].fee_name, "payment");
+            assert_eq!(res.data[1].address, Some(PAYMENT.to_string()));
+            assert_eq!(res.data[1].value, Decimal::from_str("0.03").unwrap());
+
+            let msg = QueryMsg::PercentageFees {
+                module_name: Modules::Marketplace.to_string(),
+                start_after: Some("komple".to_string()),
+                limit: Some(1),
+            };
+            let res: ResponseWrapper<Vec<PercentageFeeResponse>> =
+                app.wrap().query_wasm_smart(addr, &msg).unwrap();
+            assert_eq!(res.data.len(), 1);
+            assert_eq!(res.data[0].fee_name, "payment");
+            assert_eq!(res.data[0].address, Some(PAYMENT.to_string()));
+            assert_eq!(res.data[0].value, Decimal::from_str("0.03").unwrap());
         }
 
         #[test]
@@ -1214,6 +1257,18 @@ mod queries {
                 })
                 .unwrap(),
             );
+            setup_fee(
+                &mut app,
+                addr.clone(),
+                Fees::Fixed,
+                Modules::Hub.as_str(),
+                "test",
+                to_binary(&FixedPayment {
+                    value: Uint128::new(100_000),
+                    address: Some("test".to_string()),
+                })
+                .unwrap(),
+            );
 
             let msg = QueryMsg::FixedFees {
                 module_name: Modules::Hub.to_string(),
@@ -1221,14 +1276,41 @@ mod queries {
                 limit: None,
             };
             let res: ResponseWrapper<Vec<FixedFeeResponse>> =
-                app.wrap().query_wasm_smart(addr, &msg).unwrap();
-            assert_eq!(res.data.len(), 3);
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
+            assert_eq!(res.data.len(), 4);
             assert_eq!(res.data[0].fee_name, "creation");
             assert_eq!(res.data[0].address, Some(COMMUNITY.to_string()));
             assert_eq!(res.data[0].value, Uint128::new(1_000_000));
             assert_eq!(res.data[2].fee_name, "random");
             assert_eq!(res.data[2].address, Some(PAYMENT.to_string()));
             assert_eq!(res.data[2].value, Uint128::new(250_000));
+
+            let msg = QueryMsg::FixedFees {
+                module_name: Modules::Hub.to_string(),
+                start_after: Some("creation".to_string()),
+                limit: None,
+            };
+            let res: ResponseWrapper<Vec<FixedFeeResponse>> =
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
+            assert_eq!(res.data.len(), 3);
+            assert_eq!(res.data[0].fee_name, "module_register");
+            assert_eq!(res.data[0].address, Some(COMMUNITY.to_string()));
+            assert_eq!(res.data[0].value, Uint128::new(500_000));
+            assert_eq!(res.data[2].fee_name, "test");
+            assert_eq!(res.data[2].address, Some("test".to_string()));
+            assert_eq!(res.data[2].value, Uint128::new(100_000));
+
+            let msg = QueryMsg::FixedFees {
+                module_name: Modules::Hub.to_string(),
+                start_after: Some("module_register".to_string()),
+                limit: Some(1),
+            };
+            let res: ResponseWrapper<Vec<FixedFeeResponse>> =
+                app.wrap().query_wasm_smart(addr, &msg).unwrap();
+            assert_eq!(res.data.len(), 1);
+            assert_eq!(res.data[0].fee_name, "random");
+            assert_eq!(res.data[0].address, Some(PAYMENT.to_string()));
+            assert_eq!(res.data[0].value, Uint128::new(250_000));
         }
 
         #[test]
@@ -1302,7 +1384,7 @@ mod queries {
         }
     }
 
-    mod all_modules {
+    mod all_keys {
         use super::*;
 
         mod percentage {
@@ -1315,6 +1397,8 @@ mod queries {
 
                 let msg = QueryMsg::TotalPercentageFees {
                     module_name: Modules::Marketplace.to_string(),
+                    start_after: None,
+                    limit: None,
                 };
                 let res: ResponseWrapper<Decimal> =
                     app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
@@ -1357,9 +1441,9 @@ mod queries {
                     .unwrap(),
                 );
 
-                let msg = QueryMsg::Modules {
+                let msg = QueryMsg::Keys {
                     fee_type: Fees::Percentage,
-                    // start_after: None,
+                    start_after: None,
                     limit: None,
                 };
                 let res: ResponseWrapper<Vec<String>> =
@@ -1412,9 +1496,9 @@ mod queries {
                     .unwrap(),
                 );
 
-                let msg = QueryMsg::Modules {
+                let msg = QueryMsg::Keys {
                     fee_type: Fees::Percentage,
-                    // start_after: Some("marketplace".to_string()),
+                    start_after: Some("marketplace".to_string()),
                     limit: Some(2),
                 };
                 let res: ResponseWrapper<Vec<String>> =
@@ -1435,6 +1519,8 @@ mod queries {
 
                 let msg = QueryMsg::TotalFixedFees {
                     module_name: Modules::Marketplace.to_string(),
+                    start_after: None,
+                    limit: None,
                 };
                 let res: ResponseWrapper<Uint128> =
                     app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
@@ -1477,9 +1563,9 @@ mod queries {
                     .unwrap(),
                 );
 
-                let msg = QueryMsg::Modules {
+                let msg = QueryMsg::Keys {
                     fee_type: Fees::Fixed,
-                    // start_after: None,
+                    start_after: None,
                     limit: None,
                 };
                 let res: ResponseWrapper<Vec<String>> =
@@ -1532,9 +1618,9 @@ mod queries {
                     .unwrap(),
                 );
 
-                let msg = QueryMsg::Modules {
+                let msg = QueryMsg::Keys {
                     fee_type: Fees::Fixed,
-                    // start_after: Some("marketplace".to_string()),
+                    start_after: Some("marketplace".to_string()),
                     limit: Some(2),
                 };
                 let res: ResponseWrapper<Vec<String>> =
