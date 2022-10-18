@@ -10,7 +10,7 @@ use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
 use komple_mint_module::state::CollectionInfo;
 use komple_ownership_permission_module::msg::{
-    InstantiateMsg as OwnershipModuleInstantiateMsg, OwnershipMsg,
+    ExecuteMsg, InstantiateMsg as OwnershipModuleInstantiateMsg, OwnershipMsg,
 };
 use komple_permission_module::msg::{
     ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionInstantiateMsg,
@@ -383,10 +383,13 @@ fn test_permission_check() {
         module: Modules::Mint.to_string(),
         msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Ownership.to_string(),
-            data: to_binary(&OwnershipMsg {
-                collection_id: 1,
-                token_id: 1,
-                address: USER.to_string(),
+            data: to_binary(&ExecuteMsg::Check {
+                data: to_binary(&[OwnershipMsg {
+                    collection_id: 1,
+                    token_id: 1,
+                    address: USER.to_string(),
+                }])
+                .unwrap(),
             })
             .unwrap(),
         }])

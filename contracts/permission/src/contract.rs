@@ -213,7 +213,7 @@ fn execute_check(
     module: String,
     msg: Binary,
 ) -> Result<Response, ContractError> {
-    let mut msgs: Vec<CosmosMsg> = vec![];
+    let mut msgs: Vec<WasmMsg> = vec![];
 
     let data: Vec<PermissionCheckMsg> = from_binary(&msg)?;
     if data.is_empty() {
@@ -233,11 +233,11 @@ fn execute_check(
             return Err(ContractError::InvalidPermissions {});
         }
         let addr = PERMISSIONS.load(deps.storage, &permission.permission_type)?;
-        let permission_msg: CosmosMsg<Empty> = CosmosMsg::Wasm(WasmMsg::Execute {
+        let permission_msg = WasmMsg::Execute {
             contract_addr: addr.to_string(),
             msg: permission.data,
             funds: vec![],
-        });
+        };
         msgs.push(permission_msg);
 
         event_attributes.push(Attribute {
@@ -246,7 +246,7 @@ fn execute_check(
         });
     }
 
-    Ok(Response::new().add_event(
+    Ok(Response::new().add_messages(msgs).add_event(
         EventHelper::new("komple_permission_module")
             .add_attribute("action", "check")
             .add_attribute("module", module)
