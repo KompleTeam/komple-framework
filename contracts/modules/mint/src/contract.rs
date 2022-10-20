@@ -108,19 +108,12 @@ pub fn execute(
             collection_id,
             recipient,
             metadata_id,
-        } => execute_mint_to(deps, env, info, collection_id, recipient, metadata_id),
+        } => execute_admin_mint(deps, env, info, collection_id, recipient, metadata_id),
         ExecuteMsg::PermissionMint {
             permission_msg,
-            collection_ids,
-            metadata_ids,
-        } => execute_permission_mint(
-            deps,
-            env,
-            info,
-            permission_msg,
-            collection_ids,
-            metadata_ids,
-        ),
+            collection_id,
+            metadata_id,
+        } => execute_permission_mint(deps, env, info, permission_msg, collection_id, metadata_id),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::UpdateLinkedCollections {
             collection_id,
@@ -433,7 +426,7 @@ fn execute_mint(
     _execute_mint(deps, "execute_mint", msgs, mint_msg)
 }
 
-fn execute_mint_to(
+fn execute_admin_mint(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -470,44 +463,46 @@ fn execute_permission_mint(
     env: Env,
     info: MessageInfo,
     permission_msg: Binary,
-    collection_ids: Vec<u32>,
-    metadata_ids: Option<Vec<u32>>,
+    collection_id: u32,
+    metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let permission_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
 
-    let mut msgs: Vec<CosmosMsg> = vec![];
+    let mut msgs: Vec<WasmMsg> = vec![];
 
     let permission_msg = PermissionExecuteMsg::Check {
         module: Modules::Mint.to_string(),
         msg: permission_msg,
     };
-    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+    msgs.push(WasmMsg::Execute {
         contract_addr: permission_module_addr.to_string(),
         msg: to_binary(&permission_msg)?,
         funds: info.funds.clone(),
-    }));
+    });
 
-    if metadata_ids.is_some() && metadata_ids.as_ref().unwrap().len() != collection_ids.len() {
-        return Err(ContractError::InvalidMetadataIds {});
-    }
+    msgs.push(WasmMsg::Execute {
+        contract_addr: env.contract.address.to_string(),
+        msg: to_binary(&ExecuteMsg::AdminMint {
+            collection_id,
+            recipient: info.sender.to_string(),
+            metadata_id,
+        })?,
+        funds: info.funds.clone(),
+    });
 
-    for (index, collection_id) in collection_ids.iter().enumerate() {
-        msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: env.contract.address.to_string(),
-            msg: to_binary(&ExecuteMsg::AdminMint {
-                collection_id: *collection_id,
-                recipient: info.sender.to_string(),
-                metadata_id: metadata_ids.as_ref().map(|ids| ids[index]),
-            })?,
-            funds: info.funds.clone(),
-        }))
-    }
-
-    Ok(Response::new()
-        .add_messages(msgs)
-        .add_attribute("action", "execute_permission_mint"))
+    Ok(Response::new().add_messages(msgs).add_event(
+        EventHelper::new("komple_mint_module")
+            .add_attribute("action", "permission_mint")
+            .add_attribute("collection_id", collection_id.to_string())
+            .check_add_attribute(
+                &metadata_id,
+                "metadata_id",
+                metadata_id.as_ref().unwrap_or(&0).to_string(),
+            )
+            .get(),
+    ))
 }
 
 fn _execute_mint(

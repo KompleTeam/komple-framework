@@ -944,7 +944,13 @@ mod permission_merge {
                 .unwrap_err();
             // Three errors because we have merge -> permission -> link permission
             assert_eq!(
-                err.source().unwrap().source().unwrap().source().unwrap().to_string(),
+                err.source()
+                    .unwrap()
+                    .source()
+                    .unwrap()
+                    .source()
+                    .unwrap()
+                    .to_string(),
                 LinkPermissionError::LinkedCollectionNotFound {}.to_string()
             );
 

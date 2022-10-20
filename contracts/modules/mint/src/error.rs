@@ -22,9 +22,6 @@ pub enum ContractError {
     #[error("Collection ID not found")]
     CollectionIdNotFound {},
 
-    #[error("Invalid metadata IDs")]
-    InvalidMetadataIds {},
-
     #[error("Collection cannot be linked to itself")]
     SelfLinkedCollection {},
 

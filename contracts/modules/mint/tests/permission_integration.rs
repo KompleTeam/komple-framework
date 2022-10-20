@@ -402,11 +402,10 @@ mod permission_mint {
             .unwrap(),
         }])
         .unwrap();
-        let collection_ids = vec![2];
         let msg = MintExecuteMsg::PermissionMint {
             permission_msg,
-            collection_ids,
-            metadata_ids: None,
+            collection_id: 2,
+            metadata_id: None,
         };
         let _ = app
             .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])

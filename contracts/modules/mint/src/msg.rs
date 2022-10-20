@@ -39,8 +39,8 @@ pub enum ExecuteMsg {
     },
     PermissionMint {
         permission_msg: Binary,
-        collection_ids: Vec<u32>,
-        metadata_ids: Option<Vec<u32>>,
+        collection_id: u32,
+        metadata_id: Option<u32>,
     },
     UpdateOperators {
         addrs: Vec<String>,
