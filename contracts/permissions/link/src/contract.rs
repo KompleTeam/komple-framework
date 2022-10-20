@@ -1,15 +1,18 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Addr, from_binary};
+use cosmwasm_std::{
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 use cw2::set_contract_version;
 use komple_types::module::Modules;
+use komple_types::permission::LinkPermissionMsg;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::HUB_ADDR_NAMESPACE;
 use komple_utils::event::EventHelper;
 use komple_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, LinkMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
@@ -24,11 +27,9 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    
+
     let admin = deps.api.addr_validate(&msg.admin)?;
-    let config = Config {
-        admin
-    };
+    let config = Config { admin };
     CONFIG.save(deps.storage, &config)?;
 
     PERMISSION_MODULE_ADDR.save(deps.storage, &info.sender)?;
@@ -66,7 +67,7 @@ pub fn execute_check(
     let mint_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr.unwrap(), Modules::Mint)?;
 
-    let msgs: Vec<LinkMsg> = from_binary(&data)?;
+    let msgs: Vec<LinkPermissionMsg> = from_binary(&data)?;
 
     for msg in msgs {
         if msg.collection_ids.is_empty() {
@@ -74,10 +75,14 @@ pub fn execute_check(
         };
 
         // Get the linked collections
-        let linked_collections = StorageHelper::query_linked_collections(&deps.querier, &mint_module_addr, msg.collection_id)?;
+        let linked_collections = StorageHelper::query_linked_collections(
+            &deps.querier,
+            &mint_module_addr,
+            msg.collection_id,
+        )?;
         for collection_id in linked_collections {
             if !msg.collection_ids.contains(&collection_id) {
-                return Err(ContractError::LinkedCollectionNotFound {  });
+                return Err(ContractError::LinkedCollectionNotFound {});
             }
         }
     }

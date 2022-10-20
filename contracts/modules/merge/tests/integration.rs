@@ -6,6 +6,10 @@ use komple_hub_module::{
     msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg},
     state::HubInfo,
 };
+use komple_link_permission_module::msg::{
+    ExecuteMsg as LinkPermissionModuleExecuteMsg,
+    InstantiateMsg as LinkPermissionModuleInstantiateMsg,
+};
 use komple_merge_module::msg::{
     ExecuteMsg as MergeModuleExecuteMsg, InstantiateMsg as MergeModuleInstantiateMsg, MergeBurnMsg,
     MergeMsg,
@@ -102,6 +106,15 @@ pub fn ownership_permission_module() -> Box<dyn Contract<Empty>> {
         komple_ownership_permission_module::contract::execute,
         komple_ownership_permission_module::contract::instantiate,
         komple_ownership_permission_module::contract::query,
+    );
+    Box::new(contract)
+}
+
+pub fn link_permission_module() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        komple_link_permission_module::contract::execute,
+        komple_link_permission_module::contract::instantiate,
+        komple_link_permission_module::contract::query,
     );
     Box::new(contract)
 }
@@ -333,24 +346,6 @@ pub fn setup_mint_module_operators(app: &mut App, mint_module_addr: Addr, addrs:
         .unwrap();
 }
 
-pub fn setup_ownership_permission_module(app: &mut App) -> Addr {
-    let ownership_permission_code_id = app.store_code(ownership_permission_module());
-
-    let msg = OwnershipModuleInstantiateMsg {
-        admin: ADMIN.to_string(),
-    };
-
-    app.instantiate_contract(
-        ownership_permission_code_id,
-        Addr::unchecked(ADMIN),
-        &msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
-}
-
 pub fn setup_module_permissions(
     app: &mut App,
     permission_module_addr: &Addr,
@@ -360,27 +355,6 @@ pub fn setup_module_permissions(
     let msg = PermissionModuleExecuteMsg::UpdateModulePermissions {
         module,
         permissions,
-    };
-    let _ = app
-        .execute_contract(
-            Addr::unchecked(ADMIN),
-            permission_module_addr.clone(),
-            &msg,
-            &[],
-        )
-        .unwrap();
-}
-
-pub fn register_permission(app: &mut App, permission_module_addr: &Addr) {
-    let ownership_permission_code_id = app.store_code(ownership_permission_module());
-
-    let msg = PermissionModuleExecuteMsg::RegisterPermission {
-        permission: Permissions::Ownership.to_string(),
-        msg: to_binary(&OwnershipModuleInstantiateMsg {
-            admin: ADMIN.to_string(),
-        })
-        .unwrap(),
-        code_id: ownership_permission_code_id,
     };
     let _ = app
         .execute_contract(
@@ -510,8 +484,8 @@ mod normal_merge {
         give_approval_to_module(&mut app, collection_3_addr, USER, &merge_module_addr);
 
         let merge_msg = MergeMsg {
-            mint: vec![2],
-            burn: vec![
+            mint_id: 2,
+            burn_ids: vec![
                 MergeBurnMsg {
                     collection_id: 1,
                     token_id: 1,
@@ -525,7 +499,7 @@ mod normal_merge {
                     token_id: 1,
                 },
             ],
-            metadata_ids: None,
+            metadata_id: None,
         };
         let msg = MergeModuleExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
@@ -599,9 +573,9 @@ mod normal_merge {
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
         let merge_msg = MergeMsg {
-            mint: vec![2],
-            burn: vec![],
-            metadata_ids: None,
+            mint_id: 2,
+            burn_ids: vec![],
+            metadata_id: None,
         };
         let msg = MergeModuleExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
@@ -615,31 +589,12 @@ mod normal_merge {
         );
 
         let merge_msg = MergeMsg {
-            mint: vec![3],
-            burn: vec![MergeBurnMsg {
+            mint_id: 2,
+            burn_ids: vec![MergeBurnMsg {
                 collection_id: 1,
                 token_id: 1,
             }],
-            metadata_ids: None,
-        };
-        let msg = MergeModuleExecuteMsg::Merge {
-            msg: to_binary(&merge_msg).unwrap(),
-        };
-        let err = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
-            .unwrap_err();
-        assert_eq!(
-            err.source().unwrap().to_string(),
-            MergeContractError::LinkedCollectionNotFound {}.to_string()
-        );
-
-        let merge_msg = MergeMsg {
-            mint: vec![2],
-            burn: vec![MergeBurnMsg {
-                collection_id: 1,
-                token_id: 1,
-            }],
-            metadata_ids: None,
+            metadata_id: None,
         };
         let msg = MergeModuleExecuteMsg::Merge {
             msg: to_binary(&merge_msg).unwrap(),
@@ -752,8 +707,25 @@ mod permission_merge {
                 StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3)
                     .unwrap();
             give_approval_to_module(&mut app, collection_3_addr, USER, &merge_module_addr);
-            setup_ownership_permission_module(&mut app);
-            register_permission(&mut app, &permission_module_addr);
+
+            let ownership_permission_code_id = app.store_code(ownership_permission_module());
+            let msg = PermissionModuleExecuteMsg::RegisterPermission {
+                permission: Permissions::Ownership.to_string(),
+                msg: to_binary(&OwnershipModuleInstantiateMsg {
+                    admin: ADMIN.to_string(),
+                })
+                .unwrap(),
+                code_id: ownership_permission_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
             setup_module_permissions(
                 &mut app,
                 &permission_module_addr,
@@ -782,8 +754,8 @@ mod permission_merge {
             }])
             .unwrap();
             let merge_msg = to_binary(&MergeMsg {
-                mint: vec![2],
-                burn: vec![
+                mint_id: 2,
+                burn_ids: vec![
                     MergeBurnMsg {
                         collection_id: 1,
                         token_id: 1,
@@ -797,7 +769,7 @@ mod permission_merge {
                         token_id: 1,
                     },
                 ],
-                metadata_ids: None,
+                metadata_id: None,
             })
             .unwrap();
             let msg = MergeModuleExecuteMsg::PermissionMerge {
@@ -835,6 +807,193 @@ mod permission_merge {
             let res: OwnerOfResponse = app
                 .wrap()
                 .query_wasm_smart(collection_2_addr, &msg)
+                .unwrap();
+            assert_eq!(res.owner, USER);
+        }
+    }
+
+    mod link_permission {
+        use komple_link_permission_module::ContractError as LinkPermissionError;
+        use komple_permission_module::msg::PermissionCheckMsg;
+        use komple_types::permission::LinkPermissionMsg;
+
+        use super::*;
+
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let hub_addr = proper_instantiate(&mut app);
+
+            setup_all_modules(&mut app, hub_addr.clone());
+
+            let mint_module_addr =
+                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
+            let merge_module_addr =
+                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge)
+                    .unwrap();
+            let permission_module_addr =
+                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Permission)
+                    .unwrap();
+
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_module_code_id,
+                None,
+            );
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_module_code_id,
+                None,
+            );
+            create_collection(
+                &mut app,
+                mint_module_addr.clone(),
+                token_module_code_id,
+                Some(vec![1, 2]),
+            );
+
+            mint_token(&mut app, mint_module_addr.clone(), 1, USER);
+            mint_token(&mut app, mint_module_addr.clone(), 2, USER);
+
+            setup_mint_module_operators(
+                &mut app,
+                mint_module_addr.clone(),
+                vec![merge_module_addr.to_string()],
+            );
+
+            let collection_1_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            give_approval_to_module(
+                &mut app,
+                collection_1_addr.clone(),
+                USER,
+                &merge_module_addr,
+            );
+            let collection_2_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &2)
+                    .unwrap();
+            give_approval_to_module(
+                &mut app,
+                collection_2_addr.clone(),
+                USER,
+                &merge_module_addr,
+            );
+
+            let link_permission_code_id = app.store_code(link_permission_module());
+            let msg = PermissionModuleExecuteMsg::RegisterPermission {
+                permission: Permissions::Link.to_string(),
+                msg: to_binary(&LinkPermissionModuleInstantiateMsg {
+                    admin: ADMIN.to_string(),
+                })
+                .unwrap(),
+                code_id: link_permission_code_id,
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Merge.to_string(),
+                vec![Permissions::Link.to_string()],
+            );
+
+            let permission_msg = to_binary(&vec![PermissionCheckMsg {
+                permission_type: Permissions::Link.to_string(),
+                data: to_binary(&LinkPermissionModuleExecuteMsg::Check {
+                    data: to_binary(&vec![LinkPermissionMsg {
+                        collection_id: 3,
+                        collection_ids: vec![1],
+                    }])
+                    .unwrap(),
+                })
+                .unwrap(),
+            }])
+            .unwrap();
+            let merge_msg = to_binary(&MergeMsg {
+                mint_id: 3,
+                burn_ids: vec![
+                    MergeBurnMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                    },
+                    MergeBurnMsg {
+                        collection_id: 2,
+                        token_id: 1,
+                    },
+                ],
+                metadata_id: None,
+            })
+            .unwrap();
+            let msg = MergeModuleExecuteMsg::PermissionMerge {
+                permission_msg,
+                merge_msg: merge_msg.clone(),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
+                .unwrap_err();
+            // Three errors because we have merge -> permission -> link permission
+            assert_eq!(
+                err.source().unwrap().source().unwrap().source().unwrap().to_string(),
+                LinkPermissionError::LinkedCollectionNotFound {}.to_string()
+            );
+
+            let permission_msg = to_binary(&vec![PermissionCheckMsg {
+                permission_type: Permissions::Link.to_string(),
+                data: to_binary(&LinkPermissionModuleExecuteMsg::Check {
+                    data: to_binary(&vec![LinkPermissionMsg {
+                        collection_id: 3,
+                        collection_ids: vec![1, 2],
+                    }])
+                    .unwrap(),
+                })
+                .unwrap(),
+            }])
+            .unwrap();
+            let msg = MergeModuleExecuteMsg::PermissionMerge {
+                permission_msg,
+                merge_msg,
+            };
+            app.execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
+                .unwrap();
+
+            let msg: Cw721QueryMsg<TokenModuleQueryMsg> = Cw721QueryMsg::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            };
+            let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
+                app.wrap().query_wasm_smart(collection_1_addr.clone(), &msg);
+            assert!(res.is_err());
+
+            let msg: Cw721QueryMsg<TokenModuleQueryMsg> = Cw721QueryMsg::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            };
+            let res: Result<OwnerOfResponse, cosmwasm_std::StdError> =
+                app.wrap().query_wasm_smart(collection_2_addr, &msg);
+            assert!(res.is_err());
+
+            let collection_3_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &3)
+                    .unwrap();
+
+            let msg: Cw721QueryMsg<TokenModuleQueryMsg> = Cw721QueryMsg::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            };
+            let res: OwnerOfResponse = app
+                .wrap()
+                .query_wasm_smart(collection_3_addr, &msg)
                 .unwrap();
             assert_eq!(res.owner, USER);
         }

@@ -52,6 +52,12 @@ impl AttributeConditions {
     }
 }
 
+#[cw_serde]
+pub struct LinkPermissionMsg {
+    pub collection_id: u32,
+    pub collection_ids: Vec<u32>,
+}
+
 pub const MODULE_PERMISSIONS_NAMESPACE: &str = "module_permissions";
 
 pub const PERMISSION_MODULE_ADDR_NAMESPACE: &str = "permission_module_addr";

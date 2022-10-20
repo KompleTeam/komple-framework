@@ -1,11 +1,11 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cw_storage_plus::Item;
-use komple_types::{shared::CONFIG_NAMESPACE, permission::PERMISSION_MODULE_ADDR_NAMESPACE};
+use komple_types::{permission::PERMISSION_MODULE_ADDR_NAMESPACE, shared::CONFIG_NAMESPACE};
 
 #[cw_serde]
 pub struct Config {
-    pub admin: Addr
+    pub admin: Addr,
 }
 
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);

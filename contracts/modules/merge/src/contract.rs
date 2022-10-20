@@ -16,7 +16,6 @@ use komple_types::query::ResponseWrapper;
 use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
-use std::collections::HashMap;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
@@ -125,6 +124,8 @@ fn execute_permission_merge(
     permission_msg: Binary,
     merge_msg: Binary,
 ) -> Result<Response, ContractError> {
+    // TODO: Should only be callable by admin
+
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let permission_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
@@ -210,33 +211,32 @@ fn make_merge_msg(
     let mint_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
 
-    // MergeMsg contains mint, burn and metadata infos
+    // MergeMsg contains mint_id, burn_ids and metadata_id
     let merge_msg: MergeMsg = from_binary(&msg)?;
 
     // Throw an error if there are no burn messages
-    if merge_msg.burn.is_empty() {
+    if merge_msg.burn_ids.is_empty() {
         return Err(ContractError::BurnNotFound {});
     }
 
-    // Metadata length should be the same as mint messages
-    if merge_msg.metadata_ids.is_some()
-        && merge_msg.metadata_ids.as_ref().unwrap().len() != merge_msg.mint.len()
-    {
-        return Err(ContractError::InvalidMetadataIds {});
-    }
-
-    // Pushes the burn messages inside msgs list
+    // Pushes the burn_ids inside msgs list
     make_burn_messages(deps, event_attributes, &mint_module_addr, &merge_msg, msgs)?;
 
-    // Pushes the mint messages inside msgs list
-    make_mint_messages(
-        deps,
-        info,
-        event_attributes,
-        &mint_module_addr,
-        &merge_msg,
-        msgs,
+    let msg = KompleMintModule(mint_module_addr).mint_to_msg(
+        info.sender.to_string(),
+        merge_msg.mint_id,
+        merge_msg.metadata_id,
+        info.funds.clone(),
     )?;
+    msgs.push(msg);
+
+    event_attributes.push(Attribute::new("mint_id", merge_msg.mint_id.to_string()));
+    if merge_msg.metadata_id.is_some() {
+        event_attributes.push(Attribute::new(
+            "metadata_id",
+            merge_msg.metadata_id.as_ref().unwrap().to_string(),
+        ));
+    }
 
     Ok(())
 }
@@ -248,7 +248,7 @@ fn make_burn_messages(
     merge_msg: &MergeMsg,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
-    for (index, burn_msg) in merge_msg.burn.iter().enumerate() {
+    for (index, burn_msg) in merge_msg.burn_ids.iter().enumerate() {
         let collection_addr = StorageHelper::query_collection_address(
             &deps.querier,
             mint_module_addr,
@@ -268,73 +268,6 @@ fn make_burn_messages(
             format!("collection_id/{}", burn_msg.collection_id),
         ));
     }
-    Ok(())
-}
-
-fn make_mint_messages(
-    deps: &DepsMut,
-    info: &MessageInfo,
-    event_attributes: &mut Vec<Attribute>,
-    mint_module_addr: &Addr,
-    merge_msg: &MergeMsg,
-    msgs: &mut Vec<WasmMsg>,
-) -> Result<(), ContractError> {
-    // Keeping the linked collections list inside a hashmap
-    // Used for saving multiple queries on same collection id
-    let mut linked_collection_map: HashMap<u32, Vec<u32>> = HashMap::new();
-
-    for (index, collection_id) in merge_msg.mint.iter().enumerate() {
-        let linked_collections = match linked_collection_map.contains_key(collection_id) {
-            true => linked_collection_map.get(collection_id).unwrap().clone(),
-            false => {
-                let collections = StorageHelper::query_linked_collections(
-                    &deps.querier,
-                    mint_module_addr,
-                    *collection_id,
-                )?;
-                linked_collection_map.insert(*collection_id, collections.clone());
-                collections
-            }
-        };
-
-        // If there are some linked collections
-        // They have to be in the burn message
-        if !linked_collections.is_empty() {
-            for linked_collection_id in linked_collections {
-                if !merge_msg
-                    .burn
-                    .iter()
-                    .map(|m| m.collection_id)
-                    .any(|x| x == linked_collection_id)
-                {
-                    return Err(ContractError::LinkedCollectionNotFound {});
-                }
-            }
-        }
-
-        let metadata_id = merge_msg
-            .metadata_ids
-            .as_ref()
-            .as_ref()
-            .map(|ids| ids[index]);
-
-        let msg = KompleMintModule(mint_module_addr.clone()).mint_to_msg(
-            info.sender.to_string(),
-            *collection_id,
-            metadata_id,
-            info.funds.clone(),
-        )?;
-        msgs.push(msg);
-
-        event_attributes.push(Attribute::new("mint_ids", collection_id.to_string()));
-        if metadata_id.is_some() {
-            event_attributes.push(Attribute::new(
-                "metadata_ids",
-                metadata_id.as_ref().unwrap().to_string(),
-            ));
-        }
-    }
-
     Ok(())
 }
 

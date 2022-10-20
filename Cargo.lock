@@ -601,6 +601,7 @@ dependencies = [
  "cw721",
  "cw721-base",
  "komple-hub-module",
+ "komple-link-permission-module",
  "komple-metadata-module",
  "komple-mint-module",
  "komple-ownership-permission-module",

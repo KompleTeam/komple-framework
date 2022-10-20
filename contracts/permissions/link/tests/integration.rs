@@ -4,13 +4,11 @@ use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_hub_module::state::HubInfo;
+use komple_link_permission_module::msg::{ExecuteMsg, InstantiateMsg as LinkModuleInstantiateMsg};
+use komple_link_permission_module::ContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
 use komple_mint_module::state::CollectionInfo;
-use komple_link_permission_module::msg::{
-    ExecuteMsg, InstantiateMsg as LinkModuleInstantiateMsg, LinkMsg,
-};
-use komple_link_permission_module::ContractError;
 use komple_permission_module::msg::{
     ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionInstantiateMsg,
     PermissionCheckMsg,
@@ -21,7 +19,7 @@ use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
-use komple_types::permission::Permissions;
+use komple_types::permission::{LinkPermissionMsg, Permissions};
 use komple_types::query::ResponseWrapper;
 
 pub const USER: &str = "juno..user";
@@ -183,7 +181,12 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     (mint_res.data, permission_res.data)
 }
 
-pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_code_id: u64, linked_collections: Option<Vec<u32>>) {
+pub fn create_collection(
+    app: &mut App,
+    mint_module_addr: Addr,
+    token_module_code_id: u64,
+    linked_collections: Option<Vec<u32>>,
+) {
     let metadata_code_id = app.store_code(metadata_module());
 
     let collection_info = CollectionInfo {
@@ -358,9 +361,24 @@ fn test_permission_check() {
     let token_module_code_id = app.store_code(token_module());
 
     // Create three collections and link the first two to third
-    create_collection(&mut app, mint_module_addr.clone(), token_module_code_id, None);
-    create_collection(&mut app, mint_module_addr.clone(), token_module_code_id, None);
-    create_collection(&mut app, mint_module_addr.clone(), token_module_code_id, Some(vec![1,2]));
+    create_collection(
+        &mut app,
+        mint_module_addr.clone(),
+        token_module_code_id,
+        None,
+    );
+    create_collection(
+        &mut app,
+        mint_module_addr.clone(),
+        token_module_code_id,
+        None,
+    );
+    create_collection(
+        &mut app,
+        mint_module_addr.clone(),
+        token_module_code_id,
+        Some(vec![1, 2]),
+    );
 
     // Mint two tokens on the first two collections
     mint_token(&mut app, mint_module_addr.clone(), 1, USER);
@@ -380,9 +398,9 @@ fn test_permission_check() {
         msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Link.to_string(),
             data: to_binary(&ExecuteMsg::Check {
-                data: to_binary(&[LinkMsg {
+                data: to_binary(&[LinkPermissionMsg {
                     collection_id: 3,
-                    collection_ids: vec![]
+                    collection_ids: vec![],
                 }])
                 .unwrap(),
             })
@@ -391,18 +409,26 @@ fn test_permission_check() {
         .unwrap(),
     };
     let err = app
-        .execute_contract(Addr::unchecked(ADMIN), permission_module_addr.clone(), &msg, &[])
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            permission_module_addr.clone(),
+            &msg,
+            &[],
+        )
         .unwrap_err();
-    assert_eq!(err.source().unwrap().source().unwrap().to_string(), ContractError::EmptyCollections {  }.to_string());
+    assert_eq!(
+        err.source().unwrap().source().unwrap().to_string(),
+        ContractError::EmptyCollections {}.to_string()
+    );
 
     let msg = PermissionExecuteMsg::Check {
         module: Modules::Merge.to_string(),
         msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Link.to_string(),
             data: to_binary(&ExecuteMsg::Check {
-                data: to_binary(&[LinkMsg {
+                data: to_binary(&[LinkPermissionMsg {
                     collection_id: 3,
-                    collection_ids: vec![1]
+                    collection_ids: vec![1],
                 }])
                 .unwrap(),
             })
@@ -411,18 +437,26 @@ fn test_permission_check() {
         .unwrap(),
     };
     let err = app
-        .execute_contract(Addr::unchecked(ADMIN), permission_module_addr.clone(), &msg, &[])
+        .execute_contract(
+            Addr::unchecked(ADMIN),
+            permission_module_addr.clone(),
+            &msg,
+            &[],
+        )
         .unwrap_err();
-    assert_eq!(err.source().unwrap().source().unwrap().to_string(), ContractError::LinkedCollectionNotFound {  }.to_string());
+    assert_eq!(
+        err.source().unwrap().source().unwrap().to_string(),
+        ContractError::LinkedCollectionNotFound {}.to_string()
+    );
 
     let msg = PermissionExecuteMsg::Check {
         module: Modules::Merge.to_string(),
         msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Link.to_string(),
             data: to_binary(&ExecuteMsg::Check {
-                data: to_binary(&[LinkMsg {
+                data: to_binary(&[LinkPermissionMsg {
                     collection_id: 3,
-                    collection_ids: vec![1,2]
+                    collection_ids: vec![1, 2],
                 }])
                 .unwrap(),
             })
