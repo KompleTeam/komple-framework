@@ -14,11 +14,11 @@ pub enum ExecuteMsg {
         lock: bool,
     },
     Merge {
-        msg: Binary,
+        msg: MergeMsg,
     },
     PermissionMerge {
         permission_msg: Binary,
-        merge_msg: Binary,
+        merge_msg: MergeMsg,
     },
     UpdateOperators {
         addrs: Vec<String>,

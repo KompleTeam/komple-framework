@@ -353,7 +353,7 @@ mod permission_mint {
 
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
-    use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+    use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, MintMsg};
     use komple_ownership_permission_module::msg::OwnershipMsg;
     use komple_permission_module::msg::PermissionCheckMsg;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
@@ -403,10 +403,12 @@ mod permission_mint {
         }])
         .unwrap();
         let msg = MintExecuteMsg::PermissionMint {
-            recipient: USER.to_string(),
+            mint_msg: MintMsg {
+                collection_id: 2,
+                metadata_id: None,
+                recipient: USER.to_string(),
+            },
             permission_msg,
-            collection_id: 2,
-            metadata_id: None,
         };
         let _ = app
             .execute_contract(Addr::unchecked(ADMIN), mint_module_addr.clone(), &msg, &[])

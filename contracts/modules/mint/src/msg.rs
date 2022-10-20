@@ -39,9 +39,7 @@ pub enum ExecuteMsg {
     },
     PermissionMint {
         permission_msg: Binary,
-        collection_id: u32,
-        recipient: String,
-        metadata_id: Option<u32>,
+        mint_msg: MintMsg,
     },
     UpdateOperators {
         addrs: Vec<String>,
@@ -82,7 +80,7 @@ pub enum QueryMsg {
 #[cw_serde]
 pub struct MintMsg {
     pub collection_id: u32,
-    pub owner: String,
+    pub recipient: String,
     pub metadata_id: Option<u32>,
 }
 

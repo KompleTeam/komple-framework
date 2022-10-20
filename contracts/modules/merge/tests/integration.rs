@@ -502,9 +502,7 @@ mod normal_merge {
             ],
             metadata_id: None,
         };
-        let msg = MergeModuleExecuteMsg::Merge {
-            msg: to_binary(&merge_msg).unwrap(),
-        };
+        let msg = MergeModuleExecuteMsg::Merge { msg: merge_msg };
         let _ = app
             .execute_contract(Addr::unchecked(ADMIN), merge_module_addr, &msg, &[])
             .unwrap();
@@ -579,9 +577,7 @@ mod normal_merge {
             burn_ids: vec![],
             metadata_id: None,
         };
-        let msg = MergeModuleExecuteMsg::Merge {
-            msg: to_binary(&merge_msg).unwrap(),
-        };
+        let msg = MergeModuleExecuteMsg::Merge { msg: merge_msg };
         let err = app
             .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
@@ -599,9 +595,7 @@ mod normal_merge {
             }],
             metadata_id: None,
         };
-        let msg = MergeModuleExecuteMsg::Merge {
-            msg: to_binary(&merge_msg).unwrap(),
-        };
+        let msg = MergeModuleExecuteMsg::Merge { msg: merge_msg };
         let err = app
             .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
@@ -756,7 +750,7 @@ mod permission_merge {
                 .unwrap(),
             }])
             .unwrap();
-            let merge_msg = to_binary(&MergeMsg {
+            let merge_msg = MergeMsg {
                 recipient: USER.to_string(),
                 mint_id: 2,
                 burn_ids: vec![
@@ -774,8 +768,7 @@ mod permission_merge {
                     },
                 ],
                 metadata_id: None,
-            })
-            .unwrap();
+            };
             let msg = MergeModuleExecuteMsg::PermissionMerge {
                 permission_msg,
                 merge_msg,
@@ -924,7 +917,7 @@ mod permission_merge {
                 .unwrap(),
             }])
             .unwrap();
-            let merge_msg = to_binary(&MergeMsg {
+            let merge_msg = MergeMsg {
                 recipient: USER.to_string(),
                 mint_id: 3,
                 burn_ids: vec![
@@ -938,8 +931,7 @@ mod permission_merge {
                     },
                 ],
                 metadata_id: None,
-            })
-            .unwrap();
+            };
             let msg = MergeModuleExecuteMsg::PermissionMerge {
                 permission_msg,
                 merge_msg: merge_msg.clone(),

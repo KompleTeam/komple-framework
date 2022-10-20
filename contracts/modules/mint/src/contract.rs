@@ -111,18 +111,8 @@ pub fn execute(
         } => execute_admin_mint(deps, env, info, collection_id, recipient, metadata_id),
         ExecuteMsg::PermissionMint {
             permission_msg,
-            collection_id,
-            recipient,
-            metadata_id,
-        } => execute_permission_mint(
-            deps,
-            env,
-            info,
-            permission_msg,
-            collection_id,
-            recipient,
-            metadata_id,
-        ),
+            mint_msg,
+        } => execute_permission_mint(deps, env, info, permission_msg, mint_msg),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::UpdateLinkedCollections {
             collection_id,
@@ -330,7 +320,7 @@ fn execute_mint(
     let mut msgs: Vec<CosmosMsg> = vec![];
     let mint_msg = vec![MintMsg {
         collection_id,
-        owner: info.sender.to_string(),
+        recipient: info.sender.to_string(),
         metadata_id,
     }];
 
@@ -455,12 +445,12 @@ fn execute_admin_mint(
         operators,
     )?;
 
-    let owner = deps.api.addr_validate(&recipient)?;
+    let recipient = deps.api.addr_validate(&recipient)?;
 
     let msgs: Vec<CosmosMsg> = vec![];
     let mint_msg = vec![MintMsg {
         collection_id,
-        owner: owner.to_string(),
+        recipient: recipient.to_string(),
         metadata_id,
     }];
 
@@ -472,9 +462,7 @@ fn execute_permission_mint(
     env: Env,
     info: MessageInfo,
     permission_msg: Binary,
-    collection_id: u32,
-    recipient: String,
-    metadata_id: Option<u32>,
+    mint_msg: MintMsg,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -508,9 +496,9 @@ fn execute_permission_mint(
     msgs.push(WasmMsg::Execute {
         contract_addr: env.contract.address.to_string(),
         msg: to_binary(&ExecuteMsg::AdminMint {
-            collection_id,
-            recipient,
-            metadata_id,
+            collection_id: mint_msg.collection_id,
+            recipient: mint_msg.recipient,
+            metadata_id: mint_msg.metadata_id,
         })?,
         funds: info.funds.clone(),
     });
@@ -518,11 +506,11 @@ fn execute_permission_mint(
     Ok(Response::new().add_messages(msgs).add_event(
         EventHelper::new("komple_mint_module")
             .add_attribute("action", "permission_mint")
-            .add_attribute("collection_id", collection_id.to_string())
+            .add_attribute("collection_id", mint_msg.collection_id.to_string())
             .check_add_attribute(
-                &metadata_id,
+                &mint_msg.metadata_id,
                 "metadata_id",
-                metadata_id.as_ref().unwrap_or(&0).to_string(),
+                mint_msg.metadata_id.as_ref().unwrap_or(&0).to_string(),
             )
             .get(),
     ))
@@ -549,13 +537,13 @@ fn _execute_mint(
         }
         event_attributes.push(Attribute {
             key: format!("mint_msg_{}", index),
-            value: format!("owner/{}", msg.owner),
+            value: format!("owner/{}", msg.recipient),
         });
 
         let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
 
         let msg =
-            KompleTokenModule(collection_addr).mint_msg(msg.owner.clone(), msg.metadata_id)?;
+            KompleTokenModule(collection_addr).mint_msg(msg.recipient.clone(), msg.metadata_id)?;
         msgs.push(msg.into());
     }
 

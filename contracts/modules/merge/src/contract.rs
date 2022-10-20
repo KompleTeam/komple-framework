@@ -1,11 +1,8 @@
-use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdError, StdResult, WasmMsg,
+    to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use komple_mint_module::helper::KompleMintModule;
@@ -16,6 +13,10 @@ use komple_types::query::ResponseWrapper;
 use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
+
+use crate::error::ContractError;
+use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
+use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
@@ -101,7 +102,7 @@ fn execute_merge(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: Binary,
+    msg: MergeMsg,
 ) -> Result<Response, ContractError> {
     let mut msgs: Vec<WasmMsg> = vec![];
 
@@ -122,7 +123,7 @@ fn execute_permission_merge(
     env: Env,
     info: MessageInfo,
     permission_msg: Binary,
-    merge_msg: Binary,
+    merge_msg: MergeMsg,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -213,15 +214,12 @@ fn make_merge_msg(
     deps: &DepsMut,
     info: &MessageInfo,
     event_attributes: &mut Vec<Attribute>,
-    msg: Binary,
+    merge_msg: MergeMsg,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
-
-    // MergeMsg contains mint_id, burn_ids and metadata_id
-    let merge_msg: MergeMsg = from_binary(&msg)?;
 
     // Throw an error if there are no burn messages
     if merge_msg.burn_ids.is_empty() {
