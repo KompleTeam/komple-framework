@@ -40,6 +40,7 @@ pub enum ExecuteMsg {
     PermissionMint {
         permission_msg: Binary,
         collection_id: u32,
+        recipient: String,
         metadata_id: Option<u32>,
     },
     UpdateOperators {

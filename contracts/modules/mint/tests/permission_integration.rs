@@ -403,12 +403,13 @@ mod permission_mint {
         }])
         .unwrap();
         let msg = MintExecuteMsg::PermissionMint {
+            recipient: USER.to_string(),
             permission_msg,
             collection_id: 2,
             metadata_id: None,
         };
         let _ = app
-            .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
+            .execute_contract(Addr::unchecked(ADMIN), mint_module_addr.clone(), &msg, &[])
             .unwrap();
 
         let collection_2_addr =

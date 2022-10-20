@@ -484,6 +484,7 @@ mod normal_merge {
         give_approval_to_module(&mut app, collection_3_addr, USER, &merge_module_addr);
 
         let merge_msg = MergeMsg {
+            recipient: USER.to_string(),
             mint_id: 2,
             burn_ids: vec![
                 MergeBurnMsg {
@@ -505,7 +506,7 @@ mod normal_merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let _ = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
+            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr, &msg, &[])
             .unwrap();
 
         let msg: Cw721QueryMsg<TokenModuleQueryMsg> = Cw721QueryMsg::OwnerOf {
@@ -573,6 +574,7 @@ mod normal_merge {
         mint_token(&mut app, mint_module_addr.clone(), 1, USER);
 
         let merge_msg = MergeMsg {
+            recipient: USER.to_string(),
             mint_id: 2,
             burn_ids: vec![],
             metadata_id: None,
@@ -581,7 +583,7 @@ mod normal_merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let err = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().to_string(),
@@ -589,6 +591,7 @@ mod normal_merge {
         );
 
         let merge_msg = MergeMsg {
+            recipient: USER.to_string(),
             mint_id: 2,
             burn_ids: vec![MergeBurnMsg {
                 collection_id: 1,
@@ -600,7 +603,7 @@ mod normal_merge {
             msg: to_binary(&merge_msg).unwrap(),
         };
         let err = app
-            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
+            .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
             .unwrap_err();
         assert_eq!(
             err.source().unwrap().source().unwrap().to_string(),
@@ -754,6 +757,7 @@ mod permission_merge {
             }])
             .unwrap();
             let merge_msg = to_binary(&MergeMsg {
+                recipient: USER.to_string(),
                 mint_id: 2,
                 burn_ids: vec![
                     MergeBurnMsg {
@@ -777,7 +781,7 @@ mod permission_merge {
                 merge_msg,
             };
             let _ = app
-                .execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
+                .execute_contract(Addr::unchecked(ADMIN), merge_module_addr, &msg, &[])
                 .unwrap();
 
             let msg: Cw721QueryMsg<TokenModuleQueryMsg> = Cw721QueryMsg::OwnerOf {
@@ -921,6 +925,7 @@ mod permission_merge {
             }])
             .unwrap();
             let merge_msg = to_binary(&MergeMsg {
+                recipient: USER.to_string(),
                 mint_id: 3,
                 burn_ids: vec![
                     MergeBurnMsg {
@@ -940,7 +945,7 @@ mod permission_merge {
                 merge_msg: merge_msg.clone(),
             };
             let err = app
-                .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
+                .execute_contract(Addr::unchecked(ADMIN), merge_module_addr.clone(), &msg, &[])
                 .unwrap_err();
             // Three errors because we have merge -> permission -> link permission
             assert_eq!(
@@ -970,7 +975,7 @@ mod permission_merge {
                 permission_msg,
                 merge_msg,
             };
-            app.execute_contract(Addr::unchecked(USER), merge_module_addr, &msg, &[])
+            app.execute_contract(Addr::unchecked(ADMIN), merge_module_addr, &msg, &[])
                 .unwrap();
 
             let msg: Cw721QueryMsg<TokenModuleQueryMsg> = Cw721QueryMsg::OwnerOf {

@@ -112,8 +112,17 @@ pub fn execute(
         ExecuteMsg::PermissionMint {
             permission_msg,
             collection_id,
+            recipient,
             metadata_id,
-        } => execute_permission_mint(deps, env, info, permission_msg, collection_id, metadata_id),
+        } => execute_permission_mint(
+            deps,
+            env,
+            info,
+            permission_msg,
+            collection_id,
+            recipient,
+            metadata_id,
+        ),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::UpdateLinkedCollections {
             collection_id,
@@ -464,11 +473,25 @@ fn execute_permission_mint(
     info: MessageInfo,
     permission_msg: Binary,
     collection_id: u32,
+    recipient: String,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.load(deps.storage)?;
-    let permission_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr.clone(),
+        operators,
+    )?;
+
+    let permission_module_addr = StorageHelper::query_module_address(
+        &deps.querier,
+        &hub_addr.unwrap(),
+        Modules::Permission,
+    )?;
 
     let mut msgs: Vec<WasmMsg> = vec![];
 
@@ -486,7 +509,7 @@ fn execute_permission_mint(
         contract_addr: env.contract.address.to_string(),
         msg: to_binary(&ExecuteMsg::AdminMint {
             collection_id,
-            recipient: info.sender.to_string(),
+            recipient,
             metadata_id,
         })?,
         funds: info.funds.clone(),

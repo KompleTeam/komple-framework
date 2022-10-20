@@ -119,12 +119,21 @@ fn execute_merge(
 
 fn execute_permission_merge(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     permission_msg: Binary,
     merge_msg: Binary,
 ) -> Result<Response, ContractError> {
-    // TODO: Should only be callable by admin
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        operators,
+    )?;
 
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let permission_module_addr =
@@ -223,7 +232,7 @@ fn make_merge_msg(
     make_burn_messages(deps, event_attributes, &mint_module_addr, &merge_msg, msgs)?;
 
     let msg = KompleMintModule(mint_module_addr).mint_to_msg(
-        info.sender.to_string(),
+        merge_msg.recipient,
         merge_msg.mint_id,
         merge_msg.metadata_id,
         info.funds.clone(),

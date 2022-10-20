@@ -42,6 +42,7 @@ pub struct MergeBurnMsg {
 
 #[cw_serde]
 pub struct MergeMsg {
+    pub recipient: String,
     pub mint_id: u32,
     pub metadata_id: Option<u32>,
     pub burn_ids: Vec<MergeBurnMsg>,
