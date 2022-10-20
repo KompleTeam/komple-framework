@@ -1,6 +1,6 @@
-use crate::msg::ExecuteMsg;
+use crate::msg::{ExecuteMsg, QueryMsg};
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Addr, Coin, StdResult, WasmMsg};
+use cosmwasm_std::{to_binary, Addr, Coin, StdResult, WasmMsg, QuerierWrapper};
 
 #[cw_serde]
 pub struct KompleMintModule(pub Addr);

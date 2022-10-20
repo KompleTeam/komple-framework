@@ -5,12 +5,14 @@ use std::fmt;
 pub enum Permissions {
     Ownership,
     Attribute,
+    Link,
 }
 impl Permissions {
     pub fn as_str(&self) -> &str {
         match self {
             Permissions::Ownership => "ownership",
             Permissions::Attribute => "attribute",
+            Permissions::Link => "link",
         }
     }
 }
@@ -19,6 +21,7 @@ impl fmt::Display for Permissions {
         match self {
             Permissions::Ownership => write!(f, "ownership"),
             Permissions::Attribute => write!(f, "attribute"),
+            Permissions::Link => write!(f, "link"),
         }
     }
 }
