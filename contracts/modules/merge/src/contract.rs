@@ -229,7 +229,7 @@ fn make_merge_msg(
     // Pushes the burn_ids inside msgs list
     make_burn_messages(deps, event_attributes, &mint_module_addr, &merge_msg, msgs)?;
 
-    let msg = KompleMintModule(mint_module_addr).mint_to_msg(
+    let msg = KompleMintModule(mint_module_addr).admin_mint_msg(
         merge_msg.recipient,
         merge_msg.mint_id,
         merge_msg.metadata_id,
@@ -262,9 +262,9 @@ fn make_burn_messages(
             &burn_msg.collection_id,
         )?;
 
-        let lock_msg =
+        let msg =
             KompleTokenModule(collection_addr).burn_msg(burn_msg.token_id.to_string())?;
-        msgs.push(lock_msg);
+        msgs.push(msg);
 
         event_attributes.push(Attribute::new(
             format!("burn_msg/{}", index),

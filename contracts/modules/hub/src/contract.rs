@@ -358,7 +358,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
 
 fn query_module_address(deps: Deps, module: String) -> StdResult<ResponseWrapper<String>> {
     let addr = MODULE_ADDRS.load(deps.storage, module.as_str())?;
-    Ok(ResponseWrapper::new("module_addrSess", addr.to_string()))
+    Ok(ResponseWrapper::new("module_address", addr.to_string()))
 }
 
 fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {

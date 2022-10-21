@@ -435,7 +435,7 @@ pub fn execute_mint(
                 .add_attribute("action", "mint")
                 .add_attribute("token_id", token_id.to_string())
                 .add_attribute("owner", owner)
-                .add_attribute("metadata_id", metadata_id.unwrap_or(0).to_string())
+                .check_add_attribute(&metadata_id, "metadata_id", metadata_id.unwrap_or(0).to_string())
                 .get(),
         )),
         Err(e) => Err(e.into()),

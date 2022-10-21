@@ -10,7 +10,7 @@ impl KompleMintModule {
         self.0.clone()
     }
 
-    pub fn mint_to_msg(
+    pub fn admin_mint_msg(
         &self,
         recipient: String,
         collection_id: u32,

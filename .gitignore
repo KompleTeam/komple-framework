@@ -25,4 +25,5 @@ artifacts/
 tarpaulin-report.*
 
 packages/*/schema
-contracts/*/schema
+contracts/modules/*/schema
+contracts/permissions/*/schema
