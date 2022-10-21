@@ -262,8 +262,7 @@ fn make_burn_messages(
             &burn_msg.collection_id,
         )?;
 
-        let msg =
-            KompleTokenModule(collection_addr).burn_msg(burn_msg.token_id.to_string())?;
+        let msg = KompleTokenModule(collection_addr).burn_msg(burn_msg.token_id.to_string())?;
         msgs.push(msg);
 
         event_attributes.push(Attribute::new(

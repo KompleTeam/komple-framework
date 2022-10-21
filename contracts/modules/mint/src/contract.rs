@@ -318,11 +318,11 @@ fn execute_mint(
     }
 
     let mut msgs: Vec<CosmosMsg> = vec![];
-    let mint_msg = vec![MintMsg {
+    let mint_msg = MintMsg {
         collection_id,
         recipient: info.sender.to_string(),
         metadata_id,
-    }];
+    };
 
     // Check for fee module address
     let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
@@ -448,11 +448,11 @@ fn execute_admin_mint(
     let recipient = deps.api.addr_validate(&recipient)?;
 
     let msgs: Vec<CosmosMsg> = vec![];
-    let mint_msg = vec![MintMsg {
+    let mint_msg = MintMsg {
         collection_id,
         recipient: recipient.to_string(),
         metadata_id,
-    }];
+    };
 
     _execute_mint(deps, "execute_mint_to", msgs, mint_msg)
 }
@@ -520,37 +520,24 @@ fn _execute_mint(
     deps: DepsMut,
     action: &str,
     mut msgs: Vec<CosmosMsg>,
-    mint_msgs: Vec<MintMsg>,
+    mint_msg: MintMsg,
 ) -> Result<Response, ContractError> {
-    let mut event_attributes: Vec<Attribute> = vec![];
+    let collection_addr = COLLECTION_ADDRS.load(deps.storage, mint_msg.collection_id)?;
 
-    for (index, msg) in mint_msgs.iter().enumerate() {
-        event_attributes.push(Attribute {
-            key: format!("mint_msg_{}", index),
-            value: format!("collection_id/{}", msg.collection_id),
-        });
-        if msg.metadata_id.is_some() {
-            event_attributes.push(Attribute {
-                key: format!("mint_msg_{}", index),
-                value: format!("metadata_id/{}", msg.metadata_id.as_ref().unwrap()),
-            });
-        }
-        event_attributes.push(Attribute {
-            key: format!("mint_msg_{}", index),
-            value: format!("owner/{}", msg.recipient),
-        });
-
-        let collection_addr = COLLECTION_ADDRS.load(deps.storage, msg.collection_id)?;
-
-        let msg =
-            KompleTokenModule(collection_addr).mint_msg(msg.recipient.clone(), msg.metadata_id)?;
-        msgs.push(msg.into());
-    }
+    let msg = KompleTokenModule(collection_addr)
+        .mint_msg(mint_msg.recipient.clone(), mint_msg.metadata_id)?;
+    msgs.push(msg.into());
 
     Ok(Response::new().add_messages(msgs).add_event(
         EventHelper::new("komple_mint_module")
             .add_attribute("action", action)
-            .add_attributes(event_attributes)
+            .add_attribute("recipient", mint_msg.recipient)
+            .add_attribute("collection_id", mint_msg.collection_id.to_string())
+            .check_add_attribute(
+                &mint_msg.metadata_id,
+                "metadata_id",
+                mint_msg.metadata_id.as_ref().unwrap_or(&0).to_string(),
+            )
             .get(),
     ))
 }
