@@ -274,11 +274,13 @@ fn register_permission(app: &mut App, permission_module_addr: &Addr) {
 
     let msg = PermissionExecuteMsg::RegisterPermission {
         permission: Permissions::Ownership.to_string(),
-        msg: to_binary(&RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: None,
-        })
-        .unwrap(),
+        msg: Some(
+            to_binary(&RegisterMsg {
+                admin: ADMIN.to_string(),
+                data: None,
+            })
+            .unwrap(),
+        ),
         code_id: ownership_permission_code_id,
     };
     let _ = app

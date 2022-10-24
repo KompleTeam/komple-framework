@@ -698,11 +698,13 @@ mod permission_merge {
             let ownership_permission_code_id = app.store_code(ownership_permission_module());
             let msg = PermissionModuleExecuteMsg::RegisterPermission {
                 permission: Permissions::Ownership.to_string(),
-                msg: to_binary(&RegisterMsg {
-                    admin: ADMIN.to_string(),
-                    data: None,
-                })
-                .unwrap(),
+                msg: Some(
+                    to_binary(&RegisterMsg {
+                        admin: ADMIN.to_string(),
+                        data: None,
+                    })
+                    .unwrap(),
+                ),
                 code_id: ownership_permission_code_id,
             };
             let _ = app
@@ -874,11 +876,13 @@ mod permission_merge {
             let link_permission_code_id = app.store_code(link_permission_module());
             let msg = PermissionModuleExecuteMsg::RegisterPermission {
                 permission: Permissions::Link.to_string(),
-                msg: to_binary(&RegisterMsg {
-                    admin: ADMIN.to_string(),
-                    data: None,
-                })
-                .unwrap(),
+                msg: Some(
+                    to_binary(&RegisterMsg {
+                        admin: ADMIN.to_string(),
+                        data: None,
+                    })
+                    .unwrap(),
+                ),
                 code_id: link_permission_code_id,
             };
             let _ = app

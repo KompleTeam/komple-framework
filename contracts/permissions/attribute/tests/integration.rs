@@ -269,11 +269,13 @@ fn register_attribute_permission(app: &mut App, permission_module_addr: &Addr) {
 
     let msg = PermissionExecuteMsg::RegisterPermission {
         permission: Permissions::Attribute.to_string(),
-        msg: to_binary(&RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: None,
-        })
-        .unwrap(),
+        msg: Some(
+            to_binary(&RegisterMsg {
+                admin: ADMIN.to_string(),
+                data: None,
+            })
+            .unwrap(),
+        ),
         code_id: attribute_permission_code_id,
     };
     let _ = app

@@ -63,10 +63,10 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::RegisterPermission {
+            code_id,
             permission,
             msg,
-            code_id,
-        } => execute_register_permission(deps, env, info, permission, msg, code_id),
+        } => execute_register_permission(deps, env, info, code_id, permission, msg),
         ExecuteMsg::UpdateModulePermissions {
             module,
             permissions,
@@ -80,9 +80,9 @@ fn execute_register_permission(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    permission: String,
-    msg: Binary,
     code_id: u64,
+    permission: String,
+    msg: Option<Binary>,
 ) -> Result<Response, ContractError> {
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
@@ -98,10 +98,15 @@ fn execute_register_permission(
     // Get the latest permission reply id
     let permission_id = (PERMISSION_ID.load(deps.storage)?) + 1;
 
+    let register_msg = to_binary(&RegisterMsg {
+        admin: config.admin.to_string(),
+        data: msg,
+    })?;
+
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg,
+            msg: register_msg,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: format!("Komple Permission Module - {}", permission.as_str()),

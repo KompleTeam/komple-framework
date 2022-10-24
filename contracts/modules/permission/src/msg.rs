@@ -5,9 +5,9 @@ use komple_types::{module::Modules, query::ResponseWrapper};
 #[cw_serde]
 pub enum ExecuteMsg {
     RegisterPermission {
-        permission: String,
-        msg: Binary,
         code_id: u64,
+        permission: String,
+        msg: Option<Binary>,
     },
     UpdateModulePermissions {
         module: String,
