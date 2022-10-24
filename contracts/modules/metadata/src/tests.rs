@@ -4,8 +4,9 @@ use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
     state::{MetaInfo, Metadata, Trait},
 };
-use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 
@@ -41,9 +42,9 @@ fn mock_app() -> App {
 fn proper_instantiate(app: &mut App, metadata_type: MetadataType) -> Addr {
     let metadata_code_id = app.store_code(metadata_module());
 
-    let msg = InstantiateMsg {
+    let msg = RegisterMsg {
         admin: ADMIN.to_string(),
-        metadata_type,
+        data: Some(to_binary(&InstantiateMsg { metadata_type }).unwrap()),
     };
 
     app.instantiate_contract(
@@ -97,9 +98,14 @@ mod initialization {
         let mut app = mock_app();
         let metadata_code_id = app.store_code(metadata_module());
 
-        let msg = InstantiateMsg {
+        let msg = RegisterMsg {
             admin: ADMIN.to_string(),
-            metadata_type: MetadataType::Shared,
+            data: Some(
+                to_binary(&InstantiateMsg {
+                    metadata_type: MetadataType::Shared,
+                })
+                .unwrap(),
+            ),
         };
         let _ = app
             .instantiate_contract(

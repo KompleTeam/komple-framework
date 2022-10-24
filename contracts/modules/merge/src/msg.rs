@@ -4,11 +4,6 @@ use cosmwasm_std::Binary;
 use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
-pub struct InstantiateMsg {
-    pub admin: String,
-}
-
-#[cw_serde]
 pub enum ExecuteMsg {
     UpdateMergeLock {
         lock: bool,

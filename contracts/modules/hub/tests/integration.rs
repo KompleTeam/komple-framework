@@ -1,16 +1,13 @@
 use cosmwasm_std::{coin, to_binary, StdError};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::msg::InstantiateMsg as FeeModuleInstantiateMsg;
 use komple_hub_module::{
     msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg},
     state::{HubInfo, WebsiteConfig},
     ContractError,
 };
 use komple_marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
-use komple_merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
-use komple_mint_module::msg::InstantiateMsg as MintModuleInstantiateMsg;
-use komple_permission_module::msg::InstantiateMsg as PermissionModuleInstantiateMsg;
+use komple_types::hub::RegisterMsg;
 use komple_types::{module::Modules, query::ResponseWrapper};
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
@@ -193,13 +190,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let mint_module_code_id = app.store_code(mint_module());
 
-            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Mint.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: mint_module_code_id,
             };
             let _ = app
@@ -220,13 +218,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let permission_module_code_id = app.store_code(permission_module());
 
-            let instantiate_msg = to_binary(&PermissionModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Permission.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: permission_module_code_id,
             };
             let _ = app
@@ -247,13 +246,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let merge_module_code_id = app.store_code(merge_module());
 
-            let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Merge.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: merge_module_code_id,
             };
             let _ = app
@@ -274,14 +274,15 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let marketplace_module_code_id = app.store_code(marketplace_module());
 
-            let instantiate_msg = to_binary(&MarketplaceModuleInstantiateMsg {
-                admin: ADMIN.to_string(),
-                native_denom: NATIVE_DENOM.to_string(),
-            })
-            .unwrap();
+            let register_msg = Some(
+                to_binary(&MarketplaceModuleInstantiateMsg {
+                    native_denom: NATIVE_DENOM.to_string(),
+                })
+                .unwrap(),
+            );
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Marketplace.to_string(),
-                msg: instantiate_msg,
+                msg: register_msg,
                 code_id: marketplace_module_code_id,
             };
             let _ = app
@@ -302,13 +303,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let fee_module_code_id = app.store_code(fee_module());
 
-            let instantiate_msg = to_binary(&FeeModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Fee.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: fee_module_code_id,
             };
             let _ = app
@@ -329,13 +331,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let mint_module_code_id = app.store_code(mint_module());
 
-            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Mint.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: mint_module_code_id,
             };
             let err = app
@@ -357,13 +360,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let mint_module_code_id = app.store_code(mint_module());
 
-            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Mint.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: mint_module_code_id,
             };
             let _ = app
@@ -400,13 +404,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let mint_module_code_id = app.store_code(mint_module());
 
-            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Mint.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: mint_module_code_id,
             };
             let _ = app
@@ -431,13 +436,14 @@ mod actions {
             let hub_module_addr = proper_instantiate(&mut app);
             let mint_module_code_id = app.store_code(mint_module());
 
-            let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+            let instantiate_msg = to_binary(&RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             })
             .unwrap();
             let msg = ExecuteMsg::RegisterModule {
                 module: Modules::Mint.to_string(),
-                msg: instantiate_msg,
+                msg: Some(instantiate_msg),
                 code_id: mint_module_code_id,
             };
             let _ = app

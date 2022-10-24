@@ -1,12 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
-    ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
+    from_binary, to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Empty, Env,
+    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 use komple_types::collection::Collections;
+use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::token::{Locks, SubModules};
@@ -47,48 +48,53 @@ pub fn instantiate(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    mut msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    if msg.collection_config.start_time.is_some()
-        && env.block.time >= msg.collection_config.start_time.unwrap()
+    if msg.data.is_none() {
+        return Err(ContractError::InvalidInstantiateMsg {});
+    };
+    let data: InstantiateMsg = from_binary(&msg.data.unwrap())?;
+
+    if data.collection_config.start_time.is_some()
+        && env.block.time >= data.collection_config.start_time.unwrap()
     {
         return Err(ContractError::InvalidStartTime {});
     };
-    if msg.collection_config.max_token_limit.is_some()
-        && msg.collection_config.max_token_limit.unwrap() == 0
+    if data.collection_config.max_token_limit.is_some()
+        && data.collection_config.max_token_limit.unwrap() == 0
     {
         return Err(ContractError::InvalidMaxTokenLimit {});
     };
-    if msg.collection_config.per_address_limit.is_some()
-        && msg.collection_config.per_address_limit.unwrap() == 0
+    if data.collection_config.per_address_limit.is_some()
+        && data.collection_config.per_address_limit.unwrap() == 0
     {
         return Err(ContractError::InvalidPerAddressLimit {});
     };
-    if msg.collection_type == Collections::Standard && msg.collection_config.ipfs_link.is_none() {
+    if data.collection_type == Collections::Standard && data.collection_config.ipfs_link.is_none() {
         return Err(ContractError::IpfsNotFound {});
     };
 
-    if (msg.collection_type == Collections::Standard
-        && msg.metadata_info.instantiate_msg.metadata_type != MetadataType::Standard)
-        || (msg.collection_type != Collections::Standard
-            && msg.metadata_info.instantiate_msg.metadata_type == MetadataType::Standard)
+    if (data.collection_type == Collections::Standard
+        && data.metadata_info.instantiate_msg.metadata_type != MetadataType::Standard)
+        || (data.collection_type != Collections::Standard
+            && data.metadata_info.instantiate_msg.metadata_type == MetadataType::Standard)
     {
         return Err(ContractError::InvalidCollectionMetadataType {});
     }
 
-    COLLECTION_TYPE.save(deps.storage, &msg.collection_type)?;
+    COLLECTION_TYPE.save(deps.storage, &data.collection_type)?;
 
     let admin = deps.api.addr_validate(&msg.admin)?;
-    let creator = deps.api.addr_validate(&msg.creator)?;
+    let creator = deps.api.addr_validate(&data.creator)?;
     let config = Config {
         admin,
         creator,
-        start_time: msg.collection_config.start_time,
-        max_token_limit: msg.collection_config.max_token_limit,
-        per_address_limit: msg.collection_config.per_address_limit,
-        ipfs_link: msg.collection_config.ipfs_link,
+        start_time: data.collection_config.start_time,
+        max_token_limit: data.collection_config.max_token_limit,
+        per_address_limit: data.collection_config.per_address_limit,
+        ipfs_link: data.collection_config.ipfs_link,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -111,23 +117,26 @@ pub fn instantiate(
     SUB_MODULES.save(deps.storage, &sub_modules)?;
 
     let contract_info = ContractInfoResponse {
-        name: msg.collection_name.clone(),
-        symbol: msg.token_info.symbol.clone(),
+        name: data.collection_name.clone(),
+        symbol: data.token_info.symbol.clone(),
     };
     Cw721Contract::default()
         .contract_info
         .save(deps.storage, &contract_info)?;
 
-    let minter = deps.api.addr_validate(&msg.token_info.minter)?;
+    let minter = deps.api.addr_validate(&data.token_info.minter)?;
     Cw721Contract::default()
         .minter
         .save(deps.storage, &minter)?;
 
-    msg.metadata_info.instantiate_msg.admin = config.admin.to_string();
+    let metadata_register_msg = RegisterMsg {
+        admin: config.admin.to_string(),
+        data: Some(to_binary(&data.metadata_info.instantiate_msg)?),
+    };
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
-            code_id: msg.metadata_info.code_id,
-            msg: to_binary(&msg.metadata_info.instantiate_msg)?,
+            code_id: data.metadata_info.code_id,
+            msg: to_binary(&metadata_register_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: String::from("Komple Framework Metadata Module"),
@@ -707,10 +716,14 @@ fn execute_init_whitelist_module(
         operators,
     )?;
 
+    let register_msg = RegisterMsg {
+        admin: config.admin.to_string(),
+        data: Some(to_binary(&instantiate_msg)?),
+    };
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&instantiate_msg)?,
+            msg: to_binary(&register_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: String::from("Komple Framework Whitelist Module"),

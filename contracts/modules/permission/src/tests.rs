@@ -1,7 +1,8 @@
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, QueryMsg};
 use crate::ContractError;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
@@ -38,8 +39,9 @@ fn mock_app() -> App {
 fn proper_instantiate(app: &mut App) -> Addr {
     let permission_code_id = app.store_code(permission_module());
 
-    let msg = InstantiateMsg {
+    let msg = RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     };
 
     app.instantiate_contract(

@@ -4,7 +4,6 @@ use komple_types::{metadata::Metadata as MetadataType, query::ResponseWrapper};
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub admin: String,
     pub metadata_type: MetadataType,
 }
 

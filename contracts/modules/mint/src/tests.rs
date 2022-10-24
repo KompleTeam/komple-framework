@@ -1,5 +1,5 @@
+use crate::msg::ExecuteMsg;
 use crate::msg::QueryMsg;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::CollectionInfo;
 use crate::ContractError;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
@@ -10,6 +10,7 @@ use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
+use komple_types::hub::RegisterMsg;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
@@ -68,8 +69,9 @@ fn mock_app() -> App {
 fn proper_instantiate(app: &mut App) -> Addr {
     let minter_code_id = app.store_code(minter_contract());
 
-    let msg = InstantiateMsg {
+    let msg = RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     };
 
     app.instantiate_contract(
@@ -112,7 +114,6 @@ fn setup_collection(
     };
     let metadata_info = MetadataInfo {
         instantiate_msg: MetadataInstantiateMsg {
-            admin: "".to_string(),
             metadata_type: MetadataType::Standard,
         },
         code_id: metadata_code_id,
@@ -262,7 +263,6 @@ mod actions {
                 };
                 let metadata_info = MetadataInfo {
                     instantiate_msg: MetadataInstantiateMsg {
-                        admin: "".to_string(),
                         metadata_type: MetadataType::Standard,
                     },
                     code_id: metadata_code_id,
@@ -320,7 +320,6 @@ mod actions {
                 };
                 let metadata_info = MetadataInfo {
                     instantiate_msg: MetadataInstantiateMsg {
-                        admin: "".to_string(),
                         metadata_type: MetadataType::Standard,
                     },
                     code_id: metadata_code_id,

@@ -1,6 +1,6 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_attribute_permission_module::msg::{AttributeMsg, InstantiateMsg};
+use komple_attribute_permission_module::msg::AttributeMsg;
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
@@ -9,15 +9,13 @@ use komple_metadata_module::msg::{
     ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
 };
 use komple_metadata_module::state::{MetaInfo, Trait};
-use komple_mint_module::msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg};
+use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use komple_mint_module::state::CollectionInfo;
-use komple_permission_module::msg::{
-    ExecuteMsg as PermissionExecuteMsg, InstantiateMsg as PermissionInstantiateMsg,
-    PermissionCheckMsg,
-};
+use komple_permission_module::msg::{ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg};
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
+use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::permission::{AttributeConditions, Permissions};
@@ -133,25 +131,27 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let permission_code_id = app.store_code(permission_module());
 
-    let instantiate_msg = to_binary(&MintInstantiateMsg {
+    let instantiate_msg = to_binary(&RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     })
     .unwrap();
     let msg = HubExecuteMsg::RegisterModule {
         module: Modules::Mint.to_string(),
-        msg: instantiate_msg,
+        msg: Some(instantiate_msg),
         code_id: mint_code_id,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
         .unwrap();
-    let instantiate_msg = to_binary(&PermissionInstantiateMsg {
+    let instantiate_msg = to_binary(&RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     })
     .unwrap();
     let msg = HubExecuteMsg::RegisterModule {
         module: Modules::Permission.to_string(),
-        msg: instantiate_msg,
+        msg: Some(instantiate_msg),
         code_id: permission_code_id,
     };
     let _ = app
@@ -195,7 +195,6 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
     };
     let metadata_info = MetadataInfo {
         instantiate_msg: MetadataInstantiateMsg {
-            admin: "".to_string(),
             metadata_type: MetadataType::Dynamic,
         },
         code_id: metadata_code_id,
@@ -270,8 +269,9 @@ fn register_attribute_permission(app: &mut App, permission_module_addr: &Addr) {
 
     let msg = PermissionExecuteMsg::RegisterPermission {
         permission: Permissions::Attribute.to_string(),
-        msg: to_binary(&InstantiateMsg {
+        msg: to_binary(&RegisterMsg {
             admin: ADMIN.to_string(),
+            data: None,
         })
         .unwrap(),
         code_id: attribute_permission_code_id,

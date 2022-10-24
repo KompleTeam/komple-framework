@@ -1,12 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError,
-    StdResult,
+    from_binary, to_binary, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response,
+    StdError, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
+use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
 use komple_utils::event::EventHelper;
 use semver::Version;
@@ -23,50 +24,56 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
-    info: MessageInfo,
-    mut msg: InstantiateMsg,
+    _info: MessageInfo,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    if msg.config.member_limit == 0 {
+    if msg.data.is_none() {
+        return Err(ContractError::InvalidInstantiateMsg {});
+    };
+    let mut data: InstantiateMsg = from_binary(&msg.data.unwrap())?;
+
+    if data.config.member_limit == 0 {
         return Err(ContractError::InvalidMemberLimit {});
     }
 
-    if msg.config.per_address_limit == 0 {
+    if data.config.per_address_limit == 0 {
         return Err(ContractError::InvalidPerAddressLimit {});
     }
 
-    if msg.members.is_empty() {
+    if data.members.is_empty() {
         return Err(ContractError::EmptyMemberList {});
     }
 
-    if msg.config.start_time <= env.block.time {
+    if data.config.start_time <= env.block.time {
         return Err(ContractError::InvalidStartTime {});
     }
-    if msg.config.end_time < env.block.time {
+    if data.config.end_time < env.block.time {
         return Err(ContractError::InvalidEndTime {});
     }
-    if msg.config.start_time >= msg.config.end_time {
+    if data.config.start_time >= data.config.end_time {
         return Err(ContractError::InvalidStartTime {});
     }
 
-    msg.members.sort_unstable();
-    msg.members.dedup();
+    data.members.sort_unstable();
+    data.members.dedup();
 
     let mut event_attributes: Vec<Attribute> = vec![];
 
-    let member_num = msg.members.len() as u16;
+    let member_num = data.members.len() as u16;
+    let admin = deps.api.addr_validate(&msg.admin)?;
     let config = Config {
-        admin: info.sender,
-        start_time: msg.config.start_time,
-        end_time: msg.config.end_time,
-        per_address_limit: msg.config.per_address_limit,
-        member_limit: msg.config.member_limit,
+        admin,
+        start_time: data.config.start_time,
+        end_time: data.config.end_time,
+        per_address_limit: data.config.per_address_limit,
+        member_limit: data.config.member_limit,
         member_num,
     };
     CONFIG.save(deps.storage, &config)?;
 
-    for member in msg.members.into_iter() {
+    for member in data.members.into_iter() {
         let addr = deps.api.addr_validate(&member.clone())?;
         WHITELIST.save(deps.storage, addr, &true)?;
         event_attributes.push(Attribute {

@@ -8,11 +8,6 @@ use komple_token_module::{
 use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
-pub struct InstantiateMsg {
-    pub admin: String,
-}
-
-#[cw_serde]
 pub enum ExecuteMsg {
     CreateCollection {
         code_id: u64,

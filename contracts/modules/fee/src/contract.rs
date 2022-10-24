@@ -9,6 +9,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
 use komple_types::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
@@ -16,8 +17,7 @@ use komple_utils::funds::{check_single_amount, FundsError};
 
 use crate::error::ContractError;
 use crate::msg::{
-    CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, InstantiateMsg, PercentageFeeResponse,
-    QueryMsg,
+    CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, PercentageFeeResponse, QueryMsg,
 };
 use crate::state::{Config, CONFIG, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
 
@@ -30,7 +30,7 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 

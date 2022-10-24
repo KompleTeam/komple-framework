@@ -1,13 +1,14 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use crate::state::{CollectionConfig, Config as TokenConfig};
 use crate::ContractError;
-use cosmwasm_std::{coin, Addr, Coin, Empty, Timestamp, Uint128};
+use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::{
     msg::{InstantiateMsg as MetadataInstantiateMsg, QueryMsg as MetadataQueryMsg},
     state::{MetaInfo, Metadata as MetadataMetadata},
 };
+use komple_types::hub::RegisterMsg;
 use komple_types::{
     collection::Collections,
     metadata::Metadata as MetadataType,
@@ -92,13 +93,11 @@ fn proper_instantiate(
     };
     let metadata_info = MetadataInfo {
         instantiate_msg: MetadataInstantiateMsg {
-            admin: "".to_string(),
             metadata_type: MetadataType::Standard,
         },
         code_id: metadata_code_id,
     };
     let msg = InstantiateMsg {
-        admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
         collection_type: Collections::Standard,
@@ -106,11 +105,15 @@ fn proper_instantiate(
         collection_config,
         metadata_info,
     };
+    let register_msg = RegisterMsg {
+        admin: ADMIN.to_string(),
+        data: Some(to_binary(&msg).unwrap()),
+    };
 
     app.instantiate_contract(
         token_code_id,
         Addr::unchecked(ADMIN),
-        &msg,
+        &register_msg,
         &[],
         "test",
         None,
@@ -139,13 +142,11 @@ mod initialization {
         };
         let metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
-                admin: "".to_string(),
                 metadata_type: MetadataType::Standard,
             },
             code_id: metadata_code_id,
         };
         let msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_type: Collections::Standard,
@@ -153,11 +154,15 @@ mod initialization {
             collection_config,
             metadata_info,
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let token_module_addr = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -184,13 +189,11 @@ mod initialization {
         };
         let metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
-                admin: "".to_string(),
                 metadata_type: MetadataType::Standard,
             },
             code_id: metadata_code_id,
         };
         let msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info: token_info.clone(),
             collection_type: Collections::Standard,
@@ -198,11 +201,15 @@ mod initialization {
             collection_config: collection_config.clone(),
             metadata_info: metadata_info.clone(),
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -215,7 +222,6 @@ mod initialization {
 
         collection_config.start_time = Some(app.block_info().time.minus_seconds(10));
         let msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_type: Collections::Standard,
@@ -223,11 +229,15 @@ mod initialization {
             collection_config,
             metadata_info,
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -257,13 +267,11 @@ mod initialization {
         };
         let metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
-                admin: "".to_string(),
                 metadata_type: MetadataType::Standard,
             },
             code_id: metadata_code_id,
         };
         let msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_type: Collections::Standard,
@@ -271,11 +279,15 @@ mod initialization {
             collection_config,
             metadata_info,
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -305,13 +317,11 @@ mod initialization {
         };
         let metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
-                admin: "".to_string(),
                 metadata_type: MetadataType::Standard,
             },
             code_id: metadata_code_id,
         };
         let msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_type: Collections::Standard,
@@ -319,11 +329,15 @@ mod initialization {
             collection_config,
             metadata_info,
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -353,13 +367,11 @@ mod initialization {
         };
         let metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
-                admin: "".to_string(),
                 metadata_type: MetadataType::Standard,
             },
             code_id: metadata_code_id,
         };
         let msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_type: Collections::Standard,
@@ -367,11 +379,15 @@ mod initialization {
             collection_config,
             metadata_info,
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -401,13 +417,11 @@ mod initialization {
         };
         let metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
-                admin: "".to_string(),
                 metadata_type: MetadataType::Dynamic,
             },
             code_id: metadata_code_id,
         };
         let mut msg = InstantiateMsg {
-            admin: ADMIN.to_string(),
             creator: ADMIN.to_string(),
             token_info,
             collection_type: Collections::Standard,
@@ -415,12 +429,16 @@ mod initialization {
             collection_config,
             metadata_info: metadata_info.clone(),
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
 
         let err = app
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -437,7 +455,7 @@ mod initialization {
             .instantiate_contract(
                 token_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,

@@ -15,7 +15,7 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{fee::MintFees, module::Modules};
+use komple_types::{fee::MintFees, hub::RegisterMsg, module::Modules};
 use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use komple_utils::{event::EventHelper, funds::check_single_coin};
@@ -23,7 +23,7 @@ use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{CollectionsResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, QueryMsg};
+use crate::msg::{CollectionsResponse, ExecuteMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
     CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID,
     COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
@@ -40,7 +40,7 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -158,7 +158,6 @@ pub fn execute_create_collection(
 
     token_info.minter = env.contract.address.to_string();
     let token_instantiate_msg = TokenInstantiateMsg {
-        admin: config.admin.to_string(),
         creator: info.sender.to_string(),
         collection_config: collection_config.clone(),
         collection_type: collection_info.clone().collection_type,
@@ -166,12 +165,16 @@ pub fn execute_create_collection(
         metadata_info,
         token_info,
     };
+    let register_msg = RegisterMsg {
+        admin: config.admin.to_string(),
+        data: Some(to_binary(&token_instantiate_msg)?),
+    };
 
     // Instantiate token contract
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg: to_binary(&token_instantiate_msg)?,
+            msg: to_binary(&register_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: String::from("Komple Framework Token Module"),

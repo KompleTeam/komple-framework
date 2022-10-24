@@ -13,9 +13,9 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     RegisterModule {
-        module: String,
-        msg: Binary,
         code_id: u64,
+        module: String,
+        msg: Option<Binary>,
     },
     // Updates the general hub info
     UpdateHubInfo {

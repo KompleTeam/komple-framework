@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo,
-    Order, Response, StdError, StdResult, SubMsg, Uint128,
+    coin, from_binary, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Deps, DepsMut, Env,
+    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
@@ -12,6 +12,7 @@ use komple_fee_module::{
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
 };
+use komple_types::hub::RegisterMsg;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -37,15 +38,19 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let admin = deps.api.addr_validate(&msg.admin)?;
+    if msg.data.is_none() {
+        return Err(ContractError::InvalidInstantiateMsg {});
+    };
+    let data: InstantiateMsg = from_binary(&msg.data.unwrap())?;
 
+    let admin = deps.api.addr_validate(&msg.admin)?;
     let config = Config {
         admin,
-        native_denom: msg.native_denom,
+        native_denom: data.native_denom,
     };
     CONFIG.save(deps.storage, &config)?;
 

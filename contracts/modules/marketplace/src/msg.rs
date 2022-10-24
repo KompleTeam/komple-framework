@@ -5,7 +5,6 @@ use komple_types::{marketplace::Listing, query::ResponseWrapper};
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub admin: String,
     pub native_denom: String,
 }
 

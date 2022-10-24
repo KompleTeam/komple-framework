@@ -5,6 +5,7 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use komple_metadata_module::helper::KompleMetadataModule;
+use komple_types::hub::RegisterMsg;
 use komple_types::module::Modules;
 use komple_types::permission::AttributeConditions;
 use komple_types::query::ResponseWrapper;
@@ -13,7 +14,7 @@ use komple_utils::event::EventHelper;
 use komple_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
-use crate::msg::{AttributeMsg, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{AttributeMsg, ExecuteMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
@@ -25,12 +26,11 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let admin = deps.api.addr_validate(&msg.admin)?;
-
     let config = Config {
         admin: admin.clone(),
     };

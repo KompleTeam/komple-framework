@@ -7,6 +7,7 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 
+use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
@@ -74,10 +75,10 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::RegisterModule {
+            code_id,
             module,
             msg,
-            code_id,
-        } => execute_register_module(deps, env, info, module, msg, code_id),
+        } => execute_register_module(deps, env, info, code_id, module, msg),
         ExecuteMsg::UpdateHubInfo {
             name,
             description,
@@ -107,9 +108,9 @@ fn execute_register_module(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    module: String,
-    msg: Binary,
     code_id: u64,
+    module: String,
+    msg: Option<Binary>,
 ) -> Result<Response, ContractError> {
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
@@ -124,10 +125,16 @@ fn execute_register_module(
     // Get the latest module reply id
     let module_id = (MODULE_ID.load(deps.storage)?) + 1;
 
+    // We inject admin to each instantiate msg
+    let register_msg = RegisterMsg {
+        admin: config.admin.to_string(),
+        data: msg,
+    };
+
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
-            msg,
+            msg: to_binary(&register_msg)?,
             funds: info.funds,
             admin: Some(info.sender.to_string()),
             label: format!("Komple Framework Module - {}", module.as_str()),

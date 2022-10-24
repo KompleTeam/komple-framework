@@ -8,6 +8,7 @@ use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use komple_mint_module::helper::KompleMintModule;
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::helper::KompleTokenModule;
+use komple_types::hub::RegisterMsg;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_utils::event::EventHelper;
@@ -15,7 +16,7 @@ use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MergeMsg, MigrateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, MergeMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
 
 // version info for migration info
@@ -27,7 +28,7 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 

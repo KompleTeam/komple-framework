@@ -1,4 +1,3 @@
-use crate::msg::InstantiateMsg;
 use crate::{
     msg::{ExecuteMsg, QueryMsg},
     state::Config,
@@ -6,7 +5,7 @@ use crate::{
 };
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::query::ResponseWrapper;
+use komple_types::{hub::RegisterMsg, query::ResponseWrapper};
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -41,8 +40,9 @@ fn mock_app() -> App {
 fn proper_instantiate(app: &mut App) -> Addr {
     let merge_code_id = app.store_code(merge_module());
 
-    let msg = InstantiateMsg {
+    let msg = RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     };
 
     app.instantiate_contract(

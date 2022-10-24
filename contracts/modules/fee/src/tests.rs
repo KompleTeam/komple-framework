@@ -1,5 +1,5 @@
 use crate::msg::{CustomPaymentAddress, FixedFeeResponse, PercentageFeeResponse};
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, QueryMsg};
 use crate::state::Config;
 use crate::ContractError;
 use cosmwasm_std::Decimal;
@@ -7,6 +7,7 @@ use cosmwasm_std::StdError;
 use cosmwasm_std::{coin, Addr, Empty, Uint128};
 use cosmwasm_std::{to_binary, Binary};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
 use komple_types::{
     fee::{Fees, FixedPayment, PercentagePayment},
@@ -45,8 +46,9 @@ fn mock_app() -> App {
 fn setup_fee_contract(app: &mut App) -> Addr {
     let code_id = app.store_code(fee_contract());
 
-    let msg = InstantiateMsg {
+    let msg = RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     };
 
     app.instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
@@ -80,8 +82,9 @@ mod instantiation {
         let mut app = mock_app();
         let code_id = app.store_code(fee_contract());
 
-        let msg = InstantiateMsg {
+        let msg = RegisterMsg {
             admin: ADMIN.to_string(),
+            data: None,
         };
         let addr = app
             .instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)

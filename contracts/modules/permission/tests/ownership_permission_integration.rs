@@ -1,8 +1,8 @@
 use cosmwasm_std::to_binary;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_ownership_permission_module::msg::InstantiateMsg as OwnershipModuleInstantiateMsg;
-use komple_permission_module::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use komple_permission_module::msg::{ExecuteMsg, QueryMsg};
+use komple_types::hub::RegisterMsg;
 use komple_types::permission::Permissions;
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
@@ -47,8 +47,9 @@ fn mock_app() -> App {
 fn proper_instantiate(app: &mut App) -> Addr {
     let permission_code_id = app.store_code(permission_module());
 
-    let msg = InstantiateMsg {
+    let msg = RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     };
 
     app.instantiate_contract(
@@ -78,8 +79,9 @@ mod actions {
             let ownership_permission_code_id = app.store_code(ownership_permission_module());
             let msg = ExecuteMsg::RegisterPermission {
                 permission: Permissions::Ownership.to_string(),
-                msg: to_binary(&OwnershipModuleInstantiateMsg {
+                msg: to_binary(&RegisterMsg {
                     admin: ADMIN.to_string(),
+                    data: None,
                 })
                 .unwrap(),
                 code_id: ownership_permission_code_id,

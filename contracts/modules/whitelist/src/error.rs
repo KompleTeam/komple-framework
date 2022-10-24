@@ -9,6 +9,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Invalid instantiate msg")]
+    InvalidInstantiateMsg {},
+
     #[error("Invalid member limit")]
     InvalidMemberLimit {},
 

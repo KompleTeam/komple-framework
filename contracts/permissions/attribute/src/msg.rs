@@ -4,11 +4,6 @@ use cosmwasm_std::Binary;
 use komple_types::{permission::AttributeConditions, query::ResponseWrapper};
 
 #[cw_serde]
-pub struct InstantiateMsg {
-    pub admin: String,
-}
-
-#[cw_serde]
 pub enum ExecuteMsg {
     Check { data: Binary },
 }

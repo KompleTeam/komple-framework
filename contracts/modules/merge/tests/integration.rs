@@ -6,32 +6,19 @@ use komple_hub_module::{
     msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg},
     state::HubInfo,
 };
-use komple_link_permission_module::msg::{
-    ExecuteMsg as LinkPermissionModuleExecuteMsg,
-    InstantiateMsg as LinkPermissionModuleInstantiateMsg,
-};
-use komple_merge_module::msg::{
-    ExecuteMsg as MergeModuleExecuteMsg, InstantiateMsg as MergeModuleInstantiateMsg, MergeBurnMsg,
-    MergeMsg,
-};
+use komple_link_permission_module::msg::ExecuteMsg as LinkPermissionModuleExecuteMsg;
+use komple_merge_module::msg::{ExecuteMsg as MergeModuleExecuteMsg, MergeBurnMsg, MergeMsg};
 use komple_merge_module::ContractError as MergeContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
-use komple_mint_module::{
-    msg::{ExecuteMsg as MintModuleExecuteMsg, InstantiateMsg as MintModuleInstantiateMsg},
-    state::CollectionInfo,
-};
-use komple_ownership_permission_module::msg::{
-    ExecuteMsg as OwnershipModuleExecuteMsg, InstantiateMsg as OwnershipModuleInstantiateMsg,
-};
-use komple_permission_module::msg::{
-    ExecuteMsg as PermissionModuleExecuteMsg, InstantiateMsg as PermissionModuleInstantiateMsg,
-};
+use komple_mint_module::{msg::ExecuteMsg as MintModuleExecuteMsg, state::CollectionInfo};
+use komple_ownership_permission_module::msg::ExecuteMsg as OwnershipModuleExecuteMsg;
+use komple_permission_module::msg::ExecuteMsg as PermissionModuleExecuteMsg;
 use komple_token_module::msg::{
     ExecuteMsg as TokenModuleExecuteMsg, MetadataInfo, QueryMsg as TokenModuleQueryMsg, TokenInfo,
 };
 use komple_token_module::state::CollectionConfig;
 use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, module::Modules,
+    collection::Collections, hub::RegisterMsg, metadata::Metadata as MetadataType, module::Modules,
     permission::Permissions,
 };
 use komple_utils::storage::StorageHelper;
@@ -199,13 +186,14 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
 pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
     let mint_module_code_id = app.store_code(mint_module());
 
-    let instantiate_msg = to_binary(&MintModuleInstantiateMsg {
+    let instantiate_msg = to_binary(&RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     })
     .unwrap();
     let msg = HubExecuteMsg::RegisterModule {
         module: Modules::Mint.to_string(),
-        msg: instantiate_msg,
+        msg: Some(instantiate_msg),
         code_id: mint_module_code_id,
     };
     let _ = app
@@ -216,13 +204,14 @@ pub fn setup_mint_module(app: &mut App, hub_addr: Addr) {
 pub fn setup_merge_module(app: &mut App, hub_addr: Addr) {
     let merge_module_code_id = app.store_code(merge_module());
 
-    let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+    let instantiate_msg = to_binary(&RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     })
     .unwrap();
     let msg = HubExecuteMsg::RegisterModule {
         module: Modules::Merge.to_string(),
-        msg: instantiate_msg,
+        msg: Some(instantiate_msg),
         code_id: merge_module_code_id,
     };
     let _ = app
@@ -233,13 +222,14 @@ pub fn setup_merge_module(app: &mut App, hub_addr: Addr) {
 pub fn setup_permission_module(app: &mut App, hub_addr: Addr) {
     let permission_module_code_id = app.store_code(permission_module());
 
-    let instantiate_msg = to_binary(&PermissionModuleInstantiateMsg {
+    let instantiate_msg = to_binary(&RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     })
     .unwrap();
     let msg = HubExecuteMsg::RegisterModule {
         module: Modules::Permission.to_string(),
-        msg: instantiate_msg,
+        msg: Some(instantiate_msg),
         code_id: permission_module_code_id,
     };
     let _ = app
@@ -281,7 +271,6 @@ pub fn create_collection(
     };
     let metadata_info = MetadataInfo {
         instantiate_msg: MetadataModuleInstantiateMsg {
-            admin: "".to_string(),
             metadata_type: MetadataType::Standard,
         },
         code_id: metadata_code_id,
@@ -373,7 +362,6 @@ mod initialization {
     use komple_types::module::Modules;
 
     use komple_hub_module::ContractError;
-    use komple_merge_module::msg::InstantiateMsg as MergeModuleInstantiateMsg;
 
     #[test]
     fn test_happy_path() {
@@ -381,13 +369,14 @@ mod initialization {
         let hub_addr = proper_instantiate(&mut app);
         let merge_module_code_id = app.store_code(merge_module());
 
-        let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+        let instantiate_msg = to_binary(&RegisterMsg {
             admin: ADMIN.to_string(),
+            data: None,
         })
         .unwrap();
         let msg = HubExecuteMsg::RegisterModule {
             module: Modules::Merge.to_string(),
-            msg: instantiate_msg,
+            msg: Some(instantiate_msg),
             code_id: merge_module_code_id,
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[]);
@@ -403,13 +392,14 @@ mod initialization {
         let hub_addr = proper_instantiate(&mut app);
         let merge_module_code_id = app.store_code(merge_module());
 
-        let instantiate_msg = to_binary(&MergeModuleInstantiateMsg {
+        let instantiate_msg = to_binary(&RegisterMsg {
             admin: ADMIN.to_string(),
+            data: None,
         })
         .unwrap();
         let msg = HubExecuteMsg::RegisterModule {
             module: Modules::Merge.to_string(),
-            msg: instantiate_msg,
+            msg: Some(instantiate_msg),
             code_id: merge_module_code_id,
         };
         let err = app
@@ -708,8 +698,9 @@ mod permission_merge {
             let ownership_permission_code_id = app.store_code(ownership_permission_module());
             let msg = PermissionModuleExecuteMsg::RegisterPermission {
                 permission: Permissions::Ownership.to_string(),
-                msg: to_binary(&OwnershipModuleInstantiateMsg {
+                msg: to_binary(&RegisterMsg {
                     admin: ADMIN.to_string(),
+                    data: None,
                 })
                 .unwrap(),
                 code_id: ownership_permission_code_id,
@@ -883,8 +874,9 @@ mod permission_merge {
             let link_permission_code_id = app.store_code(link_permission_module());
             let msg = PermissionModuleExecuteMsg::RegisterPermission {
                 permission: Permissions::Link.to_string(),
-                msg: to_binary(&LinkPermissionModuleInstantiateMsg {
+                msg: to_binary(&RegisterMsg {
                     admin: ADMIN.to_string(),
+                    data: None,
                 })
                 .unwrap(),
                 code_id: link_permission_code_id,

@@ -1,11 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError,
-    StdResult,
+    from_binary, to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Order,
+    Response, StdError, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
+use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_utils::check_admin_privileges;
@@ -28,15 +29,19 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let admin = deps.api.addr_validate(&msg.admin)?;
+    if msg.data.is_none() {
+        return Err(ContractError::InvalidInstantiateMsg {});
+    };
+    let data: InstantiateMsg = from_binary(&msg.data.unwrap())?;
 
+    let admin = deps.api.addr_validate(&msg.admin)?;
     let config = Config {
         admin,
-        metadata_type: msg.metadata_type,
+        metadata_type: data.metadata_type,
     };
 
     CONFIG.save(deps.storage, &config)?;

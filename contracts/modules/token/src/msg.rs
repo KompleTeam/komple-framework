@@ -24,7 +24,6 @@ pub struct MetadataInfo {
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub admin: String,
     pub creator: String,
     pub token_info: TokenInfo,
     pub collection_name: String,

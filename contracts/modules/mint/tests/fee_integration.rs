@@ -5,7 +5,7 @@ use komple_fee_module::msg::ExecuteMsg as FeeExecuteMsg;
 use komple_hub_module::msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg};
 use komple_hub_module::state::HubInfo;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_mint_module::msg::ExecuteMsg;
 use komple_mint_module::state::CollectionInfo;
 use komple_mint_module::ContractError;
 use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
@@ -13,6 +13,7 @@ use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
 use komple_types::fee::MintFees;
 use komple_types::fee::{Fees, FixedPayment};
+use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_utils::storage::StorageHelper;
@@ -121,10 +122,13 @@ pub fn register_module(app: &mut App, hub_addr: &Addr, module: String, code_id: 
         hub_addr.clone(),
         &HubExecuteMsg::RegisterModule {
             module: module.to_string(),
-            msg: to_binary(&InstantiateMsg {
-                admin: ADMIN.to_string(),
-            })
-            .unwrap(),
+            msg: Some(
+                to_binary(&RegisterMsg {
+                    admin: ADMIN.to_string(),
+                    data: None,
+                })
+                .unwrap(),
+            ),
             code_id,
         },
         &vec![],
@@ -155,7 +159,6 @@ pub fn create_collection(app: &mut App, mint_module_addr: &Addr) {
     };
     let metadata_info = MetadataInfo {
         instantiate_msg: MetadataInstantiateMsg {
-            admin: "".to_string(),
             metadata_type: MetadataType::Standard,
         },
         code_id: metadata_code_id,

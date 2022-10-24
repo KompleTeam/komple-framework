@@ -2,8 +2,9 @@ use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
     ContractError,
 };
-use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::hub::RegisterMsg;
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -37,11 +38,15 @@ fn mock_app() -> App {
 fn proper_instantiate(app: &mut App) -> Addr {
     let marketplace_code_id = app.store_code(marketplace_module());
 
-    let msg = InstantiateMsg {
+    let msg = RegisterMsg {
         admin: ADMIN.to_string(),
-        native_denom: NATIVE_DENOM.to_string(),
+        data: Some(
+            to_binary(&InstantiateMsg {
+                native_denom: NATIVE_DENOM.to_string(),
+            })
+            .unwrap(),
+        ),
     };
-
     app.instantiate_contract(
         marketplace_code_id,
         Addr::unchecked(ADMIN),
@@ -61,9 +66,14 @@ mod instantiate {
         let mut app = mock_app();
         let marketplace_code_id = app.store_code(marketplace_module());
 
-        let msg = InstantiateMsg {
+        let msg = RegisterMsg {
             admin: ADMIN.to_string(),
-            native_denom: NATIVE_DENOM.to_string(),
+            data: Some(
+                to_binary(&InstantiateMsg {
+                    native_denom: NATIVE_DENOM.to_string(),
+                })
+                .unwrap(),
+            ),
         };
         let _ = app
             .instantiate_contract(
@@ -75,6 +85,31 @@ mod instantiate {
                 None,
             )
             .unwrap();
+    }
+
+    #[test]
+    fn test_invalid_msg() {
+        let mut app = mock_app();
+        let marketplace_code_id = app.store_code(marketplace_module());
+
+        let msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: None,
+        };
+        let err = app
+            .instantiate_contract(
+                marketplace_code_id,
+                Addr::unchecked(ADMIN),
+                &msg,
+                &[],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            ContractError::InvalidInstantiateMsg {}.to_string()
+        )
     }
 }
 

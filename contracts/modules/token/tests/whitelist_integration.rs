@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, Timestamp};
+use cosmwasm_std::{coin, to_binary, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -6,6 +6,7 @@ use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::ContractError;
+use komple_types::hub::RegisterMsg;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
     token::SubModules as TokenSubModules,
@@ -119,13 +120,11 @@ fn token_module_instantiation(app: &mut App) -> Addr {
     };
     let metadata_info = MetadataInfo {
         instantiate_msg: MetadataInstantiateMsg {
-            admin: "".to_string(),
             metadata_type: MetadataType::Standard,
         },
         code_id: metadata_code_id,
     };
     let msg = InstantiateMsg {
-        admin: ADMIN.to_string(),
         creator: ADMIN.to_string(),
         token_info,
         collection_type: Collections::Standard,
@@ -133,11 +132,15 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         collection_config,
         metadata_info,
     };
+    let register_msg = RegisterMsg {
+        admin: ADMIN.to_string(),
+        data: Some(to_binary(&msg).unwrap()),
+    };
 
     app.instantiate_contract(
         token_code_id,
         Addr::unchecked(ADMIN),
-        &msg,
+        &register_msg,
         &[],
         "test",
         None,

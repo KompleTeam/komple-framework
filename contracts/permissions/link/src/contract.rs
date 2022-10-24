@@ -4,6 +4,7 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
+use komple_types::hub::RegisterMsg;
 use komple_types::module::Modules;
 use komple_types::permission::LinkPermissionMsg;
 use komple_types::query::ResponseWrapper;
@@ -12,7 +13,7 @@ use komple_utils::event::EventHelper;
 use komple_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
@@ -24,7 +25,7 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 

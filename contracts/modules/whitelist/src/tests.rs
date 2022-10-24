@@ -1,8 +1,9 @@
 use crate::msg::{ConfigResponse, ExecuteMsg, QueryMsg};
 use crate::state::WhitelistConfig;
 use crate::ContractError;
-use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128};
+use cosmwasm_std::{to_binary, Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
 
 use crate::msg::InstantiateMsg;
@@ -58,11 +59,15 @@ fn proper_instantiate(
             member_limit,
         },
     };
+    let register_msg = RegisterMsg {
+        admin: ADMIN.to_string(),
+        data: Some(to_binary(&msg).unwrap()),
+    };
 
     app.instantiate_contract(
         whitelist_code_id,
         Addr::unchecked(ADMIN),
-        &msg,
+        &register_msg,
         &[],
         "test",
         None,
@@ -87,11 +92,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let _ = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -113,11 +122,15 @@ mod initialization {
                 member_limit: 0,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -143,11 +156,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -173,11 +190,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -203,11 +224,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -227,11 +252,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -251,11 +280,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -275,11 +308,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,
@@ -299,11 +336,15 @@ mod initialization {
                 member_limit: 10,
             },
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let err = app
             .instantiate_contract(
                 whitelist_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[],
                 "test",
                 None,

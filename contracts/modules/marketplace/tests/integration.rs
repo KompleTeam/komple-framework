@@ -1,9 +1,7 @@
 use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Uint128};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::msg::{
-    ExecuteMsg as FeeModuleExecuteMsg, InstantiateMsg as FeeModuleInstantiateMsg,
-};
+use komple_fee_module::msg::ExecuteMsg as FeeModuleExecuteMsg;
 use komple_hub_module::{
     msg::{
         ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
@@ -13,17 +11,17 @@ use komple_hub_module::{
 use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg};
 use komple_marketplace_module::ContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::{
-    msg::{ExecuteMsg as MintExecuteMsg, InstantiateMsg as MintInstantiateMsg},
-    state::CollectionInfo,
-};
+use komple_mint_module::{msg::ExecuteMsg as MintExecuteMsg, state::CollectionInfo};
 use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_types::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::{collection::Collections, fee::MarketplaceFees};
+use komple_types::{
+    fee::{Fees, PercentagePayment as FeeModulePercentagePayment},
+    hub::RegisterMsg,
+};
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 use std::str::FromStr;
@@ -199,8 +197,9 @@ fn setup_hub_module(app: &mut App, is_marbu: bool) -> Addr {
         true => {
             let fee_code_id = app.store_code(fee_module());
 
-            let msg = FeeModuleInstantiateMsg {
+            let msg = RegisterMsg {
                 admin: ADMIN.to_string(),
+                data: None,
             };
             let fee_module_addr = app
                 .instantiate_contract(fee_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
@@ -232,23 +231,25 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
     let mint_code_id = app.store_code(mint_module());
     let marketplace_code_id = app.store_code(marketplace_module());
 
-    let instantiate_msg = to_binary(&MintInstantiateMsg {
+    let instantiate_msg = to_binary(&RegisterMsg {
         admin: ADMIN.to_string(),
+        data: None,
     })
     .unwrap();
     let msg = HubExecuteMsg::RegisterModule {
         module: Modules::Mint.to_string(),
-        msg: instantiate_msg,
+        msg: Some(instantiate_msg),
         code_id: mint_code_id,
     };
     let _ = app
         .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
         .unwrap();
-    let instantiate_msg = to_binary(&InstantiateMsg {
-        admin: ADMIN.to_string(),
-        native_denom: NATIVE_DENOM.to_string(),
-    })
-    .unwrap();
+    let instantiate_msg = Some(
+        to_binary(&InstantiateMsg {
+            native_denom: NATIVE_DENOM.to_string(),
+        })
+        .unwrap(),
+    );
     let msg = HubExecuteMsg::RegisterModule {
         module: Modules::Marketplace.to_string(),
         msg: instantiate_msg,
@@ -300,7 +301,6 @@ pub fn create_collection(
     };
     let metadata_info = MetadataInfo {
         instantiate_msg: MetadataInstantiateMsg {
-            admin: "".to_string(),
             metadata_type: MetadataType::Standard,
         },
         code_id: metadata_code_id,
@@ -394,11 +394,12 @@ mod initialization {
         let hub_addr = setup_hub_module(&mut app, false);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let instantiate_msg = to_binary(&InstantiateMsg {
-            admin: ADMIN.to_string(),
-            native_denom: NATIVE_DENOM.to_string(),
-        })
-        .unwrap();
+        let instantiate_msg = Some(
+            to_binary(&InstantiateMsg {
+                native_denom: NATIVE_DENOM.to_string(),
+            })
+            .unwrap(),
+        );
         let msg = HubExecuteMsg::RegisterModule {
             module: Modules::Marketplace.to_string(),
             msg: instantiate_msg,
@@ -418,22 +419,24 @@ mod initialization {
         let marketplace_module_code_id = app.store_code(marketplace_module());
         let fee_module_code_id = app.store_code(fee_module());
 
-        let instantiate_msg = to_binary(&FeeModuleInstantiateMsg {
+        let instantiate_msg = to_binary(&RegisterMsg {
             admin: ADMIN.to_string(),
+            data: None,
         })
         .unwrap();
         let msg = HubExecuteMsg::RegisterModule {
             module: Modules::Fee.to_string(),
-            msg: instantiate_msg,
+            msg: Some(instantiate_msg),
             code_id: fee_module_code_id,
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[]);
 
-        let instantiate_msg = to_binary(&InstantiateMsg {
-            admin: ADMIN.to_string(),
-            native_denom: NATIVE_DENOM.to_string(),
-        })
-        .unwrap();
+        let instantiate_msg = Some(
+            to_binary(&InstantiateMsg {
+                native_denom: NATIVE_DENOM.to_string(),
+            })
+            .unwrap(),
+        );
         let msg = HubExecuteMsg::RegisterModule {
             module: Modules::Marketplace.to_string(),
             msg: instantiate_msg,
@@ -452,14 +455,19 @@ mod initialization {
         let hub_addr = setup_hub_module(&mut app, false);
         let marketplace_module_code_id = app.store_code(marketplace_module());
 
-        let instantiate_msg = to_binary(&InstantiateMsg {
+        let instantiate_msg = to_binary(&RegisterMsg {
             admin: ADMIN.to_string(),
-            native_denom: NATIVE_DENOM.to_string(),
+            data: Some(
+                to_binary(&InstantiateMsg {
+                    native_denom: NATIVE_DENOM.to_string(),
+                })
+                .unwrap(),
+            ),
         })
         .unwrap();
         let msg = HubExecuteMsg::RegisterModule {
             module: Modules::Marketplace.to_string(),
-            msg: instantiate_msg,
+            msg: Some(instantiate_msg),
             code_id: marketplace_module_code_id,
         };
         let err = app
@@ -1146,10 +1154,13 @@ mod actions {
                 let fee_module_code_id = app.store_code(fee_module());
                 let msg = HubExecuteMsg::RegisterModule {
                     module: Modules::Fee.to_string(),
-                    msg: to_binary(&FeeModuleInstantiateMsg {
-                        admin: ADMIN.to_string(),
-                    })
-                    .unwrap(),
+                    msg: Some(
+                        to_binary(&RegisterMsg {
+                            admin: ADMIN.to_string(),
+                            data: None,
+                        })
+                        .unwrap(),
+                    ),
                     code_id: fee_module_code_id,
                 };
                 let _ = app

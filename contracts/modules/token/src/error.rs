@@ -12,6 +12,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Invalid instantiate msg")]
+    InvalidInstantiateMsg {},
+
     #[error("Token mint locked")]
     MintLocked {},
 
