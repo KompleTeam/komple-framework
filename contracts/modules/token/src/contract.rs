@@ -147,14 +147,18 @@ pub fn instantiate(
         reply_on: ReplyOn::Success,
     };
 
-    Ok(Response::new().add_submessage(sub_msg).add_event(
-        EventHelper::new("komple_token_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("mint_module_addr", info.sender)
-            .add_attribute("creator", config.creator)
-            .add_attribute("minter", minter)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "token")
+        .add_attribute("action", "instantiate")
+        .add_event(
+            EventHelper::new("token_instantiate")
+                .add_attribute("mint_module_addr", info.sender)
+                .add_attribute("creator", config.creator)
+                .add_attribute("minter", minter)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -269,12 +273,15 @@ pub fn execute_update_module_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_token_module")
-            .add_attribute("action", "update_module_operators")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "token")
+        .add_attribute("action", "update_module_operators")
+        .add_event(
+            EventHelper::new("token_update_module_operators")
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 pub fn execute_update_locks(
@@ -297,15 +304,19 @@ pub fn execute_update_locks(
 
     LOCKS.save(deps.storage, &locks)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_token_module")
-            .add_attribute("action", "update_locks")
-            .add_attribute("mint_lock", locks.mint_lock.to_string())
-            .add_attribute("burn_lock", locks.burn_lock.to_string())
-            .add_attribute("transfer_lock", locks.transfer_lock.to_string())
-            .add_attribute("send_lock", locks.send_lock.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "token")
+        .add_attribute("action", "update_locks")
+        .add_event(
+            EventHelper::new("token_update_locks")
+                .add_attribute("action", "update_locks")
+                .add_attribute("mint_lock", locks.mint_lock.to_string())
+                .add_attribute("burn_lock", locks.burn_lock.to_string())
+                .add_attribute("transfer_lock", locks.transfer_lock.to_string())
+                .add_attribute("send_lock", locks.send_lock.to_string())
+                .get(),
+        ))
 }
 
 pub fn execute_update_token_locks(
@@ -333,16 +344,20 @@ pub fn execute_update_token_locks(
 
     TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_token_module")
-            .add_attribute("action", "update_token_locks")
-            .add_attribute("token_id", token_id)
-            .add_attribute("mint_lock", locks.mint_lock.to_string())
-            .add_attribute("burn_lock", locks.burn_lock.to_string())
-            .add_attribute("transfer_lock", locks.transfer_lock.to_string())
-            .add_attribute("send_lock", locks.send_lock.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "token")
+        .add_attribute("action", "update_token_locks")
+        .add_event(
+            EventHelper::new("token_update_token_locks")
+                .add_attribute("action", "update_token_locks")
+                .add_attribute("token_id", token_id)
+                .add_attribute("mint_lock", locks.mint_lock.to_string())
+                .add_attribute("burn_lock", locks.burn_lock.to_string())
+                .add_attribute("transfer_lock", locks.transfer_lock.to_string())
+                .add_attribute("send_lock", locks.send_lock.to_string())
+                .get(),
+        ))
 }
 
 pub fn execute_mint(
@@ -439,18 +454,22 @@ pub fn execute_mint(
     msgs.push(msg.into());
 
     match res {
-        Ok(res) => Ok(res.add_messages(msgs).add_event(
-            EventHelper::new("komple_token_module")
-                .add_attribute("action", "mint")
-                .add_attribute("token_id", token_id.to_string())
-                .add_attribute("owner", owner)
-                .check_add_attribute(
-                    &metadata_id,
-                    "metadata_id",
-                    metadata_id.unwrap_or(0).to_string(),
-                )
-                .get(),
-        )),
+        Ok(res) => Ok(res
+            .add_messages(msgs)
+            .add_attribute("name", "komple_framework")
+            .add_attribute("module", "token")
+            .add_attribute("action", "mint")
+            .add_event(
+                EventHelper::new("token_mint")
+                    .add_attribute("token_id", token_id.to_string())
+                    .add_attribute("owner", owner)
+                    .check_add_attribute(
+                        &metadata_id,
+                        "metadata_id",
+                        metadata_id.unwrap_or(0).to_string(),
+                    )
+                    .get(),
+            )),
         Err(e) => Err(e.into()),
     }
 }
@@ -488,12 +507,16 @@ pub fn execute_burn(
         },
     );
     match res {
-        Ok(res) => Ok(res.add_message(unlink_metadata_msg).add_event(
-            EventHelper::new("komple_token_module")
-                .add_attribute("action", "burn")
-                .add_attribute("token_id", token_id)
-                .get(),
-        )),
+        Ok(res) => Ok(res
+            .add_message(unlink_metadata_msg)
+            .add_attribute("name", "komple_framework")
+            .add_attribute("module", "token")
+            .add_attribute("action", "burn")
+            .add_event(
+                EventHelper::new("token_burn")
+                    .add_attribute("token_id", token_id)
+                    .get(),
+            )),
         Err(e) => Err(e.into()),
     }
 }
@@ -525,13 +548,16 @@ pub fn execute_transfer(
         },
     );
     match res {
-        Ok(res) => Ok(res.add_event(
-            EventHelper::new("komple_token_module")
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", token_id)
-                .add_attribute("recipient", recipient)
-                .get(),
-        )),
+        Ok(res) => Ok(res
+            .add_attribute("name", "komple_framework")
+            .add_attribute("module", "token")
+            .add_attribute("action", "transfer")
+            .add_event(
+                EventHelper::new("token_transfer")
+                    .add_attribute("token_id", token_id)
+                    .add_attribute("recipient", recipient)
+                    .get(),
+            )),
         Err(e) => Err(e.into()),
     }
 }
@@ -565,13 +591,16 @@ pub fn execute_admin_transfer(
         },
     );
     match res {
-        Ok(res) => Ok(res.add_event(
-            EventHelper::new("komple_token_module")
-                .add_attribute("action", "admin_transfer")
-                .add_attribute("token_id", token_id)
-                .add_attribute("recipient", recipient)
-                .get(),
-        )),
+        Ok(res) => Ok(res
+            .add_attribute("name", "komple_framework")
+            .add_attribute("module", "token")
+            .add_attribute("action", "admin_transfer")
+            .add_event(
+                EventHelper::new("token_admin_transfer")
+                    .add_attribute("token_id", token_id)
+                    .add_attribute("recipient", recipient)
+                    .get(),
+            )),
         Err(e) => Err(e.into()),
     }
 }
@@ -605,13 +634,16 @@ pub fn execute_send(
         },
     );
     match res {
-        Ok(res) => Ok(res.add_event(
-            EventHelper::new("komple_token_module")
-                .add_attribute("action", "send")
-                .add_attribute("token_id", token_id)
-                .add_attribute("contract", contract)
-                .get(),
-        )),
+        Ok(res) => Ok(res
+            .add_attribute("name", "komple_framework")
+            .add_attribute("module", "token")
+            .add_attribute("action", "send")
+            .add_event(
+                EventHelper::new("token_send")
+                    .add_attribute("token_id", token_id)
+                    .add_attribute("contract", contract)
+                    .get(),
+            )),
         Err(e) => Err(e.into()),
     }
 }
@@ -641,15 +673,18 @@ pub fn execute_update_per_address_limit(
     config.per_address_limit = per_address_limit;
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_token_module")
-            .add_attribute("action", "update_per_address_limit")
-            .add_attribute(
-                "per_address_limit",
-                per_address_limit.unwrap_or(0).to_string(),
-            )
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "token")
+        .add_attribute("action", "update_per_address_limit")
+        .add_event(
+            EventHelper::new("token_update_per_address_limit")
+                .add_attribute(
+                    "per_address_limit",
+                    per_address_limit.unwrap_or(0).to_string(),
+                )
+                .get(),
+        ))
 }
 
 fn execute_update_start_time(
@@ -686,15 +721,18 @@ fn execute_update_start_time(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_token_module")
-            .add_attribute("action", "update_start_time")
-            .add_attribute(
-                "start_time",
-                start_time.unwrap_or(Timestamp::from_seconds(0)).to_string(),
-            )
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "token")
+        .add_attribute("action", "update_start_time")
+        .add_event(
+            EventHelper::new("token_update_start_time")
+                .add_attribute(
+                    "start_time",
+                    start_time.unwrap_or(Timestamp::from_seconds(0)).to_string(),
+                )
+                .get(),
+        ))
 }
 
 fn execute_init_whitelist_module(
@@ -734,11 +772,12 @@ fn execute_init_whitelist_module(
         reply_on: ReplyOn::Success,
     };
 
-    Ok(Response::new().add_submessage(sub_msg).add_event(
-        EventHelper::new("komple_token_module")
-            .add_attribute("action", "init_whitelist_module")
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "token")
+        .add_attribute("action", "init_whitelist_module")
+        .add_event(EventHelper::new("token_init_whitelist_module").get()))
 }
 
 // fn get_mint_price(

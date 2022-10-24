@@ -41,13 +41,16 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_fee_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin.to_string())
-            .add_attribute("hub_addr", info.sender)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "fee")
+        .add_attribute("action", "instantiate")
+        .add_event(
+            EventHelper::new("fee_instantiate")
+                .add_attribute("admin", config.admin.to_string())
+                .add_attribute("hub_addr", info.sender)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -173,15 +176,18 @@ fn execute_set_fee(
         }
     }
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_fee_module")
-            .add_attribute("action", "set_fee")
-            .add_attribute("fee_type", fee_type.as_str())
-            .add_attribute("module_name", &module_name)
-            .add_attribute("fee_name", &fee_name)
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "fee")
+        .add_attribute("action", "set_fee")
+        .add_event(
+            EventHelper::new("fee_set_fee")
+                .add_attribute("fee_type", fee_type.as_str())
+                .add_attribute("module_name", &module_name)
+                .add_attribute("fee_name", &fee_name)
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 fn execute_remove_fee(
@@ -207,14 +213,17 @@ fn execute_remove_fee(
         Fees::Percentage => PERCENTAGE_FEES.remove(deps.storage, (&module_name, &fee_name)),
     }
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_fee_module")
-            .add_attribute("action", "remove_fee")
-            .add_attribute("fee_type", fee_type.as_str())
-            .add_attribute("module_name", &module_name)
-            .add_attribute("fee_name", &fee_name)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "fee")
+        .add_attribute("action", "remove_fee")
+        .add_event(
+            EventHelper::new("fee_remove_fee")
+                .add_attribute("fee_type", fee_type.as_str())
+                .add_attribute("module_name", &module_name)
+                .add_attribute("fee_name", &fee_name)
+                .get(),
+        ))
 }
 
 fn execute_distribute(
@@ -352,13 +361,17 @@ fn execute_distribute(
         }
     }
 
-    Ok(Response::new().add_messages(msgs).add_event(
-        EventHelper::new("komple_fee_module")
-            .add_attribute("action", "distribute")
-            .add_attribute("fee_type", fee_type.as_str())
-            .add_attribute("module_name", &module_name)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "fee")
+        .add_attribute("action", "distribute")
+        .add_event(
+            EventHelper::new("fee_distribute")
+                .add_attribute("fee_type", fee_type.as_str())
+                .add_attribute("module_name", &module_name)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

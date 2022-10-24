@@ -38,13 +38,16 @@ pub fn instantiate(
 
     PERMISSION_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_ownership_permission_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", admin)
-            .add_attribute("permission_module_addr", info.sender)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("permission", "attribute")
+        .add_attribute("action", "instantiate")
+        .add_event(
+            EventHelper::new("ownership_permission_instantiate")
+                .add_attribute("admin", admin)
+                .add_attribute("permission_module_addr", info.sender)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -102,12 +105,15 @@ pub fn execute_check(
         };
     }
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_attribute_permission_module")
-            .add_attribute("action", "check")
-            // .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("permission", "attribute")
+        .add_attribute("action", "check")
+        .add_event(
+            EventHelper::new("attribute_permission_check")
+                // .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -82,16 +82,19 @@ pub fn instantiate(
         });
     }
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("start_time", config.start_time.to_string())
-            .add_attribute("end_time", config.end_time.to_string())
-            .add_attribute("per_address_limit", config.per_address_limit.to_string())
-            .add_attribute("member_limit", config.member_limit.to_string())
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "whitelist")
+        .add_attribute("action", "instantiate")
+        .add_event(
+            EventHelper::new("whitelist_instantiate")
+                .add_attribute("start_time", config.start_time.to_string())
+                .add_attribute("end_time", config.end_time.to_string())
+                .add_attribute("per_address_limit", config.per_address_limit.to_string())
+                .add_attribute("member_limit", config.member_limit.to_string())
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -173,15 +176,18 @@ fn execute_update_whitelist_config(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "update_whitelist_config")
-            .add_attribute("start_time", config.start_time.to_string())
-            .add_attribute("end_time", config.end_time.to_string())
-            .add_attribute("per_address_limit", config.per_address_limit.to_string())
-            .add_attribute("member_limit", config.member_limit.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "whitelist")
+        .add_attribute("action", "update_whitelist_config")
+        .add_event(
+            EventHelper::new("whitelist_update_whitelist_config")
+                .add_attribute("start_time", config.start_time.to_string())
+                .add_attribute("end_time", config.end_time.to_string())
+                .add_attribute("per_address_limit", config.per_address_limit.to_string())
+                .add_attribute("member_limit", config.member_limit.to_string())
+                .get(),
+        ))
 }
 
 fn execute_add_members(
@@ -223,12 +229,15 @@ fn execute_add_members(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "add_members")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "whitelist")
+        .add_attribute("action", "add_members")
+        .add_event(
+            EventHelper::new("whitelist_add_members")
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 fn execute_remove_members(
@@ -267,12 +276,15 @@ fn execute_remove_members(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_whitelist_module")
-            .add_attribute("action", "remove_members")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "whitelist")
+        .add_attribute("action", "remove_members")
+        .add_event(
+            EventHelper::new("whitelist_remove_members")
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -35,13 +35,16 @@ pub fn instantiate(
 
     PERMISSION_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_link_permission_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin)
-            .add_attribute("permission_module_addr", info.sender)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("permission", "link")
+        .add_attribute("action", "instantiate")
+        .add_event(
+            EventHelper::new("link_permission_instantiate")
+                .add_attribute("admin", config.admin)
+                .add_attribute("permission_module_addr", info.sender)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -88,11 +91,11 @@ pub fn execute_check(
         }
     }
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_attribute_permission_module")
-            .add_attribute("action", "check")
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("permission", "link")
+        .add_attribute("action", "check")
+        .add_event(EventHelper::new("link_permission_check").get()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

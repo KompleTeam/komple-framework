@@ -42,13 +42,16 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_merge_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin)
-            .add_attribute("hub_addr", info.sender)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "merge")
+        .add_attribute("action", "instantiate")
+        .add_event(
+            EventHelper::new("merge_instantiate")
+                .add_attribute("admin", config.admin)
+                .add_attribute("hub_addr", info.sender)
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -91,12 +94,15 @@ fn execute_update_merge_lock(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_merge_module")
-            .add_attribute("action", "update_merge_lock")
-            .add_attribute("lock", lock.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "merge")
+        .add_attribute("action", "update_merge_lock")
+        .add_event(
+            EventHelper::new("merge_update_merge_lock")
+                .add_attribute("lock", lock.to_string())
+                .get(),
+        ))
 }
 
 fn execute_merge(
@@ -111,12 +117,16 @@ fn execute_merge(
 
     make_merge_msg(&deps, &info, &mut event_attributes, msg, &mut msgs)?;
 
-    Ok(Response::new().add_messages(msgs).add_event(
-        EventHelper::new("komple_merge_module")
-            .add_attribute("action", "merge")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "merge")
+        .add_attribute("action", "merge")
+        .add_event(
+            EventHelper::new("merge_merge")
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 fn execute_permission_merge(
@@ -157,12 +167,16 @@ fn execute_permission_merge(
 
     make_merge_msg(&deps, &info, &mut event_attributes, merge_msg, &mut msgs)?;
 
-    Ok(Response::new().add_messages(msgs).add_event(
-        EventHelper::new("komple_merge_module")
-            .add_attribute("action", "permission_merge")
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "merge")
+        .add_attribute("action", "permission_merge")
+        .add_event(
+            EventHelper::new("merge_permission_merge")
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 fn execute_update_operators(
@@ -202,12 +216,15 @@ fn execute_update_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_merge_module")
-            .add_attribute("action".to_string(), "update_operators".to_string())
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "merge")
+        .add_attribute("action", "update_operators")
+        .add_event(
+            EventHelper::new("merge_update_operators")
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 /// Constructs the mint and burn messages
