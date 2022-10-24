@@ -57,17 +57,20 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", "instantiate")
-            .add_attribute("admin", config.admin)
-            .add_attribute(
-                "public_collection_creation",
-                config.public_collection_creation.to_string(),
-            )
-            .add_attribute("mint_lock", config.mint_lock.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "instantiate")
+        .add_event(
+            EventHelper::new("mint_instantiate")
+                .add_attribute("admin", config.admin)
+                .add_attribute(
+                    "public_collection_creation",
+                    config.public_collection_creation.to_string(),
+                )
+                .add_attribute("mint_lock", config.mint_lock.to_string())
+                .get(),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -190,56 +193,60 @@ pub fn execute_create_collection(
 
     COLLECTION_INFO.save(deps.storage, collection_id, &collection_info)?;
 
-    Ok(Response::new().add_submessage(sub_msg).add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", "create_collection")
-            .add_attribute("creator", token_instantiate_msg.creator)
-            .add_attribute("minter", token_instantiate_msg.token_info.minter)
-            .add_attribute("symbol", token_instantiate_msg.token_info.symbol)
-            .add_attribute(
-                "collection_type",
-                token_instantiate_msg.collection_type.to_string(),
-            )
-            .add_attribute("collection_name", token_instantiate_msg.collection_name)
-            .add_attribute("description", collection_info.description)
-            .add_attribute("image", collection_info.image)
-            .check_add_attribute(
-                &collection_info.external_link,
-                "external_link",
-                collection_info
-                    .external_link
-                    .as_ref()
-                    .unwrap_or(&String::from("")),
-            )
-            .add_attribute("native_denom", collection_info.native_denom)
-            .check_add_attribute(
-                &collection_config.start_time,
-                "start_time",
-                collection_config
-                    .start_time
-                    .unwrap_or(Timestamp::from_nanos(0))
-                    .to_string(),
-            )
-            .check_add_attribute(
-                &collection_config.max_token_limit,
-                "max_token_limit",
-                collection_config.max_token_limit.unwrap_or(0).to_string(),
-            )
-            .check_add_attribute(
-                &collection_config.per_address_limit,
-                "per_address_limit",
-                collection_config.per_address_limit.unwrap_or(0).to_string(),
-            )
-            .check_add_attribute(
-                &collection_config.ipfs_link,
-                "ipfs_link",
-                collection_config
-                    .ipfs_link
-                    .as_ref()
-                    .unwrap_or(&String::from("")),
-            )
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_submessage(sub_msg)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "create_collection")
+        .add_event(
+            EventHelper::new("mint_create_collection")
+                .add_attribute("creator", token_instantiate_msg.creator)
+                .add_attribute("minter", token_instantiate_msg.token_info.minter)
+                .add_attribute("symbol", token_instantiate_msg.token_info.symbol)
+                .add_attribute(
+                    "collection_type",
+                    token_instantiate_msg.collection_type.to_string(),
+                )
+                .add_attribute("collection_name", token_instantiate_msg.collection_name)
+                .add_attribute("description", collection_info.description)
+                .add_attribute("image", collection_info.image)
+                .check_add_attribute(
+                    &collection_info.external_link,
+                    "external_link",
+                    collection_info
+                        .external_link
+                        .as_ref()
+                        .unwrap_or(&String::from("")),
+                )
+                .add_attribute("native_denom", collection_info.native_denom)
+                .check_add_attribute(
+                    &collection_config.start_time,
+                    "start_time",
+                    collection_config
+                        .start_time
+                        .unwrap_or(Timestamp::from_nanos(0))
+                        .to_string(),
+                )
+                .check_add_attribute(
+                    &collection_config.max_token_limit,
+                    "max_token_limit",
+                    collection_config.max_token_limit.unwrap_or(0).to_string(),
+                )
+                .check_add_attribute(
+                    &collection_config.per_address_limit,
+                    "per_address_limit",
+                    collection_config.per_address_limit.unwrap_or(0).to_string(),
+                )
+                .check_add_attribute(
+                    &collection_config.ipfs_link,
+                    "ipfs_link",
+                    collection_config
+                        .ipfs_link
+                        .as_ref()
+                        .unwrap_or(&String::from("")),
+                )
+                .get(),
+        ))
 }
 
 pub fn execute_update_public_collection_creation(
@@ -263,15 +270,18 @@ pub fn execute_update_public_collection_creation(
     config.public_collection_creation = public_collection_creation;
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", "update_public_collection_creation")
-            .add_attribute(
-                "public_collection_creation",
-                public_collection_creation.to_string(),
-            )
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "update_public_collection_creation")
+        .add_event(
+            EventHelper::new("mint_update_public_collection_creation")
+                .add_attribute(
+                    "public_collection_creation",
+                    public_collection_creation.to_string(),
+                )
+                .get(),
+        ))
 }
 
 pub fn execute_update_mint_lock(
@@ -296,12 +306,15 @@ pub fn execute_update_mint_lock(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", "update_mint_lock")
-            .add_attribute("mint_lock", lock.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "update_mint_lock")
+        .add_event(
+            EventHelper::new("mint_update_mint_lock")
+                .add_attribute("mint_lock", lock.to_string())
+                .get(),
+        ))
 }
 
 fn execute_mint(
@@ -422,7 +435,7 @@ fn execute_mint(
         };
     }
 
-    _execute_mint(deps, "execute_mint", msgs, mint_msg)
+    _execute_mint(deps, "mint", msgs, mint_msg)
 }
 
 fn execute_admin_mint(
@@ -454,7 +467,7 @@ fn execute_admin_mint(
         metadata_id,
     };
 
-    _execute_mint(deps, "execute_mint_to", msgs, mint_msg)
+    _execute_mint(deps, "admin_mint", msgs, mint_msg)
 }
 
 fn execute_permission_mint(
@@ -497,23 +510,28 @@ fn execute_permission_mint(
         contract_addr: env.contract.address.to_string(),
         msg: to_binary(&ExecuteMsg::AdminMint {
             collection_id: mint_msg.collection_id,
-            recipient: mint_msg.recipient,
+            recipient: mint_msg.recipient.clone(),
             metadata_id: mint_msg.metadata_id,
         })?,
         funds: info.funds.clone(),
     });
 
-    Ok(Response::new().add_messages(msgs).add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", "permission_mint")
-            .add_attribute("collection_id", mint_msg.collection_id.to_string())
-            .check_add_attribute(
-                &mint_msg.metadata_id,
-                "metadata_id",
-                mint_msg.metadata_id.as_ref().unwrap_or(&0).to_string(),
-            )
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "permission_mint")
+        .add_event(
+            EventHelper::new("mint_permission_mint")
+                .add_attribute("collection_id", mint_msg.collection_id.to_string())
+                .add_attribute("recipient", mint_msg.recipient)
+                .check_add_attribute(
+                    &mint_msg.metadata_id,
+                    "metadata_id",
+                    mint_msg.metadata_id.as_ref().unwrap_or(&0).to_string(),
+                )
+                .get(),
+        ))
 }
 
 fn _execute_mint(
@@ -528,18 +546,22 @@ fn _execute_mint(
         .mint_msg(mint_msg.recipient.clone(), mint_msg.metadata_id)?;
     msgs.push(msg.into());
 
-    Ok(Response::new().add_messages(msgs).add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", action)
-            .add_attribute("recipient", mint_msg.recipient)
-            .add_attribute("collection_id", mint_msg.collection_id.to_string())
-            .check_add_attribute(
-                &mint_msg.metadata_id,
-                "metadata_id",
-                mint_msg.metadata_id.as_ref().unwrap_or(&0).to_string(),
-            )
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", action)
+        .add_event(
+            EventHelper::new(format!("mint_{}", action))
+                .add_attribute("recipient", mint_msg.recipient)
+                .add_attribute("collection_id", mint_msg.collection_id.to_string())
+                .check_add_attribute(
+                    &mint_msg.metadata_id,
+                    "metadata_id",
+                    mint_msg.metadata_id.as_ref().unwrap_or(&0).to_string(),
+                )
+                .get(),
+        ))
 }
 
 fn execute_update_operators(
@@ -579,12 +601,15 @@ fn execute_update_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action".to_string(), "update_operators".to_string())
-            .add_attributes(event_attributes)
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "update_operators")
+        .add_event(
+            EventHelper::new("mint_update_operators")
+                .add_attributes(event_attributes)
+                .get(),
+        ))
 }
 
 fn execute_update_linked_collections(
@@ -616,7 +641,11 @@ fn execute_update_linked_collections(
 
     LINKED_COLLECTIONS.save(deps.storage, collection_id, &linked_collections)?;
 
-    Ok(Response::new().add_attribute("action", "execute_update_linked_collections"))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "update_linked_collections")
+        .add_event(EventHelper::new("mint_update_linked_collections").get()))
 }
 
 fn execute_whitelist_collection(
@@ -649,12 +678,15 @@ fn execute_whitelist_collection(
     BLACKLIST_COLLECTION_ADDRS.remove(deps.storage, collection_id);
     COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", "whitelist_collection")
-            .add_attribute("collection_id", collection_id.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "whitelist_collection")
+        .add_event(
+            EventHelper::new("mint_whitelist_collection")
+                .add_attribute("collection_id", collection_id.to_string())
+                .get(),
+        ))
 }
 
 fn execute_blacklist_collection(
@@ -687,12 +719,15 @@ fn execute_blacklist_collection(
     COLLECTION_ADDRS.remove(deps.storage, collection_id);
     BLACKLIST_COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
 
-    Ok(Response::new().add_event(
-        EventHelper::new("komple_mint_module")
-            .add_attribute("action", "blacklist_collection")
-            .add_attribute("collection_id", collection_id.to_string())
-            .get(),
-    ))
+    Ok(Response::new()
+        .add_attribute("name", "komple_framework")
+        .add_attribute("module", "mint")
+        .add_attribute("action", "blacklist_collection")
+        .add_event(
+            EventHelper::new("mint_blacklist_collection")
+                .add_attribute("collection_id", collection_id.to_string())
+                .get(),
+        ))
 }
 
 fn check_collection_ids_exists(
