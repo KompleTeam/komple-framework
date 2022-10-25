@@ -5,7 +5,7 @@ use crate::{
 };
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::{hub::RegisterMsg, query::ResponseWrapper};
+use komple_types::{query::ResponseWrapper, shared::RegisterMsg};
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

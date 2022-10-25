@@ -7,9 +7,9 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 use komple_types::collection::Collections;
-use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 use komple_types::token::{Locks, SubModules};
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
@@ -779,36 +779,6 @@ fn execute_init_whitelist_module(
         .add_attribute("action", "init_whitelist_module")
         .add_event(EventHelper::new("token_init_whitelist_module").get()))
 }
-
-// fn get_mint_price(
-//     deps: &DepsMut,
-//     collection_config: &CollectionConfig,
-// ) -> Result<Option<Coin>, ContractError> {
-//     let sub_modules = SUB_MODULES.load(deps.storage)?;
-
-//     let collection_price = collection_config
-//         .unit_price
-//         .map(|price| coin(price.u128(), &collection_config.native_denom));
-
-//     if sub_modules.whitelist.is_none() {
-//         return Ok(collection_price);
-//     };
-
-//     let whitelist = sub_modules.whitelist.unwrap();
-
-//     let res: ResponseWrapper<WhitelistConfigResponse> = deps
-//         .querier
-//         .query_wasm_smart(whitelist, &WhitelistQueryMsg::Config {})?;
-
-//     if res.data.is_active {
-//         Ok(Some(coin(
-//             res.data.unit_price.u128(),
-//             &collection_config.native_denom,
-//         )))
-//     } else {
-//         Ok(collection_price)
-//     }
-// }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {

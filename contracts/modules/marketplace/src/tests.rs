@@ -4,7 +4,7 @@ use crate::{
 };
 use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::hub::RegisterMsg;
+use komple_types::shared::RegisterMsg;
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

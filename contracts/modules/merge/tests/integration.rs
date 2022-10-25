@@ -18,8 +18,8 @@ use komple_token_module::msg::{
 };
 use komple_token_module::state::CollectionConfig;
 use komple_types::{
-    collection::Collections, hub::RegisterMsg, metadata::Metadata as MetadataType, module::Modules,
-    permission::Permissions,
+    collection::Collections, metadata::Metadata as MetadataType, module::Modules,
+    permission::Permissions, shared::RegisterMsg,
 };
 use komple_utils::storage::StorageHelper;
 

@@ -7,7 +7,7 @@ use komple_hub_module::{
     ContractError,
 };
 use komple_marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
-use komple_types::hub::RegisterMsg;
+use komple_types::shared::RegisterMsg;
 use komple_types::{module::Modules, query::ResponseWrapper};
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {

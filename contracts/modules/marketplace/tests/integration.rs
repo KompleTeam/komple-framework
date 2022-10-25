@@ -20,7 +20,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::{collection::Collections, fee::MarketplaceFees};
 use komple_types::{
     fee::{Fees, PercentagePayment as FeeModulePercentagePayment},
-    hub::RegisterMsg,
+    shared::RegisterMsg,
 };
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;

@@ -6,7 +6,7 @@ use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::ContractError;
-use komple_types::hub::RegisterMsg;
+use komple_types::shared::RegisterMsg;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
     token::SubModules as TokenSubModules,

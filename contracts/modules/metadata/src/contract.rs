@@ -6,9 +6,9 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
-use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
 use komple_utils::event::EventHelper;
 use semver::Version;

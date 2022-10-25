@@ -13,11 +13,11 @@ use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
-use komple_types::hub::RegisterMsg;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";

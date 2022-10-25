@@ -8,9 +8,9 @@ use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use komple_mint_module::helper::KompleMintModule;
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::helper::KompleTokenModule;
-use komple_types::hub::RegisterMsg;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 use komple_utils::event::EventHelper;
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
@@ -285,7 +285,10 @@ fn make_burn_messages(
 
         event_attributes.push(Attribute::new(
             "burn_ids",
-            format!("collection_id/{}|token_id/{}", burn_msg.collection_id, burn_msg.token_id),
+            format!(
+                "collection_id/{}|token_id/{}",
+                burn_msg.collection_id, burn_msg.token_id
+            ),
         ));
     }
     Ok(())

@@ -1,9 +1,10 @@
 use cosmwasm_schema::write_api;
-use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use komple_marketplace_module::msg::{ExecuteMsg, MigrateMsg, QueryMsg};
+use komple_types::shared::RegisterMsg;
 
 fn main() {
     write_api! {
-        instantiate: InstantiateMsg,
+        instantiate: RegisterMsg,
         query: QueryMsg,
         execute: ExecuteMsg,
         migrate: MigrateMsg

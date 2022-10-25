@@ -15,7 +15,7 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{fee::MintFees, hub::RegisterMsg, module::Modules};
+use komple_types::{fee::MintFees, module::Modules, shared::RegisterMsg};
 use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use komple_utils::{event::EventHelper, funds::check_single_coin};

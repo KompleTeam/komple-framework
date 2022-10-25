@@ -3,8 +3,8 @@ use crate::state::WhitelistConfig;
 use crate::ContractError;
 use cosmwasm_std::{to_binary, Addr, Coin, Empty, Timestamp, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 
 use crate::msg::InstantiateMsg;
 

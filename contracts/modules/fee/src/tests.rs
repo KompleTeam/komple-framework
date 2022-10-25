@@ -7,8 +7,8 @@ use cosmwasm_std::StdError;
 use cosmwasm_std::{coin, Addr, Empty, Uint128};
 use cosmwasm_std::{to_binary, Binary};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::hub::RegisterMsg;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 use komple_types::{
     fee::{Fees, FixedPayment, PercentagePayment},
     module::Modules,

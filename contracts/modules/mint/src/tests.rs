@@ -10,7 +10,7 @@ use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::hub::RegisterMsg;
+use komple_types::shared::RegisterMsg;
 use komple_types::{
     collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };

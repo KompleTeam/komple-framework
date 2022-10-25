@@ -8,7 +8,7 @@ use komple_metadata_module::{
     msg::{InstantiateMsg as MetadataInstantiateMsg, QueryMsg as MetadataQueryMsg},
     state::{MetaInfo, Metadata as MetadataMetadata},
 };
-use komple_types::hub::RegisterMsg;
+use komple_types::shared::RegisterMsg;
 use komple_types::{
     collection::Collections,
     metadata::Metadata as MetadataType,

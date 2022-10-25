@@ -4,11 +4,10 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use komple_types::hub::RegisterMsg;
 use komple_types::module::Modules;
 use komple_types::permission::LinkPermissionMsg;
 use komple_types::query::ResponseWrapper;
-use komple_types::shared::HUB_ADDR_NAMESPACE;
+use komple_types::shared::{RegisterMsg, HUB_ADDR_NAMESPACE};
 use komple_utils::event::EventHelper;
 use komple_utils::storage::StorageHelper;
 

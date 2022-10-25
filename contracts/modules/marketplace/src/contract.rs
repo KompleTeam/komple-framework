@@ -12,10 +12,10 @@ use komple_fee_module::{
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
 };
-use komple_types::hub::RegisterMsg;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 use komple_types::token::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
 use komple_types::{fee::MarketplaceFees, hub::MARBU_FEE_MODULE_NAMESPACE};
