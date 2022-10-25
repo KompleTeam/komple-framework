@@ -273,7 +273,7 @@ fn make_burn_messages(
     merge_msg: &MergeMsg,
     msgs: &mut Vec<WasmMsg>,
 ) -> Result<(), ContractError> {
-    for (index, burn_msg) in merge_msg.burn_ids.iter().enumerate() {
+    for burn_msg in &merge_msg.burn_ids {
         let collection_addr = StorageHelper::query_collection_address(
             &deps.querier,
             mint_module_addr,
@@ -284,12 +284,8 @@ fn make_burn_messages(
         msgs.push(msg);
 
         event_attributes.push(Attribute::new(
-            format!("burn_msg/{}", index),
-            format!("token_id/{}", burn_msg.token_id),
-        ));
-        event_attributes.push(Attribute::new(
-            format!("burn_msg/{}", index),
-            format!("collection_id/{}", burn_msg.collection_id),
+            "burn_ids",
+            format!("collection_id/{}|token_id/{}", burn_msg.collection_id, burn_msg.token_id),
         ));
     }
     Ok(())

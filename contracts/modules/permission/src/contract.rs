@@ -158,7 +158,7 @@ fn execute_update_module_permissions(
             return Err(ContractError::InvalidPermissions {});
         };
         event_attributes.push(Attribute {
-            key: "permission".to_string(),
+            key: "permissions".to_string(),
             value: permission.to_string(),
         });
     }
@@ -260,7 +260,7 @@ fn execute_check(
         msgs.push(permission_msg);
 
         event_attributes.push(Attribute {
-            key: "permission".to_string(),
+            key: "permissions".to_string(),
             value: permission.permission_type,
         });
     }
