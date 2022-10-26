@@ -4,7 +4,7 @@ use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_hub_module::state::HubInfo;
-use komple_link_permission_module::msg::ExecuteMsg;
+use komple_link_permission_module::msg::{ExecuteMsg, LinkPermissionMsg};
 use komple_link_permission_module::ContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
@@ -16,7 +16,7 @@ use komple_token_module::state::CollectionConfig;
 use komple_types::collection::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
-use komple_types::permission::{LinkPermissionMsg, Permissions};
+use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 

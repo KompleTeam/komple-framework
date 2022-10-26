@@ -1,6 +1,7 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_attribute_permission_module::msg::AttributeMsg;
+use komple_attribute_permission_module::{msg::ExecuteMsg, ContractError};
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
@@ -292,23 +293,18 @@ mod check_conditions {
     use super::*;
 
     mod exists {
-        use komple_attribute_permission_module::{msg::ExecuteMsg, ContractError};
-
         use super::*;
 
         #[test]
-        fn test_permission_check() {
+        fn test_check() {
             let mut app = mock_app();
             let hub_addr = setup_hub_module(&mut app);
             let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
-
             let token_module_code_id = app.store_code(token_module());
             create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
-
             let collection_addr =
                 StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                     .unwrap();
-
             let sub_modules =
                 StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
             let metadata_addr = sub_modules.metadata.unwrap();
@@ -323,7 +319,6 @@ mod check_conditions {
             );
 
             mint_token(&mut app, mint_module_addr, USER, 1, 1);
-
             register_attribute_permission(&mut app, &permission_module_addr);
             setup_module_permissions(
                 &mut app,
@@ -384,6 +379,903 @@ mod check_conditions {
                 err.source().unwrap().source().unwrap().to_string(),
                 ContractError::AttributeNotFound {}.to_string()
             )
+        }
+    }
+
+    mod absent {
+        use super::*;
+
+        #[test]
+        fn test_check() {
+            let mut app = mock_app();
+            let hub_addr = setup_hub_module(&mut app);
+            let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
+            let collection_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            let sub_modules =
+                StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
+            let metadata_addr = sub_modules.metadata.unwrap();
+
+            add_metadata(
+                &mut app,
+                metadata_addr,
+                vec![Trait {
+                    trait_type: "room_number".to_string(),
+                    value: "123".to_string(),
+                }],
+            );
+
+            mint_token(&mut app, mint_module_addr, USER, 1, 1);
+            register_attribute_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Mint.to_string(),
+                vec![Permissions::Attribute.to_string()],
+            );
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::Absent,
+                            trait_type: "unrelated".to_string(),
+                            value: "123".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::Absent,
+                            trait_type: "room_number".to_string(),
+                            value: "123".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), permission_module_addr, &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeFound {}.to_string()
+            )
+        }
+    }
+
+    mod equal {
+        use super::*;
+
+        #[test]
+        fn test_check() {
+            let mut app = mock_app();
+            let hub_addr = setup_hub_module(&mut app);
+            let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
+            let collection_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            let sub_modules =
+                StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
+            let metadata_addr = sub_modules.metadata.unwrap();
+
+            add_metadata(
+                &mut app,
+                metadata_addr,
+                vec![
+                    Trait {
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    },
+                    Trait {
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    },
+                ],
+            );
+
+            mint_token(&mut app, mint_module_addr, USER, 1, 1);
+            register_attribute_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Mint.to_string(),
+                vec![Permissions::Attribute.to_string()],
+            );
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::Equal,
+                                trait_type: "room_number".to_string(),
+                                value: "123".to_string(),
+                            },
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::Equal,
+                                trait_type: "sold".to_string(),
+                                value: "true".to_string(),
+                            },
+                        ])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::Equal,
+                            trait_type: "sold".to_string(),
+                            value: "false".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), permission_module_addr, &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeNotEqual {}.to_string()
+            )
+        }
+    }
+
+    mod not_equal {
+        use super::*;
+
+        #[test]
+        fn test_check() {
+            let mut app = mock_app();
+            let hub_addr = setup_hub_module(&mut app);
+            let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
+            let collection_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            let sub_modules =
+                StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
+            let metadata_addr = sub_modules.metadata.unwrap();
+
+            add_metadata(
+                &mut app,
+                metadata_addr,
+                vec![
+                    Trait {
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    },
+                    Trait {
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    },
+                ],
+            );
+
+            mint_token(&mut app, mint_module_addr, USER, 1, 1);
+            register_attribute_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Mint.to_string(),
+                vec![Permissions::Attribute.to_string()],
+            );
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::NotEqual,
+                                trait_type: "room_number".to_string(),
+                                value: "500".to_string(),
+                            },
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::NotEqual,
+                                trait_type: "sold".to_string(),
+                                value: "false".to_string(),
+                            },
+                        ])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::NotEqual,
+                            trait_type: "sold".to_string(),
+                            value: "true".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), permission_module_addr, &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeEqual {}.to_string()
+            )
+        }
+    }
+
+    mod greater_than {
+        use super::*;
+
+        #[test]
+        fn test_check() {
+            let mut app = mock_app();
+            let hub_addr = setup_hub_module(&mut app);
+            let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
+            let collection_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            let sub_modules =
+                StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
+            let metadata_addr = sub_modules.metadata.unwrap();
+
+            add_metadata(
+                &mut app,
+                metadata_addr,
+                vec![
+                    Trait {
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    },
+                    Trait {
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    },
+                ],
+            );
+
+            mint_token(&mut app, mint_module_addr, USER, 1, 1);
+            register_attribute_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Mint.to_string(),
+                vec![Permissions::Attribute.to_string()],
+            );
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThan,
+                            trait_type: "room_number".to_string(),
+                            value: "100".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThan,
+                            trait_type: "sold".to_string(),
+                            value: "true".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeTypeMismatch {}.to_string()
+            );
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThan,
+                            trait_type: "room_number".to_string(),
+                            value: "500".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeLessThanOrEqual {}.to_string()
+            );
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThan,
+                            trait_type: "room_number".to_string(),
+                            value: "123".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), permission_module_addr, &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeLessThanOrEqual {}.to_string()
+            )
+        }
+    }
+
+    mod greater_than_or_equal {
+        use super::*;
+
+        #[test]
+        fn test_check() {
+            let mut app = mock_app();
+            let hub_addr = setup_hub_module(&mut app);
+            let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
+            let collection_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            let sub_modules =
+                StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
+            let metadata_addr = sub_modules.metadata.unwrap();
+
+            add_metadata(
+                &mut app,
+                metadata_addr,
+                vec![
+                    Trait {
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    },
+                    Trait {
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    },
+                ],
+            );
+
+            mint_token(&mut app, mint_module_addr, USER, 1, 1);
+            register_attribute_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Mint.to_string(),
+                vec![Permissions::Attribute.to_string()],
+            );
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::GreaterThanOrEqual,
+                                trait_type: "room_number".to_string(),
+                                value: "123".to_string(),
+                            },
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::GreaterThanOrEqual,
+                                trait_type: "room_number".to_string(),
+                                value: "100".to_string(),
+                            },
+                        ])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThanOrEqual,
+                            trait_type: "sold".to_string(),
+                            value: "true".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeTypeMismatch {}.to_string()
+            );
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThanOrEqual,
+                            trait_type: "room_number".to_string(),
+                            value: "500".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeLessThan {}.to_string()
+            );
+        }
+    }
+
+    mod less_than {
+        use super::*;
+
+        #[test]
+        fn test_check() {
+            let mut app = mock_app();
+            let hub_addr = setup_hub_module(&mut app);
+            let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
+            let collection_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            let sub_modules =
+                StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
+            let metadata_addr = sub_modules.metadata.unwrap();
+
+            add_metadata(
+                &mut app,
+                metadata_addr,
+                vec![
+                    Trait {
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    },
+                    Trait {
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    },
+                ],
+            );
+
+            mint_token(&mut app, mint_module_addr, USER, 1, 1);
+            register_attribute_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Mint.to_string(),
+                vec![Permissions::Attribute.to_string()],
+            );
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThan,
+                            trait_type: "room_number".to_string(),
+                            value: "500".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThan,
+                            trait_type: "sold".to_string(),
+                            value: "true".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeTypeMismatch {}.to_string()
+            );
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThan,
+                            trait_type: "room_number".to_string(),
+                            value: "50".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeGreaterThanOrEqual {}.to_string()
+            );
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThan,
+                            trait_type: "room_number".to_string(),
+                            value: "123".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeGreaterThanOrEqual {}.to_string()
+            );
+        }
+    }
+
+    mod less_than_or_equal {
+        use super::*;
+
+        #[test]
+        fn test_check() {
+            let mut app = mock_app();
+            let hub_addr = setup_hub_module(&mut app);
+            let (mint_module_addr, permission_module_addr) = setup_modules(&mut app, hub_addr);
+            let token_module_code_id = app.store_code(token_module());
+            create_collection(&mut app, mint_module_addr.clone(), token_module_code_id);
+            let collection_addr =
+                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                    .unwrap();
+            let sub_modules =
+                StorageHelper::query_token_sub_modules(&app.wrap(), &collection_addr).unwrap();
+            let metadata_addr = sub_modules.metadata.unwrap();
+
+            add_metadata(
+                &mut app,
+                metadata_addr,
+                vec![
+                    Trait {
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    },
+                    Trait {
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    },
+                ],
+            );
+
+            mint_token(&mut app, mint_module_addr, USER, 1, 1);
+            register_attribute_permission(&mut app, &permission_module_addr);
+            setup_module_permissions(
+                &mut app,
+                &permission_module_addr,
+                Modules::Mint.to_string(),
+                vec![Permissions::Attribute.to_string()],
+            );
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::LessThanOrEqual,
+                                trait_type: "room_number".to_string(),
+                                value: "500".to_string(),
+                            },
+                            AttributeMsg {
+                                collection_id: 1,
+                                token_id: 1,
+                                condition: AttributeConditions::LessThanOrEqual,
+                                trait_type: "room_number".to_string(),
+                                value: "123".to_string(),
+                            },
+                        ])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let _ = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap();
+
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThanOrEqual,
+                            trait_type: "sold".to_string(),
+                            value: "true".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeTypeMismatch {}.to_string()
+            );
+            let msg = PermissionExecuteMsg::Check {
+                module: Modules::Mint.to_string(),
+                msg: to_binary(&[PermissionCheckMsg {
+                    permission_type: Permissions::Attribute.to_string(),
+                    data: to_binary(&ExecuteMsg::Check {
+                        data: to_binary(&[AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThanOrEqual,
+                            trait_type: "room_number".to_string(),
+                            value: "50".to_string(),
+                        }])
+                        .unwrap(),
+                    })
+                    .unwrap(),
+                }])
+                .unwrap(),
+            };
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    permission_module_addr.clone(),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().source().unwrap().to_string(),
+                ContractError::AttributeGreaterThan {}.to_string()
+            );
         }
     }
 }

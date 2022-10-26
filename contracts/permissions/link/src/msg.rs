@@ -14,3 +14,9 @@ pub enum QueryMsg {
     #[returns(ResponseWrapper<Config>)]
     Config {},
 }
+
+#[cw_serde]
+pub struct LinkPermissionMsg {
+    pub collection_id: u32,
+    pub collection_ids: Vec<u32>,
+}

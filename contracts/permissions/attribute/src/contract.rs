@@ -7,6 +7,7 @@ use cw2::set_contract_version;
 use komple_metadata_module::helper::KompleMetadataModule;
 use komple_types::module::Modules;
 use komple_types::permission::AttributeConditions;
+use komple_types::permission::AttributeTypes;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::shared::HUB_ADDR_NAMESPACE;
@@ -75,6 +76,7 @@ pub fn execute_check(
 
     let msgs: Vec<AttributeMsg> = from_binary(&data)?;
 
+    // TODO: Cache if the metadata is same
     for msg in msgs {
         // Get collection address
         let collection_addr = StorageHelper::query_collection_address(
@@ -94,13 +96,77 @@ pub fn execute_check(
             .query_metadata(&deps.querier, msg.token_id)?;
         let attributes = response.metadata.attributes;
 
-        // TODO: Cover other conditions
+        // Get the attribute value
+        let attribute = attributes
+            .into_iter()
+            .find(|attr| attr.trait_type == msg.trait_type);
+
+        // Check if attribute exists
+        if msg.condition != AttributeConditions::Absent {
+            if attribute.is_none() {
+                return Err(ContractError::AttributeNotFound {});
+            }
+        }
+        // If it is a comparison
+        // Check if value is integer and both are same type
+        if msg.condition == AttributeConditions::GreaterThan
+            || msg.condition == AttributeConditions::GreaterThanOrEqual
+            || msg.condition == AttributeConditions::LessThan
+            || msg.condition == AttributeConditions::LessThanOrEqual
+        {
+            // If the types are not number, return error
+            if get_value_type(&msg.value) != AttributeTypes::Integer
+                && get_value_type(&attribute.as_ref().unwrap().value) != AttributeTypes::Integer
+            {
+                return Err(ContractError::AttributeTypeMismatch {});
+            }
+        }
+        // Rest of the conditions
         match msg.condition {
-            AttributeConditions::Exist => attributes
-                .iter()
-                .find(|attr| attr.trait_type == msg.trait_type)
-                .ok_or::<ContractError>(ContractError::AttributeNotFound {})?,
-            _ => unimplemented!(),
+            AttributeConditions::Absent => {
+                if attribute.is_some() {
+                    return Err(ContractError::AttributeFound {});
+                }
+            }
+            AttributeConditions::Equal => {
+                if attribute.unwrap().value != msg.value {
+                    return Err(ContractError::AttributeNotEqual {});
+                }
+            }
+            AttributeConditions::NotEqual => {
+                if attribute.unwrap().value == msg.value {
+                    return Err(ContractError::AttributeEqual {});
+                }
+            }
+            AttributeConditions::GreaterThan => {
+                let attribute_value = attribute.as_ref().unwrap().value.parse::<u32>()?;
+                let msg_value = msg.value.parse::<u32>().unwrap();
+                if attribute_value <= msg_value {
+                    return Err(ContractError::AttributeLessThanOrEqual {});
+                }
+            }
+            AttributeConditions::GreaterThanOrEqual => {
+                let attribute_value = attribute.as_ref().unwrap().value.parse::<u32>()?;
+                let msg_value = msg.value.parse::<u32>().unwrap();
+                if attribute_value < msg_value {
+                    return Err(ContractError::AttributeLessThan {});
+                }
+            }
+            AttributeConditions::LessThan => {
+                let attribute_value = attribute.as_ref().unwrap().value.parse::<u32>()?;
+                let msg_value = msg.value.parse::<u32>().unwrap();
+                if attribute_value >= msg_value {
+                    return Err(ContractError::AttributeGreaterThanOrEqual {});
+                }
+            }
+            AttributeConditions::LessThanOrEqual => {
+                let attribute_value = attribute.as_ref().unwrap().value.parse::<u32>()?;
+                let msg_value = msg.value.parse::<u32>().unwrap();
+                if attribute_value > msg_value {
+                    return Err(ContractError::AttributeGreaterThan {});
+                }
+            }
+            _ => {}
         };
     }
 
@@ -111,6 +177,18 @@ pub fn execute_check(
                 .get(),
         ),
     )
+}
+
+// For now attribute comparison only works with
+// Strings, integers and booleans
+fn get_value_type(value: &str) -> AttributeTypes {
+    if value.parse::<u32>().is_ok() {
+        return AttributeTypes::Integer;
+    }
+    if value.parse::<bool>().is_ok() {
+        return AttributeTypes::Boolean;
+    }
+    return AttributeTypes::String;
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

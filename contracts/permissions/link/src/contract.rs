@@ -5,14 +5,13 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use komple_types::module::Modules;
-use komple_types::permission::LinkPermissionMsg;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::{RegisterMsg, HUB_ADDR_NAMESPACE};
 use komple_utils::response::{EventHelper, ResponseHelper};
 use komple_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, QueryMsg, LinkPermissionMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
