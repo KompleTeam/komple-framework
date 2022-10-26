@@ -1,4 +1,4 @@
-use crate::state::{HubInfo, WebsiteConfig};
+use crate::state::HubInfo;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use komple_types::query::ResponseWrapper;
@@ -24,12 +24,6 @@ pub enum ExecuteMsg {
         image: String,
         external_link: Option<String>,
     },
-    // Updates the website profile configuration
-    UpdateWebsiteConfig {
-        background_color: Option<String>,
-        background_image: Option<String>,
-        banner_image: Option<String>,
-    },
     DeregisterModule {
         module: String,
     },
@@ -41,7 +35,6 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    // Gets both general and website config
     #[returns(ResponseWrapper<ConfigResponse>)]
     Config {},
     #[returns(ResponseWrapper<String>)]
@@ -54,7 +47,6 @@ pub enum QueryMsg {
 pub struct ConfigResponse {
     pub admin: String,
     pub hub_info: HubInfo,
-    pub website_config: Option<WebsiteConfig>,
 }
 
 #[cw_serde]

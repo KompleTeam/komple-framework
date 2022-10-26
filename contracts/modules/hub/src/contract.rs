@@ -16,8 +16,8 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, HubInfo, WebsiteConfig, CONFIG, HUB_INFO, MARBU_FEE_MODULE, MODULE_ADDRS, MODULE_ID,
-    MODULE_TO_REGISTER, OPERATORS, WEBSITE_CONFIG,
+    Config, HubInfo, CONFIG, HUB_INFO, MARBU_FEE_MODULE, MODULE_ADDRS, MODULE_ID,
+    MODULE_TO_REGISTER, OPERATORS,
 };
 
 // version info for migration info
@@ -84,18 +84,6 @@ pub fn execute(
             image,
             external_link,
         } => execute_update_hub_info(deps, env, info, name, description, image, external_link),
-        ExecuteMsg::UpdateWebsiteConfig {
-            background_color,
-            background_image,
-            banner_image,
-        } => execute_update_website_config(
-            deps,
-            env,
-            info,
-            background_color,
-            background_image,
-            banner_image,
-        ),
         ExecuteMsg::DeregisterModule { module } => {
             execute_deregister_module(deps, env, info, module)
         }
@@ -205,69 +193,6 @@ fn execute_update_hub_info(
     )
 }
 
-fn execute_update_website_config(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    background_color: Option<String>,
-    background_image: Option<String>,
-    banner_image: Option<String>,
-) -> Result<Response, ContractError> {
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        None,
-        operators,
-    )?;
-
-    let website_config = WebsiteConfig {
-        background_color,
-        background_image,
-        banner_image,
-    };
-    WEBSITE_CONFIG.save(deps.storage, &website_config)?;
-
-    let mut event_attributes: Vec<Attribute> = vec![];
-    if website_config.background_color.is_some() {
-        event_attributes.push(Attribute {
-            key: "background_color".to_string(),
-            value: website_config
-                .background_color
-                .as_ref()
-                .unwrap()
-                .to_string(),
-        });
-    };
-    if website_config.background_image.is_some() {
-        event_attributes.push(Attribute {
-            key: "background_image".to_string(),
-            value: website_config
-                .background_image
-                .as_ref()
-                .unwrap()
-                .to_string(),
-        });
-    };
-    if website_config.banner_image.is_some() {
-        event_attributes.push(Attribute {
-            key: "banner_image".to_string(),
-            value: website_config.banner_image.as_ref().unwrap().to_string(),
-        });
-    };
-
-    Ok(
-        ResponseHelper::new_module("hub", "update_website_config").add_event(
-            EventHelper::new("hub_update_website_config")
-                .add_attributes(event_attributes)
-                .get(),
-        ),
-    )
-}
-
 fn execute_deregister_module(
     deps: DepsMut,
     env: Env,
@@ -356,13 +281,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
     let config = CONFIG.load(deps.storage)?;
     let hub_info = HUB_INFO.load(deps.storage)?;
-    let website_config = WEBSITE_CONFIG.may_load(deps.storage)?;
     Ok(ResponseWrapper::new(
         "config",
         ConfigResponse {
             admin: config.admin.to_string(),
             hub_info,
-            website_config,
         },
     ))
 }

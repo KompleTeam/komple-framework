@@ -803,7 +803,9 @@ mod permission_merge {
     }
 
     mod link_permission {
-        use komple_link_permission_module::{ContractError as LinkPermissionError, msg::LinkPermissionMsg};
+        use komple_link_permission_module::{
+            msg::LinkPermissionMsg, ContractError as LinkPermissionError,
+        };
         use komple_permission_module::msg::PermissionCheckMsg;
 
         use super::*;

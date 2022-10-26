@@ -3,7 +3,7 @@ use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::{
     msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg},
-    state::{HubInfo, WebsiteConfig},
+    state::HubInfo,
     ContractError,
 };
 use komple_marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
@@ -463,63 +463,6 @@ mod actions {
         }
     }
 
-    mod update_website_config {
-        use super::*;
-
-        #[test]
-        fn test_happy_path() {
-            let mut app = mock_app();
-            let hub_module_addr = proper_instantiate(&mut app);
-
-            let msg = QueryMsg::Config {};
-            let res: ResponseWrapper<ConfigResponse> = app
-                .wrap()
-                .query_wasm_smart(hub_module_addr.clone(), &msg)
-                .unwrap();
-            assert_eq!(res.data.website_config, None);
-
-            let msg = ExecuteMsg::UpdateWebsiteConfig {
-                background_color: Some("#00FFEE".to_string()),
-                background_image: Some("ifps://some-image".to_string()),
-                banner_image: Some("ipfs://some-banner".to_string()),
-            };
-            let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
-                .unwrap();
-
-            let msg = QueryMsg::Config {};
-            let res: ResponseWrapper<ConfigResponse> =
-                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-            assert_eq!(
-                res.data.website_config,
-                Some(WebsiteConfig {
-                    background_color: Some("#00FFEE".to_string()),
-                    background_image: Some("ifps://some-image".to_string()),
-                    banner_image: Some("ipfs://some-banner".to_string()),
-                })
-            )
-        }
-
-        #[test]
-        fn test_invalid_admin() {
-            let mut app = mock_app();
-            let hub_module_addr = proper_instantiate(&mut app);
-
-            let msg = ExecuteMsg::UpdateWebsiteConfig {
-                background_color: Some("#00FFEE".to_string()),
-                background_image: Some("ifps://some-image".to_string()),
-                banner_image: Some("ipfs://some-banner".to_string()),
-            };
-            let err = app
-                .execute_contract(Addr::unchecked(USER), hub_module_addr, &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::Unauthorized {}.to_string()
-            )
-        }
-    }
-
     mod update_hub_info {
         use super::*;
 
@@ -527,13 +470,6 @@ mod actions {
         fn test_happy_path() {
             let mut app = mock_app();
             let hub_module_addr = proper_instantiate(&mut app);
-
-            let msg = QueryMsg::Config {};
-            let res: ResponseWrapper<ConfigResponse> = app
-                .wrap()
-                .query_wasm_smart(hub_module_addr.clone(), &msg)
-                .unwrap();
-            assert_eq!(res.data.website_config, None);
 
             let msg = ExecuteMsg::UpdateHubInfo {
                 name: "New Name".to_string(),
