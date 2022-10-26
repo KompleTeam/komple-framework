@@ -159,7 +159,6 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
     let hub_code_id = app.store_code(hub_module());
 
     let msg = HubInstantiateMsg {
-        admin: None,
         hub_info: HubInfo {
             name: "Test Hub".to_string(),
             description: "Test Hub".to_string(),
@@ -168,11 +167,15 @@ pub fn proper_instantiate(app: &mut App) -> Addr {
         },
         marbu_fee_module: None,
     };
+    let register_msg = RegisterMsg {
+        admin: ADMIN.to_string(),
+        data: Some(to_binary(&msg).unwrap()),
+    };
 
     app.instantiate_contract(
         hub_code_id,
         Addr::unchecked(ADMIN),
-        &msg,
+        &register_msg,
         &[Coin {
             amount: Uint128::new(1_000_000),
             denom: NATIVE_DENOM.to_string(),

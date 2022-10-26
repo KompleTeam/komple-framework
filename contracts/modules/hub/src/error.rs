@@ -10,6 +10,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Invalid instantiate message")]
+    InvalidInstantiateMsg {},
+
     #[error("Description too long")]
     DescriptionTooLong {},
 

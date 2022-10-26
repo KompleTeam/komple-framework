@@ -213,7 +213,6 @@ fn setup_hub_module(app: &mut App, is_marbu: bool) -> Addr {
     };
 
     let msg = HubInstantiateMsg {
-        admin: None,
         hub_info: HubInfo {
             name: "Test Hub".to_string(),
             description: "Test Hub".to_string(),
@@ -222,8 +221,12 @@ fn setup_hub_module(app: &mut App, is_marbu: bool) -> Addr {
         },
         marbu_fee_module: fee_module_addr,
     };
+    let register_msg = RegisterMsg {
+        admin: ADMIN.to_string(),
+        data: Some(to_binary(&msg).unwrap()),
+    };
 
-    app.instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
+    app.instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &register_msg, &[], "test", None)
         .unwrap()
 }
 

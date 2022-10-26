@@ -5,7 +5,6 @@ use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub admin: Option<String>,
     pub hub_info: HubInfo,
     pub marbu_fee_module: Option<String>,
 }

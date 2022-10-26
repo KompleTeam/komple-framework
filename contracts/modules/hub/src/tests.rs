@@ -3,10 +3,10 @@ use crate::{
     state::HubInfo,
     ContractError,
 };
-use cosmwasm_std::coin;
+use cosmwasm_std::{coin, to_binary};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::query::ResponseWrapper;
+use komple_types::{query::ResponseWrapper, shared::RegisterMsg};
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -53,7 +53,6 @@ fn proper_instantiate(app: &mut App) -> Addr {
     let hub_code_id = app.store_code(hub_module());
 
     let msg = InstantiateMsg {
-        admin: None,
         hub_info: HubInfo {
             name: "Test Hub".to_string(),
             description: "Test Hub".to_string(),
@@ -62,11 +61,15 @@ fn proper_instantiate(app: &mut App) -> Addr {
         },
         marbu_fee_module: None,
     };
+    let register_msg = RegisterMsg {
+        admin: ADMIN.to_string(),
+        data: Some(to_binary(&msg).unwrap()),
+    };
 
     app.instantiate_contract(
         hub_code_id,
         Addr::unchecked(ADMIN),
-        &msg,
+        &register_msg,
         &[coin(1_000_000, NATIVE_DENOM)],
         "test",
         None,
@@ -83,7 +86,6 @@ mod instantiate {
         let hub_code_id = app.store_code(hub_module());
 
         let msg = InstantiateMsg {
-            admin: None,
             hub_info: HubInfo {
                 name: "Test Hub".to_string(),
                 description: "Test Hub".to_string(),
@@ -92,8 +94,12 @@ mod instantiate {
             },
             marbu_fee_module: None,
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
         let _ = app
-            .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
+            .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &register_msg, &[], "test", None)
             .unwrap();
     }
 
@@ -103,7 +109,6 @@ mod instantiate {
         let hub_code_id = app.store_code(hub_module());
 
         let msg = InstantiateMsg {
-            admin: None,
             hub_info: HubInfo {
                 name: "Test Hub".to_string(),
                 description: "Test HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest HubTest Hub".to_string(),
@@ -112,12 +117,16 @@ mod instantiate {
             },
             marbu_fee_module: None
         };
+        let register_msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(to_binary(&msg).unwrap()),
+        };
 
         let err = app
             .instantiate_contract(
                 hub_code_id,
                 Addr::unchecked(ADMIN),
-                &msg,
+                &register_msg,
                 &[coin(1_000_000, NATIVE_DENOM)],
                 "test",
                 None,

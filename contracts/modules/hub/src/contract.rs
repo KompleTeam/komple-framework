@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response,
-    StdError, StdResult, SubMsg, WasmMsg,
+    StdError, StdResult, SubMsg, WasmMsg, from_binary,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -30,31 +30,32 @@ const MAX_DESCRIPTION_LENGTH: u32 = 512;
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
-    msg: InstantiateMsg,
+    _info: MessageInfo,
+    msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let admin = match msg.admin {
-        Some(value) => deps.api.addr_validate(&value)?,
-        None => info.sender,
+    if msg.data.is_none() {
+        return Err(ContractError::InvalidInstantiateMsg {});
     };
+    let data: InstantiateMsg = from_binary(&msg.data.unwrap())?;
 
+    let admin = deps.api.addr_validate(&msg.admin)?;
     let config = Config { admin };
     CONFIG.save(deps.storage, &config)?;
 
-    if msg.hub_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
+    if data.hub_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
     }
 
     // Save fee module info for Marbu if exists
     // This comes from Marbu controller on Hub creation
-    if let Some(marbu_fee_module) = msg.marbu_fee_module {
+    if let Some(marbu_fee_module) = data.marbu_fee_module {
         let marbu_fee_module = deps.api.addr_validate(&marbu_fee_module)?;
         MARBU_FEE_MODULE.save(deps.storage, &marbu_fee_module)?;
     }
 
-    HUB_INFO.save(deps.storage, &msg.hub_info)?;
+    HUB_INFO.save(deps.storage, &data.hub_info)?;
 
     MODULE_ID.save(deps.storage, &0)?;
 
