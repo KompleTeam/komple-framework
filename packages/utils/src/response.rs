@@ -1,5 +1,22 @@
-use cosmwasm_std::{Attribute, Event};
+use cosmwasm_std::{Attribute, Event, Response};
 use std::string::ToString;
+
+pub struct ResponseHelper;
+impl ResponseHelper {
+    pub fn new_module(module: &str, action: &str) -> Response {
+        Response::new()
+            .add_attribute("name", "komple_framework")
+            .add_attribute("module", module)
+            .add_attribute("action", action)
+    }
+
+    pub fn new_permission(permission: &str, action: &str) -> Response {
+        Response::new()
+            .add_attribute("name", "komple_framework")
+            .add_attribute("permission", permission)
+            .add_attribute("action", action)
+    }
+}
 
 pub struct EventHelper {
     event: Event,

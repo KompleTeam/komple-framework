@@ -10,7 +10,7 @@ use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
-use komple_utils::event::EventHelper;
+use komple_utils::response::{EventHelper, ResponseHelper};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -50,17 +50,15 @@ pub fn instantiate(
 
     METADATA_ID.save(deps.storage, &0)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "instantiate")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "instantiate").add_event(
             EventHelper::new("metadata_instantiate")
                 .add_attribute("admin", config.admin)
                 .add_attribute("metadata_type", config.metadata_type.to_string())
                 .add_attribute("collection_addr", info.sender)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -145,11 +143,8 @@ fn execute_add_metadata(
         }
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "add_metadata")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "add_metadata").add_event(
             EventHelper::new("metadata_add_metadata")
                 .check_add_attribute(
                     &metadata.meta_info.image,
@@ -218,7 +213,8 @@ fn execute_add_metadata(
                 )
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_link_metadata(
@@ -264,16 +260,14 @@ fn execute_link_metadata(
         }
     };
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "link_metadata")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "link_metadata").add_event(
             EventHelper::new("metadata_link_metadata")
                 .add_attribute("token_id", token_id.to_string())
                 .add_attribute("metadata_id", metadata_id.to_string())
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_update_meta_info(
@@ -317,11 +311,8 @@ fn execute_update_meta_info(
         DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "update_meta_info")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "update_meta_info").add_event(
             EventHelper::new("metadata_update_meta_info")
                 .add_attribute("raw_metadata", raw_metadata.to_string())
                 .add_attribute("id", id.to_string())
@@ -391,7 +382,8 @@ fn execute_update_meta_info(
                     ),
                 )
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_add_attribute(
@@ -438,11 +430,8 @@ fn execute_add_attribute(
         DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "add_attribute")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "add_attribute").add_event(
             EventHelper::new("metadata_add_attribute")
                 .add_attribute("raw_metadata", raw_metadata.to_string())
                 .add_attribute("id", id.to_string())
@@ -451,7 +440,8 @@ fn execute_add_attribute(
                     format!("{}/{}", attribute.trait_type, attribute.value),
                 )
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_update_attribute(
@@ -503,11 +493,8 @@ fn execute_update_attribute(
         DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "update_attribute")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "update_attribute").add_event(
             EventHelper::new("metadata_update_attribute")
                 .add_attribute("raw_metadata", raw_metadata.to_string())
                 .add_attribute("id", id.to_string())
@@ -516,7 +503,8 @@ fn execute_update_attribute(
                     format!("{}/{}", attribute.trait_type, attribute.value),
                 )
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_remove_attribute(
@@ -567,17 +555,15 @@ fn execute_remove_attribute(
         DYNAMIC_LINKED_METADATA.save(deps.storage, id, &metadata)?;
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "remove_attribute")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "remove_attribute").add_event(
             EventHelper::new("metadata_remove_attribute")
                 .add_attribute("raw_metadata", raw_metadata.to_string())
                 .add_attribute("id", id.to_string())
                 .add_attribute("trait_type", trait_type)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_unlink_metadata(
@@ -612,15 +598,13 @@ fn execute_unlink_metadata(
         }
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "unlink_metadata")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "unlink_metadata").add_event(
             EventHelper::new("metadata_unlink_metadata")
                 .add_attribute("token_id", token_id.to_string())
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_update_operators(
@@ -659,15 +643,13 @@ fn execute_update_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "metadata")
-        .add_attribute("action", "update_operators")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("metadata", "update_operators").add_event(
             EventHelper::new("metadata_update_operators")
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn get_metadata_with_token_id(

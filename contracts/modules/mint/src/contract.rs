@@ -17,8 +17,8 @@ use komple_token_module::{
 };
 use komple_types::{fee::MintFees, module::Modules, shared::RegisterMsg};
 use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
-use komple_utils::{check_admin_privileges, storage::StorageHelper};
-use komple_utils::{event::EventHelper, funds::check_single_coin};
+use komple_utils::{check_admin_privileges, response::ResponseHelper, storage::StorageHelper};
+use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
@@ -57,20 +57,16 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", "instantiate")
-        .add_event(
-            EventHelper::new("mint_instantiate")
-                .add_attribute("admin", config.admin)
-                .add_attribute(
-                    "public_collection_creation",
-                    config.public_collection_creation.to_string(),
-                )
-                .add_attribute("mint_lock", config.mint_lock.to_string())
-                .get(),
-        ))
+    Ok(ResponseHelper::new_module("mint", "instantiate").add_event(
+        EventHelper::new("mint_instantiate")
+            .add_attribute("admin", config.admin)
+            .add_attribute(
+                "public_collection_creation",
+                config.public_collection_creation.to_string(),
+            )
+            .add_attribute("mint_lock", config.mint_lock.to_string())
+            .get(),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -196,11 +192,8 @@ pub fn execute_create_collection(
 
     COLLECTION_INFO.save(deps.storage, collection_id, &collection_info)?;
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("mint", "create_collection")
         .add_submessage(sub_msg)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", "create_collection")
         .add_event(
             EventHelper::new("mint_create_collection")
                 .add_attribute("creator", token_instantiate_msg.creator)
@@ -273,18 +266,16 @@ pub fn execute_update_public_collection_creation(
     config.public_collection_creation = public_collection_creation;
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", "update_public_collection_creation")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("mint", "update_public_collection_creation").add_event(
             EventHelper::new("mint_update_public_collection_creation")
                 .add_attribute(
                     "public_collection_creation",
                     public_collection_creation.to_string(),
                 )
                 .get(),
-        ))
+        ),
+    )
 }
 
 pub fn execute_update_mint_lock(
@@ -309,15 +300,13 @@ pub fn execute_update_mint_lock(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", "update_mint_lock")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("mint", "update_mint_lock").add_event(
             EventHelper::new("mint_update_mint_lock")
                 .add_attribute("mint_lock", lock.to_string())
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_mint(
@@ -516,14 +505,11 @@ fn execute_permission_mint(
             recipient: mint_msg.recipient.clone(),
             metadata_id: mint_msg.metadata_id,
         })?,
-        funds: info.funds.clone(),
+        funds: info.funds,
     });
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("mint", "permission_mint")
         .add_messages(msgs)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", "permission_mint")
         .add_event(
             EventHelper::new("mint_permission_mint")
                 .add_attribute("collection_id", mint_msg.collection_id.to_string())
@@ -549,11 +535,8 @@ fn _execute_mint(
         .mint_msg(mint_msg.recipient.clone(), mint_msg.metadata_id)?;
     msgs.push(msg.into());
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("mint", action)
         .add_messages(msgs)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", action)
         .add_event(
             EventHelper::new(format!("mint_{}", action))
                 .add_attribute("recipient", mint_msg.recipient)
@@ -604,15 +587,13 @@ fn execute_update_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", "update_operators")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("mint", "update_operators").add_event(
             EventHelper::new("mint_update_operators")
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_update_linked_collections(

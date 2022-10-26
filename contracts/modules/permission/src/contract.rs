@@ -10,7 +10,7 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
-use komple_utils::event::EventHelper;
+use komple_utils::response::{EventHelper, ResponseHelper};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -42,16 +42,14 @@ pub fn instantiate(
 
     PERMISSION_ID.save(deps.storage, &0)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "permission")
-        .add_attribute("action", "instantiate")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("permission", "instantiate").add_event(
             EventHelper::new("permission_instantiate")
                 .add_attribute("admin", config.admin)
                 .add_attribute("hub_addr", info.sender)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -121,16 +119,15 @@ fn execute_register_permission(
     // This will be loaded in reply handler for registering the correct module
     PERMISSION_TO_REGISTER.save(deps.storage, &permission)?;
 
-    Ok(Response::new()
-        .add_submessage(sub_msg)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "permission")
-        .add_attribute("action", "register_permission")
-        .add_event(
-            EventHelper::new("permission_register_permission")
-                .add_attribute("module", permission)
-                .get(),
-        ))
+    Ok(
+        ResponseHelper::new_module("permission", "register_permission")
+            .add_submessage(sub_msg)
+            .add_event(
+                EventHelper::new("permission_register_permission")
+                    .add_attribute("module", permission)
+                    .get(),
+            ),
+    )
 }
 
 fn execute_update_module_permissions(
@@ -165,16 +162,14 @@ fn execute_update_module_permissions(
 
     MODULE_PERMISSIONS.save(deps.storage, &module, &permissions)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "permission")
-        .add_attribute("action", "update_module_permissions")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("permission", "update_module_permissions").add_event(
             EventHelper::new("permission_update_module_permissions")
                 .add_attribute("module", module)
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_update_operators(
@@ -214,15 +209,13 @@ fn execute_update_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "permission")
-        .add_attribute("action", "update_operators")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("permission", "update_operators").add_event(
             EventHelper::new("permission_update_operators")
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_check(
@@ -265,11 +258,8 @@ fn execute_check(
         });
     }
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("permission", "check")
         .add_messages(msgs)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "permission")
-        .add_attribute("action", "check")
         .add_event(
             EventHelper::new("permission_check")
                 .add_attribute("module", module)

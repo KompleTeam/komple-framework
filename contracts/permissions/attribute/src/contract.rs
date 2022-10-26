@@ -10,7 +10,8 @@ use komple_types::permission::AttributeConditions;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::shared::HUB_ADDR_NAMESPACE;
-use komple_utils::event::EventHelper;
+use komple_utils::response::EventHelper;
+use komple_utils::response::ResponseHelper;
 use komple_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
@@ -18,7 +19,7 @@ use crate::msg::{AttributeMsg, ExecuteMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-ownership-permission-module";
+const CONTRACT_NAME: &str = "crates.io:komple-attribute-permission-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -38,16 +39,14 @@ pub fn instantiate(
 
     PERMISSION_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("permission", "attribute")
-        .add_attribute("action", "instantiate")
-        .add_event(
-            EventHelper::new("ownership_permission_instantiate")
+    Ok(
+        ResponseHelper::new_permission("attribute", "instantiate").add_event(
+            EventHelper::new("attribute_permission_instantiate")
                 .add_attribute("admin", admin)
                 .add_attribute("permission_module_addr", info.sender)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -105,15 +104,13 @@ pub fn execute_check(
         };
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("permission", "attribute")
-        .add_attribute("action", "check")
-        .add_event(
+    Ok(
+        ResponseHelper::new_permission("attribute", "check").add_event(
             EventHelper::new("attribute_permission_check")
                 // .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

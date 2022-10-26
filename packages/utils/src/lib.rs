@@ -1,10 +1,10 @@
 use cosmwasm_std::{Addr, StdError};
 use thiserror::Error;
 
-#[cfg(feature = "event")]
-pub mod event;
 #[cfg(feature = "funds")]
 pub mod funds;
+#[cfg(feature = "response")]
+pub mod response;
 #[cfg(feature = "storage")]
 pub mod storage;
 

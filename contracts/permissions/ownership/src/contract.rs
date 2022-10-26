@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::{RegisterMsg, HUB_ADDR_NAMESPACE};
-use komple_utils::event::EventHelper;
+use komple_utils::response::{EventHelper, ResponseHelper};
 use komple_utils::storage::StorageHelper;
 use std::collections::HashMap;
 
@@ -37,16 +37,14 @@ pub fn instantiate(
 
     PERMISSION_MODULE_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("permission", "ownership")
-        .add_attribute("action", "instantiate")
-        .add_event(
+    Ok(
+        ResponseHelper::new_permission("ownership", "instantiate").add_event(
             EventHelper::new("ownership_permission_instantiate")
                 .add_attribute("admin", admin)
                 .add_attribute("permission_module_addr", info.sender)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -119,15 +117,13 @@ pub fn execute_check(
         });
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("permission", "ownership")
-        .add_attribute("action", "check")
-        .add_event(
+    Ok(
+        ResponseHelper::new_permission("ownership", "check").add_event(
             EventHelper::new("ownership_permission_check")
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

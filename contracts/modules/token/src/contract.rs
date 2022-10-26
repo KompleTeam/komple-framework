@@ -12,7 +12,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::token::{Locks, SubModules};
 use komple_utils::check_admin_privileges;
-use komple_utils::event::EventHelper;
+use komple_utils::response::{EventHelper, ResponseHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
@@ -147,11 +147,8 @@ pub fn instantiate(
         reply_on: ReplyOn::Success,
     };
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("token", "instantiate")
         .add_submessage(sub_msg)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "token")
-        .add_attribute("action", "instantiate")
         .add_event(
             EventHelper::new("token_instantiate")
                 .add_attribute("mint_module_addr", info.sender)
@@ -273,15 +270,13 @@ pub fn execute_update_module_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "token")
-        .add_attribute("action", "update_module_operators")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("token", "update_module_operators").add_event(
             EventHelper::new("token_update_module_operators")
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 pub fn execute_update_locks(
@@ -304,11 +299,8 @@ pub fn execute_update_locks(
 
     LOCKS.save(deps.storage, &locks)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "token")
-        .add_attribute("action", "update_locks")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("token", "update_locks").add_event(
             EventHelper::new("token_update_locks")
                 .add_attribute("action", "update_locks")
                 .add_attribute("mint_lock", locks.mint_lock.to_string())
@@ -316,7 +308,8 @@ pub fn execute_update_locks(
                 .add_attribute("transfer_lock", locks.transfer_lock.to_string())
                 .add_attribute("send_lock", locks.send_lock.to_string())
                 .get(),
-        ))
+        ),
+    )
 }
 
 pub fn execute_update_token_locks(
@@ -344,11 +337,8 @@ pub fn execute_update_token_locks(
 
     TOKEN_LOCKS.save(deps.storage, &token_id, &locks)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "token")
-        .add_attribute("action", "update_token_locks")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("token", "update_token_locks").add_event(
             EventHelper::new("token_update_token_locks")
                 .add_attribute("action", "update_token_locks")
                 .add_attribute("token_id", token_id)
@@ -357,7 +347,8 @@ pub fn execute_update_token_locks(
                 .add_attribute("transfer_lock", locks.transfer_lock.to_string())
                 .add_attribute("send_lock", locks.send_lock.to_string())
                 .get(),
-        ))
+        ),
+    )
 }
 
 pub fn execute_mint(
@@ -721,18 +712,16 @@ fn execute_update_start_time(
 
     CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "token")
-        .add_attribute("action", "update_start_time")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("token", "update_start_time").add_event(
             EventHelper::new("token_update_start_time")
                 .add_attribute(
                     "start_time",
                     start_time.unwrap_or(Timestamp::from_seconds(0)).to_string(),
                 )
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_init_whitelist_module(
@@ -772,11 +761,8 @@ fn execute_init_whitelist_module(
         reply_on: ReplyOn::Success,
     };
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("token", "init_whitelist_module")
         .add_submessage(sub_msg)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "token")
-        .add_attribute("action", "init_whitelist_module")
         .add_event(EventHelper::new("token_init_whitelist_module").get()))
 }
 

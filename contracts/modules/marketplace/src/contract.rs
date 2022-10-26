@@ -19,8 +19,9 @@ use komple_types::shared::RegisterMsg;
 use komple_types::token::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
 use komple_types::{fee::MarketplaceFees, hub::MARBU_FEE_MODULE_NAMESPACE};
+use komple_utils::response::ResponseHelper;
 use komple_utils::{
-    check_admin_privileges, event::EventHelper, funds::check_single_coin, storage::StorageHelper,
+    check_admin_privileges, funds::check_single_coin, response::EventHelper, storage::StorageHelper,
 };
 use semver::Version;
 use std::ops::Mul;
@@ -56,17 +57,15 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "marketplace")
-        .add_attribute("action", "instantiate")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("marketplace", "instantiate").add_event(
             EventHelper::new("marketplace_instantiate")
                 .add_attribute("admin", config.admin)
                 .add_attribute("native_denom", config.native_denom)
                 .add_attribute("hub_addr", info.sender)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -152,18 +151,17 @@ fn execute_list_fixed_token(
         },
     )?;
 
-    Ok(Response::new()
-        .add_message(lock_msg)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "marketplace")
-        .add_attribute("action", "list_fixed_token")
-        .add_event(
-            EventHelper::new("marketplace_list_fixed_token")
-                .add_attribute("collection_id", collection_id.to_string())
-                .add_attribute("token_id", token_id.to_string())
-                .add_attribute("price", price.to_string())
-                .get(),
-        ))
+    Ok(
+        ResponseHelper::new_module("marketplace", "list_fixed_token")
+            .add_message(lock_msg)
+            .add_event(
+                EventHelper::new("marketplace_list_fixed_token")
+                    .add_attribute("collection_id", collection_id.to_string())
+                    .add_attribute("token_id", token_id.to_string())
+                    .add_attribute("price", price.to_string())
+                    .get(),
+            ),
+    )
 }
 
 fn execute_delist_fixed_token(
@@ -199,17 +197,16 @@ fn execute_delist_fixed_token(
         },
     )?;
 
-    Ok(Response::new()
-        .add_message(unlock_msg)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "marketplace")
-        .add_attribute("action", "delist_fixed_token")
-        .add_event(
-            EventHelper::new("marketplace_delist_fixed_token")
-                .add_attribute("collection_id", collection_id.to_string())
-                .add_attribute("token_id", token_id.to_string())
-                .get(),
-        ))
+    Ok(
+        ResponseHelper::new_module("marketplace", "delist_fixed_token")
+            .add_message(unlock_msg)
+            .add_event(
+                EventHelper::new("marketplace_delist_fixed_token")
+                    .add_attribute("collection_id", collection_id.to_string())
+                    .add_attribute("token_id", token_id.to_string())
+                    .get(),
+            ),
+    )
 }
 
 fn execute_update_price(
@@ -238,18 +235,16 @@ fn execute_update_price(
         Listing::Auction => unimplemented!(),
     }
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "marketplace")
-        .add_attribute("action", "update_price")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("marketplace", "update_price").add_event(
             EventHelper::new("marketplace_update_price")
                 .add_attribute("listing_type", listing_type.to_string())
                 .add_attribute("collection_id", collection_id.to_string())
                 .add_attribute("token_id", token_id.to_string())
                 .add_attribute("price", price.to_string())
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_buy(
@@ -389,12 +384,9 @@ fn _execute_buy_fixed_listing(
 
     FIXED_LISTING.remove(deps.storage, (collection_id, token_id));
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("marketplace", "buy")
         .add_submessages(sub_msgs)
         .add_messages(vec![transfer_msg, unlock_msg])
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "marketplace")
-        .add_attribute("action", "buy")
         .add_event(
             EventHelper::new("marketplace_buy")
                 .add_attribute("listing_type", "fixed")

@@ -10,7 +10,7 @@ use cw_utils::parse_reply_instantiate_data;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
-use komple_utils::event::EventHelper;
+use komple_utils::response::{EventHelper, ResponseHelper};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -58,15 +58,11 @@ pub fn instantiate(
 
     MODULE_ID.save(deps.storage, &0)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "hub")
-        .add_attribute("action", "instantiate")
-        .add_event(
-            EventHelper::new("hub_instantiate")
-                .add_attribute("admin", config.admin)
-                .get(),
-        ))
+    Ok(ResponseHelper::new_module("hub", "instantiate").add_event(
+        EventHelper::new("hub_instantiate")
+            .add_attribute("admin", config.admin)
+            .get(),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -152,11 +148,8 @@ fn execute_register_module(
     // This will be loaded in reply handler for registering the correct module
     MODULE_TO_REGISTER.save(deps.storage, &module)?;
 
-    Ok(Response::new()
+    Ok(ResponseHelper::new_module("hub", "register_module")
         .add_submessage(sub_msg)
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "hub")
-        .add_attribute("action", "register_module")
         .add_event(
             EventHelper::new("hub_register_module")
                 .add_attribute("module", module)
@@ -200,18 +193,16 @@ fn execute_update_hub_info(
         });
     };
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "hub")
-        .add_attribute("action", "update_hub_info")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("hub", "update_hub_info").add_event(
             EventHelper::new("hub_update_hub_info")
                 .add_attribute("name", hub_info.name)
                 .add_attribute("description", hub_info.description)
                 .add_attribute("image", hub_info.image)
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_update_website_config(
@@ -268,15 +259,13 @@ fn execute_update_website_config(
         });
     };
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "hub")
-        .add_attribute("action", "update_website_config")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("hub", "update_website_config").add_event(
             EventHelper::new("hub_update_website_config")
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_deregister_module(
@@ -301,15 +290,13 @@ fn execute_deregister_module(
 
     MODULE_ADDRS.remove(deps.storage, &module);
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "hub")
-        .add_attribute("action", "deregister_module")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("hub", "deregister_module").add_event(
             EventHelper::new("hub_deregister_module")
                 .add_attribute("module", module)
                 .get(),
-        ))
+        ),
+    )
 }
 
 fn execute_update_operators(
@@ -348,15 +335,13 @@ fn execute_update_operators(
 
     OPERATORS.save(deps.storage, &addrs)?;
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "hub")
-        .add_attribute("action", "update_operators")
-        .add_event(
+    Ok(
+        ResponseHelper::new_module("hub", "update_operators").add_event(
             EventHelper::new("hub_update_operators")
                 .add_attributes(event_attributes)
                 .get(),
-        ))
+        ),
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
