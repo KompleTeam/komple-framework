@@ -64,8 +64,11 @@ pub fn execute_check(
     let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
     let hub_addr =
         StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, HUB_ADDR_NAMESPACE)?;
-    let mint_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr.unwrap(), Modules::Mint)?;
+    let mint_module_addr = StorageHelper::query_module_address(
+        &deps.querier,
+        &hub_addr.unwrap(),
+        Modules::Mint.to_string(),
+    )?;
 
     let msgs: Vec<LinkPermissionMsg> = from_binary(&data)?;
 

@@ -141,8 +141,11 @@ fn execute_permission_merge(
     )?;
 
     let hub_addr = HUB_ADDR.load(deps.storage)?;
-    let permission_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Permission)?;
+    let permission_module_addr = StorageHelper::query_module_address(
+        &deps.querier,
+        &hub_addr,
+        Modules::Permission.to_string(),
+    )?;
 
     let mut msgs: Vec<WasmMsg> = vec![];
 
@@ -225,7 +228,7 @@ fn make_merge_msg(
 ) -> Result<(), ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint.to_string())?;
 
     // Throw an error if there are no burn messages
     if merge_msg.burn_ids.is_empty() {

@@ -226,8 +226,15 @@ fn setup_hub_module(app: &mut App, is_marbu: bool) -> Addr {
         data: Some(to_binary(&msg).unwrap()),
     };
 
-    app.instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &register_msg, &[], "test", None)
-        .unwrap()
+    app.instantiate_contract(
+        hub_code_id,
+        Addr::unchecked(ADMIN),
+        &register_msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
@@ -410,8 +417,12 @@ mod initialization {
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[]);
 
-        let res = StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace)
-            .unwrap();
+        let res = StorageHelper::query_module_address(
+            &app.wrap(),
+            &hub_addr,
+            Modules::Marketplace.to_string(),
+        )
+        .unwrap();
         assert_eq!(res, "contract1")
     }
 
@@ -447,8 +458,12 @@ mod initialization {
         };
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[]);
 
-        let res = StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Marketplace)
-            .unwrap();
+        let res = StorageHelper::query_module_address(
+            &app.wrap(),
+            &hub_addr,
+            Modules::Marketplace.to_string(),
+        )
+        .unwrap();
         assert_eq!(res, "contract2")
     }
 
@@ -1169,9 +1184,12 @@ mod actions {
                 let _ = app
                     .execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[])
                     .unwrap();
-                let fee_module_addr =
-                    StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Fee)
-                        .unwrap();
+                let fee_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Fee.to_string(),
+                )
+                .unwrap();
 
                 // Setup admin royalty for 10 percent
                 set_royalties(&mut app, &fee_module_addr, &1, "0.1");

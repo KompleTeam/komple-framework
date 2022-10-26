@@ -311,7 +311,7 @@ fn _execute_buy_fixed_listing(
 
     // Process fee module fees if exists on Hub
     let fee_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee.to_string());
     if let Ok(fee_module_addr) = fee_module_addr {
         // Marketplace fees
         // process_marketplace_fees(
@@ -444,7 +444,7 @@ fn process_marketplace_fees(
 fn get_collection_address(deps: &DepsMut, collection_id: &u32) -> Result<Addr, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let mint_module_addr =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint)?;
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Mint.to_string())?;
     let collection_addr =
         StorageHelper::query_collection_address(&deps.querier, &mint_module_addr, collection_id)?;
     Ok(collection_addr)

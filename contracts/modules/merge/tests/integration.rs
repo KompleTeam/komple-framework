@@ -385,7 +385,8 @@ mod initialization {
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[]);
 
         let res =
-            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge).unwrap();
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge.to_string())
+                .unwrap();
         assert_eq!(res, "contract1")
     }
 
@@ -426,9 +427,11 @@ mod normal_merge {
         setup_all_modules(&mut app, hub_addr.clone());
 
         let mint_module_addr =
-            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint.to_string())
+                .unwrap();
         let merge_module_addr =
-            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge).unwrap();
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge.to_string())
+                .unwrap();
 
         let token_module_code_id = app.store_code(token_module());
         create_collection(
@@ -538,9 +541,11 @@ mod normal_merge {
         setup_all_modules(&mut app, hub_addr.clone());
 
         let mint_module_addr =
-            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint.to_string())
+                .unwrap();
         let merge_module_addr =
-            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge).unwrap();
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge.to_string())
+                .unwrap();
 
         let token_module_code_id = app.store_code(token_module());
         create_collection(
@@ -642,14 +647,24 @@ mod permission_merge {
 
             setup_all_modules(&mut app, hub_addr.clone());
 
-            let mint_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
-            let merge_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge)
-                    .unwrap();
-            let permission_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Permission)
-                    .unwrap();
+            let mint_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Mint.to_string(),
+            )
+            .unwrap();
+            let merge_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Merge.to_string(),
+            )
+            .unwrap();
+            let permission_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Permission.to_string(),
+            )
+            .unwrap();
 
             let token_module_code_id = app.store_code(token_module());
             create_collection(
@@ -820,14 +835,24 @@ mod permission_merge {
 
             setup_all_modules(&mut app, hub_addr.clone());
 
-            let mint_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
-            let merge_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Merge)
-                    .unwrap();
-            let permission_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Permission)
-                    .unwrap();
+            let mint_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Mint.to_string(),
+            )
+            .unwrap();
+            let merge_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Merge.to_string(),
+            )
+            .unwrap();
+            let permission_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Permission.to_string(),
+            )
+            .unwrap();
 
             let token_module_code_id = app.store_code(token_module());
             create_collection(

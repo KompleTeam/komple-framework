@@ -115,8 +115,15 @@ fn setup_hub_module(app: &mut App) -> Addr {
         data: Some(to_binary(&msg).unwrap()),
     };
 
-    app.instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &register_msg, &[], "test", None)
-        .unwrap()
+    app.instantiate_contract(
+        hub_code_id,
+        Addr::unchecked(ADMIN),
+        &register_msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
 }
 
 pub fn register_module(app: &mut App, hub_addr: &Addr, module: String, code_id: u64) {
@@ -241,14 +248,22 @@ mod execute {
             // Register Mint Module
             let mint_code_id = app.store_code(mint_module());
             register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
-            let mint_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
+            let mint_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Mint.to_string(),
+            )
+            .unwrap();
 
             // Register fee module
             let fee_code_id = app.store_code(fee_module());
             register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
-            let fee_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Fee).unwrap();
+            let fee_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Fee.to_string(),
+            )
+            .unwrap();
 
             // Create collection
             create_collection(&mut app, &mint_module_addr);
@@ -297,14 +312,22 @@ mod execute {
             // Register Mint Module
             let mint_code_id = app.store_code(mint_module());
             register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
-            let mint_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
+            let mint_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Mint.to_string(),
+            )
+            .unwrap();
 
             // Register fee module
             let fee_code_id = app.store_code(fee_module());
             register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
-            let fee_module_addr =
-                StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Fee).unwrap();
+            let fee_module_addr = StorageHelper::query_module_address(
+                &app.wrap(),
+                &hub_addr,
+                Modules::Fee.to_string(),
+            )
+            .unwrap();
 
             // Create collection
             create_collection(&mut app, &mint_module_addr);

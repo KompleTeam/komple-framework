@@ -323,7 +323,8 @@ mod initialization {
         let _ = app.execute_contract(Addr::unchecked(ADMIN), hub_addr.clone(), &msg, &[]);
 
         let res =
-            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint).unwrap();
+            StorageHelper::query_module_address(&app.wrap(), &hub_addr, Modules::Mint.to_string())
+                .unwrap();
         assert_eq!(res, "contract1")
     }
 

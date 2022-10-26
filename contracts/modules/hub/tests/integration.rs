@@ -147,7 +147,14 @@ mod instantiate {
             data: Some(to_binary(&msg).unwrap()),
         };
         let _ = app
-            .instantiate_contract(hub_code_id, Addr::unchecked(ADMIN), &register_msg, &[], "test", None)
+            .instantiate_contract(
+                hub_code_id,
+                Addr::unchecked(ADMIN),
+                &register_msg,
+                &[],
+                "test",
+                None,
+            )
             .unwrap();
     }
 

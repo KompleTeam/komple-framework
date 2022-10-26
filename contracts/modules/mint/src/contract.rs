@@ -330,7 +330,8 @@ fn execute_mint(
     };
 
     // Check for fee module address
-    let res = StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee);
+    let res =
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee.to_string());
     if let Ok(fee_module_addr) = res {
         let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
 
@@ -483,7 +484,7 @@ fn execute_permission_mint(
     let permission_module_addr = StorageHelper::query_module_address(
         &deps.querier,
         &hub_addr.unwrap(),
-        Modules::Permission,
+        Modules::Permission.to_string(),
     )?;
 
     let mut msgs: Vec<WasmMsg> = vec![];
