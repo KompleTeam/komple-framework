@@ -30,6 +30,12 @@ pub enum ExecuteMsg {
         collection_id: u32,
         token_id: u32,
     },
+    PermissionBuy {
+        listing_type: Listing,
+        collection_id: u32,
+        token_id: u32,
+        buyer: String,
+    },
     UpdateOperators {
         addrs: Vec<String>,
     },

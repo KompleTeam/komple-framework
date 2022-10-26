@@ -104,6 +104,20 @@ pub fn execute(
             collection_id,
             token_id,
         } => execute_buy(deps, env, info, listing_type, collection_id, token_id),
+        ExecuteMsg::PermissionBuy {
+            listing_type,
+            collection_id,
+            token_id,
+            buyer,
+        } => execute_permission_buy(
+            deps,
+            env,
+            info,
+            listing_type,
+            collection_id,
+            token_id,
+            buyer,
+        ),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
     }
 }
@@ -256,7 +270,39 @@ fn execute_buy(
     token_id: u32,
 ) -> Result<Response, ContractError> {
     match listing_type {
-        Listing::Fixed => _execute_buy_fixed_listing(deps, &info, collection_id, token_id),
+        Listing::Fixed => _execute_buy_fixed_listing(
+            deps,
+            &info,
+            collection_id,
+            token_id,
+            info.sender.to_string(),
+        ),
+        Listing::Auction => unimplemented!(),
+    }
+}
+
+fn execute_permission_buy(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    listing_type: Listing,
+    collection_id: u32,
+    token_id: u32,
+    buyer: String,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        operators,
+    )?;
+
+    match listing_type {
+        Listing::Fixed => _execute_buy_fixed_listing(deps, &info, collection_id, token_id, buyer),
         Listing::Auction => unimplemented!(),
     }
 }
@@ -266,12 +312,13 @@ fn _execute_buy_fixed_listing(
     info: &MessageInfo,
     collection_id: u32,
     token_id: u32,
+    buyer: String,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
     let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
 
-    if fixed_listing.owner == info.sender {
+    if fixed_listing.owner == buyer {
         return Err(ContractError::SelfPurchase {});
     }
 
@@ -369,7 +416,7 @@ fn _execute_buy_fixed_listing(
 
     // Transfer token ownership to the new address
     let transfer_msg = KompleTokenModule(collection_addr.clone())
-        .admin_transfer_nft_msg(token_id.to_string(), info.sender.to_string())?;
+        .admin_transfer_nft_msg(token_id.to_string(), buyer.clone())?;
 
     // Lift up the token locks
     let unlock_msg = KompleTokenModule(collection_addr).update_token_locks_msg(
@@ -394,7 +441,7 @@ fn _execute_buy_fixed_listing(
                 .add_attribute("token_id", token_id.to_string())
                 .add_attribute("price", fixed_listing.price.to_string())
                 .add_attribute("owner", fixed_listing.owner)
-                .add_attribute("buyer", info.sender.to_string())
+                .add_attribute("buyer", buyer)
                 .add_attribute("marketplace_fee", marketplace_fee.to_string())
                 .add_attribute("royalty_fee", royalty_fee.to_string())
                 .add_attribute("payout", payout.to_string())
