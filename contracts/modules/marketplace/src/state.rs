@@ -25,7 +25,7 @@ pub struct FixedListing {
     pub owner: Addr,
 }
 /// Storage map for the fixed listings.
-/// 
+///
 /// Collection id and token id are used as the key.
 /// `FixedListing` is the value.
 pub const FIXED_LISTING: Map<(u32, u32), FixedListing> = Map::new(FIXED_LISTING_NAMESPACE);

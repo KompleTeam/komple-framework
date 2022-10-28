@@ -257,6 +257,8 @@ fn make_merge_msg(
     Ok(())
 }
 
+// Loops through the tokens to burn inside merge message and
+// creates the messages for burning the tokens
 fn make_burn_messages(
     deps: &DepsMut,
     event_attributes: &mut Vec<Attribute>,

@@ -11,6 +11,8 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
+/// Hub module address.
 pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
 
+/// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

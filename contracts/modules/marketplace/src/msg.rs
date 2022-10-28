@@ -12,7 +12,7 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Public message.
-    /// 
+    ///
     /// List a new token for fixed amount sale.
     /// Every token created under parent hub
     /// can be listed for sale.
@@ -22,14 +22,11 @@ pub enum ExecuteMsg {
         price: Uint128,
     },
     /// Public message.
-    /// 
+    ///
     /// Remove a token from fixed amount sale.
-    DelistFixedToken {
-        collection_id: u32,
-        token_id: u32,
-    },
+    DelistFixedToken { collection_id: u32, token_id: u32 },
     /// Public message.
-    /// 
+    ///
     /// Update the price of a listed token based on listing type.
     UpdatePrice {
         listing_type: Listing,
@@ -38,7 +35,7 @@ pub enum ExecuteMsg {
         price: Uint128,
     },
     /// Public message.
-    /// 
+    ///
     /// Buy a token that is listed on the marketplace.
     Buy {
         listing_type: Listing,
@@ -46,7 +43,7 @@ pub enum ExecuteMsg {
         token_id: u32,
     },
     /// Admin message.
-    /// 
+    ///
     /// Same as ```Buy``` message but can be used with permissions.
     PermissionBuy {
         listing_type: Listing,
@@ -57,9 +54,7 @@ pub enum ExecuteMsg {
     /// Admin message.
     ///
     /// Update the operators of this contract.
-    UpdateOperators {
-        addrs: Vec<String>,
-    },
+    UpdateOperators { addrs: Vec<String> },
 }
 
 #[cw_serde]

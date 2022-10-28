@@ -5,36 +5,48 @@ use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    UpdateMergeLock {
-        lock: bool,
-    },
-    Merge {
-        msg: MergeMsg,
-    },
+    /// Admin message.
+    ///
+    /// Update the lock for merging.
+    /// This applies for the normal merge operation.
+    UpdateMergeLock { lock: bool },
+    /// Public message.
+    ///
+    /// Burn multiple tokens and mint a new one.
+    /// Takes merge msg to determine which tokens to burn and which to mint.
+    Merge { msg: MergeMsg },
+    /// Admin message.
+    ///
+    /// Same as `Merge` message but can be used with permissions.
     PermissionMerge {
         permission_msg: Binary,
         merge_msg: MergeMsg,
     },
-    UpdateOperators {
-        addrs: Vec<String>,
-    },
+    /// Admin message.
+    ///
+    /// Update the operators of this contract.
+    UpdateOperators { addrs: Vec<String> },
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
+    /// Get the contract's config.
     #[returns(ResponseWrapper<Config>)]
     Config {},
+    /// Get the operators of this contract.
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
 }
 
+/// Message that is used for the tokens that will be burned.
 #[cw_serde]
 pub struct MergeBurnMsg {
     pub collection_id: u32,
     pub token_id: u32,
 }
 
+/// Message that is used for the merge operation.
 #[cw_serde]
 pub struct MergeMsg {
     pub recipient: String,
