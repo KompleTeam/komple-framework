@@ -566,6 +566,8 @@ fn query_total_fixed_fees(
     })
 }
 
+// TODO: Fix this query
+// Need to add pagination
 fn query_keys(
     deps: Deps,
     fee_type: Fees,

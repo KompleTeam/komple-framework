@@ -1,6 +1,9 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Uint128};
 
+/// The different types of fees.
+///
+/// Currently only percentage and fixed fees are supported.
 #[cw_serde]
 pub enum Fees {
     Fixed,
@@ -15,6 +18,9 @@ impl Fees {
     }
 }
 
+/// The different type of mint fees to be used in mint module.
+///
+/// This is used for convinience when setting the fee configuration.
 #[cw_serde]
 pub enum MintFees {
     Price,
@@ -31,6 +37,9 @@ impl MintFees {
     }
 }
 
+/// The different type of marketplace fees to be used in marketplace module.
+///
+/// This is used for convinience when setting the fee configuration.
 #[cw_serde]
 pub enum MarketplaceFees {
     Komple,
@@ -49,17 +58,27 @@ impl MarketplaceFees {
     }
 }
 
+/// The payment configuration for a percentage fee.
+///
+/// This is saved to storage for a module and fee name.
 #[cw_serde]
 pub struct PercentagePayment {
-    // Address is optional and can be overriden with a custom address on distribution
+    /// Address is the payment address.
+    /// If the address is empty, custom payment addresses are used for distribution.
     pub address: Option<String>,
+    /// Value is the percentage value.
     pub value: Decimal,
 }
 
+/// The payment configuration for a fixed fee.
+///
+/// This is saved to storage for a module and fee name.
 #[cw_serde]
 pub struct FixedPayment {
-    // Address is optional and can be overriden with a custom address on distribution
+    /// Address is the payment address.
+    /// If the address is empty, custom payment addresses are used for distribution.
     pub address: Option<String>,
+    /// Value is the integer value.
     pub value: Uint128,
 }
 

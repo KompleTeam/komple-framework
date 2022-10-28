@@ -1,11 +1,11 @@
 # Komple Framework Fee Module
 
-This contract is used for general fee adjustment and distribution.
+More info about this module can be found in [our documentation](https://docs.komple.io/).
 
-Fees can be used in many different places. In Komple Framework, the main usa case is marketplace fee distributions.
+This contract is used for general fee adjustment and distribution in Komple Framework.
 
-## Overview
+Fees can be used in many different places such as:
 
-In order to distribute fees among different addresses, shares must be added at first.
-
-After adding shares, contract will distribute the incoming funds according to the fee percentages.
+- Mint module for minting fee, whitelist fee
+- Marketplace module for royalty fee
+- Marbu for marketplace creation and community pool fee

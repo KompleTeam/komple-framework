@@ -4,9 +4,11 @@ use cosmwasm_std::{to_binary, Addr, Coin, Decimal, QuerierWrapper, StdResult, Ui
 use komple_types::fee::Fees;
 use komple_types::query::ResponseWrapper;
 
+/// Helper methods for the fee module.
+///
+/// Used for constructing some of the execute messages and performing queries.
 #[cw_serde]
 pub struct KompleFeeModule(pub Addr);
-
 impl KompleFeeModule {
     pub fn addr(&self) -> Addr {
         self.0.clone()
