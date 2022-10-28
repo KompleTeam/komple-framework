@@ -14,6 +14,7 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
+/// Hub module address.
 pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
 
 #[cw_serde]
@@ -23,6 +24,11 @@ pub struct FixedListing {
     pub price: Uint128,
     pub owner: Addr,
 }
+/// Storage map for the fixed listings.
+/// 
+/// Collection id and token id are used as the key.
+/// `FixedListing` is the value.
 pub const FIXED_LISTING: Map<(u32, u32), FixedListing> = Map::new(FIXED_LISTING_NAMESPACE);
 
+/// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

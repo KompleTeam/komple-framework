@@ -1,6 +1,9 @@
 use cosmwasm_schema::cw_serde;
 use std::fmt;
 
+/// The different types of listing.
+///
+/// Currently only fixed and auction listings are supported.
 #[cw_serde]
 pub enum Listing {
     Fixed,

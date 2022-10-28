@@ -43,6 +43,7 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+    // Return error if instantiate data is not sent
     if msg.data.is_none() {
         return Err(ContractError::InvalidInstantiateMsg {});
     };
@@ -146,6 +147,7 @@ fn execute_list_fixed_token(
     let token_locks = StorageHelper::query_token_locks(&deps.querier, &collection_addr, &token_id)?;
     check_locks(token_locks)?;
 
+    // Create the fixed listing
     let fixed_listing = FixedListing {
         collection_id,
         token_id,
@@ -318,6 +320,7 @@ fn _execute_buy_fixed_listing(
     let config = CONFIG.load(deps.storage)?;
     let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
 
+    // If owner and the buyer is the same return error
     if fixed_listing.owner == buyer {
         return Err(ContractError::SelfPurchase {});
     }
@@ -449,8 +452,8 @@ fn _execute_buy_fixed_listing(
         ))
 }
 
-// Gets the current fee percentage from fee module
-// Updates the marketplace fee if exists
+// Gets the current total fee percentage from fee module
+// If exists updates the marketplace fee
 // Creates a distribute msg and adds to sub message
 fn process_marketplace_fees(
     deps: &DepsMut,
