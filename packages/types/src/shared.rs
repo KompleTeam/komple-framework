@@ -1,6 +1,10 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Binary;
 
+/// Message used for instantiating a contract.
+///
+/// Admin is a mandatory field for every contract.
+/// Data is optional and can be used to pass in instantiate data.
 #[cw_serde]
 pub struct RegisterMsg {
     pub admin: String,

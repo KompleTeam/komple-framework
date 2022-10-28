@@ -35,6 +35,7 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+    // Return error if instantiate data is not sent
     if msg.data.is_none() {
         return Err(ContractError::InvalidInstantiateMsg {});
     };
@@ -49,7 +50,7 @@ pub fn instantiate(
     }
 
     // Save fee module info for Marbu if exists
-    // This comes from Marbu controller on Hub creation
+    // This comes from Marbu Controller on Hub creation
     if let Some(marbu_fee_module) = data.marbu_fee_module {
         let marbu_fee_module = deps.api.addr_validate(&marbu_fee_module)?;
         MARBU_FEE_MODULE.save(deps.storage, &marbu_fee_module)?;
@@ -113,7 +114,9 @@ fn execute_register_module(
     // Get the latest module reply id
     let module_id = (MODULE_ID.load(deps.storage)?) + 1;
 
-    // We inject admin to each instantiate msg
+    // Register message to instantiate the module
+    // Admin is set as the hub's admin
+    // Additional data is sent to the module
     let register_msg = RegisterMsg {
         admin: config.admin.to_string(),
         data: msg,
@@ -134,7 +137,8 @@ fn execute_register_module(
     };
 
     MODULE_ID.save(deps.storage, &module_id)?;
-    // This will be loaded in reply handler for registering the correct module
+    // Module name will be loaded in reply handler for saving
+    // the correct module name to storage
     MODULE_TO_REGISTER.save(deps.storage, &module)?;
 
     Ok(ResponseHelper::new_module("hub", "register_module")
@@ -174,21 +178,17 @@ fn execute_update_hub_info(
     };
     HUB_INFO.save(deps.storage, &hub_info)?;
 
-    let mut event_attributes: Vec<Attribute> = vec![];
-    if hub_info.external_link.is_some() {
-        event_attributes.push(Attribute {
-            key: "external_link".to_string(),
-            value: hub_info.external_link.as_ref().unwrap().to_string(),
-        });
-    };
-
     Ok(
         ResponseHelper::new_module("hub", "update_hub_info").add_event(
             EventHelper::new("hub_update_hub_info")
                 .add_attribute("name", hub_info.name)
                 .add_attribute("description", hub_info.description)
                 .add_attribute("image", hub_info.image)
-                .add_attributes(event_attributes)
+                .check_add_attribute(
+                    &hub_info.external_link,
+                    "external_link",
+                    hub_info.external_link.as_ref().unwrap_or(&String::from("")),
+                )
                 .get(),
         ),
     )
@@ -308,6 +308,7 @@ fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     // Get the last module id
+    // This is used as the reply id
     let module_id = MODULE_ID.load(deps.storage)?;
 
     // Check if the reply id is the same
@@ -315,24 +316,21 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         return Err(ContractError::InvalidReplyID {});
     };
 
+    // Handle the registration
+    handle_module_instantiate_reply(deps, msg)
+}
+
+fn handle_module_instantiate_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    let reply = parse_reply_instantiate_data(msg);
+
     // Get the module for registering
     let module_to_register = MODULE_TO_REGISTER.load(deps.storage)?;
 
-    // Handle the registration
-    handle_module_instantiate_reply(deps, msg, module_to_register.as_str())
-}
-
-fn handle_module_instantiate_reply(
-    deps: DepsMut,
-    msg: Reply,
-    module_to_register: &str,
-) -> Result<Response, ContractError> {
-    let reply = parse_reply_instantiate_data(msg);
     match reply {
         Ok(res) => {
             MODULE_ADDRS.save(
                 deps.storage,
-                module_to_register,
+                &module_to_register,
                 &Addr::unchecked(res.contract_address),
             )?;
             Ok(Response::default().add_attribute(

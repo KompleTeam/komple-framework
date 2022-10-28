@@ -11,6 +11,8 @@ use komple_types::{
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 
+/// General information about the hub module.
+/// This information is equal to project information.
 #[cw_serde]
 pub struct HubInfo {
     pub name: String,
@@ -26,12 +28,17 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
+/// Addresses of the registered modules.
 pub const MODULE_ADDRS: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);
 
+/// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
 
+/// ID used for the module registration purposes.
 pub const MODULE_ID: Item<u64> = Item::new(MODULE_ID_NAMESPACE);
 
+/// Module name to register. This is utilized in the reply handler of this contract.
 pub const MODULE_TO_REGISTER: Item<String> = Item::new(MODULE_TO_REGISTER_NAMESPACE);
 
+/// Fee module address if hub is created through Marbu.
 pub const MARBU_FEE_MODULE: Item<Addr> = Item::new(MARBU_FEE_MODULE_NAMESPACE);
