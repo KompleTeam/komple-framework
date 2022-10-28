@@ -33,6 +33,7 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+    // Return error if instantiate data is not sent
     if msg.data.is_none() {
         return Err(ContractError::InvalidInstantiateMsg {});
     };
@@ -122,11 +123,13 @@ fn execute_add_metadata(
         None,
     )?;
 
+    // Create the metadata object
     let metadata = Metadata {
         meta_info,
         attributes,
     };
 
+    // Metadata id is the raw metadata id
     let metadata_id = (METADATA_ID.load(deps.storage)?) + 1;
 
     METADATA.save(deps.storage, metadata_id, &metadata)?;
@@ -235,6 +238,8 @@ fn execute_link_metadata(
         None,
     )?;
 
+    // If the metadata type is standard use token id as metadata id
+    // Else use the metadata id provided
     let metadata_id = match config.metadata_type {
         MetadataType::Standard => token_id,
         MetadataType::Shared | MetadataType::Dynamic => {
@@ -245,11 +250,13 @@ fn execute_link_metadata(
         }
     };
 
+    // Get the raw metadata from storage
     let metadata = METADATA.may_load(deps.storage, metadata_id)?;
     if metadata.is_none() {
         return Err(ContractError::MissingMetadata {});
     }
 
+    // Based on the metadata type, add metadata information to correct storage
     match config.metadata_type {
         MetadataType::Standard | MetadataType::Shared => {
             LINKED_METADATA.save(deps.storage, token_id, &metadata_id)?;
@@ -289,6 +296,8 @@ fn execute_update_meta_info(
         None,
     )?;
 
+    // If raw metadata is true use the raw metadata storage
+    // Else use the linked metadata storage
     let (metadata_id, mut metadata) = match raw_metadata {
         true => {
             let metadata = METADATA.may_load(deps.storage, id)?;

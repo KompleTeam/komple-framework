@@ -6,6 +6,9 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Addr, QuerierWrapper, StdResult, WasmMsg};
 use komple_types::query::ResponseWrapper;
 
+/// Helper methods for the metadata module.
+///
+/// Used for constructing some of the execute messages and performing queries.
 #[cw_serde]
 pub struct KompleMetadataModule(pub Addr);
 

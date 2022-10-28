@@ -18,6 +18,7 @@ pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 // pub const METADATA_LOCK: Map<&str, bool> = Map::new("metadata_lock");
 
+/// Address of the token contract.
 pub const COLLECTION_ADDR: Item<Addr> = Item::new(COLLECTION_ADDR_NAMESPACE);
 
 #[cw_serde]
@@ -39,12 +40,26 @@ pub struct Metadata {
     pub meta_info: MetaInfo,
     pub attributes: Vec<Trait>,
 }
+/// Raw metadata values that is saved to storage.
+/// `AddMetadata` message can be used to add items to this map.
 pub const METADATA: Map<u32, Metadata> = Map::new(METADATA_NAMESPACE);
 
+/// ID used to identify a single raw metadata.
 pub const METADATA_ID: Item<u32> = Item::new(METADATA_ID_NAMESPACE);
 
+/// Linked metadata values that is saved to storage.
+/// `LinkMetadata` message can be used to add items to this map.
+///
+/// Raw metadata ids are mapped to token ids.
+/// Only works for `Standard` and `Shared` metadata types.
 pub const LINKED_METADATA: Map<u32, u32> = Map::new(LINKED_METADATA_NAMESPACE);
 
+/// Linked metadata values that is saved to storage.
+/// `LinkMetadata` message can be used to add items to this map.
+///
+/// Whole metadata objects are mapped to token ids.
+/// Only works for `Dynamic` metadata type.
 pub const DYNAMIC_LINKED_METADATA: Map<u32, Metadata> = Map::new(DYNAMIC_LINKED_METADATA_NAMESPACE);
 
+/// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

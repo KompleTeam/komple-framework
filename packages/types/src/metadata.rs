@@ -1,6 +1,9 @@
 use cosmwasm_schema::cw_serde;
 use std::fmt;
 
+/// The different types of metadata.
+///
+/// Currently only standard, shared and dynamic metadatas are supported.
 #[cw_serde]
 pub enum Metadata {
     Standard,
