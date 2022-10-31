@@ -17,10 +17,7 @@ use komple_token_module::state::CollectionConfig;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::{
-    collection::Collections,
-    fee::{MarketplaceFees, MintFees},
-};
+use komple_types::{collection::Collections, fee::MarketplaceFees};
 use komple_types::{
     fee::{Fees, PercentagePayment as FeeModulePercentagePayment},
     shared::RegisterMsg,
@@ -181,7 +178,7 @@ fn set_royalties(app: &mut App, fee_module_addr: &Addr, collection_id: &u32, roy
     let msg = FeeModuleExecuteMsg::SetFee {
         fee_type: Fees::Percentage,
         module_name: Modules::Mint.to_string(),
-        fee_name: format!("{}/{}", MintFees::Royalty.as_str(), collection_id),
+        fee_name: format!("{}/{}", MarketplaceFees::Royalty.as_str(), collection_id),
         data: to_binary(&FeeModulePercentagePayment {
             address: None,
             value: Decimal::from_str(royalty).unwrap(),

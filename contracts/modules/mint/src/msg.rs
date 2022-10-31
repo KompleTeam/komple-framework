@@ -5,14 +5,10 @@ use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{execute::SharedExecuteMsg, query::ResponseWrapper};
+use komple_types::query::ResponseWrapper;
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    /// Admin and public message.
-    ///
-    /// Create a new collection.
-    /// This can be executed by both admin and users based on configuration.
     CreateCollection {
         code_id: u64,
         collection_info: CollectionInfo,
@@ -21,92 +17,53 @@ pub enum ExecuteMsg {
         metadata_info: MetadataInfo,
         linked_collections: Option<Vec<u32>>,
     },
-    /// Admin message.
-    ///
-    /// Update the configuration for public collection creation.
-    /// If set to true, users can create collections.
-    UpdatePublicCollectionCreation { public_collection_creation: bool },
-    /// Admin message.
-    ///
-    /// Update the configuration for mint lock.
-    UpdateMintLock { lock: bool },
-    /// Public message.
-    ///
-    /// Mint a new token on a collection.
-    /// Additional metadata id can be provided to link to a certain metadata.
+    UpdatePublicCollectionCreation {
+        public_collection_creation: bool,
+    },
+    UpdateMintLock {
+        lock: bool,
+    },
     Mint {
         collection_id: u32,
         metadata_id: Option<u32>,
     },
-    /// Admin message.
-    ///
-    /// Same as `Mint` message but only executable by admin.
     AdminMint {
         collection_id: u32,
         recipient: String,
         metadata_id: Option<u32>,
     },
-    /// Admin message.
-    ///
-    /// Same as `Mint` message but can be used with permissions.
     PermissionMint {
         permission_msg: Binary,
         mint_msg: MintMsg,
     },
-    /// Admin message.
-    ///
-    /// Update the operators of this contract.
-    UpdateOperators { addrs: Vec<String> },
-    /// Admin message.
-    ///
-    /// Update the linked collections of a collection.
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
     UpdateLinkedCollections {
         collection_id: u32,
         linked_collections: Vec<u32>,
     },
-    /// Admin message.
-    ///
-    /// Whitelist a collection making it enabled withing the framework.
-    WhitelistCollection { collection_id: u32 },
-    /// Admin message.
-    ///
-    /// Blacklist a collection making it disabled within the framework.
-    BlacklistCollection { collection_id: u32 },
-    /// Hub message.
-    ///
-    /// Lock the execute entry point.
-    /// Can only be called by the hub module.
-    LockExecute {},
-}
-
-impl From<ExecuteMsg> for SharedExecuteMsg {
-    fn from(msg: ExecuteMsg) -> Self {
-        match msg {
-            ExecuteMsg::LockExecute {} => SharedExecuteMsg::LockExecute {},
-            _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
-        }
-    }
+    WhitelistCollection {
+        collection_id: u32,
+    },
+    BlacklistCollection {
+        collection_id: u32,
+    },
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    /// Get the contract's config.
     #[returns(ResponseWrapper<Config>)]
     Config {},
-    /// Resolve the collection address for a collection id.
     #[returns(ResponseWrapper<String>)]
     CollectionAddress(u32),
-    /// Get the collection info for a collection id.
     #[returns(ResponseWrapper<CollectionInfo>)]
     CollectionInfo { collection_id: u32 },
-    /// Get the operators of this contract.
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
-    /// Get the linked collections of a collection.
     #[returns(ResponseWrapper<Vec<u32>>)]
     LinkedCollections { collection_id: u32 },
-    /// List the collections with pagination.
     #[returns(ResponseWrapper<Vec<CollectionsResponse>>)]
     Collections {
         blacklist: bool,
@@ -115,7 +72,6 @@ pub enum QueryMsg {
     },
 }
 
-/// Message used to mint new tokens on a collection.
 #[cw_serde]
 pub struct MintMsg {
     pub collection_id: u32,

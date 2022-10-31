@@ -2,9 +2,6 @@ use crate::msg::ExecuteMsg;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Addr, Coin, StdResult, WasmMsg};
 
-/// Helper methods for the mint module.
-///
-/// Used for constructing some of the execute messages and performing queries.
 #[cw_serde]
 pub struct KompleMintModule(pub Addr);
 

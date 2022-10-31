@@ -11,9 +11,6 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("Execute locked")]
-    ExecuteLocked {},
-
     #[error("Invalid instantiate message")]
     InvalidInstantiateMsg {},
 

@@ -22,12 +22,12 @@ use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
+use crate::error::ContractError;
 use crate::msg::{CollectionsResponse, ExecuteMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
     CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID,
     COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
 };
-use crate::{error::ContractError, state::EXECUTE_LOCK};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-mint-module";
@@ -57,8 +57,6 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
-    EXECUTE_LOCK.save(deps.storage, &false)?;
-
     Ok(ResponseHelper::new_module("mint", "instantiate").add_event(
         EventHelper::new("mint_instantiate")
             .add_attribute("admin", config.admin)
@@ -78,11 +76,6 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    let execute_lock = EXECUTE_LOCK.load(deps.storage)?;
-    if execute_lock {
-        return Err(ContractError::ExecuteLocked {});
-    };
-
     match msg {
         ExecuteMsg::CreateCollection {
             code_id,
@@ -130,7 +123,6 @@ pub fn execute(
         ExecuteMsg::BlacklistCollection { collection_id } => {
             execute_blacklist_collection(deps, env, info, collection_id)
         }
-        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
     }
 }
 
@@ -721,21 +713,6 @@ fn execute_blacklist_collection(
                 .add_attribute("collection_id", collection_id.to_string())
                 .get(),
         ))
-}
-
-fn execute_lock_execute(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.load(deps.storage)?;
-    if hub_addr != info.sender {
-        return Err(ContractError::Unauthorized {});
-    };
-
-    EXECUTE_LOCK.save(deps.storage, &true)?;
-
-    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 fn check_collection_ids_exists(

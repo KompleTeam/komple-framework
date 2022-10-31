@@ -1,9 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use std::fmt;
 
-/// The different types of collections.
-///
-/// Currently only standard and komple collections are supported.
 #[cw_serde]
 pub enum Collections {
     Standard,
