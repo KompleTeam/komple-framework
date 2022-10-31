@@ -30,7 +30,7 @@ use semver::Version;
 use std::ops::Mul;
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, FixedListing, CONFIG, FIXED_LISTING, HUB_ADDR};
+use crate::state::{Config, FixedListing, CONFIG, EXECUTE_LOCK, FIXED_LISTING, HUB_ADDR};
 use crate::{error::ContractError, state::OPERATORS};
 
 // version info for migration info
@@ -61,6 +61,8 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
+    EXECUTE_LOCK.save(deps.storage, &false)?;
+
     Ok(
         ResponseHelper::new_module("marketplace", "instantiate").add_event(
             EventHelper::new("marketplace_instantiate")
@@ -79,6 +81,11 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    let execute_lock = EXECUTE_LOCK.load(deps.storage)?;
+    if execute_lock {
+        return Err(ContractError::ExecuteLocked {});
+    };
+
     match msg {
         ExecuteMsg::ListFixedToken {
             collection_id,
@@ -123,6 +130,7 @@ pub fn execute(
             buyer,
         ),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
+        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
     }
 }
 
@@ -561,6 +569,21 @@ fn execute_update_operators(
                 .add_attributes(event_attributes)
                 .get(),
         ))
+}
+
+fn execute_lock_execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
+    if hub_addr != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    EXECUTE_LOCK.save(deps.storage, &true)?;
+
+    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

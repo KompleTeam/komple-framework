@@ -55,6 +55,11 @@ pub enum ExecuteMsg {
     ///
     /// Update the operators of this contract.
     UpdateOperators { addrs: Vec<String> },
+    /// Hub message.
+    ///
+    /// Lock the execute entry point.
+    /// Can only be called by the hub module.
+    LockExecute {},
 }
 
 #[cw_serde]
