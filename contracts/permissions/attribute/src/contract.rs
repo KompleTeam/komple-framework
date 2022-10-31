@@ -105,8 +105,10 @@ pub fn execute_check(
             .find(|attr| attr.trait_type == msg.trait_type);
 
         // Check if attribute exists
-        if msg.condition != AttributeConditions::Absent && attribute.is_none() {
-            return Err(ContractError::AttributeNotFound {});
+        if msg.condition != AttributeConditions::Absent {
+            if attribute.is_none() {
+                return Err(ContractError::AttributeNotFound {});
+            }
         }
         // If it is a comparison
         // Check if value is integer and both are same type
@@ -189,7 +191,7 @@ fn get_value_type(value: &str) -> AttributeTypes {
     if value.parse::<bool>().is_ok() {
         return AttributeTypes::Boolean;
     }
-    AttributeTypes::String
+    return AttributeTypes::String;
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

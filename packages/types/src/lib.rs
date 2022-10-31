@@ -1,5 +1,4 @@
 pub mod collection;
-pub mod execute;
 pub mod fee;
 pub mod hub;
 pub mod marketplace;

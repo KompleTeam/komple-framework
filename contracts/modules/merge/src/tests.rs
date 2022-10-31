@@ -240,26 +240,3 @@ mod update_operators {
         );
     }
 }
-
-mod lock_execute {
-    use super::*;
-
-    #[test]
-    fn test_happy_path() {
-        let mut app = mock_app();
-        let addr = proper_instantiate(&mut app);
-
-        let msg = ExecuteMsg::LockExecute {};
-        let _ = app
-            .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
-            .unwrap();
-
-        let err = app
-            .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
-            .unwrap_err();
-        assert_eq!(
-            err.source().unwrap().to_string(),
-            ContractError::ExecuteLocked {}.to_string()
-        );
-    }
-}
