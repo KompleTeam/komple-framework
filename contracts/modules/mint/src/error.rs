@@ -10,6 +10,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Execute locked")]
+    ExecuteLocked {},
+
     #[error("Minting locked")]
     LockedMint {},
 

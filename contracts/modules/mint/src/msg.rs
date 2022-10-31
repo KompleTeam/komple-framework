@@ -72,6 +72,11 @@ pub enum ExecuteMsg {
     ///
     /// Blacklist a collection making it disabled within the framework.
     BlacklistCollection { collection_id: u32 },
+    /// Hub message.
+    ///
+    /// Lock the execute entry point.
+    /// Can only be called by the hub module.
+    LockExecute {},
 }
 
 #[cw_serde]

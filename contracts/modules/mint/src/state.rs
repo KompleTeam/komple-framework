@@ -4,7 +4,7 @@ use komple_types::{
         Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
         COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE,
     },
-    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
 use cosmwasm_std::Addr;
@@ -55,3 +55,6 @@ pub const LINKED_COLLECTIONS: Map<u32, Vec<u32>> = Map::new(LINKED_COLLECTIONS_N
 /// prevent them from being used in operations.
 pub const BLACKLIST_COLLECTION_ADDRS: Map<u32, Addr> =
     Map::new(BLACKLIST_COLLECTION_ADDRS_NAMESPACE);
+
+/// Lock for the execute entry point.
+pub const EXECUTE_LOCK: Item<bool> = Item::new(EXECUTE_LOCK_NAMESPACE);
