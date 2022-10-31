@@ -19,7 +19,7 @@ use crate::error::ContractError;
 use crate::msg::{
     CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, PercentageFeeResponse, QueryMsg,
 };
-use crate::state::{Config, CONFIG, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
+use crate::state::{Config, CONFIG, EXECUTE_LOCK, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-fee-module";
@@ -41,6 +41,8 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
+    EXECUTE_LOCK.save(deps.storage, &false)?;
+
     Ok(ResponseHelper::new_module("fee", "instantiate").add_event(
         EventHelper::new("fee_instantiate")
             .add_attribute("admin", config.admin.to_string())
@@ -56,6 +58,11 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    let execute_lock = EXECUTE_LOCK.load(deps.storage)?;
+    if execute_lock {
+        return Err(ContractError::ExecuteLocked {});
+    };
+
     match msg {
         ExecuteMsg::SetFee {
             fee_type,
@@ -80,6 +87,7 @@ pub fn execute(
             module_name,
             custom_payment_addresses,
         ),
+        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
     }
 }
 
@@ -357,6 +365,21 @@ fn execute_distribute(
                 .add_attribute("module_name", &module_name)
                 .get(),
         ))
+}
+
+fn execute_lock_execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
+    if hub_addr != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    EXECUTE_LOCK.save(deps.storage, &true)?;
+
+    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

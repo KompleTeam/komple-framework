@@ -1,12 +1,27 @@
 use cosmwasm_std::{coin, to_binary, StdError};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_fee_module::{
+    msg::ExecuteMsg as FeeModuleExecuteMsg, ContractError as FeeModuleContractError,
+};
 use komple_hub_module::{
     msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg},
     state::HubInfo,
     ContractError,
 };
 use komple_marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
+use komple_marketplace_module::{
+    msg::ExecuteMsg as MarketplaceModuleExecuteMsg, ContractError as MarketplaceModuleContractError,
+};
+use komple_merge_module::{
+    msg::ExecuteMsg as MergeModuleExecuteMsg, ContractError as MergeModuleContractError,
+};
+use komple_mint_module::{
+    msg::ExecuteMsg as MintModuleExecuteMsg, ContractError as MintModuleContractError,
+};
+use komple_permission_module::{
+    msg::ExecuteMsg as PermissionModuleExecuteMsg, ContractError as PermissionModuleContractError,
+};
 use komple_types::shared::RegisterMsg;
 use komple_types::{module::Modules, query::ResponseWrapper};
 
@@ -364,6 +379,238 @@ mod actions {
                 err.source().unwrap().to_string(),
                 ContractError::Unauthorized {}.to_string()
             )
+        }
+    }
+
+    mod deregister_module {
+        use super::*;
+
+        #[test]
+        fn test_register_mint_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let mint_module_code_id = app.store_code(mint_module());
+
+            let instantiate_msg = to_binary(&RegisterMsg {
+                admin: ADMIN.to_string(),
+                data: None,
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Mint.to_string(),
+                msg: Some(instantiate_msg),
+                code_id: mint_module_code_id,
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::DeregisterModule {
+                module: Modules::Mint.to_string(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = MintModuleExecuteMsg::LockExecute {};
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    Addr::unchecked("contract1"),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                MintModuleContractError::ExecuteLocked {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_register_permission_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let permission_module_code_id = app.store_code(permission_module());
+
+            let instantiate_msg = to_binary(&RegisterMsg {
+                admin: ADMIN.to_string(),
+                data: None,
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Permission.to_string(),
+                msg: Some(instantiate_msg),
+                code_id: permission_module_code_id,
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::DeregisterModule {
+                module: Modules::Permission.to_string(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = PermissionModuleExecuteMsg::LockExecute {};
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    Addr::unchecked("contract1"),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                PermissionModuleContractError::ExecuteLocked {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_register_merge_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let merge_module_code_id = app.store_code(merge_module());
+
+            let instantiate_msg = to_binary(&RegisterMsg {
+                admin: ADMIN.to_string(),
+                data: None,
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Merge.to_string(),
+                msg: Some(instantiate_msg),
+                code_id: merge_module_code_id,
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::DeregisterModule {
+                module: Modules::Merge.to_string(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = MergeModuleExecuteMsg::LockExecute {};
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    Addr::unchecked("contract1"),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                MergeModuleContractError::ExecuteLocked {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_register_marketplace_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let marketplace_module_code_id = app.store_code(marketplace_module());
+
+            let register_msg = Some(
+                to_binary(&MarketplaceModuleInstantiateMsg {
+                    native_denom: NATIVE_DENOM.to_string(),
+                })
+                .unwrap(),
+            );
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Marketplace.to_string(),
+                msg: register_msg,
+                code_id: marketplace_module_code_id,
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::DeregisterModule {
+                module: Modules::Marketplace.to_string(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = MarketplaceModuleExecuteMsg::LockExecute {};
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    Addr::unchecked("contract1"),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                MarketplaceModuleContractError::ExecuteLocked {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_happy_path_fee_module() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+            let fee_module_code_id = app.store_code(fee_module());
+
+            let instantiate_msg = to_binary(&RegisterMsg {
+                admin: ADMIN.to_string(),
+                data: None,
+            })
+            .unwrap();
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Fee.to_string(),
+                msg: Some(instantiate_msg),
+                code_id: fee_module_code_id,
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::DeregisterModule {
+                module: Modules::Fee.to_string(),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = FeeModuleExecuteMsg::LockExecute {};
+            let err = app
+                .execute_contract(
+                    Addr::unchecked(ADMIN),
+                    Addr::unchecked("contract1"),
+                    &msg,
+                    &[],
+                )
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                FeeModuleContractError::ExecuteLocked {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_invalid_module() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::DeregisterModule {
+                module: "invalid".to_string(),
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::InvalidModule {}.to_string()
+            );
         }
     }
 

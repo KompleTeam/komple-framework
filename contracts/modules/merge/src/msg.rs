@@ -1,7 +1,7 @@
 use crate::state::Config;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::query::ResponseWrapper;
+use komple_types::{execute::SharedExecuteMsg, query::ResponseWrapper};
 
 #[cw_serde]
 pub enum ExecuteMsg {
@@ -26,6 +26,20 @@ pub enum ExecuteMsg {
     ///
     /// Update the operators of this contract.
     UpdateOperators { addrs: Vec<String> },
+    /// Hub message.
+    ///
+    /// Lock the execute entry point.
+    /// Can only be called by the hub module.
+    LockExecute {},
+}
+
+impl From<ExecuteMsg> for SharedExecuteMsg {
+    fn from(msg: ExecuteMsg) -> Self {
+        match msg {
+            ExecuteMsg::LockExecute {} => SharedExecuteMsg::LockExecute {},
+            _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
+        }
+    }
 }
 
 #[cw_serde]

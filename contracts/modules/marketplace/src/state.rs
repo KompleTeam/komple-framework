@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
     marketplace::FIXED_LISTING_NAMESPACE,
-    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
 use cosmwasm_std::{Addr, Uint128};
@@ -32,3 +32,6 @@ pub const FIXED_LISTING: Map<(u32, u32), FixedListing> = Map::new(FIXED_LISTING_
 
 /// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
+
+/// Lock for the execute entry point.
+pub const EXECUTE_LOCK: Item<bool> = Item::new(EXECUTE_LOCK_NAMESPACE);

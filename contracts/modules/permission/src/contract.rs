@@ -16,8 +16,8 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, MigrateMsg, PermissionCheckMsg, QueryMsg};
 use crate::state::{
-    Config, CONFIG, HUB_ADDR, MODULE_PERMISSIONS, OPERATORS, PERMISSIONS, PERMISSION_ID,
-    PERMISSION_TO_REGISTER,
+    Config, CONFIG, EXECUTE_LOCK, HUB_ADDR, MODULE_PERMISSIONS, OPERATORS, PERMISSIONS,
+    PERMISSION_ID, PERMISSION_TO_REGISTER,
 };
 
 // version info for migration info
@@ -42,6 +42,8 @@ pub fn instantiate(
 
     PERMISSION_ID.save(deps.storage, &0)?;
 
+    EXECUTE_LOCK.save(deps.storage, &false)?;
+
     Ok(
         ResponseHelper::new_module("permission", "instantiate").add_event(
             EventHelper::new("permission_instantiate")
@@ -59,6 +61,11 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    let execute_lock = EXECUTE_LOCK.load(deps.storage)?;
+    if execute_lock {
+        return Err(ContractError::ExecuteLocked {});
+    };
+
     match msg {
         ExecuteMsg::RegisterPermission {
             code_id,
@@ -71,6 +78,7 @@ pub fn execute(
         } => execute_update_module_permissions(deps, env, info, module, permissions),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::Check { module, msg } => execute_check(deps, env, info, module, msg),
+        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
     }
 }
 
@@ -266,6 +274,21 @@ fn execute_check(
                 .add_attributes(event_attributes)
                 .get(),
         ))
+}
+
+fn execute_lock_execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
+    if hub_addr != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    EXECUTE_LOCK.save(deps.storage, &true)?;
+
+    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

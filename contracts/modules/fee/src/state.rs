@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
     fee::{FixedPayment, PercentagePayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
-    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE},
 };
 
 use cosmwasm_std::Addr;
@@ -29,3 +29,6 @@ pub const FIXED_FEES: Map<(&str, &str), FixedPayment> = Map::new(FIXED_FEES_NAME
 
 /// Hub module address.
 pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
+
+/// Lock for the execute entry point.
+pub const EXECUTE_LOCK: Item<bool> = Item::new(EXECUTE_LOCK_NAMESPACE);

@@ -17,7 +17,7 @@ use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, MergeMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, HUB_ADDR, OPERATORS};
+use crate::state::{Config, CONFIG, EXECUTE_LOCK, HUB_ADDR, OPERATORS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
@@ -42,6 +42,8 @@ pub fn instantiate(
 
     HUB_ADDR.save(deps.storage, &info.sender)?;
 
+    EXECUTE_LOCK.save(deps.storage, &false)?;
+
     Ok(
         ResponseHelper::new_module("merge", "instantiate").add_event(
             EventHelper::new("merge_instantiate")
@@ -59,6 +61,11 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    let execute_lock = EXECUTE_LOCK.load(deps.storage)?;
+    if execute_lock {
+        return Err(ContractError::ExecuteLocked {});
+    };
+
     match msg {
         ExecuteMsg::UpdateMergeLock { lock } => execute_update_merge_lock(deps, env, info, lock),
         ExecuteMsg::Merge { msg } => execute_merge(deps, env, info, msg),
@@ -67,6 +74,7 @@ pub fn execute(
             merge_msg,
         } => execute_permission_merge(deps, env, info, permission_msg, merge_msg),
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
+        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
     }
 }
 
@@ -285,6 +293,21 @@ fn make_burn_messages(
         ));
     }
     Ok(())
+}
+
+fn execute_lock_execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
+    if hub_addr != info.sender {
+        return Err(ContractError::Unauthorized {});
+    };
+
+    EXECUTE_LOCK.save(deps.storage, &true)?;
+
+    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
