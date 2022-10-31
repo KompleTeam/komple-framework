@@ -33,6 +33,11 @@ pub enum ExecuteMsg {
         module_name: String,
         custom_payment_addresses: Option<Vec<CustomPaymentAddress>>,
     },
+    /// Hub message.
+    ///
+    /// Lock the execute entry point.
+    /// Can only be called by the hub module.
+    LockExecute {},
 }
 
 #[cw_serde]
