@@ -7,6 +7,7 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 
+use komple_types::execute::SharedExecuteMsg;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
@@ -210,19 +211,27 @@ fn execute_deregister_module(
         operators,
     )?;
 
-    if !MODULE_ADDRS.has(deps.storage, &module) {
+    let module_addr = MODULE_ADDRS.load(deps.storage, &module);
+    if module_addr.is_err() {
         return Err(ContractError::InvalidModule {});
     }
 
+    // Create a message to disable execute messages on module
+    let msg = WasmMsg::Execute {
+        contract_addr: module_addr.unwrap().to_string(),
+        msg: to_binary(&SharedExecuteMsg::LockExecute {})?,
+        funds: vec![],
+    };
+
     MODULE_ADDRS.remove(deps.storage, &module);
 
-    Ok(
-        ResponseHelper::new_module("hub", "deregister_module").add_event(
+    Ok(ResponseHelper::new_module("hub", "deregister_module")
+        .add_message(msg)
+        .add_event(
             EventHelper::new("hub_deregister_module")
                 .add_attribute("module", module)
                 .get(),
-        ),
-    )
+        ))
 }
 
 fn execute_update_operators(

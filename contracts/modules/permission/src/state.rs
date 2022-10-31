@@ -8,7 +8,7 @@ use komple_types::{
         MODULE_PERMISSIONS_NAMESPACE, PERMISSIONS_NAMESPACE, PERMISSION_ID_NAMESPACE,
         PERMISSION_TO_REGISTER_NAMESPACE,
     },
-    shared::{CONFIG_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
 #[cw_serde]
@@ -31,3 +31,6 @@ pub const PERMISSION_ID: Item<u64> = Item::new(PERMISSION_ID_NAMESPACE);
 
 // Used for matching permission names to addresses
 pub const PERMISSIONS: Map<&str, Addr> = Map::new(PERMISSIONS_NAMESPACE);
+
+/// Lock for the execute entry point.
+pub const EXECUTE_LOCK: Item<bool> = Item::new(EXECUTE_LOCK_NAMESPACE);
