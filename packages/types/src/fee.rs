@@ -26,6 +26,7 @@ pub enum MintFees {
     Price,
     Whitelist,
     Transaction,
+    Royalty,
 }
 impl MintFees {
     pub fn as_str(&self) -> &'static str {
@@ -33,6 +34,7 @@ impl MintFees {
             MintFees::Price => "price",
             MintFees::Whitelist => "whitelist",
             MintFees::Transaction => "transaction",
+            MintFees::Royalty => "royalty",
         }
     }
 }
@@ -45,7 +47,6 @@ pub enum MarketplaceFees {
     Komple,
     Community,
     HubAdmin,
-    Royalty,
 }
 impl MarketplaceFees {
     pub fn as_str(&self) -> &'static str {
@@ -53,7 +54,6 @@ impl MarketplaceFees {
             MarketplaceFees::Komple => "komple",
             MarketplaceFees::Community => "community",
             MarketplaceFees::HubAdmin => "hub_admin",
-            MarketplaceFees::Royalty => "royalty",
         }
     }
 }
