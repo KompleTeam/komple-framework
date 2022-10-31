@@ -23,3 +23,10 @@ pub struct AttributeMsg {
     pub trait_type: String,
     pub value: String,
 }
+
+#[cw_serde]
+pub enum AttributeTypes {
+    String,
+    Integer,
+    Boolean,
+}

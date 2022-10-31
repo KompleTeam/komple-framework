@@ -17,19 +17,22 @@ pub struct Config {
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
+/// Hub module address.
 pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
 
+/// List of permissions that are set to a module.
 pub const MODULE_PERMISSIONS: Map<&str, Vec<String>> = Map::new(MODULE_PERMISSIONS_NAMESPACE);
 
+/// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
 
-// Used as a temporary variable for saving permission to be registered
+/// Permission name to register. This is utilized in the reply handler of this contract.
 pub const PERMISSION_TO_REGISTER: Item<String> = Item::new(PERMISSION_TO_REGISTER_NAMESPACE);
 
-// Used for registering permissions
+/// ID used for the permission registration purposes.
 pub const PERMISSION_ID: Item<u64> = Item::new(PERMISSION_ID_NAMESPACE);
 
-// Used for matching permission names to addresses
+/// Addresses of the registered permissions.
 pub const PERMISSIONS: Map<&str, Addr> = Map::new(PERMISSIONS_NAMESPACE);
 
 /// Lock for the execute entry point.

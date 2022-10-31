@@ -7,7 +7,6 @@ use cw2::set_contract_version;
 use komple_metadata_module::helper::KompleMetadataModule;
 use komple_types::module::Modules;
 use komple_types::permission::AttributeConditions;
-use komple_types::permission::AttributeTypes;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::shared::HUB_ADDR_NAMESPACE;
@@ -16,7 +15,7 @@ use komple_utils::response::ResponseHelper;
 use komple_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
-use crate::msg::{AttributeMsg, ExecuteMsg, QueryMsg};
+use crate::msg::{AttributeMsg, ExecuteMsg, QueryMsg, AttributeTypes};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info

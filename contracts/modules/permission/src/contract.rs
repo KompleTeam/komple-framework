@@ -240,6 +240,7 @@ fn execute_check(
         return Err(ContractError::InvalidPermissions {});
     }
 
+    // Load the permissions for the module
     let permissions = MODULE_PERMISSIONS.may_load(deps.storage, module.as_str())?;
     let expected_permissions = match permissions {
         Some(permissions) => permissions,
@@ -248,6 +249,8 @@ fn execute_check(
 
     let mut event_attributes: Vec<Attribute> = vec![];
 
+    // For each permission type
+    // Make and send a submessage to the permissions
     for permission in data {
         if !expected_permissions.contains(&permission.permission_type) {
             return Err(ContractError::InvalidPermissions {});

@@ -1,6 +1,9 @@
 use cosmwasm_schema::cw_serde;
 use std::fmt;
 
+/// The different types of permissions.
+///
+/// Currently only ownership, attribute and link are supported.
 #[cw_serde]
 pub enum Permissions {
     Ownership,
@@ -26,6 +29,7 @@ impl fmt::Display for Permissions {
     }
 }
 
+/// The different types of attribute permission conditions.
 #[cw_serde]
 pub enum AttributeConditions {
     Exist,
@@ -50,13 +54,6 @@ impl AttributeConditions {
             AttributeConditions::LessThanOrEqual => "less_than_or_equal",
         }
     }
-}
-
-#[cw_serde]
-pub enum AttributeTypes {
-    String,
-    Integer,
-    Boolean,
 }
 
 pub const MODULE_PERMISSIONS_NAMESPACE: &str = "module_permissions";

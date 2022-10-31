@@ -4,18 +4,33 @@ use komple_types::{execute::SharedExecuteMsg, module::Modules, query::ResponseWr
 
 #[cw_serde]
 pub enum ExecuteMsg {
+    /// Admin message.
+    /// 
+    /// Register a new permission to the module.
+    /// Saves the permission address to storage.
     RegisterPermission {
         code_id: u64,
         permission: String,
         msg: Option<Binary>,
     },
+    /// Admin message.
+    /// 
+    /// Update the permissions for a module.
+    /// Permissions must be set for usage.
     UpdateModulePermissions {
         module: String,
         permissions: Vec<String>,
     },
+    /// Admin message.
+    ///
+    /// Updates the operators of this contract.
     UpdateOperators {
         addrs: Vec<String>,
     },
+    /// Public message.
+    /// 
+    /// Entry point for permission messages.
+    /// Permission messages are constructed and sent in this message.
     Check {
         module: String,
         msg: Binary,
