@@ -18,7 +18,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::token::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_types::{fee::MarketplaceFees, hub::MARBU_FEE_MODULE_NAMESPACE};
+use komple_types::{fee::{MintFees, MarketplaceFees}, hub::MARBU_FEE_MODULE_NAMESPACE};
 use komple_utils::response::ResponseHelper;
 use komple_utils::{
     check_admin_privileges, funds::check_single_coin, response::EventHelper, storage::StorageHelper,
@@ -379,7 +379,7 @@ fn _execute_buy_fixed_listing(
             &deps.querier,
             &fee_module_addr,
             Modules::Mint.to_string(),
-            format!("{}/{}", MarketplaceFees::Royalty.as_str(), collection_id),
+            format!("{}/{}", MintFees::Royalty.as_str(), collection_id),
         );
         if let Ok(percentage_fee) = res {
             royalty_fee = percentage_fee.value.mul(fixed_listing.price);
