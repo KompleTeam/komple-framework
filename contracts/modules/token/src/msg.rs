@@ -35,6 +35,7 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     // Reimplementation of cw721 messages
+    // These messages are the same with custom implementation
     TransferNft {
         recipient: String,
         token_id: String,
@@ -51,34 +52,49 @@ pub enum ExecuteMsg {
     Burn {
         token_id: String,
     },
-
-    // ADMIN MESSAGES
+    /// Admin message.
+    ///
+    /// Update the operators of this contract.
     UpdateModuleOperators {
         addrs: Vec<String>,
     },
+    /// Admin message.
+    ///
+    /// Same message as `TransferNft` but can only be used by admin.
     AdminTransferNft {
         recipient: String,
         token_id: String,
     },
-
-    // LOCK MESSAGES
+    /// Admin message.
+    ///
+    /// Lock the module to prevent some operations.
+    /// Includes minting, burning, transferring and sending.
     UpdateLocks {
         locks: Locks,
     },
+    /// Admin message.
+    ///
+    /// Lock a single token to prevent some operations.
+    /// Includes minting, burning, transferring and sending.
     UpdateTokenLocks {
         token_id: String,
         locks: Locks,
     },
-
-    // CONFIG MESSAGES
+    /// Admin message.
+    ///
+    /// Update per address limit configuration.
     UpdatePerAddressLimit {
         per_address_limit: Option<u32>,
     },
+    /// Admin message.
+    ///
+    /// Update start time for minting
     UpdateStartTime {
         start_time: Option<Timestamp>,
     },
-
-    // CONTRACT MESSAGES
+    /// Admin message.
+    ///
+    /// Create a whitelist contract tied to this contract.
     InitWhitelistContract {
         code_id: u64,
         instantiate_msg: WhitelistInstantiateMsg,
@@ -89,17 +105,22 @@ impl CustomMsg for ExecuteMsg {}
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    // Custom query messages
+    /// List operation locks for the contract.
     #[returns(ResponseWrapper<Locks>)]
     Locks {},
+    /// List operation locks for a token.
     #[returns(ResponseWrapper<Locks>)]
     TokenLocks { token_id: String },
+    /// Get the total amount of minted tokens for an address.
     #[returns(ResponseWrapper<u32>)]
     MintedTokensPerAddress { address: String },
+    /// List the sub modules for this contract.
     #[returns(ResponseWrapper<SubModules>)]
     SubModules {},
+    /// Get this contract's configuration.
     #[returns(ResponseWrapper<Config>)]
     Config {},
+    /// Get the operators of this contract.
     #[returns(ResponseWrapper<Vec<String>>)]
     ModuleOperators {},
 }

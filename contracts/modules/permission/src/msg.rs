@@ -5,7 +5,7 @@ use komple_types::{execute::SharedExecuteMsg, module::Modules, query::ResponseWr
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Admin message.
-    /// 
+    ///
     /// Register a new permission to the module.
     /// Saves the permission address to storage.
     RegisterPermission {
@@ -14,7 +14,7 @@ pub enum ExecuteMsg {
         msg: Option<Binary>,
     },
     /// Admin message.
-    /// 
+    ///
     /// Update the permissions for a module.
     /// Permissions must be set for usage.
     UpdateModulePermissions {
@@ -24,17 +24,12 @@ pub enum ExecuteMsg {
     /// Admin message.
     ///
     /// Updates the operators of this contract.
-    UpdateOperators {
-        addrs: Vec<String>,
-    },
+    UpdateOperators { addrs: Vec<String> },
     /// Public message.
-    /// 
+    ///
     /// Entry point for permission messages.
     /// Permission messages are constructed and sent in this message.
-    Check {
-        module: String,
-        msg: Binary,
-    },
+    Check { module: String, msg: Binary },
     /// Hub message.
     ///
     /// Lock the execute entry point.
@@ -54,14 +49,18 @@ impl From<ExecuteMsg> for SharedExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
+    /// Resolve the permission address for a permission.
     #[returns(ResponseWrapper<String>)]
     PermissionAddress { permission: String },
+    /// List all the permissions for a module.
     #[returns(ResponseWrapper<Vec<String>>)]
     ModulePermissions(Modules),
+    /// Get the operators of this contract.
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
 }
 
+/// Message used for permission check messages.
 #[cw_serde]
 pub struct PermissionCheckMsg {
     pub permission_type: String,

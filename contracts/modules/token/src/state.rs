@@ -31,18 +31,25 @@ pub struct CollectionConfig {
     pub ipfs_link: Option<String>,
 }
 
+/// Contracts that are tied to this contract.
 pub const SUB_MODULES: Item<SubModules> = Item::new(SUB_MODULES_NAMESPACE);
 
+/// Contract level operation locks.
 pub const LOCKS: Item<Locks> = Item::new(LOCKS_NAMESPACE);
 
+/// Token level operation locks.
 pub const TOKEN_LOCKS: Map<&str, Locks> = Map::new(TOKEN_LOCKS_NAMESPACE);
 
+/// Incremental token id.
 pub const TOKEN_IDS: Item<u32> = Item::new(TOKEN_IDS_NAMESPACE);
 
+/// Total number of tokens minted per address.
 pub const MINTED_TOKENS_PER_ADDR: Map<&str, u32> = Map::new(MINTED_TOKENS_PER_ADDR_NAMESPACE);
 
+/// Address of the mint module.
 pub const MINT_MODULE_ADDR: Item<Addr> = Item::new(MINT_MODULE_ADDR_NAMESPACE);
 
+/// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
 
 pub const COLLECTION_TYPE: Item<Collections> = Item::new(COLLECTION_TYPE_NAMESPACE);

@@ -15,7 +15,7 @@ use komple_utils::response::ResponseHelper;
 use komple_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
-use crate::msg::{AttributeMsg, ExecuteMsg, QueryMsg, AttributeTypes};
+use crate::msg::{AttributeMsg, AttributeTypes, ExecuteMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
