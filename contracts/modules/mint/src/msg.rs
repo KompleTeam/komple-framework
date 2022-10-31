@@ -5,7 +5,7 @@ use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::query::ResponseWrapper;
+use komple_types::{query::ResponseWrapper, execute::SharedExecuteMsg};
 
 #[cw_serde]
 pub enum ExecuteMsg {
@@ -77,6 +77,15 @@ pub enum ExecuteMsg {
     /// Lock the execute entry point.
     /// Can only be called by the hub module.
     LockExecute {},
+}
+
+impl From<ExecuteMsg> for SharedExecuteMsg {
+    fn from(msg: ExecuteMsg) -> Self {
+        match msg {
+            ExecuteMsg::LockExecute {} => SharedExecuteMsg::LockExecute {},
+            _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
+        }
+    }
 }
 
 #[cw_serde]

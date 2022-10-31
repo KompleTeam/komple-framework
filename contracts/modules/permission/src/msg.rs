@@ -1,6 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::{module::Modules, query::ResponseWrapper};
+use komple_types::{module::Modules, query::ResponseWrapper, execute::SharedExecuteMsg};
 
 #[cw_serde]
 pub enum ExecuteMsg {
@@ -25,6 +25,15 @@ pub enum ExecuteMsg {
     /// Lock the execute entry point.
     /// Can only be called by the hub module.
     LockExecute {},
+}
+
+impl From<ExecuteMsg> for SharedExecuteMsg {
+    fn from(msg: ExecuteMsg) -> Self {
+        match msg {
+            ExecuteMsg::LockExecute {} => SharedExecuteMsg::LockExecute {},
+            _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
+        }
+    }
 }
 
 #[cw_serde]

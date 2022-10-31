@@ -1,7 +1,7 @@
 use crate::state::{Config, FixedListing};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
-use komple_types::{marketplace::Listing, query::ResponseWrapper};
+use komple_types::{marketplace::Listing, query::ResponseWrapper, execute::SharedExecuteMsg};
 
 /// Message to be sent along the ```RegisterMsg``` for instantiation.
 #[cw_serde]
@@ -60,6 +60,15 @@ pub enum ExecuteMsg {
     /// Lock the execute entry point.
     /// Can only be called by the hub module.
     LockExecute {},
+}
+
+impl From<ExecuteMsg> for SharedExecuteMsg {
+    fn from(msg: ExecuteMsg) -> Self {
+        match msg {
+            ExecuteMsg::LockExecute {} => SharedExecuteMsg::LockExecute {},
+            _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
+        }
+    }
 }
 
 #[cw_serde]
