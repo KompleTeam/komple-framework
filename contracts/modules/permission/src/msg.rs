@@ -20,6 +20,11 @@ pub enum ExecuteMsg {
         module: String,
         msg: Binary,
     },
+    /// Hub message.
+    ///
+    /// Lock the execute entry point.
+    /// Can only be called by the hub module.
+    LockExecute {},
 }
 
 #[cw_serde]
