@@ -55,6 +55,7 @@ pub fn instantiate(
     let admin = deps.api.addr_validate(&msg.admin)?;
     let config = Config {
         admin,
+        buy_lock: false,
         native_denom: data.native_denom,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -87,6 +88,7 @@ pub fn execute(
     };
 
     match msg {
+        ExecuteMsg::UpdateBuyLock { lock } => update_buy_lock(deps, env, info, lock),
         ExecuteMsg::ListFixedToken {
             collection_id,
             token_id,
@@ -132,6 +134,35 @@ pub fn execute(
         ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
         ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
     }
+}
+
+fn update_buy_lock(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    lock: bool,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let mut config = CONFIG.load(deps.storage)?;
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        operators,
+    )?;
+
+    config.buy_lock = lock;
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(
+        ResponseHelper::new_module("marketplace", "update_buy_lock").add_event(
+            EventHelper::new("marketplace_buy_lock")
+                .add_attribute("lock", lock.to_string())
+                .get(),
+        ),
+    )
 }
 
 fn execute_list_fixed_token(
@@ -282,6 +313,11 @@ fn execute_buy(
     collection_id: u32,
     token_id: u32,
 ) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.buy_lock {
+        return Err(ContractError::BuyLocked {});
+    };
+
     match listing_type {
         Listing::Fixed => _execute_buy_fixed_listing(
             deps,

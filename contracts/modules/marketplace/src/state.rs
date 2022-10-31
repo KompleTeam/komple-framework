@@ -10,6 +10,7 @@ use cw_storage_plus::{Item, Map};
 #[cw_serde]
 pub struct Config {
     pub admin: Addr,
+    pub buy_lock: bool,
     pub native_denom: String,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);

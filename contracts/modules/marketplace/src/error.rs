@@ -14,6 +14,9 @@ pub enum ContractError {
     #[error("Execute locked")]
     ExecuteLocked {},
 
+    #[error("Buy locked")]
+    BuyLocked {},
+
     #[error("Invalid instantiate message")]
     InvalidInstantiateMsg {},
 

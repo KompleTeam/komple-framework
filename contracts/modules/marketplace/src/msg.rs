@@ -11,6 +11,11 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
+    /// Admin message.
+    ///
+    /// Update the lock for buying.
+    /// This applies for the normal buy operation.
+    UpdateBuyLock { lock: bool },
     /// Public message.
     ///
     /// List a new token for fixed amount sale.

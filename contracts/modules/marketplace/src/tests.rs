@@ -221,6 +221,59 @@ mod actions {
         }
     }
 
+    mod update_buy_lock {
+        use komple_types::{marketplace::Listing, query::ResponseWrapper};
+
+        use crate::state::Config;
+
+        use super::*;
+
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::UpdateBuyLock { lock: true };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
+                .unwrap();
+
+            let res: ResponseWrapper<Config> = app
+                .wrap()
+                .query_wasm_smart(addr.clone(), &QueryMsg::Config {})
+                .unwrap();
+            assert_eq!(res.data.buy_lock, true);
+
+            let msg = ExecuteMsg::Buy {
+                listing_type: Listing::Fixed,
+                collection_id: 1,
+                token_id: 1,
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::BuyLocked {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_invalid_admin() {
+            let mut app = mock_app();
+            let addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::UpdateBuyLock { lock: true };
+            let err = app
+                .execute_contract(Addr::unchecked(USER), addr.clone(), &msg, &vec![])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+        }
+    }
+
     mod lock_execute {
         use super::*;
 
