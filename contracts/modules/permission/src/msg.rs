@@ -1,6 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::{module::Modules, query::ResponseWrapper, execute::SharedExecuteMsg};
+use komple_types::{execute::SharedExecuteMsg, module::Modules, query::ResponseWrapper};
 
 #[cw_serde]
 pub enum ExecuteMsg {

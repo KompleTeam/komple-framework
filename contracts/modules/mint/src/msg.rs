@@ -5,7 +5,7 @@ use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{query::ResponseWrapper, execute::SharedExecuteMsg};
+use komple_types::{execute::SharedExecuteMsg, query::ResponseWrapper};
 
 #[cw_serde]
 pub enum ExecuteMsg {
