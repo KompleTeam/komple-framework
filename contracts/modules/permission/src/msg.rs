@@ -1,6 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::{execute::SharedExecuteMsg, module::Modules, query::ResponseWrapper};
+use komple_types::{execute::SharedExecuteMsg, query::ResponseWrapper};
 
 #[cw_serde]
 pub enum ExecuteMsg {
@@ -54,7 +54,7 @@ pub enum QueryMsg {
     PermissionAddress { permission: String },
     /// List all the permissions for a module.
     #[returns(ResponseWrapper<Vec<String>>)]
-    ModulePermissions(Modules),
+    ModulePermissions { module: String },
     /// Get the operators of this contract.
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},

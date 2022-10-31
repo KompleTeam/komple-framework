@@ -6,7 +6,6 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
-use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
@@ -300,7 +299,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::PermissionAddress { permission } => {
             to_binary(&query_permission_address(deps, permission)?)
         }
-        QueryMsg::ModulePermissions(module) => to_binary(&query_module_permissions(deps, module)?),
+        QueryMsg::ModulePermissions { module } => {
+            to_binary(&query_module_permissions(deps, module)?)
+        }
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
@@ -310,11 +311,8 @@ fn query_permission_address(deps: Deps, permission: String) -> StdResult<Respons
     Ok(ResponseWrapper::new("permission_address", addr.to_string()))
 }
 
-fn query_module_permissions(
-    deps: Deps,
-    module: Modules,
-) -> StdResult<ResponseWrapper<Vec<String>>> {
-    let permissions = MODULE_PERMISSIONS.load(deps.storage, module.as_str())?;
+fn query_module_permissions(deps: Deps, module: String) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let permissions = MODULE_PERMISSIONS.load(deps.storage, &module)?;
     Ok(ResponseWrapper::new(
         "module_permissions",
         permissions.iter().map(|p| p.as_str().to_string()).collect(),

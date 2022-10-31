@@ -17,8 +17,8 @@ use semver::Version;
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{
-    Config, HubInfo, CONFIG, HUB_INFO, MARBU_FEE_MODULE, MODULE_ADDRS, MODULE_ID,
-    MODULE_TO_REGISTER, OPERATORS,
+    Config, HubInfo, CONFIG, HUB_INFO, MARBU_FEE_MODULE, MODULES, MODULE_ID, MODULE_TO_REGISTER,
+    OPERATORS,
 };
 
 // version info for migration info
@@ -211,7 +211,7 @@ fn execute_deregister_module(
         operators,
     )?;
 
-    let module_addr = MODULE_ADDRS.load(deps.storage, &module);
+    let module_addr = MODULES.load(deps.storage, &module);
     if module_addr.is_err() {
         return Err(ContractError::InvalidModule {});
     }
@@ -223,7 +223,7 @@ fn execute_deregister_module(
         funds: vec![],
     };
 
-    MODULE_ADDRS.remove(deps.storage, &module);
+    MODULES.remove(deps.storage, &module);
 
     Ok(ResponseHelper::new_module("hub", "deregister_module")
         .add_message(msg)
@@ -301,7 +301,7 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
 }
 
 fn query_module_address(deps: Deps, module: String) -> StdResult<ResponseWrapper<String>> {
-    let addr = MODULE_ADDRS.load(deps.storage, module.as_str())?;
+    let addr = MODULES.load(deps.storage, module.as_str())?;
     Ok(ResponseWrapper::new("module_address", addr.to_string()))
 }
 
@@ -337,7 +337,7 @@ fn handle_module_instantiate_reply(deps: DepsMut, msg: Reply) -> Result<Response
 
     match reply {
         Ok(res) => {
-            MODULE_ADDRS.save(
+            MODULES.save(
                 deps.storage,
                 &module_to_register,
                 &Addr::unchecked(res.contract_address),

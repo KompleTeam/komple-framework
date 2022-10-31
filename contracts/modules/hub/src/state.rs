@@ -4,7 +4,7 @@ use komple_types::{
         HUB_INFO_NAMESPACE, MARBU_FEE_MODULE_NAMESPACE, MODULE_ID_NAMESPACE,
         MODULE_TO_REGISTER_NAMESPACE,
     },
-    module::MODULE_ADDRS_NAMESPACE,
+    module::MODULES_NAMESPACE,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
@@ -29,7 +29,7 @@ pub struct Config {
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 /// Addresses of the registered modules.
-pub const MODULE_ADDRS: Map<&str, Addr> = Map::new(MODULE_ADDRS_NAMESPACE);
+pub const MODULES: Map<&str, Addr> = Map::new(MODULES_NAMESPACE);
 
 /// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

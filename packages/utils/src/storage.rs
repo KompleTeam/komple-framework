@@ -4,7 +4,7 @@ use cw_storage_plus::Path;
 use komple_types::{
     collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     fee::{FixedPayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
-    module::MODULE_ADDRS_NAMESPACE,
+    module::MODULES_NAMESPACE,
     token::{
         Locks, SubModules, LOCKS_NAMESPACE, SUB_MODULES_NAMESPACE, TOKENS_NAMESPACE,
         TOKEN_LOCKS_NAMESPACE,
@@ -60,7 +60,7 @@ impl StorageHelper {
         hub_addr: &Addr,
         module: String,
     ) -> StdResult<Addr> {
-        let key = Self::get_map_storage_key(MODULE_ADDRS_NAMESPACE, &[module.as_bytes()])?;
+        let key = Self::get_map_storage_key(MODULES_NAMESPACE, &[module.as_bytes()])?;
         let res = Self::query_storage::<Addr>(querier, hub_addr, &key)?;
         match res {
             Some(res) => Ok(res),

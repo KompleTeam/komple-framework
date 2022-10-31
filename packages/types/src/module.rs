@@ -40,4 +40,4 @@ impl fmt::Display for Modules {
     }
 }
 
-pub const MODULE_ADDRS_NAMESPACE: &str = "module_addrs";
+pub const MODULES_NAMESPACE: &str = "modules";
