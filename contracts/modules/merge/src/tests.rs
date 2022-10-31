@@ -1,3 +1,4 @@
+use crate::msg::{MergeBurnMsg, MergeMsg};
 use crate::{
     msg::{ExecuteMsg, QueryMsg},
     state::Config,
@@ -75,6 +76,25 @@ mod merge_lock {
             .query_wasm_smart(merge_module_addr.clone(), &msg)
             .unwrap();
         assert_eq!(res.data.merge_lock, true);
+
+        let msg = ExecuteMsg::Merge {
+            msg: MergeMsg {
+                recipient: USER.to_string(),
+                mint_id: 1,
+                metadata_id: None,
+                burn_ids: vec![MergeBurnMsg {
+                    collection_id: 1,
+                    token_id: 1,
+                }],
+            },
+        };
+        let err = app
+            .execute_contract(Addr::unchecked(USER), merge_module_addr.clone(), &msg, &[])
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            ContractError::MergeLocked {}.to_string()
+        );
 
         let msg = ExecuteMsg::UpdateOperators {
             addrs: vec![USER.to_string()],

@@ -115,6 +115,11 @@ fn execute_merge(
     info: MessageInfo,
     msg: MergeMsg,
 ) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if config.merge_lock {
+        return Err(ContractError::MergeLocked {});
+    };
+
     let mut msgs: Vec<WasmMsg> = vec![];
 
     let mut event_attributes: Vec<Attribute> = vec![];

@@ -13,6 +13,9 @@ pub enum ContractError {
     #[error("Execute locked")]
     ExecuteLocked {},
 
+    #[error("Merge locked")]
+    MergeLocked {},
+
     #[error("No burn messages found")]
     BurnNotFound {},
 
