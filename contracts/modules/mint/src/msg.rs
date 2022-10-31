@@ -10,7 +10,7 @@ use komple_types::query::ResponseWrapper;
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Admin and public message.
-    /// 
+    ///
     /// Create a new collection.
     /// This can be executed by both admin and users based on configuration.
     CreateCollection {
@@ -22,20 +22,16 @@ pub enum ExecuteMsg {
         linked_collections: Option<Vec<u32>>,
     },
     /// Admin message.
-    /// 
+    ///
     /// Update the configuration for public collection creation.
     /// If set to true, users can create collections.
-    UpdatePublicCollectionCreation {
-        public_collection_creation: bool,
-    },
+    UpdatePublicCollectionCreation { public_collection_creation: bool },
     /// Admin message.
-    /// 
+    ///
     /// Update the configuration for mint lock.
-    UpdateMintLock {
-        lock: bool,
-    },
+    UpdateMintLock { lock: bool },
     /// Public message.
-    /// 
+    ///
     /// Mint a new token on a collection.
     /// Additional metadata id can be provided to link to a certain metadata.
     Mint {
@@ -43,7 +39,7 @@ pub enum ExecuteMsg {
         metadata_id: Option<u32>,
     },
     /// Admin message.
-    /// 
+    ///
     /// Same as `Mint` message but only executable by admin.
     AdminMint {
         collection_id: u32,
@@ -51,7 +47,7 @@ pub enum ExecuteMsg {
         metadata_id: Option<u32>,
     },
     /// Admin message.
-    /// 
+    ///
     /// Same as `Mint` message but can be used with permissions.
     PermissionMint {
         permission_msg: Binary,
@@ -60,9 +56,7 @@ pub enum ExecuteMsg {
     /// Admin message.
     ///
     /// Update the operators of this contract.
-    UpdateOperators {
-        addrs: Vec<String>,
-    },
+    UpdateOperators { addrs: Vec<String> },
     /// Admin message.
     ///
     /// Update the linked collections of a collection.
@@ -71,17 +65,13 @@ pub enum ExecuteMsg {
         linked_collections: Vec<u32>,
     },
     /// Admin message.
-    /// 
+    ///
     /// Whitelist a collection making it enabled withing the framework.
-    WhitelistCollection {
-        collection_id: u32,
-    },
+    WhitelistCollection { collection_id: u32 },
     /// Admin message.
-    /// 
+    ///
     /// Blacklist a collection making it disabled within the framework.
-    BlacklistCollection {
-        collection_id: u32,
-    },
+    BlacklistCollection { collection_id: u32 },
 }
 
 #[cw_serde]

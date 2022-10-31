@@ -17,7 +17,10 @@ use komple_token_module::state::CollectionConfig;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::{collection::Collections, fee::{MarketplaceFees, MintFees}};
+use komple_types::{
+    collection::Collections,
+    fee::{MarketplaceFees, MintFees},
+};
 use komple_types::{
     fee::{Fees, PercentagePayment as FeeModulePercentagePayment},
     shared::RegisterMsg,

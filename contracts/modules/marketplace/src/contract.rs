@@ -18,7 +18,10 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::token::Locks;
 use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_types::{fee::{MintFees, MarketplaceFees}, hub::MARBU_FEE_MODULE_NAMESPACE};
+use komple_types::{
+    fee::{MarketplaceFees, MintFees},
+    hub::MARBU_FEE_MODULE_NAMESPACE,
+};
 use komple_utils::response::ResponseHelper;
 use komple_utils::{
     check_admin_privileges, funds::check_single_coin, response::EventHelper, storage::StorageHelper,
