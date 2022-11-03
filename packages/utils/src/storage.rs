@@ -1,9 +1,9 @@
-use cosmwasm_std::{from_slice, Addr, Decimal, Empty, QuerierWrapper, StdError, StdResult};
+use cosmwasm_std::{from_slice, Addr, Empty, QuerierWrapper, StdError, StdResult};
 use cw721_base::state::TokenInfo;
 use cw_storage_plus::Path;
 use komple_types::{
-    collection::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
-    fee::{FixedPayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
+    mint::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
+    fee::{FixedPayment, PercentagePayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
     module::MODULES_NAMESPACE,
     token::{
         Locks, SubModules, LOCKS_NAMESPACE, SUB_MODULES_NAMESPACE, TOKENS_NAMESPACE,
@@ -13,12 +13,6 @@ use komple_types::{
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{ops::Deref, str::from_utf8};
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct PercentagePayment {
-    pub address: Option<String>,
-    pub value: Decimal,
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct StorageHelper();

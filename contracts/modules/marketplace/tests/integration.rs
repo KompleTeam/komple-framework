@@ -18,7 +18,7 @@ use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::{
-    collection::Collections,
+    mint::Collections,
     fee::{MarketplaceFees, MintFees},
 };
 use komple_types::{

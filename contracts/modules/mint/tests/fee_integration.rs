@@ -10,7 +10,7 @@ use komple_mint_module::state::CollectionInfo;
 use komple_mint_module::ContractError;
 use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_types::collection::Collections;
+use komple_types::mint::Collections;
 use komple_types::fee::MintFees;
 use komple_types::fee::{Fees, FixedPayment};
 use komple_types::metadata::Metadata as MetadataType;

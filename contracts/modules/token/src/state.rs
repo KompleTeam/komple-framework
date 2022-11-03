@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
-    collection::Collections,
+    mint::Collections,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
     token::{
         Locks, SubModules, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE,

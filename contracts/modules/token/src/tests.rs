@@ -10,7 +10,7 @@ use komple_metadata_module::{
 };
 use komple_types::shared::RegisterMsg;
 use komple_types::{
-    collection::Collections,
+    mint::Collections,
     metadata::Metadata as MetadataType,
     query::ResponseWrapper,
     token::{Locks, SubModules},

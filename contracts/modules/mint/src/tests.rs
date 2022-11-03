@@ -12,7 +12,7 @@ use komple_token_module::{
 };
 use komple_types::shared::RegisterMsg;
 use komple_types::{
-    collection::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
+    mint::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
 };
 use komple_utils::storage::StorageHelper;
 

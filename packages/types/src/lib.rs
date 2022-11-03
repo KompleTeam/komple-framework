@@ -1,4 +1,4 @@
-pub mod collection;
+pub mod mint;
 pub mod execute;
 pub mod fee;
 pub mod hub;

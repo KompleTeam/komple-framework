@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
-    collection::{
+    mint::{
         Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
         COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE,
     },

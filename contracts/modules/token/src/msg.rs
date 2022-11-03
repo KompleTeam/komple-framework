@@ -4,7 +4,7 @@ use cosmwasm_std::{Binary, Timestamp};
 use cw721::CustomMsg;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_types::{
-    collection::Collections,
+    mint::Collections,
     query::ResponseWrapper,
     token::{Locks, SubModules},
 };

@@ -12,7 +12,7 @@ use komple_ownership_permission_module::msg::ExecuteMsg as OwnershipModuleExecut
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_types::collection::Collections;
+use komple_types::mint::Collections;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::permission::Permissions;
