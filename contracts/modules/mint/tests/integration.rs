@@ -496,165 +496,178 @@ mod actions {
         }
     }
 
-    mod blacklist {
+    mod update_collection_status {
         use super::*;
 
         #[test]
-        fn test_happy_path() {
+        fn test_invalid_admin() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
 
-            let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
-            let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap();
-
-            let res =
-                StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap_err();
-            assert_eq!(res.to_string(), "Collection not found");
-
-            let msg = QueryMsg::Collections {
-                blacklist: true,
-                start_after: None,
-                limit: None,
+            let msg = ExecuteMsg::UpdateCollectionStatus {
+                collection_id: 1,
+                is_blacklist: true,
             };
-            let res: ResponseWrapper<Vec<CollectionsResponse>> = app
-                .wrap()
-                .query_wasm_smart(minter_addr.clone(), &msg)
-                .unwrap();
-            assert_eq!(res.data.len(), 1);
+            let err = app
+                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
+                .unwrap_err();
             assert_eq!(
-                res.data[0],
-                CollectionsResponse {
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+        }
+
+        mod blacklist {
+            use super::*;
+
+            #[test]
+            fn test_happy_path() {
+                let mut app = mock_app();
+                let minter_addr = proper_instantiate(&mut app);
+                setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+                let collection_addr =
+                    StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
+
+                let msg = ExecuteMsg::UpdateCollectionStatus {
                     collection_id: 1,
-                    address: collection_addr.to_string()
-                }
-            );
+                    is_blacklist: true,
+                };
+                let _ = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap();
+
+                let res = StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1)
+                    .unwrap_err();
+                assert_eq!(res.to_string(), "Collection not found");
+
+                let msg = QueryMsg::Collections {
+                    blacklist: true,
+                    start_after: None,
+                    limit: None,
+                };
+                let res: ResponseWrapper<Vec<CollectionsResponse>> = app
+                    .wrap()
+                    .query_wasm_smart(minter_addr.clone(), &msg)
+                    .unwrap();
+                assert_eq!(res.data.len(), 1);
+                assert_eq!(
+                    res.data[0],
+                    CollectionsResponse {
+                        collection_id: 1,
+                        address: collection_addr.to_string()
+                    }
+                );
+            }
+
+            #[test]
+            fn test_existing_blacklist() {
+                let mut app = mock_app();
+                let minter_addr = proper_instantiate(&mut app);
+                setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+
+                let msg = ExecuteMsg::UpdateCollectionStatus {
+                    collection_id: 1,
+                    is_blacklist: true,
+                };
+                let _ = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap();
+                let err = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::AlreadyBlacklisted {}.to_string()
+                );
+            }
+
+            #[test]
+            fn test_absent_collection() {
+                let mut app = mock_app();
+                let minter_addr = proper_instantiate(&mut app);
+                setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+
+                let msg = ExecuteMsg::UpdateCollectionStatus {
+                    collection_id: 2,
+                    is_blacklist: true,
+                };
+                let err = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::CollectionIdNotFound {}.to_string()
+                );
+            }
         }
 
-        #[test]
-        fn test_invalid_admin() {
-            let mut app = mock_app();
-            let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+        mod whitelist {
+            use super::*;
 
-            let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
-            let err = app
-                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::Unauthorized {}.to_string()
-            );
-        }
+            #[test]
+            fn test_happy_path() {
+                let mut app = mock_app();
+                let minter_addr = proper_instantiate(&mut app);
+                setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
-        #[test]
-        fn test_existing_blacklist() {
-            let mut app = mock_app();
-            let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+                let msg = ExecuteMsg::UpdateCollectionStatus {
+                    collection_id: 1,
+                    is_blacklist: true,
+                };
+                let _ = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap();
 
-            let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
-            let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap();
-            let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::AlreadyBlacklisted {}.to_string()
-            );
-        }
+                let msg = ExecuteMsg::UpdateCollectionStatus {
+                    collection_id: 1,
+                    is_blacklist: false,
+                };
+                let _ = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap();
 
-        #[test]
-        fn test_absent_collection() {
-            let mut app = mock_app();
-            let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+                let _ =
+                    StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
+            }
 
-            let msg = ExecuteMsg::BlacklistCollection { collection_id: 2 };
-            let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::CollectionIdNotFound {}.to_string()
-            );
-        }
-    }
+            #[test]
+            fn test_existing_whitelist() {
+                let mut app = mock_app();
+                let minter_addr = proper_instantiate(&mut app);
+                setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
-    mod whitelist {
-        use super::*;
+                let msg = ExecuteMsg::UpdateCollectionStatus {
+                    collection_id: 1,
+                    is_blacklist: false,
+                };
+                let err = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::AlreadyWhitelistlisted {}.to_string()
+                );
+            }
 
-        #[test]
-        fn test_happy_path() {
-            let mut app = mock_app();
-            let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
+            #[test]
+            fn test_absent_collection() {
+                let mut app = mock_app();
+                let minter_addr = proper_instantiate(&mut app);
+                setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
-            let msg = ExecuteMsg::BlacklistCollection { collection_id: 1 };
-            let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap();
-
-            let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
-            let _ = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap();
-
-            let _ = StorageHelper::query_collection_address(&app.wrap(), &minter_addr, &1).unwrap();
-        }
-
-        #[test]
-        fn test_invalid_admin() {
-            let mut app = mock_app();
-            let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
-
-            let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
-            let err = app
-                .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::Unauthorized {}.to_string()
-            );
-        }
-
-        #[test]
-        fn test_existing_whitelist() {
-            let mut app = mock_app();
-            let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
-
-            let msg = ExecuteMsg::WhitelistCollection { collection_id: 1 };
-            let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::AlreadyWhitelistlisted {}.to_string()
-            );
-        }
-
-        #[test]
-        fn test_absent_collection() {
-            let mut app = mock_app();
-            let minter_addr = proper_instantiate(&mut app);
-            setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
-
-            let msg = ExecuteMsg::WhitelistCollection { collection_id: 2 };
-            let err = app
-                .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
-                .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::CollectionIdNotFound {}.to_string()
-            );
+                let msg = ExecuteMsg::UpdateCollectionStatus {
+                    collection_id: 2,
+                    is_blacklist: false,
+                };
+                let err = app
+                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::CollectionIdNotFound {}.to_string()
+                );
+            }
         }
     }
 

@@ -127,12 +127,10 @@ pub fn execute(
             collection_id,
             linked_collections,
         } => execute_update_linked_collections(deps, env, info, collection_id, linked_collections),
-        ExecuteMsg::WhitelistCollection { collection_id } => {
-            execute_whitelist_collection(deps, env, info, collection_id)
-        }
-        ExecuteMsg::BlacklistCollection { collection_id } => {
-            execute_blacklist_collection(deps, env, info, collection_id)
-        }
+        ExecuteMsg::UpdateCollectionStatus {
+            collection_id,
+            is_blacklist,
+        } => execute_update_collection_status(deps, env, info, collection_id, is_blacklist),
         ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
         ExecuteMsg::UpdateCreators { addrs } => execute_update_creators(deps, env, info, addrs),
     }
@@ -665,11 +663,12 @@ fn execute_update_linked_collections(
         .add_event(EventHelper::new("mint_update_linked_collections").get()))
 }
 
-fn execute_whitelist_collection(
+fn execute_update_collection_status(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     collection_id: u32,
+    is_blacklist: bool,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -683,66 +682,50 @@ fn execute_whitelist_collection(
         operators,
     )?;
 
-    if COLLECTION_ADDRS.has(deps.storage, collection_id) {
-        return Err(ContractError::AlreadyWhitelistlisted {});
-    };
+    match is_blacklist {
+        // Blacklist case
+        true => {
+            if BLACKLIST_COLLECTION_ADDRS.has(deps.storage, collection_id) {
+                return Err(ContractError::AlreadyBlacklisted {});
+            };
 
-    let collection_addr = BLACKLIST_COLLECTION_ADDRS.may_load(deps.storage, collection_id)?;
-    if collection_addr.is_none() {
-        return Err(ContractError::CollectionIdNotFound {});
-    };
+            let collection_addr = COLLECTION_ADDRS.may_load(deps.storage, collection_id)?;
+            if collection_addr.is_none() {
+                return Err(ContractError::CollectionIdNotFound {});
+            };
 
-    BLACKLIST_COLLECTION_ADDRS.remove(deps.storage, collection_id);
-    COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
+            COLLECTION_ADDRS.remove(deps.storage, collection_id);
+            BLACKLIST_COLLECTION_ADDRS.save(
+                deps.storage,
+                collection_id,
+                &collection_addr.unwrap(),
+            )?;
+        }
+        // Whitelist case
+        false => {
+            if COLLECTION_ADDRS.has(deps.storage, collection_id) {
+                return Err(ContractError::AlreadyWhitelistlisted {});
+            };
 
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "mint")
-        .add_attribute("action", "whitelist_collection")
-        .add_event(
-            EventHelper::new("mint_whitelist_collection")
-                .add_attribute("collection_id", collection_id.to_string())
-                .get(),
-        ))
-}
+            let collection_addr =
+                BLACKLIST_COLLECTION_ADDRS.may_load(deps.storage, collection_id)?;
+            if collection_addr.is_none() {
+                return Err(ContractError::CollectionIdNotFound {});
+            };
 
-fn execute_blacklist_collection(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    collection_id: u32,
-) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        hub_addr,
-        operators,
-    )?;
-
-    if BLACKLIST_COLLECTION_ADDRS.has(deps.storage, collection_id) {
-        return Err(ContractError::AlreadyBlacklisted {});
-    };
-
-    let collection_addr = COLLECTION_ADDRS.may_load(deps.storage, collection_id)?;
-    if collection_addr.is_none() {
-        return Err(ContractError::CollectionIdNotFound {});
-    };
-
-    COLLECTION_ADDRS.remove(deps.storage, collection_id);
-    BLACKLIST_COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
+            BLACKLIST_COLLECTION_ADDRS.remove(deps.storage, collection_id);
+            COLLECTION_ADDRS.save(deps.storage, collection_id, &collection_addr.unwrap())?;
+        }
+    }
 
     Ok(Response::new()
         .add_attribute("name", "komple_framework")
         .add_attribute("module", "mint")
-        .add_attribute("action", "blacklist_collection")
+        .add_attribute("action", "update_collection_status")
         .add_event(
-            EventHelper::new("mint_blacklist_collection")
+            EventHelper::new("mint_update_collection_status")
                 .add_attribute("collection_id", collection_id.to_string())
+                .add_attribute("is_blacklist", is_blacklist.to_string())
                 .get(),
         ))
 }

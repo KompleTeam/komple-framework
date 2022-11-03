@@ -66,12 +66,11 @@ pub enum ExecuteMsg {
     },
     /// Admin message.
     ///
-    /// Whitelist a collection making it enabled withing the framework.
-    WhitelistCollection { collection_id: u32 },
-    /// Admin message.
-    ///
-    /// Blacklist a collection making it disabled within the framework.
-    BlacklistCollection { collection_id: u32 },
+    /// Update the status of a collection. Whitelist or blacklist.
+    UpdateCollectionStatus {
+        collection_id: u32,
+        is_blacklist: bool,
+    },
     /// Hub message.
     ///
     /// Lock the execute entry point.
