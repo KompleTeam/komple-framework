@@ -359,45 +359,51 @@ fn execute_mint(
         metadata_id,
     };
 
+    let mut total_price = Uint128::zero();
+    let mut is_whitelist = false;
+
     // Check for fee module address
-    let res =
+    let fee_module_addr_res =
         StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee.to_string());
-    if let Ok(fee_module_addr) = res {
-        let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
+    let fee_module_addr = match fee_module_addr_res {
+        Ok(addr) => Some(addr),
+        Err(_) => None,
+    };
 
-        let mut total_price = Uint128::zero();
-        let mut is_whitelist = false;
+    // Get collection info
+    let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
 
-        // Get sub modules from collection
-        let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
-        let sub_modules = StorageHelper::query_token_sub_modules(&deps.querier, &collection_addr)?;
+    // Get sub modules from collection
+    let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
+    let sub_modules = StorageHelper::query_token_sub_modules(&deps.querier, &collection_addr)?;
 
-        // Check for whitelist status
-        if let Some(whitelist_addr) = sub_modules.whitelist {
-            let res =
-                KompleWhitelistHelper::new(whitelist_addr.clone()).query_is_active(&deps.querier);
+    // Check for whitelist status
+    if let Some(whitelist_addr) = sub_modules.whitelist {
+        let res = KompleWhitelistHelper::new(whitelist_addr.clone()).query_is_active(&deps.querier);
 
-            // Continue if whitelist is active
-            if let Ok(is_active) = res {
-                if is_active {
-                    // Query whitelist storage with owner address
-                    let query_key = StorageHelper::get_map_storage_key(
-                        WHITELIST_NAMESPACE,
-                        &[info.sender.as_bytes()],
-                    )?;
-                    let res = StorageHelper::query_storage::<bool>(
-                        &deps.querier,
-                        &whitelist_addr,
-                        &query_key,
-                    )?;
-                    if res.is_none() {
-                        return Err(ContractError::AddressNotWhitelisted {});
-                    }
+        // Continue if whitelist is active
+        if let Ok(is_active) = res {
+            if is_active {
+                // Query whitelist storage with owner address
+                let query_key = StorageHelper::get_map_storage_key(
+                    WHITELIST_NAMESPACE,
+                    &[info.sender.as_bytes()],
+                )?;
+                let res = StorageHelper::query_storage::<bool>(
+                    &deps.querier,
+                    &whitelist_addr,
+                    &query_key,
+                )?;
+                if res.is_none() {
+                    return Err(ContractError::AddressNotWhitelisted {});
+                }
 
+                // If fee module is registered, check for whitelist minting price
+                if fee_module_addr.is_some() {
                     // Whitelist is active and user is member
                     let res = StorageHelper::query_fixed_fee(
                         &deps.querier,
-                        &fee_module_addr,
+                        &fee_module_addr.as_ref().unwrap(),
                         Modules::Mint.to_string(),
                         format!("{}/{}", MintFees::Whitelist.as_str(), collection_id),
                     );
@@ -420,17 +426,21 @@ fn execute_mint(
                         msgs.push(msg.into());
                         total_price += whitelist_price;
                     }
+                };
 
-                    is_whitelist = true;
-                }
+                is_whitelist = true;
             }
         }
-        // Standard collection mint flow
-        if !is_whitelist {
+    }
+
+    // Standard collection mint flow
+    if !is_whitelist {
+        // If fee module is registered, check for standard minting price
+        if fee_module_addr.is_some() {
             // Token mint price
             let res = StorageHelper::query_fixed_fee(
                 &deps.querier,
-                &fee_module_addr,
+                &fee_module_addr.unwrap(),
                 Modules::Mint.to_string(),
                 format!("{}/{}", MintFees::Price.as_str(), collection_id),
             );
@@ -446,17 +456,17 @@ fn execute_mint(
                 total_price += fixed_fee_response.value;
             }
         }
-
-        if !total_price.is_zero() {
-            check_single_coin(
-                &info,
-                Coin {
-                    denom: collection_info.native_denom,
-                    amount: total_price,
-                },
-            )?;
-        };
     }
+
+    if !total_price.is_zero() {
+        check_single_coin(
+            &info,
+            Coin {
+                denom: collection_info.native_denom,
+                amount: total_price,
+            },
+        )?;
+    };
 
     _execute_mint(deps, "mint", msgs, mint_msg)
 }
