@@ -1,28 +1,25 @@
-use crate::msg::ExecuteMsg;
-use crate::msg::QueryMsg;
-use crate::state::CollectionInfo;
-use crate::ContractError;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_mint_module::msg::{CollectionsResponse, ExecuteMsg, QueryMsg};
+use komple_mint_module::state::CollectionInfo;
+use komple_mint_module::ContractError;
 use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
 use komple_types::shared::RegisterMsg;
-use komple_types::{
-    mint::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
-};
+use komple_types::{metadata::Metadata as MetadataType, mint::Collections, query::ResponseWrapper};
 use komple_utils::storage::StorageHelper;
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        crate::contract::execute,
-        crate::contract::instantiate,
-        crate::contract::query,
+        komple_mint_module::contract::execute,
+        komple_mint_module::contract::instantiate,
+        komple_mint_module::contract::query,
     )
-    .with_reply(crate::contract::reply);
+    .with_reply(komple_mint_module::contract::reply);
     Box::new(contract)
 }
 
@@ -136,10 +133,6 @@ mod actions {
 
     mod mint {
         use super::*;
-        use crate::{
-            msg::{ExecuteMsg, QueryMsg},
-            ContractError,
-        };
         use cw721::OwnerOfResponse;
         use komple_token_module::msg::QueryMsg as TokenQueryMsg;
         use komple_types::query::ResponseWrapper;
@@ -198,13 +191,8 @@ mod actions {
     }
 
     mod locks {
-        use komple_types::query::ResponseWrapper;
-
         use super::*;
-        use crate::{
-            msg::{ExecuteMsg, QueryMsg},
-            state::Config,
-        };
+        use komple_mint_module::state::Config;
 
         #[test]
         fn test_mint_lock_happy_path() {
@@ -224,14 +212,7 @@ mod actions {
     }
 
     mod collections {
-        use komple_types::query::ResponseWrapper;
-
         use super::*;
-
-        use crate::{
-            msg::{CollectionsResponse, ExecuteMsg, QueryMsg},
-            ContractError,
-        };
 
         mod creation {
             use super::*;
@@ -516,8 +497,6 @@ mod actions {
     }
 
     mod blacklist {
-        use crate::{msg::CollectionsResponse, ContractError};
-
         use super::*;
 
         #[test]
@@ -757,6 +736,60 @@ mod actions {
 
             let err = app
                 .execute_contract(Addr::unchecked("juno..third"), mint_module_addr, &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+        }
+    }
+
+    mod update_creators {
+        use super::*;
+
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let mint_module_addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::UpdateCreators {
+                addrs: vec![
+                    "juno..first".to_string(),
+                    "juno..second".to_string(),
+                    "juno..first".to_string(),
+                ],
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), mint_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = QueryMsg::Creators {};
+            let res: ResponseWrapper<Vec<String>> = app
+                .wrap()
+                .query_wasm_smart(mint_module_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data.len(), 2);
+            assert_eq!(res.data[0], "juno..first");
+            assert_eq!(res.data[1], "juno..second");
+
+            setup_collection(
+                &mut app,
+                &mint_module_addr,
+                Addr::unchecked("juno..second"),
+                None,
+            );
+        }
+
+        #[test]
+        fn test_invalid_admin() {
+            let mut app = mock_app();
+            let mint_module_addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::UpdateCreators {
+                addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(USER), mint_module_addr, &msg, &[])
                 .unwrap_err();
             assert_eq!(
                 err.source().unwrap().to_string(),

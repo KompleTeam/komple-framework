@@ -18,7 +18,7 @@ use komple_token_module::msg::{
 };
 use komple_token_module::state::CollectionConfig;
 use komple_types::{
-    mint::Collections, metadata::Metadata as MetadataType, module::Modules,
+    metadata::Metadata as MetadataType, mint::Collections, module::Modules,
     permission::Permissions, shared::RegisterMsg,
 };
 use komple_utils::storage::StorageHelper;

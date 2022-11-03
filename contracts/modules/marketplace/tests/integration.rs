@@ -18,12 +18,12 @@ use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::{
-    mint::Collections,
-    fee::{MarketplaceFees, MintFees},
-};
-use komple_types::{
     fee::{Fees, PercentagePayment as FeeModulePercentagePayment},
     shared::RegisterMsg,
+};
+use komple_types::{
+    fee::{MarketplaceFees, MintFees},
+    mint::Collections,
 };
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;

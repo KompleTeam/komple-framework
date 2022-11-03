@@ -2,8 +2,8 @@ use cosmwasm_std::{from_slice, Addr, Empty, QuerierWrapper, StdError, StdResult}
 use cw721_base::state::TokenInfo;
 use cw_storage_plus::Path;
 use komple_types::{
-    mint::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     fee::{FixedPayment, PercentagePayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE},
+    mint::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::MODULES_NAMESPACE,
     token::{
         Locks, SubModules, LOCKS_NAMESPACE, SUB_MODULES_NAMESPACE, TOKENS_NAMESPACE,

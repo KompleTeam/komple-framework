@@ -77,6 +77,10 @@ pub enum ExecuteMsg {
     /// Lock the execute entry point.
     /// Can only be called by the hub module.
     LockExecute {},
+    /// Admin message.
+    ///
+    /// Update addresses that can create collections.
+    UpdateCreators { addrs: Vec<String> },
 }
 
 impl From<ExecuteMsg> for SharedExecuteMsg {
@@ -113,6 +117,9 @@ pub enum QueryMsg {
         start_after: Option<u32>,
         limit: Option<u8>,
     },
+    /// Get the creators of this contract.
+    #[returns(ResponseWrapper<Vec<String>>)]
+    Creators {},
 }
 
 /// Message used to mint new tokens on a collection.

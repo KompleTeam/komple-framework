@@ -22,12 +22,15 @@ use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
-use crate::msg::{CollectionsResponse, ExecuteMsg, MigrateMsg, MintMsg, QueryMsg};
 use crate::state::{
     CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID,
     COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
 };
 use crate::{error::ContractError, state::EXECUTE_LOCK};
+use crate::{
+    msg::{CollectionsResponse, ExecuteMsg, MigrateMsg, MintMsg, QueryMsg},
+    state::CREATORS,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-mint-module";
@@ -131,6 +134,7 @@ pub fn execute(
             execute_blacklist_collection(deps, env, info, collection_id)
         }
         ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
+        ExecuteMsg::UpdateCreators { addrs } => execute_update_creators(deps, env, info, addrs),
     }
 }
 
@@ -147,17 +151,37 @@ pub fn execute_create_collection(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
+    // If public collection creation is enabled skip privilege checks
     if !config.public_collection_creation {
         let hub_addr = HUB_ADDR.may_load(deps.storage)?;
         let operators = OPERATORS.may_load(deps.storage)?;
 
-        check_admin_privileges(
-            &info.sender,
-            &env.contract.address,
-            &config.admin,
-            hub_addr,
-            operators,
-        )?;
+        // Check for creators privilege
+        let creators = CREATORS.may_load(deps.storage)?;
+        match creators {
+            Some(creators) => {
+                // If the sender is not a creator
+                if !creators.contains(&info.sender) {
+                    check_admin_privileges(
+                        &info.sender,
+                        &env.contract.address,
+                        &config.admin,
+                        hub_addr,
+                        operators,
+                    )?;
+                }
+            }
+            // If there are no creators
+            None => {
+                check_admin_privileges(
+                    &info.sender,
+                    &env.contract.address,
+                    &config.admin,
+                    hub_addr,
+                    operators,
+                )?;
+            }
+        }
     };
 
     token_info.minter = env.contract.address.to_string();
@@ -738,6 +762,52 @@ fn execute_lock_execute(
     Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
+fn execute_update_creators(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    mut addrs: Vec<String>,
+) -> Result<Response, ContractError> {
+    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        hub_addr,
+        operators,
+    )?;
+
+    addrs.sort_unstable();
+    addrs.dedup();
+
+    let mut event_attributes: Vec<Attribute> = vec![];
+
+    let addrs = addrs
+        .iter()
+        .map(|addr| -> StdResult<Addr> {
+            let addr = deps.api.addr_validate(addr)?;
+            event_attributes.push(Attribute {
+                key: "addrs".to_string(),
+                value: addr.to_string(),
+            });
+            Ok(addr)
+        })
+        .collect::<StdResult<Vec<Addr>>>()?;
+
+    CREATORS.save(deps.storage, &addrs)?;
+
+    Ok(
+        ResponseHelper::new_module("mint", "update_creators").add_event(
+            EventHelper::new("mint_update_creators")
+                .add_attributes(event_attributes)
+                .get(),
+        ),
+    )
+}
+
 fn check_collection_ids_exists(
     deps: &DepsMut,
     collection_ids: &Vec<u32>,
@@ -769,6 +839,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             start_after,
             limit,
         } => to_binary(&query_collections(deps, blacklist, start_after, limit)?),
+        QueryMsg::Creators {} => to_binary(&query_creators(deps)?),
     }
 }
 
@@ -841,6 +912,15 @@ fn query_collections(
         .collect::<Vec<CollectionsResponse>>();
 
     Ok(ResponseWrapper::new("collections", collections))
+}
+
+fn query_creators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = CREATORS.may_load(deps.storage)?;
+    let addrs = match addrs {
+        Some(addrs) => addrs.iter().map(|a| a.to_string()).collect(),
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new("creators", addrs))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

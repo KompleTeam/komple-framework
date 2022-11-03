@@ -8,7 +8,7 @@ use komple_token_module::state::CollectionConfig;
 use komple_token_module::ContractError;
 use komple_types::shared::RegisterMsg;
 use komple_types::{
-    mint::Collections, metadata::Metadata as MetadataType, query::ResponseWrapper,
+    metadata::Metadata as MetadataType, mint::Collections, query::ResponseWrapper,
     token::SubModules as TokenSubModules,
 };
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;

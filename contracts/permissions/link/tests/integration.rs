@@ -13,8 +13,8 @@ use komple_permission_module::msg::{ExecuteMsg as PermissionExecuteMsg, Permissi
 use komple_permission_module::ContractError as PermissionError;
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_types::mint::Collections;
 use komple_types::metadata::Metadata as MetadataType;
+use komple_types::mint::Collections;
 use komple_types::module::Modules;
 use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;

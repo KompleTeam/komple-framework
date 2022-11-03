@@ -2,7 +2,8 @@ use cosmwasm_schema::cw_serde;
 use komple_types::{
     mint::{
         Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
-        COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE,
+        COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, CREATORS_NAMESPACE,
+        LINKED_COLLECTIONS_NAMESPACE,
     },
     shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
 };
@@ -58,3 +59,6 @@ pub const BLACKLIST_COLLECTION_ADDRS: Map<u32, Addr> =
 
 /// Lock for the execute entry point.
 pub const EXECUTE_LOCK: Item<bool> = Item::new(EXECUTE_LOCK_NAMESPACE);
+
+/// List of creators that can create collections.
+pub const CREATORS: Item<Vec<Addr>> = Item::new(CREATORS_NAMESPACE);
