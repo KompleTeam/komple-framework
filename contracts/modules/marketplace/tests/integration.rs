@@ -744,6 +744,61 @@ mod actions {
                     TokenContractError::Unauthorized {}.to_string()
                 );
             }
+
+            #[test]
+            fn test_existing_listing() {
+                let mut app = mock_app();
+                let hub_addr = setup_hub_module(&mut app, false);
+
+                let (mint_module_addr, marketplace_module_addr) = setup_modules(&mut app, hub_addr);
+
+                let token_module_code_id = app.store_code(token_module());
+                create_collection(
+                    &mut app,
+                    mint_module_addr.clone(),
+                    ADMIN,
+                    token_module_code_id,
+                );
+
+                let collection_addr =
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
+
+                setup_token_module_operators(
+                    &mut app,
+                    collection_addr.clone(),
+                    vec![marketplace_module_addr.to_string()],
+                );
+
+                mint_token(&mut app, mint_module_addr, 1, USER);
+
+                let msg = MarketplaceExecuteMsg::ListFixedToken {
+                    collection_id: 1,
+                    token_id: 1,
+                    price: Uint128::new(1_000_000),
+                };
+                let _ = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
+                    .unwrap();
+
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(USER),
+                        marketplace_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::AlreadyListed {}.to_string()
+                )
+            }
         }
     }
 

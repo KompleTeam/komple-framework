@@ -38,6 +38,9 @@ pub enum ContractError {
     #[error("Fee module address not found")]
     FeeModuleNotFound {},
 
+    #[error("Token already listed")]
+    AlreadyListed {},
+
     #[error("{0}")]
     Overflow(#[from] OverflowError),
 

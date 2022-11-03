@@ -173,6 +173,11 @@ fn execute_list_fixed_token(
     token_id: u32,
     price: Uint128,
 ) -> Result<Response, ContractError> {
+    let fixed_listing = FIXED_LISTING.may_load(deps.storage, (collection_id, token_id))?;
+    if fixed_listing.is_some() {
+        return Err(ContractError::AlreadyListed {});
+    };
+
     let collection_addr = get_collection_address(&deps, &collection_id)?;
     let owner = StorageHelper::query_token_owner(&deps.querier, &collection_addr, &token_id)?;
 
