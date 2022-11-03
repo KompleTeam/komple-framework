@@ -6,6 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
+use komple_types::permission::SubPermissionExecuteMsg;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
@@ -257,7 +258,9 @@ fn execute_check(
         let addr = PERMISSIONS.load(deps.storage, &permission.permission_type)?;
         let permission_msg = WasmMsg::Execute {
             contract_addr: addr.to_string(),
-            msg: permission.data,
+            msg: to_binary(&SubPermissionExecuteMsg::Check {
+                data: permission.data,
+            })?,
             funds: vec![],
         };
         msgs.push(permission_msg);

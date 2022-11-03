@@ -1,7 +1,7 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_attribute_permission_module::msg::AttributeMsg;
-use komple_attribute_permission_module::{msg::ExecuteMsg, ContractError};
+use komple_attribute_permission_module::ContractError;
 use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
@@ -334,16 +334,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::Exist,
-                            trait_type: "room_number".to_string(),
-                            value: "123".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::Exist,
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -361,16 +358,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::Exist,
-                            trait_type: "unrelated".to_string(),
-                            value: "123".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::Exist,
+                        trait_type: "unrelated".to_string(),
+                        value: "123".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -424,16 +418,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::Absent,
-                            trait_type: "unrelated".to_string(),
-                            value: "123".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::Absent,
+                        trait_type: "unrelated".to_string(),
+                        value: "123".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -451,16 +442,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::Absent,
-                            trait_type: "room_number".to_string(),
-                            value: "123".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::Absent,
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -520,25 +508,22 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::Equal,
-                                trait_type: "room_number".to_string(),
-                                value: "123".to_string(),
-                            },
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::Equal,
-                                trait_type: "sold".to_string(),
-                                value: "true".to_string(),
-                            },
-                        ])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::Equal,
+                            trait_type: "room_number".to_string(),
+                            value: "123".to_string(),
+                        },
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::Equal,
+                            trait_type: "sold".to_string(),
+                            value: "true".to_string(),
+                        },
+                    ])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -556,16 +541,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::Equal,
-                            trait_type: "sold".to_string(),
-                            value: "false".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::Equal,
+                        trait_type: "sold".to_string(),
+                        value: "false".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -625,25 +607,22 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::NotEqual,
-                                trait_type: "room_number".to_string(),
-                                value: "500".to_string(),
-                            },
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::NotEqual,
-                                trait_type: "sold".to_string(),
-                                value: "false".to_string(),
-                            },
-                        ])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::NotEqual,
+                            trait_type: "room_number".to_string(),
+                            value: "500".to_string(),
+                        },
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::NotEqual,
+                            trait_type: "sold".to_string(),
+                            value: "false".to_string(),
+                        },
+                    ])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -661,16 +640,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::NotEqual,
-                            trait_type: "sold".to_string(),
-                            value: "true".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::NotEqual,
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -730,16 +706,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::GreaterThan,
-                            trait_type: "room_number".to_string(),
-                            value: "100".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::GreaterThan,
+                        trait_type: "room_number".to_string(),
+                        value: "100".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -757,16 +730,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::GreaterThan,
-                            trait_type: "sold".to_string(),
-                            value: "true".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::GreaterThan,
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -787,16 +757,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::GreaterThan,
-                            trait_type: "room_number".to_string(),
-                            value: "500".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::GreaterThan,
+                        trait_type: "room_number".to_string(),
+                        value: "500".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -817,16 +784,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::GreaterThan,
-                            trait_type: "room_number".to_string(),
-                            value: "123".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::GreaterThan,
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -886,25 +850,22 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::GreaterThanOrEqual,
-                                trait_type: "room_number".to_string(),
-                                value: "123".to_string(),
-                            },
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::GreaterThanOrEqual,
-                                trait_type: "room_number".to_string(),
-                                value: "100".to_string(),
-                            },
-                        ])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThanOrEqual,
+                            trait_type: "room_number".to_string(),
+                            value: "123".to_string(),
+                        },
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::GreaterThanOrEqual,
+                            trait_type: "room_number".to_string(),
+                            value: "100".to_string(),
+                        },
+                    ])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -922,16 +883,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::GreaterThanOrEqual,
-                            trait_type: "sold".to_string(),
-                            value: "true".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::GreaterThanOrEqual,
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -952,16 +910,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::GreaterThanOrEqual,
-                            trait_type: "room_number".to_string(),
-                            value: "500".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::GreaterThanOrEqual,
+                        trait_type: "room_number".to_string(),
+                        value: "500".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -1026,16 +981,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::LessThan,
-                            trait_type: "room_number".to_string(),
-                            value: "500".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::LessThan,
+                        trait_type: "room_number".to_string(),
+                        value: "500".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -1053,16 +1005,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::LessThan,
-                            trait_type: "sold".to_string(),
-                            value: "true".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::LessThan,
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -1083,16 +1032,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::LessThan,
-                            trait_type: "room_number".to_string(),
-                            value: "50".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::LessThan,
+                        trait_type: "room_number".to_string(),
+                        value: "50".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -1113,16 +1059,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::LessThan,
-                            trait_type: "room_number".to_string(),
-                            value: "123".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::LessThan,
+                        trait_type: "room_number".to_string(),
+                        value: "123".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -1187,25 +1130,22 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::LessThanOrEqual,
-                                trait_type: "room_number".to_string(),
-                                value: "500".to_string(),
-                            },
-                            AttributeMsg {
-                                collection_id: 1,
-                                token_id: 1,
-                                condition: AttributeConditions::LessThanOrEqual,
-                                trait_type: "room_number".to_string(),
-                                value: "123".to_string(),
-                            },
-                        ])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThanOrEqual,
+                            trait_type: "room_number".to_string(),
+                            value: "500".to_string(),
+                        },
+                        AttributeMsg {
+                            collection_id: 1,
+                            token_id: 1,
+                            condition: AttributeConditions::LessThanOrEqual,
+                            trait_type: "room_number".to_string(),
+                            value: "123".to_string(),
+                        },
+                    ])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -1223,16 +1163,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::LessThanOrEqual,
-                            trait_type: "sold".to_string(),
-                            value: "true".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::LessThanOrEqual,
+                        trait_type: "sold".to_string(),
+                        value: "true".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),
@@ -1253,16 +1190,13 @@ mod check_conditions {
                 module: Modules::Mint.to_string(),
                 msg: to_binary(&[PermissionCheckMsg {
                     permission_type: Permissions::Attribute.to_string(),
-                    data: to_binary(&ExecuteMsg::Check {
-                        data: to_binary(&[AttributeMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            condition: AttributeConditions::LessThanOrEqual,
-                            trait_type: "room_number".to_string(),
-                            value: "50".to_string(),
-                        }])
-                        .unwrap(),
-                    })
+                    data: to_binary(&[AttributeMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        condition: AttributeConditions::LessThanOrEqual,
+                        trait_type: "room_number".to_string(),
+                        value: "50".to_string(),
+                    }])
                     .unwrap(),
                 }])
                 .unwrap(),

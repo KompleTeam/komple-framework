@@ -6,12 +6,10 @@ use komple_hub_module::{
     msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg},
     state::HubInfo,
 };
-use komple_link_permission_module::msg::ExecuteMsg as LinkPermissionModuleExecuteMsg;
 use komple_merge_module::msg::{ExecuteMsg as MergeModuleExecuteMsg, MergeBurnMsg, MergeMsg};
 use komple_merge_module::ContractError as MergeContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
 use komple_mint_module::{msg::ExecuteMsg as MintModuleExecuteMsg, state::CollectionInfo};
-use komple_ownership_permission_module::msg::ExecuteMsg as OwnershipModuleExecuteMsg;
 use komple_permission_module::msg::ExecuteMsg as PermissionModuleExecuteMsg;
 use komple_token_module::msg::{
     ExecuteMsg as TokenModuleExecuteMsg, MetadataInfo, QueryMsg as TokenModuleQueryMsg, TokenInfo,
@@ -743,21 +741,18 @@ mod permission_merge {
 
             let permission_msg = to_binary(&vec![PermissionCheckMsg {
                 permission_type: Permissions::Ownership.to_string(),
-                data: to_binary(&OwnershipModuleExecuteMsg::Check {
-                    data: to_binary(&vec![
-                        OwnershipMsg {
-                            collection_id: 1,
-                            token_id: 1,
-                            address: USER.to_string(),
-                        },
-                        OwnershipMsg {
-                            collection_id: 1,
-                            token_id: 2,
-                            address: USER.to_string(),
-                        },
-                    ])
-                    .unwrap(),
-                })
+                data: to_binary(&vec![
+                    OwnershipMsg {
+                        collection_id: 1,
+                        token_id: 1,
+                        address: USER.to_string(),
+                    },
+                    OwnershipMsg {
+                        collection_id: 1,
+                        token_id: 2,
+                        address: USER.to_string(),
+                    },
+                ])
                 .unwrap(),
             }])
             .unwrap();
@@ -932,13 +927,10 @@ mod permission_merge {
 
             let permission_msg = to_binary(&vec![PermissionCheckMsg {
                 permission_type: Permissions::Link.to_string(),
-                data: to_binary(&LinkPermissionModuleExecuteMsg::Check {
-                    data: to_binary(&vec![LinkPermissionMsg {
-                        collection_id: 3,
-                        collection_ids: vec![1],
-                    }])
-                    .unwrap(),
-                })
+                data: to_binary(&vec![LinkPermissionMsg {
+                    collection_id: 3,
+                    collection_ids: vec![1],
+                }])
                 .unwrap(),
             }])
             .unwrap();
@@ -978,13 +970,10 @@ mod permission_merge {
 
             let permission_msg = to_binary(&vec![PermissionCheckMsg {
                 permission_type: Permissions::Link.to_string(),
-                data: to_binary(&LinkPermissionModuleExecuteMsg::Check {
-                    data: to_binary(&vec![LinkPermissionMsg {
-                        collection_id: 3,
-                        collection_ids: vec![1, 2],
-                    }])
-                    .unwrap(),
-                })
+                data: to_binary(&vec![LinkPermissionMsg {
+                    collection_id: 3,
+                    collection_ids: vec![1, 2],
+                }])
                 .unwrap(),
             }])
             .unwrap();

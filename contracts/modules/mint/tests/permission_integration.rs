@@ -8,7 +8,6 @@ use komple_hub_module::state::HubInfo;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::ExecuteMsg;
 use komple_mint_module::state::CollectionInfo;
-use komple_ownership_permission_module::msg::ExecuteMsg as OwnershipModuleExecuteMsg;
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
@@ -392,21 +391,18 @@ mod permission_mint {
 
         let permission_msg = to_binary(&vec![PermissionCheckMsg {
             permission_type: Permissions::Ownership.to_string(),
-            data: to_binary(&OwnershipModuleExecuteMsg::Check {
-                data: to_binary(&vec![
-                    OwnershipMsg {
-                        collection_id: 1,
-                        token_id: 1,
-                        address: USER.to_string(),
-                    },
-                    OwnershipMsg {
-                        collection_id: 1,
-                        token_id: 2,
-                        address: USER.to_string(),
-                    },
-                ])
-                .unwrap(),
-            })
+            data: to_binary(&vec![
+                OwnershipMsg {
+                    collection_id: 1,
+                    token_id: 1,
+                    address: USER.to_string(),
+                },
+                OwnershipMsg {
+                    collection_id: 1,
+                    token_id: 2,
+                    address: USER.to_string(),
+                },
+            ])
             .unwrap(),
         }])
         .unwrap();

@@ -1,5 +1,11 @@
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Binary;
 use std::fmt;
+
+#[cw_serde]
+pub enum SubPermissionExecuteMsg {
+    Check { data: Binary },
+}
 
 /// The different types of permissions.
 ///

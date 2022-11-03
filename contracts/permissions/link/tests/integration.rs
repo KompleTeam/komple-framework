@@ -4,7 +4,7 @@ use komple_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_hub_module::state::HubInfo;
-use komple_link_permission_module::msg::{ExecuteMsg, LinkPermissionMsg};
+use komple_link_permission_module::msg::LinkPermissionMsg;
 use komple_link_permission_module::ContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
@@ -403,13 +403,10 @@ fn test_permission_check() {
         module: Modules::Merge.to_string(),
         msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Link.to_string(),
-            data: to_binary(&ExecuteMsg::Check {
-                data: to_binary(&[LinkPermissionMsg {
-                    collection_id: 3,
-                    collection_ids: vec![],
-                }])
-                .unwrap(),
-            })
+            data: to_binary(&[LinkPermissionMsg {
+                collection_id: 3,
+                collection_ids: vec![],
+            }])
             .unwrap(),
         }])
         .unwrap(),
@@ -431,13 +428,10 @@ fn test_permission_check() {
         module: Modules::Merge.to_string(),
         msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Link.to_string(),
-            data: to_binary(&ExecuteMsg::Check {
-                data: to_binary(&[LinkPermissionMsg {
-                    collection_id: 3,
-                    collection_ids: vec![1],
-                }])
-                .unwrap(),
-            })
+            data: to_binary(&[LinkPermissionMsg {
+                collection_id: 3,
+                collection_ids: vec![1],
+            }])
             .unwrap(),
         }])
         .unwrap(),
@@ -459,13 +453,10 @@ fn test_permission_check() {
         module: Modules::Merge.to_string(),
         msg: to_binary(&[PermissionCheckMsg {
             permission_type: Permissions::Link.to_string(),
-            data: to_binary(&ExecuteMsg::Check {
-                data: to_binary(&[LinkPermissionMsg {
-                    collection_id: 3,
-                    collection_ids: vec![1, 2],
-                }])
-                .unwrap(),
-            })
+            data: to_binary(&[LinkPermissionMsg {
+                collection_id: 3,
+                collection_ids: vec![1, 2],
+            }])
             .unwrap(),
         }])
         .unwrap(),
