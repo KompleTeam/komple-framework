@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, CosmosMsg, Deps, DepsMut, Empty, Env,
-    MessageInfo, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
+    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
+    ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -22,7 +22,7 @@ use crate::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg as TokenQueryMsg,
 };
 use crate::state::{
-    Config, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, PARENT_ADDR, OPERATORS,
+    Config, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, OPERATORS, PARENT_ADDR,
     SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
 };
 
@@ -201,12 +201,20 @@ pub fn execute(
             } => execute_init_whitelist_module(deps, env, info, code_id, instantiate_msg),
             TokenExecuteMsg::UpdateModuleOperators { addrs } => {
                 let config = CONFIG.load(deps.storage)?;
-                let res = execute_update_operators(deps, info, "token", &env.contract.address, &config.admin, OPERATORS, addrs);
+                let res = execute_update_operators(
+                    deps,
+                    info,
+                    "token",
+                    &env.contract.address,
+                    &config.admin,
+                    OPERATORS,
+                    addrs,
+                );
                 match res {
                     Ok(res) => Ok(res),
                     Err(e) => Err(e.into()),
                 }
-            },
+            }
         },
         _ => {
             match msg {

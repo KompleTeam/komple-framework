@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Reply,
-    ReplyOn, Response, StdError, StdResult, SubMsg, WasmMsg,
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn,
+    Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
@@ -12,6 +12,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
 use komple_utils::response::{EventHelper, ResponseHelper};
+use komple_utils::shared::execute_update_operators;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -90,7 +91,22 @@ pub fn execute(
         ExecuteMsg::DeregisterModule { module } => {
             execute_deregister_module(deps, env, info, module)
         }
-        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
+        ExecuteMsg::UpdateOperators { addrs } => {
+            let config = CONFIG.load(deps.storage)?;
+            let res = execute_update_operators(
+                deps,
+                info,
+                "hub",
+                &env.contract.address,
+                &config.admin,
+                OPERATORS,
+                addrs,
+            );
+            match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err.into()),
+            }
+        }
     }
 }
 
@@ -232,51 +248,6 @@ fn execute_deregister_module(
                 .add_attribute("module", module)
                 .get(),
         ))
-}
-
-fn execute_update_operators(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    mut addrs: Vec<String>,
-) -> Result<Response, ContractError> {
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        None,
-        operators,
-    )?;
-
-    addrs.sort_unstable();
-    addrs.dedup();
-
-    let mut event_attributes: Vec<Attribute> = vec![];
-
-    let addrs = addrs
-        .iter()
-        .map(|addr| -> StdResult<Addr> {
-            let addr = deps.api.addr_validate(addr)?;
-            event_attributes.push(Attribute {
-                key: "addrs".to_string(),
-                value: addr.to_string(),
-            });
-            Ok(addr)
-        })
-        .collect::<StdResult<Vec<Addr>>>()?;
-
-    OPERATORS.save(deps.storage, &addrs)?;
-
-    Ok(
-        ResponseHelper::new_module("hub", "update_operators").add_event(
-            EventHelper::new("hub_update_operators")
-                .add_attributes(event_attributes)
-                .get(),
-        ),
-    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

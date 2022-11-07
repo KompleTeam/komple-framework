@@ -1,9 +1,14 @@
-use cosmwasm_std::{Addr, DepsMut, MessageInfo, Response, StdError, Attribute, StdResult};
+use cosmwasm_std::{Addr, Attribute, DepsMut, MessageInfo, Response, StdError, StdResult};
 use cw_storage_plus::Item;
 use komple_types::shared::{HUB_ADDR_NAMESPACE, PARENT_ADDR_NAMESPACE};
 use thiserror::Error;
 
-use crate::{response::{ResponseHelper, EventHelper}, storage::StorageHelper, check_admin_privileges, UtilError};
+use crate::{
+    check_admin_privileges,
+    response::{EventHelper, ResponseHelper},
+    storage::StorageHelper,
+    UtilError,
+};
 
 pub fn execute_lock_execute(
     deps: DepsMut,
@@ -36,16 +41,11 @@ pub fn execute_update_operators(
     operators_state: Item<Vec<Addr>>,
     mut addrs: Vec<String>,
 ) -> Result<Response, SharedError> {
-    let parent_addr = StorageHelper::query_storage::<Addr>(&deps.querier, module_addr, PARENT_ADDR_NAMESPACE)?;
+    let parent_addr =
+        StorageHelper::query_storage::<Addr>(&deps.querier, module_addr, PARENT_ADDR_NAMESPACE)?;
     let operators = operators_state.may_load(deps.storage)?;
 
-    check_admin_privileges(
-        &info.sender,
-        module_addr,
-        &admin,
-        parent_addr,
-        operators,
-    )?;
+    check_admin_privileges(&info.sender, module_addr, &admin, parent_addr, operators)?;
 
     addrs.sort_unstable();
     addrs.dedup();

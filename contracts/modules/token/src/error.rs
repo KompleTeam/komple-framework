@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use komple_utils::{UtilError, shared::SharedError};
+use komple_utils::{shared::SharedError, UtilError};
 use thiserror::Error;
 
 use cw721_base::ContractError as Cw721ContractError;
