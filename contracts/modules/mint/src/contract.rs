@@ -29,7 +29,7 @@ use semver::Version;
 
 use crate::state::{
     CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID,
-    COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, OPERATORS,
+    COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, MINT_LOCKS, OPERATORS,
 };
 use crate::{error::ContractError, state::EXECUTE_LOCK};
 use crate::{
@@ -113,7 +113,10 @@ pub fn execute(
         ExecuteMsg::UpdatePublicCollectionCreation {
             public_collection_creation,
         } => execute_update_public_collection_creation(deps, env, info, public_collection_creation),
-        ExecuteMsg::UpdateMintLock { lock } => execute_update_mint_lock(deps, env, info, lock),
+        ExecuteMsg::UpdateCollectionMintLock {
+            collection_id,
+            lock,
+        } => execute_update_collection_mint_lock(deps, env, info, collection_id, lock),
         ExecuteMsg::Mint {
             collection_id,
             metadata_id,
@@ -334,15 +337,16 @@ pub fn execute_update_public_collection_creation(
     )
 }
 
-pub fn execute_update_mint_lock(
+pub fn execute_update_collection_mint_lock(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
+    collection_id: u32,
     lock: bool,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
-    let mut config = CONFIG.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
 
     check_admin_privileges(
         &info.sender,
@@ -352,13 +356,12 @@ pub fn execute_update_mint_lock(
         operators,
     )?;
 
-    config.mint_lock = lock;
-
-    CONFIG.save(deps.storage, &config)?;
+    MINT_LOCKS.save(deps.storage, collection_id, &lock)?;
 
     Ok(
         ResponseHelper::new_module("mint", "update_mint_lock").add_event(
             EventHelper::new("mint_update_mint_lock")
+                .add_attribute("collection_id", collection_id.to_string())
                 .add_attribute("mint_lock", lock.to_string())
                 .get(),
         ),
@@ -374,7 +377,9 @@ fn execute_mint(
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
-    if config.mint_lock {
+
+    let mint_lock = MINT_LOCKS.may_load(deps.storage, collection_id)?;
+    if let Some(_mint_lock) = mint_lock {
         return Err(ContractError::LockedMint {});
     }
 
@@ -798,6 +803,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
         } => to_binary(&query_collections(deps, blacklist, start_after, limit)?),
         QueryMsg::Creators {} => to_binary(&query_creators(deps)?),
+        QueryMsg::MintLock { collection_id } => to_binary(&query_mint_lock(deps, collection_id)?),
     }
 }
 
@@ -879,6 +885,11 @@ fn query_creators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
         None => vec![],
     };
     Ok(ResponseWrapper::new("creators", addrs))
+}
+
+fn query_mint_lock(deps: Deps, collection_id: u32) -> StdResult<ResponseWrapper<Option<bool>>> {
+    let mint_lock = MINT_LOCKS.may_load(deps.storage, collection_id)?;
+    Ok(ResponseWrapper::new("mint_lock", mint_lock))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

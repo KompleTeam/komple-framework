@@ -28,8 +28,8 @@ pub enum ExecuteMsg {
     UpdatePublicCollectionCreation { public_collection_creation: bool },
     /// Admin message.
     ///
-    /// Update the configuration for mint lock.
-    UpdateMintLock { lock: bool },
+    /// Update the configuration for collection mint lock.
+    UpdateCollectionMintLock { collection_id: u32, lock: bool },
     /// Public message.
     ///
     /// Mint a new token on a collection.
@@ -119,6 +119,9 @@ pub enum QueryMsg {
     /// Get the creators of this contract.
     #[returns(ResponseWrapper<Vec<String>>)]
     Creators {},
+    /// Get the mint lock for collection
+    #[returns(ResponseWrapper<Option<bool>>)]
+    MintLock { collection_id: u32 },
 }
 
 /// Message used to mint new tokens on a collection.

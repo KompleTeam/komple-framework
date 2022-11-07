@@ -171,7 +171,10 @@ mod actions {
             let minter_addr = proper_instantiate(&mut app);
             setup_collection(&mut app, &minter_addr, Addr::unchecked(ADMIN), None);
 
-            let msg = ExecuteMsg::UpdateMintLock { lock: true };
+            let msg = ExecuteMsg::UpdateCollectionMintLock {
+                collection_id: 1,
+                lock: true,
+            };
             let _ = app
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
@@ -192,22 +195,31 @@ mod actions {
 
     mod locks {
         use super::*;
-        use komple_mint_module::state::Config;
 
         #[test]
         fn test_mint_lock_happy_path() {
             let mut app = mock_app();
             let minter_addr = proper_instantiate(&mut app);
 
-            let msg = ExecuteMsg::UpdateMintLock { lock: true };
+            let msg = ExecuteMsg::UpdateCollectionMintLock {
+                collection_id: 1,
+                lock: true,
+            };
             let _ = app
                 .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
-            let msg = QueryMsg::Config {};
-            let response: ResponseWrapper<Config> =
+            let msg = QueryMsg::MintLock { collection_id: 1 };
+            let response: ResponseWrapper<Option<bool>> = app
+                .wrap()
+                .query_wasm_smart(minter_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(response.data, Some(true));
+
+            let msg = QueryMsg::MintLock { collection_id: 2 };
+            let response: ResponseWrapper<Option<bool>> =
                 app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-            assert_eq!(response.data.mint_lock, true);
+            assert_eq!(response.data, None);
         }
     }
 

@@ -43,3 +43,5 @@ pub const BLACKLIST_COLLECTION_ADDRS_NAMESPACE: &str = "blacklist_collection_add
 pub const COLLECTION_INFO_NAMESPACE: &str = "collection_info";
 
 pub const CREATORS_NAMESPACE: &str = "creators";
+
+pub const MINT_LOCKS_NAMESPACE: &str = "mint_locks";

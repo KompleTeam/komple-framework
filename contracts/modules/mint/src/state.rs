@@ -3,7 +3,7 @@ use komple_types::{
     mint::{
         Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
         COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, CREATORS_NAMESPACE,
-        LINKED_COLLECTIONS_NAMESPACE,
+        LINKED_COLLECTIONS_NAMESPACE, MINT_LOCKS_NAMESPACE,
     },
     shared::{
         CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
@@ -64,3 +64,6 @@ pub const EXECUTE_LOCK: Item<bool> = Item::new(EXECUTE_LOCK_NAMESPACE);
 
 /// List of creators that can create collections.
 pub const CREATORS: Item<Vec<Addr>> = Item::new(CREATORS_NAMESPACE);
+
+/// Map of collection ids to minting locks.
+pub const MINT_LOCKS: Map<u32, bool> = Map::new(MINT_LOCKS_NAMESPACE);
