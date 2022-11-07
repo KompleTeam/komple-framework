@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::shared::{
-    CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE,
+    CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
 };
 
 use cosmwasm_std::Addr;
@@ -14,7 +14,7 @@ pub struct Config {
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 /// Hub module address.
-pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
+pub const HUB_ADDR: Item<Addr> = Item::new(PARENT_ADDR_NAMESPACE);
 
 /// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

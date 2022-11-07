@@ -3,10 +3,10 @@ use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 use komple_types::{
     metadata::{
-        Metadata as MetadataType, COLLECTION_ADDR_NAMESPACE, DYNAMIC_LINKED_METADATA_NAMESPACE,
-        LINKED_METADATA_NAMESPACE, METADATA_ID_NAMESPACE, METADATA_NAMESPACE,
+        Metadata as MetadataType, DYNAMIC_LINKED_METADATA_NAMESPACE, LINKED_METADATA_NAMESPACE,
+        METADATA_ID_NAMESPACE, METADATA_NAMESPACE,
     },
-    shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE},
 };
 
 #[cw_serde]
@@ -19,7 +19,7 @@ pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 // pub const METADATA_LOCK: Map<&str, bool> = Map::new("metadata_lock");
 
 /// Address of the token contract.
-pub const COLLECTION_ADDR: Item<Addr> = Item::new(COLLECTION_ADDR_NAMESPACE);
+pub const COLLECTION_ADDR: Item<Addr> = Item::new(PARENT_ADDR_NAMESPACE);
 
 #[cw_serde]
 pub struct Trait {

@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Attribute, DepsMut, MessageInfo, Response, StdError, StdResult};
 use cw_storage_plus::Item;
-use komple_types::shared::{HUB_ADDR_NAMESPACE, PARENT_ADDR_NAMESPACE};
+use komple_types::shared::PARENT_ADDR_NAMESPACE;
 use thiserror::Error;
 
 use crate::{
@@ -18,7 +18,7 @@ pub fn execute_lock_execute(
     execute_lock_state: Item<bool>,
 ) -> Result<Response, SharedError> {
     if let Some(hub_addr) =
-        StorageHelper::query_storage::<Addr>(&deps.querier, module_addr, HUB_ADDR_NAMESPACE)?
+        StorageHelper::query_storage::<Addr>(&deps.querier, module_addr, PARENT_ADDR_NAMESPACE)?
     {
         if hub_addr != info.sender {
             return Err(SharedError::Unauthorized {});

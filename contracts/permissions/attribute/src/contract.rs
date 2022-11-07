@@ -8,8 +8,7 @@ use komple_metadata_module::helper::KompleMetadataModule;
 use komple_types::module::Modules;
 use komple_types::permission::AttributeConditions;
 use komple_types::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_types::shared::HUB_ADDR_NAMESPACE;
+use komple_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
 use komple_utils::response::EventHelper;
 use komple_utils::response::ResponseHelper;
 use komple_utils::storage::StorageHelper;
@@ -68,8 +67,11 @@ pub fn execute_check(
     data: Binary,
 ) -> Result<Response, ContractError> {
     let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
-    let hub_addr =
-        StorageHelper::query_storage::<Addr>(&deps.querier, &permission_addr, HUB_ADDR_NAMESPACE)?;
+    let hub_addr = StorageHelper::query_storage::<Addr>(
+        &deps.querier,
+        &permission_addr,
+        PARENT_ADDR_NAMESPACE,
+    )?;
     let mint_module_addr = StorageHelper::query_module_address(
         &deps.querier,
         &hub_addr.unwrap(),

@@ -8,7 +8,9 @@ use komple_types::{
         MODULE_PERMISSIONS_NAMESPACE, PERMISSIONS_NAMESPACE, PERMISSION_ID_NAMESPACE,
         PERMISSION_TO_REGISTER_NAMESPACE,
     },
-    shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{
+        CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
+    },
 };
 
 #[cw_serde]
@@ -18,7 +20,7 @@ pub struct Config {
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 /// Hub module address.
-pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
+pub const HUB_ADDR: Item<Addr> = Item::new(PARENT_ADDR_NAMESPACE);
 
 /// List of permissions that are set to a module.
 pub const MODULE_PERMISSIONS: Map<&str, Vec<String>> = Map::new(MODULE_PERMISSIONS_NAMESPACE);

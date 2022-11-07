@@ -5,7 +5,9 @@ use komple_types::{
         COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, CREATORS_NAMESPACE,
         LINKED_COLLECTIONS_NAMESPACE,
     },
-    shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, HUB_ADDR_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{
+        CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
+    },
 };
 
 use cosmwasm_std::Addr;
@@ -39,7 +41,7 @@ pub const COLLECTION_ADDRS: Map<u32, Addr> = Map::new(COLLECTION_ADDRS_NAMESPACE
 pub const COLLECTION_ID: Item<u32> = Item::new(COLLECTION_ID_NAMESPACE);
 
 /// Hub module address.
-pub const HUB_ADDR: Item<Addr> = Item::new(HUB_ADDR_NAMESPACE);
+pub const HUB_ADDR: Item<Addr> = Item::new(PARENT_ADDR_NAMESPACE);
 
 /// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
