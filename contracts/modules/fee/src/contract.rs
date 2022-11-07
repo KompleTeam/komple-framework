@@ -14,6 +14,7 @@ use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
 use komple_utils::funds::{check_single_amount, FundsError};
 use komple_utils::response::{EventHelper, ResponseHelper};
+use komple_utils::shared::execute_lock_execute;
 
 use crate::error::ContractError;
 use crate::msg::{
@@ -87,7 +88,13 @@ pub fn execute(
             module_name,
             custom_payment_addresses,
         ),
-        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
+        ExecuteMsg::LockExecute {} => {
+            let res = execute_lock_execute(deps, info, "fee", &env.contract.address, EXECUTE_LOCK);
+            match res {
+                Ok(res) => Ok(res),
+                Err(e) => Err(e.into()),
+            }
+        }
     }
 }
 
@@ -365,21 +372,6 @@ fn execute_distribute(
                 .add_attribute("module_name", &module_name)
                 .get(),
         ))
-}
-
-fn execute_lock_execute(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.load(deps.storage)?;
-    if hub_addr != info.sender {
-        return Err(ContractError::Unauthorized {});
-    };
-
-    EXECUTE_LOCK.save(deps.storage, &true)?;
-
-    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
