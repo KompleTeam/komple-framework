@@ -237,17 +237,24 @@ fn execute_deregister_module(
         return Err(ContractError::InvalidModule {});
     }
 
+    let mut msgs: Vec<WasmMsg> = vec![];
+
     // Create a message to disable execute messages on module
-    let msg = WasmMsg::Execute {
-        contract_addr: module_addr.unwrap().to_string(),
+    msgs.push(WasmMsg::Execute {
+        contract_addr: module_addr.as_ref().unwrap().to_string(),
         msg: to_binary(&SharedExecuteMsg::LockExecute {})?,
         funds: vec![],
-    };
+    });
+
+    // Create a message to set contract's admin as None
+    msgs.push(WasmMsg::ClearAdmin {
+        contract_addr: module_addr.unwrap().to_string(),
+    });
 
     MODULES.remove(deps.storage, &module);
 
     Ok(ResponseHelper::new_module("hub", "deregister_module")
-        .add_message(msg)
+        .add_messages(msgs)
         .add_event(
             EventHelper::new("hub_deregister_module")
                 .add_attribute("module", module)
