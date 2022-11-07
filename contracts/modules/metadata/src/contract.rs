@@ -11,6 +11,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
 use komple_utils::response::{EventHelper, ResponseHelper};
+use komple_utils::shared::execute_update_operators;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -101,7 +102,22 @@ pub fn execute(
             id,
             trait_type,
         } => execute_remove_attribute(deps, env, info, raw_metadata, id, trait_type),
-        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
+        ExecuteMsg::UpdateOperators { addrs } => {
+            let config = CONFIG.load(deps.storage)?;
+            let res = execute_update_operators(
+                deps,
+                info,
+                "metadata",
+                &env.contract.address,
+                &config.admin,
+                OPERATORS,
+                addrs,
+            );
+            match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err.into()),
+            }
+        }
     }
 }
 
@@ -611,51 +627,6 @@ fn execute_unlink_metadata(
         ResponseHelper::new_module("metadata", "unlink_metadata").add_event(
             EventHelper::new("metadata_unlink_metadata")
                 .add_attribute("token_id", token_id.to_string())
-                .get(),
-        ),
-    )
-}
-
-fn execute_update_operators(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    mut addrs: Vec<String>,
-) -> Result<Response, ContractError> {
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        None,
-        operators,
-    )?;
-
-    addrs.sort_unstable();
-    addrs.dedup();
-
-    let mut event_attributes: Vec<Attribute> = vec![];
-
-    let addrs = addrs
-        .iter()
-        .map(|addr| -> StdResult<Addr> {
-            let addr = deps.api.addr_validate(addr)?;
-            event_attributes.push(Attribute {
-                key: "addrs".to_string(),
-                value: addr.to_string(),
-            });
-            Ok(addr)
-        })
-        .collect::<StdResult<Vec<Addr>>>()?;
-
-    OPERATORS.save(deps.storage, &addrs)?;
-
-    Ok(
-        ResponseHelper::new_module("metadata", "update_operators").add_event(
-            EventHelper::new("metadata_update_operators")
-                .add_attributes(event_attributes)
                 .get(),
         ),
     )
