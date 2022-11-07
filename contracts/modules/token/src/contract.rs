@@ -13,6 +13,7 @@ use komple_types::shared::RegisterMsg;
 use komple_types::token::{Locks, SubModules};
 use komple_utils::check_admin_privileges;
 use komple_utils::response::{EventHelper, ResponseHelper};
+use komple_utils::shared::execute_update_operators;
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
@@ -21,7 +22,7 @@ use crate::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg as TokenQueryMsg,
 };
 use crate::state::{
-    Config, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, MINT_MODULE_ADDR, OPERATORS,
+    Config, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, PARENT_ADDR, OPERATORS,
     SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
 };
 
@@ -108,7 +109,7 @@ pub fn instantiate(
 
     TOKEN_IDS.save(deps.storage, &0)?;
 
-    MINT_MODULE_ADDR.save(deps.storage, &info.sender)?;
+    PARENT_ADDR.save(deps.storage, &info.sender)?;
 
     let sub_modules = SubModules {
         whitelist: None,
@@ -167,12 +168,10 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Extension { msg } => match msg {
-            // LOCK MESSAGES
             TokenExecuteMsg::UpdateLocks { locks } => execute_update_locks(deps, env, info, locks),
             TokenExecuteMsg::UpdateTokenLocks { token_id, locks } => {
                 execute_update_token_locks(deps, env, info, token_id, locks)
             }
-            // OPERATION MESSAGES
             TokenExecuteMsg::Mint { owner, metadata_id } => {
                 execute_mint(deps, env, info, owner, metadata_id)
             }
@@ -186,26 +185,28 @@ pub fn execute(
                 contract,
                 msg,
             } => execute_send(deps, env, info, token_id, contract, msg),
-            // CONFIG MESSAGES
             TokenExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
                 execute_update_per_address_limit(deps, env, info, per_address_limit)
             }
             TokenExecuteMsg::UpdateStartTime { start_time } => {
                 execute_update_start_time(deps, env, info, start_time)
             }
-            // ADMIN MESSAGES
-            TokenExecuteMsg::UpdateModuleOperators { addrs } => {
-                execute_update_module_operators(deps, env, info, addrs)
-            }
             TokenExecuteMsg::AdminTransferNft {
                 recipient,
                 token_id,
             } => execute_admin_transfer(deps, env, info, token_id, recipient),
-            // CONTRACT MESSAGES
             TokenExecuteMsg::InitWhitelistContract {
                 code_id,
                 instantiate_msg,
             } => execute_init_whitelist_module(deps, env, info, code_id, instantiate_msg),
+            TokenExecuteMsg::UpdateModuleOperators { addrs } => {
+                let config = CONFIG.load(deps.storage)?;
+                let res = execute_update_operators(deps, info, "token", &env.contract.address, &config.admin, OPERATORS, addrs);
+                match res {
+                    Ok(res) => Ok(res),
+                    Err(e) => Err(e.into()),
+                }
+            },
         },
         _ => {
             match msg {
@@ -233,59 +234,13 @@ pub fn execute(
     }
 }
 
-pub fn execute_update_module_operators(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    mut addrs: Vec<String>,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    addrs.sort_unstable();
-    addrs.dedup();
-
-    let mut event_attributes: Vec<Attribute> = vec![];
-
-    let addrs = addrs
-        .iter()
-        .map(|addr| -> StdResult<Addr> {
-            let addr = deps.api.addr_validate(addr)?;
-            event_attributes.push(Attribute {
-                key: "addrs".to_string(),
-                value: addr.to_string(),
-            });
-            Ok(addr)
-        })
-        .collect::<StdResult<Vec<Addr>>>()?;
-
-    OPERATORS.save(deps.storage, &addrs)?;
-
-    Ok(
-        ResponseHelper::new_module("token", "update_module_operators").add_event(
-            EventHelper::new("token_update_module_operators")
-                .add_attributes(event_attributes)
-                .get(),
-        ),
-    )
-}
-
 pub fn execute_update_locks(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     locks: Locks,
 ) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -319,7 +274,7 @@ pub fn execute_update_token_locks(
     token_id: String,
     locks: Locks,
 ) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -561,7 +516,7 @@ pub fn execute_admin_transfer(
     recipient: String,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
 
     check_admin_privileges(
@@ -645,7 +600,7 @@ pub fn execute_update_per_address_limit(
     info: MessageInfo,
     per_address_limit: Option<u32>,
 ) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -684,7 +639,7 @@ fn execute_update_start_time(
     info: MessageInfo,
     start_time: Option<Timestamp>,
 ) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -731,7 +686,7 @@ fn execute_init_whitelist_module(
     code_id: u64,
     instantiate_msg: WhitelistInstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let mint_module_addr = MINT_MODULE_ADDR.may_load(deps.storage)?;
+    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 

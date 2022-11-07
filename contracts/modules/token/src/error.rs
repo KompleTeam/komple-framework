@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use komple_utils::UtilError;
+use komple_utils::{UtilError, shared::SharedError};
 use thiserror::Error;
 
 use cw721_base::ContractError as Cw721ContractError;
@@ -80,6 +80,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     Util(#[from] UtilError),
+
+    #[error("{0}")]
+    SharedError(#[from] SharedError),
 
     #[error("Semver parsing error: {0}")]
     SemVer(String),
