@@ -5,6 +5,7 @@ use thiserror::Error;
 pub mod funds;
 #[cfg(feature = "response")]
 pub mod response;
+pub mod shared;
 #[cfg(feature = "storage")]
 pub mod storage;
 
