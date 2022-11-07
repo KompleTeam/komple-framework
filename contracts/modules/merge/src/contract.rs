@@ -12,6 +12,7 @@ use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::response::{EventHelper, ResponseHelper};
+use komple_utils::shared::{execute_lock_execute, execute_update_operators};
 use komple_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 
@@ -73,8 +74,30 @@ pub fn execute(
             permission_msg,
             merge_msg,
         } => execute_permission_merge(deps, env, info, permission_msg, merge_msg),
-        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
-        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
+        ExecuteMsg::UpdateOperators { addrs } => {
+            let config = CONFIG.load(deps.storage)?;
+            let res = execute_update_operators(
+                deps,
+                info,
+                "merge",
+                &env.contract.address,
+                &config.admin,
+                OPERATORS,
+                addrs,
+            );
+            match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err.into()),
+            }
+        }
+        ExecuteMsg::LockExecute {} => {
+            let res =
+                execute_lock_execute(deps, info, "merge", &env.contract.address, EXECUTE_LOCK);
+            match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err.into()),
+            }
+        }
     }
 }
 
@@ -185,52 +208,6 @@ fn execute_permission_merge(
         ))
 }
 
-fn execute_update_operators(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    mut addrs: Vec<String>,
-) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        hub_addr,
-        operators,
-    )?;
-
-    addrs.sort_unstable();
-    addrs.dedup();
-
-    let mut event_attributes: Vec<Attribute> = vec![];
-
-    let addrs = addrs
-        .iter()
-        .map(|addr| -> StdResult<Addr> {
-            let addr = deps.api.addr_validate(addr)?;
-            event_attributes.push(Attribute {
-                key: "addrs".to_string(),
-                value: addr.to_string(),
-            });
-            Ok(addr)
-        })
-        .collect::<StdResult<Vec<Addr>>>()?;
-
-    OPERATORS.save(deps.storage, &addrs)?;
-
-    Ok(
-        ResponseHelper::new_module("merge", "update_operators").add_event(
-            EventHelper::new("merge_update_operators")
-                .add_attributes(event_attributes)
-                .get(),
-        ),
-    )
-}
-
 /// Constructs the mint and burn messages
 fn make_merge_msg(
     deps: &DepsMut,
@@ -298,21 +275,6 @@ fn make_burn_messages(
         ));
     }
     Ok(())
-}
-
-fn execute_lock_execute(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.load(deps.storage)?;
-    if hub_addr != info.sender {
-        return Err(ContractError::Unauthorized {});
-    };
-
-    EXECUTE_LOCK.save(deps.storage, &true)?;
-
-    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
