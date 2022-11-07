@@ -225,13 +225,15 @@ pub fn execute_create_collection(
         data: Some(to_binary(&token_instantiate_msg)?),
     };
 
-    // Instantiate token contract
+    let contract_info = deps
+        .querier
+        .query_wasm_contract_info(env.contract.address)?;
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
             msg: to_binary(&register_msg)?,
             funds: info.funds,
-            admin: Some(info.sender.to_string()),
+            admin: contract_info.admin,
             label: String::from("Komple Framework Token Module"),
         }
         .into(),

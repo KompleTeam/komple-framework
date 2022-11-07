@@ -130,6 +130,9 @@ pub fn instantiate(
         .minter
         .save(deps.storage, &minter)?;
 
+    let contract_info = deps
+        .querier
+        .query_wasm_contract_info(env.contract.address)?;
     let metadata_register_msg = RegisterMsg {
         admin: config.admin.to_string(),
         data: Some(to_binary(&data.metadata_info.instantiate_msg)?),
@@ -138,8 +141,8 @@ pub fn instantiate(
         msg: WasmMsg::Instantiate {
             code_id: data.metadata_info.code_id,
             msg: to_binary(&metadata_register_msg)?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
+            funds: vec![],
+            admin: contract_info.admin,
             label: String::from("Komple Framework Metadata Module"),
         }
         .into(),
@@ -694,7 +697,7 @@ fn execute_init_whitelist_module(
     code_id: u64,
     instantiate_msg: WhitelistInstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
+    let mint_module_addr = PARENT_ADDR.load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
@@ -702,10 +705,13 @@ fn execute_init_whitelist_module(
         &info.sender,
         &env.contract.address,
         &config.admin,
-        mint_module_addr,
+        Some(mint_module_addr.clone()),
         operators,
     )?;
 
+    let contract_info = deps
+        .querier
+        .query_wasm_contract_info(env.contract.address)?;
     let register_msg = RegisterMsg {
         admin: config.admin.to_string(),
         data: Some(to_binary(&instantiate_msg)?),
@@ -714,8 +720,8 @@ fn execute_init_whitelist_module(
         msg: WasmMsg::Instantiate {
             code_id,
             msg: to_binary(&register_msg)?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
+            funds: vec![],
+            admin: contract_info.admin,
             label: String::from("Komple Framework Whitelist Module"),
         }
         .into(),

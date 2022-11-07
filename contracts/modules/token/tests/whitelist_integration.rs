@@ -143,7 +143,7 @@ fn token_module_instantiation(app: &mut App) -> Addr {
         &register_msg,
         &[],
         "test",
-        None,
+        Some(ADMIN.to_string()),
     )
     .unwrap()
 }
@@ -186,7 +186,10 @@ mod initialization {
             .wrap()
             .query_wasm_smart(token_module_addr, &msg)
             .unwrap();
-        assert_eq!(res.data.whitelist.unwrap(), "contract2")
+        assert_eq!(res.data.whitelist.unwrap(), "contract2");
+
+        let res = app.wrap().query_wasm_contract_info("contract2").unwrap();
+        assert_eq!(res.admin, Some(ADMIN.to_string()));
     }
 }
 

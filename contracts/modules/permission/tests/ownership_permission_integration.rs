@@ -58,7 +58,7 @@ fn proper_instantiate(app: &mut App) -> Addr {
         &msg,
         &[],
         "test",
-        None,
+        Some(ADMIN.to_string()),
     )
     .unwrap()
 }
@@ -104,7 +104,10 @@ mod actions {
                 .wrap()
                 .query_wasm_smart(permission_module_addr, &msg)
                 .unwrap();
-            assert_eq!(res.data, "contract1")
+            assert_eq!(res.data, "contract1");
+
+            let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+            assert_eq!(res.admin, Some(ADMIN.to_string()));
         }
     }
 }

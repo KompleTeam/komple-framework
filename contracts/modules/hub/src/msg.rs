@@ -40,6 +40,14 @@ pub enum ExecuteMsg {
     ///
     /// Updates the operators of this contract.
     UpdateOperators { addrs: Vec<String> },
+    /// Admin message.
+    ///
+    /// Migrate the contracts available in framework.
+    MigrateContracts {
+        code_id: u64,
+        contract_address: String,
+        msg: Binary,
+    },
 }
 
 #[cw_serde]

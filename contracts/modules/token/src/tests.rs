@@ -110,15 +110,21 @@ fn proper_instantiate(
         data: Some(to_binary(&msg).unwrap()),
     };
 
-    app.instantiate_contract(
-        token_code_id,
-        Addr::unchecked(ADMIN),
-        &register_msg,
-        &[],
-        "test",
-        None,
-    )
-    .unwrap()
+    let token_addr = app
+        .instantiate_contract(
+            token_code_id,
+            Addr::unchecked(ADMIN),
+            &register_msg,
+            &[],
+            "test",
+            Some(ADMIN.to_string()),
+        )
+        .unwrap();
+
+    let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+    assert_eq!(res.admin, Some(ADMIN.to_string()));
+
+    token_addr
 }
 
 mod initialization {

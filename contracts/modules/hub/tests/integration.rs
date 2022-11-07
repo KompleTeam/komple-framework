@@ -238,9 +238,14 @@ mod actions {
             let msg = QueryMsg::ModuleAddress {
                 module: Modules::Mint.to_string(),
             };
-            let res: ResponseWrapper<String> =
-                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-            assert_eq!(res.data, "contract1")
+            let res: ResponseWrapper<String> = app
+                .wrap()
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data, "contract1");
+
+            let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+            assert_eq!(res.admin, Some(hub_module_addr.to_string()));
         }
 
         #[test]
@@ -266,9 +271,14 @@ mod actions {
             let msg = QueryMsg::ModuleAddress {
                 module: Modules::Permission.to_string(),
             };
-            let res: ResponseWrapper<String> =
-                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-            assert_eq!(res.data, "contract1")
+            let res: ResponseWrapper<String> = app
+                .wrap()
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data, "contract1");
+
+            let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+            assert_eq!(res.admin, Some(hub_module_addr.to_string()));
         }
 
         #[test]
@@ -294,9 +304,14 @@ mod actions {
             let msg = QueryMsg::ModuleAddress {
                 module: Modules::Merge.to_string(),
             };
-            let res: ResponseWrapper<String> =
-                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-            assert_eq!(res.data, "contract1")
+            let res: ResponseWrapper<String> = app
+                .wrap()
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data, "contract1");
+
+            let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+            assert_eq!(res.admin, Some(hub_module_addr.to_string()));
         }
 
         #[test]
@@ -323,9 +338,14 @@ mod actions {
             let msg = QueryMsg::ModuleAddress {
                 module: Modules::Marketplace.to_string(),
             };
-            let res: ResponseWrapper<String> =
-                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-            assert_eq!(res.data, "contract1")
+            let res: ResponseWrapper<String> = app
+                .wrap()
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data, "contract1");
+
+            let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+            assert_eq!(res.admin, Some(hub_module_addr.to_string()));
         }
 
         #[test]
@@ -351,9 +371,14 @@ mod actions {
             let msg = QueryMsg::ModuleAddress {
                 module: Modules::Fee.to_string(),
             };
-            let res: ResponseWrapper<String> =
-                app.wrap().query_wasm_smart(hub_module_addr, &msg).unwrap();
-            assert_eq!(res.data, "contract1")
+            let res: ResponseWrapper<String> = app
+                .wrap()
+                .query_wasm_smart(hub_module_addr.clone(), &msg)
+                .unwrap();
+            assert_eq!(res.data, "contract1");
+
+            let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+            assert_eq!(res.admin, Some(hub_module_addr.to_string()));
         }
 
         #[test]

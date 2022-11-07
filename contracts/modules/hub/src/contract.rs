@@ -107,6 +107,11 @@ pub fn execute(
                 Err(err) => Err(err.into()),
             }
         }
+        ExecuteMsg::MigrateContracts {
+            code_id,
+            contract_address,
+            msg,
+        } => execute_migrate_contracts(deps, env, info, code_id, contract_address, msg),
     }
 }
 
@@ -143,8 +148,8 @@ fn execute_register_module(
         msg: WasmMsg::Instantiate {
             code_id,
             msg: to_binary(&register_msg)?,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
+            funds: vec![],
+            admin: Some(env.contract.address.to_string()),
             label: format!("Komple Framework Module - {}", module.as_str()),
         }
         .into(),
@@ -246,6 +251,43 @@ fn execute_deregister_module(
         .add_event(
             EventHelper::new("hub_deregister_module")
                 .add_attribute("module", module)
+                .get(),
+        ))
+}
+
+fn execute_migrate_contracts(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    code_id: u64,
+    contract_address: String,
+    msg: Binary,
+) -> Result<Response, ContractError> {
+    let operators = OPERATORS.may_load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    check_admin_privileges(
+        &info.sender,
+        &env.contract.address,
+        &config.admin,
+        None,
+        operators,
+    )?;
+
+    let contract_addr = deps.api.addr_validate(&contract_address)?;
+
+    let msg = WasmMsg::Migrate {
+        contract_addr: contract_addr.to_string(),
+        new_code_id: code_id,
+        msg,
+    };
+
+    Ok(ResponseHelper::new_module("hub", "migrate_contracts")
+        .add_message(msg)
+        .add_event(
+            EventHelper::new("hub_migrate_contracts")
+                .add_attribute("code_id", code_id.to_string())
+                .add_attribute("contract_address", contract_address)
                 .get(),
         ))
 }

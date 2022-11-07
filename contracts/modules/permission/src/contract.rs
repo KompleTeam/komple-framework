@@ -137,12 +137,15 @@ fn execute_register_permission(
         data: msg,
     })?;
 
+    let contract_info = deps
+        .querier
+        .query_wasm_contract_info(env.contract.address)?;
     let sub_msg: SubMsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id,
             msg: register_msg,
-            funds: info.funds,
-            admin: Some(info.sender.to_string()),
+            funds: vec![],
+            admin: contract_info.admin,
             label: format!("Komple Permission Module - {}", permission.as_str()),
         }
         .into(),

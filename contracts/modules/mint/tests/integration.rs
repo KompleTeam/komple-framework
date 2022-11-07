@@ -77,7 +77,7 @@ fn proper_instantiate(app: &mut App) -> Addr {
         &msg,
         &[],
         "test",
-        None,
+        Some(ADMIN.to_string()),
     )
     .unwrap()
 }
@@ -284,6 +284,9 @@ mod actions {
                     app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
                 assert_eq!(res.data.name, "Test Collection");
                 assert_eq!(res.data.collection_type, Collections::Standard);
+
+                let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
+                assert_eq!(res.admin, Some(ADMIN.to_string()));
             }
 
             #[test]
