@@ -18,3 +18,5 @@ pub const HUB_ADDR_NAMESPACE: &str = "hub_addr";
 pub const OPERATORS_NAMESPACE: &str = "operators";
 
 pub const EXECUTE_LOCK_NAMESPACE: &str = "execute_lock";
+
+pub const PARENT_ADDR_NAMESPACE: &str = "parent_addr";

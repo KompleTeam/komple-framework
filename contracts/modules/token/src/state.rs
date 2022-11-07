@@ -1,10 +1,10 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
     mint::Collections,
-    shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
+    shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE},
     token::{
         Locks, SubModules, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE,
-        MINTED_TOKENS_PER_ADDR_NAMESPACE, MINT_MODULE_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE,
+        MINTED_TOKENS_PER_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE,
         TOKEN_IDS_NAMESPACE, TOKEN_LOCKS_NAMESPACE,
     },
 };
@@ -47,7 +47,7 @@ pub const TOKEN_IDS: Item<u32> = Item::new(TOKEN_IDS_NAMESPACE);
 pub const MINTED_TOKENS_PER_ADDR: Map<&str, u32> = Map::new(MINTED_TOKENS_PER_ADDR_NAMESPACE);
 
 /// Address of the mint module.
-pub const MINT_MODULE_ADDR: Item<Addr> = Item::new(MINT_MODULE_ADDR_NAMESPACE);
+pub const PARENT_ADDR: Item<Addr> = Item::new(PARENT_ADDR_NAMESPACE);
 
 /// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
