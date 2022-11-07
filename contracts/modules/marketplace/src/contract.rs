@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, from_binary, to_binary, Addr, Attribute, BankMsg, Binary, Coin, Deps, DepsMut, Env,
-    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128,
+    coin, from_binary, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo,
+    Order, Response, StdError, StdResult, SubMsg, Uint128,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
@@ -23,6 +23,7 @@ use komple_types::{
     hub::MARBU_FEE_MODULE_NAMESPACE,
 };
 use komple_utils::response::ResponseHelper;
+use komple_utils::shared::{execute_lock_execute, execute_update_operators};
 use komple_utils::{
     check_admin_privileges, funds::check_single_coin, response::EventHelper, storage::StorageHelper,
 };
@@ -131,8 +132,35 @@ pub fn execute(
             token_id,
             buyer,
         ),
-        ExecuteMsg::UpdateOperators { addrs } => execute_update_operators(deps, env, info, addrs),
-        ExecuteMsg::LockExecute {} => execute_lock_execute(deps, env, info),
+        ExecuteMsg::UpdateOperators { addrs } => {
+            let config = CONFIG.load(deps.storage)?;
+            let res = execute_update_operators(
+                deps,
+                info,
+                "marketplace",
+                &env.contract.address,
+                &config.admin,
+                OPERATORS,
+                addrs,
+            );
+            match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err.into()),
+            }
+        }
+        ExecuteMsg::LockExecute {} => {
+            let res = execute_lock_execute(
+                deps,
+                info,
+                "marketplace",
+                &env.contract.address,
+                EXECUTE_LOCK,
+            );
+            match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err.into()),
+            }
+        }
     }
 }
 
@@ -563,68 +591,6 @@ fn check_locks(locks: Locks) -> Result<(), TokenContractError> {
         return Err(TokenContractError::BurnLocked {});
     };
     Ok(())
-}
-
-fn execute_update_operators(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    mut addrs: Vec<String>,
-) -> Result<Response, ContractError> {
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        None,
-        operators,
-    )?;
-
-    addrs.sort_unstable();
-    addrs.dedup();
-
-    let mut event_attributes: Vec<Attribute> = vec![];
-
-    let addrs = addrs
-        .iter()
-        .map(|addr| -> StdResult<Addr> {
-            let addr = deps.api.addr_validate(addr)?;
-            event_attributes.push(Attribute {
-                key: "addrs".to_string(),
-                value: addr.to_string(),
-            });
-            Ok(addr)
-        })
-        .collect::<StdResult<Vec<Addr>>>()?;
-
-    OPERATORS.save(deps.storage, &addrs)?;
-
-    Ok(Response::new()
-        .add_attribute("name", "komple_framework")
-        .add_attribute("module", "marketplace")
-        .add_attribute("action", "update_operators")
-        .add_event(
-            EventHelper::new("marketplace_update_operators")
-                .add_attributes(event_attributes)
-                .get(),
-        ))
-}
-
-fn execute_lock_execute(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.load(deps.storage)?;
-    if hub_addr != info.sender {
-        return Err(ContractError::Unauthorized {});
-    };
-
-    EXECUTE_LOCK.save(deps.storage, &true)?;
-
-    Ok(ResponseHelper::new_module("fee", "lock_execute"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
