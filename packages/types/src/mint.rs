@@ -7,8 +7,6 @@ use std::fmt;
 #[cw_serde]
 pub enum Collections {
     Standard,
-    // TODO: Find a new collection type
-    Linked,
     Komple,
 }
 
@@ -16,7 +14,6 @@ impl Collections {
     pub fn as_str(&self) -> &'static str {
         match self {
             Collections::Standard => "standard",
-            Collections::Linked => "linked",
             Collections::Komple => "komple",
         }
     }
@@ -26,7 +23,6 @@ impl fmt::Display for Collections {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Collections::Standard => write!(f, "standard"),
-            Collections::Linked => write!(f, "linked"),
             Collections::Komple => write!(f, "komple"),
         }
     }
