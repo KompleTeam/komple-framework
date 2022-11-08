@@ -25,7 +25,6 @@ impl Fees {
 pub enum MintFees {
     Price,
     Whitelist,
-    Transaction,
     Royalty,
 }
 impl MintFees {
@@ -33,7 +32,6 @@ impl MintFees {
         match self {
             MintFees::Price => "price",
             MintFees::Whitelist => "whitelist",
-            MintFees::Transaction => "transaction",
             MintFees::Royalty => "royalty",
         }
     }
