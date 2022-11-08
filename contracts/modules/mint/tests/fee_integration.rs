@@ -189,20 +189,26 @@ pub fn create_collection(app: &mut App, mint_module_addr: &Addr) {
     .unwrap();
 }
 
-pub fn set_fixed_fee(
+pub fn set_minting_price(
     app: &mut App,
     fee_module_addr: &Addr,
     fee_name: &str,
     collection_id: u32,
     value: u128,
 ) {
+    let fee_name = match fee_name {
+        "price" => MintFees::new_price(collection_id),
+        "whitelist" => MintFees::new_whitelist_price(collection_id),
+        _ => unimplemented!(),
+    };
+
     app.execute_contract(
         Addr::unchecked(ADMIN),
         fee_module_addr.clone(),
         &FeeExecuteMsg::SetFee {
             fee_type: Fees::Fixed,
             module_name: Modules::Mint.to_string(),
-            fee_name: format!("{}/{}", fee_name, collection_id),
+            fee_name,
             data: to_binary(&FixedPayment {
                 address: Some(ADMIN.to_string()),
                 value: Uint128::new(value),
@@ -268,8 +274,8 @@ mod execute {
             // Create collection
             create_collection(&mut app, &mint_module_addr);
 
-            // Set mint fee
-            set_fixed_fee(&mut app, &fee_module_addr, MintFees::Price.as_str(), 1, 10);
+            // Set normal price
+            set_minting_price(&mut app, &fee_module_addr, MintFees::Price.as_str(), 1, 10);
 
             // Throw error if invalid fund
             app.execute_contract(
@@ -338,8 +344,8 @@ mod execute {
             // Create whitelist
             create_whitelist(&mut app, &collection_addr);
 
-            // Set whitelist fee
-            set_fixed_fee(
+            // Set whitelist price
+            set_minting_price(
                 &mut app,
                 &fee_module_addr,
                 MintFees::Whitelist.as_str(),

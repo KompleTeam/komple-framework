@@ -459,7 +459,7 @@ fn _execute_buy_fixed_listing(
             &deps.querier,
             &fee_module_addr,
             Modules::Mint.to_string(),
-            format!("{}/{}", MintFees::Royalty.as_str(), collection_id),
+            MintFees::new_royalty(collection_id),
         );
         if let Ok(percentage_fee) = res {
             royalty_fee = percentage_fee.value.mul(fixed_listing.price);

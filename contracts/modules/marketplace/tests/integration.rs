@@ -177,11 +177,11 @@ fn setup_fee_module(app: &mut App, fee_module_addr: &Addr) {
         .unwrap();
 }
 
-fn set_royalties(app: &mut App, fee_module_addr: &Addr, collection_id: &u32, royalty: &str) {
+fn set_royalties(app: &mut App, fee_module_addr: &Addr, collection_id: u32, royalty: &str) {
     let msg = FeeModuleExecuteMsg::SetFee {
         fee_type: Fees::Percentage,
         module_name: Modules::Mint.to_string(),
-        fee_name: format!("{}/{}", MintFees::Royalty.as_str(), collection_id),
+        fee_name: MintFees::new_royalty(collection_id),
         data: to_binary(&FeeModulePercentagePayment {
             address: None,
             value: Decimal::from_str(royalty).unwrap(),
@@ -1250,7 +1250,7 @@ mod actions {
                 .unwrap();
 
                 // Setup admin royalty for 10 percent
-                set_royalties(&mut app, &fee_module_addr, &1, "0.1");
+                set_royalties(&mut app, &fee_module_addr, 1, "0.1");
 
                 setup_marketplace_listing(
                     &mut app,
@@ -1307,7 +1307,7 @@ mod actions {
                 assert_eq!(balance.amount, Uint128::new(100));
 
                 // Setup admin royalty for 10 percent
-                set_royalties(&mut app, &fee_module_addr, &1, "0.05");
+                set_royalties(&mut app, &fee_module_addr, 1, "0.05");
 
                 setup_marketplace_listing(
                     &mut app,

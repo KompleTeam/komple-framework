@@ -37,6 +37,15 @@ impl MintFees {
             MintFees::Royalty => "royalty",
         }
     }
+    pub fn new_price(collection_id: u32) -> String {
+        format!("{}:{}", MintFees::Price.as_str(), collection_id)
+    }
+    pub fn new_whitelist_price(collection_id: u32) -> String {
+        format!("{}:{}", MintFees::Whitelist.as_str(), collection_id)
+    }
+    pub fn new_royalty(collection_id: u32) -> String {
+        format!("{}:{}", MintFees::Royalty.as_str(), collection_id)
+    }
 }
 
 /// The different type of marketplace fees to be used in marketplace module.

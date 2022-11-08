@@ -438,7 +438,7 @@ fn execute_mint(
                         &deps.querier,
                         &fee_module_addr.as_ref().unwrap(),
                         Modules::Mint.to_string(),
-                        format!("{}/{}", MintFees::Whitelist.as_str(), collection_id),
+                        MintFees::new_whitelist_price(collection_id),
                     );
 
                     let mut whitelist_price = Uint128::zero();
@@ -475,7 +475,7 @@ fn execute_mint(
                 &deps.querier,
                 &fee_module_addr.unwrap(),
                 Modules::Mint.to_string(),
-                format!("{}/{}", MintFees::Price.as_str(), collection_id),
+                MintFees::new_price(collection_id),
             );
             if let Ok(fixed_fee_response) = res {
                 let msg = BankMsg::Send {
