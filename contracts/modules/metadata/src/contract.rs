@@ -1,3 +1,5 @@
+use core::panic;
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -6,6 +8,7 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
+use komple_types::events::MetadataEventAttributes;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
@@ -155,9 +158,9 @@ fn execute_add_metadata(
 
     if !metadata.attributes.is_empty() {
         for attribute in metadata.attributes {
-            event_attributes.push(Attribute::new(
-                "attributes",
-                format!("{}/{}", attribute.trait_type, attribute.value),
+            event_attributes.push(MetadataEventAttributes::new_attribute_attribute(
+                attribute.trait_type,
+                attribute.value,
             ));
         }
     }
@@ -168,66 +171,41 @@ fn execute_add_metadata(
                 .check_add_attribute(
                     &metadata.meta_info.image,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "image",
-                        metadata
-                            .meta_info
-                            .image
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.image,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.external_url,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "external_url",
-                        metadata
-                            .meta_info
-                            .external_url
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.external_url,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.description,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "description",
-                        metadata
-                            .meta_info
-                            .description
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.description,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.animation_url,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "animation_url",
-                        metadata
-                            .meta_info
-                            .animation_url
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.animation_url,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.youtube_url,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "youtube_url",
-                        metadata
-                            .meta_info
-                            .youtube_url
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.youtube_url,
                     ),
                 )
                 .add_attributes(event_attributes)
@@ -344,66 +322,41 @@ fn execute_update_meta_info(
                 .check_add_attribute(
                     &metadata.meta_info.image,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "image",
-                        metadata
-                            .meta_info
-                            .image
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.image,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.external_url,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "external_url",
-                        metadata
-                            .meta_info
-                            .external_url
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.external_url,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.description,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "description",
-                        metadata
-                            .meta_info
-                            .description
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.description,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.animation_url,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "animation_url",
-                        metadata
-                            .meta_info
-                            .animation_url
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.animation_url,
                     ),
                 )
                 .check_add_attribute(
                     &metadata.meta_info.youtube_url,
                     "meta_info",
-                    format!(
-                        "{}/{}",
+                    MetadataEventAttributes::new_meta_info_value(
                         "youtube_url",
-                        metadata
-                            .meta_info
-                            .youtube_url
-                            .as_ref()
-                            .unwrap_or(&String::from(""))
+                        &metadata.meta_info.youtube_url,
                     ),
                 )
                 .get(),
@@ -460,10 +413,10 @@ fn execute_add_attribute(
             EventHelper::new("metadata_add_attribute")
                 .add_attribute("raw_metadata", raw_metadata.to_string())
                 .add_attribute("id", id.to_string())
-                .add_attribute(
-                    "attribute",
-                    format!("{}/{}", attribute.trait_type, attribute.value),
-                )
+                .add_attributes(vec![MetadataEventAttributes::new_attribute_attribute(
+                    attribute.trait_type,
+                    attribute.value,
+                )])
                 .get(),
         ),
     )
@@ -523,10 +476,10 @@ fn execute_update_attribute(
             EventHelper::new("metadata_update_attribute")
                 .add_attribute("raw_metadata", raw_metadata.to_string())
                 .add_attribute("id", id.to_string())
-                .add_attribute(
-                    "attribute",
-                    format!("{}/{}", attribute.trait_type, attribute.value),
-                )
+                .add_attributes(vec![MetadataEventAttributes::new_attribute_attribute(
+                    attribute.trait_type,
+                    attribute.value,
+                )])
                 .get(),
         ),
     )

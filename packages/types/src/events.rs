@@ -10,3 +10,18 @@ impl MergeEventAttributes {
         Attribute::new("burn_ids", value)
     }
 }
+
+/// Event attributes for the metadata module.
+pub enum MetadataEventAttributes {
+    MetaInfo,
+    Attributes,
+}
+impl MetadataEventAttributes {
+    pub fn new_meta_info_value(field: &str, value: &Option<String>) -> String {
+        format!("{}:{}", field, value.as_ref().unwrap_or(&String::from("")))
+    }
+    pub fn new_attribute_attribute(trait_type: String, value: String) -> Attribute {
+        let value = format!("{}:{}", trait_type, value);
+        Attribute::new("attributes", value)
+    }
+}
