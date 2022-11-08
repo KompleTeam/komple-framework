@@ -89,6 +89,14 @@ pub struct FixedPayment {
     pub value: Uint128,
 }
 
+/// The fund information for native and cw20 tokens.
+#[cw_serde]
+pub struct FundInfo {
+    pub is_native: bool,
+    pub denom: String,
+    pub cw20_address: Option<String>,
+}
+
 pub const FIXED_FEES_NAMESPACE: &str = "fixed_fees";
 
 pub const PERCENTAGE_FEES_NAMESPACE: &str = "percentage_fees";
