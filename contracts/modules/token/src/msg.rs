@@ -1,6 +1,6 @@
 use crate::state::{CollectionConfig, Config};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Binary, Timestamp};
+use cosmwasm_std::Binary;
 use cw721::CustomMsg;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_types::{
@@ -82,15 +82,9 @@ pub enum ExecuteMsg {
     },
     /// Admin message.
     ///
-    /// Update per address limit configuration.
-    UpdatePerAddressLimit {
-        per_address_limit: Option<u32>,
-    },
-    /// Admin message.
-    ///
-    /// Update start time for minting
-    UpdateStartTime {
-        start_time: Option<Timestamp>,
+    /// Update the collection config.
+    UpdateCollectionConfig {
+        collection_config: CollectionConfig,
     },
     /// Admin message.
     ///

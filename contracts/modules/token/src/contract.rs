@@ -22,8 +22,8 @@ use crate::msg::{
     ExecuteMsg as TokenExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg as TokenQueryMsg,
 };
 use crate::state::{
-    Config, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, OPERATORS, PARENT_ADDR,
-    SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
+    CollectionConfig, Config, COLLECTION_TYPE, CONFIG, LOCKS, MINTED_TOKENS_PER_ADDR, OPERATORS,
+    PARENT_ADDR, SUB_MODULES, TOKEN_IDS, TOKEN_LOCKS,
 };
 
 use cw721::ContractInfoResponse;
@@ -64,12 +64,12 @@ pub fn instantiate(
         return Err(ContractError::InvalidStartTime {});
     };
     if data.collection_config.max_token_limit.is_some()
-        && data.collection_config.max_token_limit.unwrap() == 0
+        && data.collection_config.max_token_limit.unwrap() <= 0
     {
         return Err(ContractError::InvalidMaxTokenLimit {});
     };
     if data.collection_config.per_address_limit.is_some()
-        && data.collection_config.per_address_limit.unwrap() == 0
+        && data.collection_config.per_address_limit.unwrap() <= 0
     {
         return Err(ContractError::InvalidPerAddressLimit {});
     };
@@ -188,11 +188,8 @@ pub fn execute(
                 contract,
                 msg,
             } => execute_send(deps, env, info, token_id, contract, msg),
-            TokenExecuteMsg::UpdatePerAddressLimit { per_address_limit } => {
-                execute_update_per_address_limit(deps, env, info, per_address_limit)
-            }
-            TokenExecuteMsg::UpdateStartTime { start_time } => {
-                execute_update_start_time(deps, env, info, start_time)
+            TokenExecuteMsg::UpdateCollectionConfig { collection_config } => {
+                execute_update_collection_config(deps, env, info, collection_config)
             }
             TokenExecuteMsg::AdminTransferNft {
                 recipient,
@@ -605,11 +602,11 @@ pub fn execute_send(
     }
 }
 
-pub fn execute_update_per_address_limit(
+fn execute_update_collection_config(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    per_address_limit: Option<u32>,
+    collection_config: CollectionConfig,
 ) -> Result<Response, ContractError> {
     let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
     let operators = OPERATORS.may_load(deps.storage)?;
@@ -623,71 +620,74 @@ pub fn execute_update_per_address_limit(
         operators,
     )?;
 
-    if per_address_limit.is_some() && per_address_limit.unwrap() == 0 {
-        return Err(ContractError::InvalidPerAddressLimit {});
-    }
+    // Start time
+    if config.start_time.is_some() && env.block.time >= config.start_time.unwrap() {
+        return Err(ContractError::AlreadyStarted {});
+    };
+    match collection_config.start_time {
+        Some(time) => {
+            if env.block.time >= time {
+                return Err(ContractError::InvalidStartTime {});
+            }
+            config.start_time = collection_config.start_time;
+        }
+        None => config.start_time = None,
+    };
 
-    config.per_address_limit = per_address_limit;
+    // Per address limit
+    if collection_config.per_address_limit.is_some()
+        && collection_config.per_address_limit.unwrap() <= 0
+    {
+        return Err(ContractError::InvalidPerAddressLimit {});
+    };
+    config.per_address_limit = collection_config.per_address_limit;
+
+    // Max token limit
+    if collection_config.max_token_limit.is_some()
+        && collection_config.max_token_limit.unwrap() <= 0
+    {
+        return Err(ContractError::InvalidMaxTokenLimit {});
+    };
+    config.max_token_limit = collection_config.max_token_limit;
+
+    // IPFS link
+    if collection_config.ipfs_link.is_some() {
+        config.ipfs_link = collection_config.ipfs_link;
+    };
+
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new()
         .add_attribute("name", "komple_framework")
         .add_attribute("module", "token")
-        .add_attribute("action", "update_per_address_limit")
+        .add_attribute("action", "update_collection_config")
         .add_event(
-            EventHelper::new("token_update_per_address_limit")
-                .add_attribute(
+            EventHelper::new("token_update_collection_config")
+                .check_add_attribute(
+                    &config.start_time,
+                    "start_time",
+                    config
+                        .start_time
+                        .unwrap_or(Timestamp::from_nanos(0))
+                        .to_string(),
+                )
+                .check_add_attribute(
+                    &config.max_token_limit,
+                    "max_token_limit",
+                    config.max_token_limit.unwrap_or(0).to_string(),
+                )
+                .check_add_attribute(
+                    &config.per_address_limit,
                     "per_address_limit",
-                    per_address_limit.unwrap_or(0).to_string(),
+                    config.per_address_limit.unwrap_or(0).to_string(),
+                )
+                .check_add_attribute(
+                    &config.ipfs_link,
+                    "ipfs_link",
+                    config.ipfs_link.as_ref().unwrap_or(&String::from("")),
                 )
                 .get(),
         ))
-}
-
-fn execute_update_start_time(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    start_time: Option<Timestamp>,
-) -> Result<Response, ContractError> {
-    let mint_module_addr = PARENT_ADDR.may_load(deps.storage)?;
-    let operators = OPERATORS.may_load(deps.storage)?;
-    let mut config = CONFIG.load(deps.storage)?;
-
-    check_admin_privileges(
-        &info.sender,
-        &env.contract.address,
-        &config.admin,
-        mint_module_addr,
-        operators,
-    )?;
-
-    if config.start_time.is_some() && env.block.time >= config.start_time.unwrap() {
-        return Err(ContractError::AlreadyStarted {});
-    }
-
-    match start_time {
-        Some(time) => {
-            if env.block.time >= time {
-                return Err(ContractError::InvalidStartTime {});
-            }
-            config.start_time = start_time;
-        }
-        None => config.start_time = None,
-    }
-
-    CONFIG.save(deps.storage, &config)?;
-
-    Ok(
-        ResponseHelper::new_module("token", "update_start_time").add_event(
-            EventHelper::new("token_update_start_time")
-                .add_attribute(
-                    "start_time",
-                    start_time.unwrap_or(Timestamp::from_seconds(0)).to_string(),
-                )
-                .get(),
-        ),
-    )
 }
 
 fn execute_init_whitelist_module(

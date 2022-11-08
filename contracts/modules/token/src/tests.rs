@@ -456,7 +456,7 @@ mod initialization {
         );
 
         msg.metadata_info.instantiate_msg.metadata_type = MetadataType::Standard;
-        msg.collection_type = Collections::Linked;
+        msg.collection_type = Collections::Komple;
         let err = app
             .instantiate_contract(
                 token_code_id,
@@ -732,38 +732,313 @@ mod actions {
             }
         }
 
-        mod update_per_address_limit {
+        mod update_collection_config {
             use super::*;
 
-            #[test]
-            fn test_happy_path() {
-                let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+            mod per_address_limit {
+                use super::*;
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdatePerAddressLimit {
-                        per_address_limit: Some(5),
-                    },
-                };
-                let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-                    .unwrap();
+                #[test]
+                fn test_happy_path() {
+                    let mut app = mock_app();
+                    let token_module_addr = proper_instantiate(
+                        &mut app,
+                        ADMIN.to_string(),
+                        None,
+                        None,
+                        None,
+                        Some("some-link".to_string()),
+                    );
 
-                let msg = Cw721QueryMsg::Extension {
-                    msg: QueryMsg::Config {},
-                };
-                let res: ResponseWrapper<TokenConfig> = app
-                    .wrap()
-                    .query_wasm_smart(token_module_addr, &msg)
-                    .unwrap();
-                assert_eq!(res.data.per_address_limit, Some(5));
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: Some(5),
+                                start_time: None,
+                                max_token_limit: None,
+                                ipfs_link: None,
+                            },
+                        },
+                    };
+                    let _ = app
+                        .execute_contract(
+                            Addr::unchecked(ADMIN),
+                            token_module_addr.clone(),
+                            &msg,
+                            &[],
+                        )
+                        .unwrap();
+
+                    let msg = Cw721QueryMsg::Extension {
+                        msg: QueryMsg::Config {},
+                    };
+                    let res: ResponseWrapper<TokenConfig> = app
+                        .wrap()
+                        .query_wasm_smart(token_module_addr, &msg)
+                        .unwrap();
+                    assert_eq!(res.data.per_address_limit, Some(5));
+                }
+
+                #[test]
+                fn test_invalid_per_address_limit() {
+                    let mut app = mock_app();
+                    let token_module_addr = proper_instantiate(
+                        &mut app,
+                        ADMIN.to_string(),
+                        None,
+                        None,
+                        None,
+                        Some("some-link".to_string()),
+                    );
+
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: Some(0),
+                                start_time: None,
+                                max_token_limit: None,
+                                ipfs_link: None,
+                            },
+                        },
+                    };
+                    let err = app
+                        .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                        .unwrap_err();
+                    assert_eq!(
+                        err.source().unwrap().to_string(),
+                        ContractError::InvalidPerAddressLimit {}.to_string()
+                    );
+                }
+            }
+
+            mod start_time {
+                use super::*;
+
+                #[test]
+                fn test_happy_path() {
+                    let mut app = mock_app();
+                    let token_module_addr = proper_instantiate(
+                        &mut app,
+                        ADMIN.to_string(),
+                        None,
+                        None,
+                        None,
+                        Some("some-link".to_string()),
+                    );
+
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: None,
+                                start_time: Some(app.block_info().time.plus_seconds(5)),
+                                max_token_limit: None,
+                                ipfs_link: None,
+                            },
+                        },
+                    };
+                    let _ = app
+                        .execute_contract(
+                            Addr::unchecked(ADMIN),
+                            token_module_addr.clone(),
+                            &msg,
+                            &[],
+                        )
+                        .unwrap();
+
+                    let msg = Cw721QueryMsg::Extension {
+                        msg: QueryMsg::Config {},
+                    };
+                    let res: ResponseWrapper<TokenConfig> = app
+                        .wrap()
+                        .query_wasm_smart(token_module_addr, &msg)
+                        .unwrap();
+                    assert_eq!(
+                        res.data.start_time,
+                        Some(app.block_info().time.plus_seconds(5))
+                    );
+                }
+
+                #[test]
+                fn test_invalid_time() {
+                    let mut app = mock_app();
+                    let start_time = app.block_info().time.plus_seconds(5);
+                    let token_module_addr = proper_instantiate(
+                        &mut app,
+                        ADMIN.to_string(),
+                        None,
+                        Some(start_time),
+                        None,
+                        Some("some-link".to_string()),
+                    );
+
+                    let genesis_time = app.block_info().time;
+
+                    app.update_block(|block| block.time = block.time.plus_seconds(10));
+
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: None,
+                                start_time: Some(app.block_info().time.plus_seconds(5)),
+                                max_token_limit: None,
+                                ipfs_link: None,
+                            },
+                        },
+                    };
+                    let err = app
+                        .execute_contract(
+                            Addr::unchecked(ADMIN),
+                            token_module_addr.clone(),
+                            &msg,
+                            &[],
+                        )
+                        .unwrap_err();
+                    assert_eq!(
+                        err.source().unwrap().to_string(),
+                        ContractError::AlreadyStarted {}.to_string()
+                    );
+
+                    app.update_block(|block| block.time = block.time.minus_seconds(6));
+
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: None,
+                                start_time: Some(genesis_time.plus_seconds(2)),
+                                max_token_limit: None,
+                                ipfs_link: None,
+                            },
+                        },
+                    };
+                    let err = app
+                        .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                        .unwrap_err();
+                    assert_eq!(
+                        err.source().unwrap().to_string(),
+                        ContractError::InvalidStartTime {}.to_string()
+                    );
+                }
+            }
+
+            mod max_token_limit {
+                use super::*;
+
+                #[test]
+                fn test_happy_path() {
+                    let mut app = mock_app();
+                    let token_module_addr = proper_instantiate(
+                        &mut app,
+                        ADMIN.to_string(),
+                        None,
+                        None,
+                        None,
+                        Some("some-link".to_string()),
+                    );
+
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: None,
+                                start_time: None,
+                                max_token_limit: Some(5),
+                                ipfs_link: None,
+                            },
+                        },
+                    };
+                    let _ = app
+                        .execute_contract(
+                            Addr::unchecked(ADMIN),
+                            token_module_addr.clone(),
+                            &msg,
+                            &[],
+                        )
+                        .unwrap();
+
+                    let msg = Cw721QueryMsg::Extension {
+                        msg: QueryMsg::Config {},
+                    };
+                    let res: ResponseWrapper<TokenConfig> = app
+                        .wrap()
+                        .query_wasm_smart(token_module_addr, &msg)
+                        .unwrap();
+                    assert_eq!(res.data.max_token_limit, Some(5));
+                }
+
+                #[test]
+                fn test_invalid_max_token_limit() {
+                    let mut app = mock_app();
+                    let token_module_addr = proper_instantiate(
+                        &mut app,
+                        ADMIN.to_string(),
+                        None,
+                        None,
+                        None,
+                        Some("some-link".to_string()),
+                    );
+
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: None,
+                                start_time: None,
+                                max_token_limit: Some(0),
+                                ipfs_link: None,
+                            },
+                        },
+                    };
+                    let err = app
+                        .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                        .unwrap_err();
+                    assert_eq!(
+                        err.source().unwrap().to_string(),
+                        ContractError::InvalidMaxTokenLimit {}.to_string()
+                    );
+                }
+            }
+
+            mod ipfs_link {
+                use super::*;
+
+                #[test]
+                fn test_happy_path() {
+                    let mut app = mock_app();
+                    let token_module_addr = proper_instantiate(
+                        &mut app,
+                        ADMIN.to_string(),
+                        None,
+                        None,
+                        None,
+                        Some("some-link".to_string()),
+                    );
+
+                    let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
+                        msg: ExecuteMsg::UpdateCollectionConfig {
+                            collection_config: CollectionConfig {
+                                per_address_limit: None,
+                                start_time: None,
+                                max_token_limit: None,
+                                ipfs_link: Some("other-link".to_string()),
+                            },
+                        },
+                    };
+                    let _ = app
+                        .execute_contract(
+                            Addr::unchecked(ADMIN),
+                            token_module_addr.clone(),
+                            &msg,
+                            &[],
+                        )
+                        .unwrap();
+
+                    let msg = Cw721QueryMsg::Extension {
+                        msg: QueryMsg::Config {},
+                    };
+                    let res: ResponseWrapper<TokenConfig> = app
+                        .wrap()
+                        .query_wasm_smart(token_module_addr, &msg)
+                        .unwrap();
+                    assert_eq!(res.data.ipfs_link, Some("other-link".to_string()));
+                }
             }
 
             #[test]
@@ -779,8 +1054,13 @@ mod actions {
                 );
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdatePerAddressLimit {
-                        per_address_limit: Some(5),
+                    msg: ExecuteMsg::UpdateCollectionConfig {
+                        collection_config: CollectionConfig {
+                            per_address_limit: Some(5),
+                            start_time: None,
+                            max_token_limit: None,
+                            ipfs_link: None,
+                        },
                     },
                 };
                 let err = app
@@ -789,142 +1069,6 @@ mod actions {
                 assert_eq!(
                     err.source().unwrap().to_string(),
                     ContractError::Unauthorized {}.to_string()
-                );
-            }
-
-            #[test]
-            fn test_invalid_per_address_limit() {
-                let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdatePerAddressLimit {
-                        per_address_limit: Some(0),
-                    },
-                };
-                let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::InvalidPerAddressLimit {}.to_string()
-                );
-            }
-        }
-
-        mod update_start_time {
-            use super::*;
-
-            #[test]
-            fn test_happy_path() {
-                let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateStartTime {
-                        start_time: Some(app.block_info().time.plus_seconds(5)),
-                    },
-                };
-                let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-                    .unwrap();
-
-                let msg = Cw721QueryMsg::Extension {
-                    msg: QueryMsg::Config {},
-                };
-                let res: ResponseWrapper<TokenConfig> = app
-                    .wrap()
-                    .query_wasm_smart(token_module_addr, &msg)
-                    .unwrap();
-                assert_eq!(
-                    res.data.start_time,
-                    Some(app.block_info().time.plus_seconds(5))
-                );
-            }
-
-            #[test]
-            fn test_invalid_admin() {
-                let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateStartTime {
-                        start_time: Some(app.block_info().time.plus_seconds(5)),
-                    },
-                };
-                let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::Unauthorized {}.to_string()
-                );
-            }
-
-            #[test]
-            fn test_invalid_time() {
-                let mut app = mock_app();
-                let start_time = app.block_info().time.plus_seconds(5);
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    Some(start_time),
-                    None,
-                    Some("some-link".to_string()),
-                );
-
-                let genesis_time = app.block_info().time;
-
-                app.update_block(|block| block.time = block.time.plus_seconds(10));
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateStartTime {
-                        start_time: Some(app.block_info().time.plus_seconds(5)),
-                    },
-                };
-                let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::AlreadyStarted {}.to_string()
-                );
-
-                app.update_block(|block| block.time = block.time.minus_seconds(6));
-
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::UpdateStartTime {
-                        start_time: Some(genesis_time.plus_seconds(2)),
-                    },
-                };
-                let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
-                    .unwrap_err();
-                assert_eq!(
-                    err.source().unwrap().to_string(),
-                    ContractError::InvalidStartTime {}.to_string()
                 );
             }
         }
