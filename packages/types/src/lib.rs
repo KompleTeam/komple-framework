@@ -1,3 +1,4 @@
+pub mod events;
 pub mod execute;
 pub mod fee;
 pub mod hub;
