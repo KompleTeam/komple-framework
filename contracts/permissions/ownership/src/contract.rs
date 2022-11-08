@@ -1,8 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Attribute, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult,
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
 use komple_types::module::Modules;
@@ -79,10 +78,9 @@ pub fn execute_check(
 
     let msgs: Vec<OwnershipMsg> = from_binary(&data)?;
 
-    let mut event_attributes: Vec<Attribute> = vec![];
     let mut collection_map: HashMap<u32, Addr> = HashMap::new();
 
-    for (index, ownership_msg) in msgs.iter().enumerate() {
+    for ownership_msg in msgs.iter() {
         let collection_addr = match collection_map.contains_key(&ownership_msg.collection_id) {
             true => collection_map
                 .get(&ownership_msg.collection_id)
@@ -108,28 +106,10 @@ pub fn execute_check(
         if owner != ownership_msg.address {
             return Err(ContractError::InvalidOwnership {});
         }
-
-        event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index),
-            value: format!("collection_id/{}", ownership_msg.collection_id),
-        });
-        event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index),
-            value: format!("token_id/{}", ownership_msg.token_id),
-        });
-        event_attributes.push(Attribute {
-            key: format!("check_msg/{}", index),
-            value: format!("address/{}", ownership_msg.address),
-        });
     }
 
-    Ok(
-        ResponseHelper::new_permission("ownership", "check").add_event(
-            EventHelper::new("ownership_permission_check")
-                .add_attributes(event_attributes)
-                .get(),
-        ),
-    )
+    Ok(ResponseHelper::new_permission("ownership", "check")
+        .add_event(EventHelper::new("ownership_permission_check").get()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

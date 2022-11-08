@@ -1,9 +1,7 @@
 use cosmwasm_std::Attribute;
 
 /// Event attributes for the merge module.
-pub enum MergeEventAttributes {
-    BurnIds,
-}
+pub struct MergeEventAttributes;
 impl MergeEventAttributes {
     pub fn new_burn_id_attribute(collection_id: u32, token_id: u32) -> Attribute {
         let value = format!("{}:{}", collection_id, token_id);
@@ -12,10 +10,7 @@ impl MergeEventAttributes {
 }
 
 /// Event attributes for the metadata module.
-pub enum MetadataEventAttributes {
-    MetaInfo,
-    Attributes,
-}
+pub struct MetadataEventAttributes;
 impl MetadataEventAttributes {
     pub fn new_meta_info_value(field: &str, value: &Option<String>) -> String {
         format!("{}:{}", field, value.as_ref().unwrap_or(&String::from("")))
