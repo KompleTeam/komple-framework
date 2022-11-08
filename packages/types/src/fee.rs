@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Decimal, Uint128};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 
 /// The different types of fees.
 ///
@@ -94,9 +94,11 @@ pub struct FixedPayment {
 pub struct FundInfo {
     pub is_native: bool,
     pub denom: String,
-    pub cw20_address: Option<String>,
+    pub cw20_address: Option<Addr>,
 }
 
 pub const FIXED_FEES_NAMESPACE: &str = "fixed_fees";
 
 pub const PERCENTAGE_FEES_NAMESPACE: &str = "percentage_fees";
+
+pub const FUND_INFO_NAMESPACE: &str = "fund_info";

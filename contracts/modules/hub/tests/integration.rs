@@ -9,7 +9,9 @@ use komple_hub_module::{
     state::HubInfo,
     ContractError,
 };
-use komple_marketplace_module::msg::InstantiateMsg as MarketplaceModuleInstantiateMsg;
+use komple_marketplace_module::msg::{
+    InstantiateMsg as MarketplaceModuleInstantiateMsg, MarketplaceFundInfo,
+};
 use komple_marketplace_module::{
     msg::ExecuteMsg as MarketplaceModuleExecuteMsg, ContractError as MarketplaceModuleContractError,
 };
@@ -322,7 +324,11 @@ mod actions {
 
             let register_msg = Some(
                 to_binary(&MarketplaceModuleInstantiateMsg {
-                    native_denom: NATIVE_DENOM.to_string(),
+                    fund_info: MarketplaceFundInfo {
+                        is_native: true,
+                        denom: NATIVE_DENOM.to_string(),
+                        cw20_address: None,
+                    },
                 })
                 .unwrap(),
             );
@@ -548,7 +554,11 @@ mod actions {
 
             let register_msg = Some(
                 to_binary(&MarketplaceModuleInstantiateMsg {
-                    native_denom: NATIVE_DENOM.to_string(),
+                    fund_info: MarketplaceFundInfo {
+                        is_native: true,
+                        denom: NATIVE_DENOM.to_string(),
+                        cw20_address: None,
+                    },
                 })
                 .unwrap(),
             );

@@ -6,7 +6,14 @@ use komple_types::{execute::SharedExecuteMsg, marketplace::Listing, query::Respo
 /// Message to be sent along the ```RegisterMsg``` for instantiation.
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub native_denom: String,
+    pub fund_info: MarketplaceFundInfo,
+}
+
+#[cw_serde]
+pub struct MarketplaceFundInfo {
+    pub is_native: bool,
+    pub denom: String,
+    pub cw20_address: Option<String>,
 }
 
 #[cw_serde]

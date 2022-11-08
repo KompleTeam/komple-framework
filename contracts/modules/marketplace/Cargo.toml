@@ -52,6 +52,7 @@ komple-utils = { path = "../../../packages/utils" }
 komple-token-module = { path = "../token", features = ["library"] }
 komple-fee-module = { path = "../fee", features = ["library"] }
 cw721-base = { version = "0.15.0", features = ["library"] }
+cw20 = "0.16.0"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"

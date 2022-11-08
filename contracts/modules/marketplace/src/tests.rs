@@ -1,5 +1,5 @@
 use crate::{
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo, QueryMsg},
     ContractError,
 };
 use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
@@ -42,7 +42,11 @@ fn proper_instantiate(app: &mut App) -> Addr {
         admin: ADMIN.to_string(),
         data: Some(
             to_binary(&InstantiateMsg {
-                native_denom: NATIVE_DENOM.to_string(),
+                fund_info: MarketplaceFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                },
             })
             .unwrap(),
         ),
@@ -70,7 +74,11 @@ mod instantiate {
             admin: ADMIN.to_string(),
             data: Some(
                 to_binary(&InstantiateMsg {
-                    native_denom: NATIVE_DENOM.to_string(),
+                    fund_info: MarketplaceFundInfo {
+                        is_native: true,
+                        denom: NATIVE_DENOM.to_string(),
+                        cw20_address: None,
+                    },
                 })
                 .unwrap(),
             ),

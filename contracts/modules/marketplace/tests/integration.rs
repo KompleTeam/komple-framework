@@ -8,7 +8,7 @@ use komple_hub_module::{
     },
     state::HubInfo,
 };
-use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg};
+use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo};
 use komple_marketplace_module::ContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::{msg::ExecuteMsg as MintExecuteMsg, state::CollectionInfo};
@@ -259,7 +259,11 @@ fn setup_modules(app: &mut App, hub_addr: Addr) -> (Addr, Addr) {
         .unwrap();
     let instantiate_msg = Some(
         to_binary(&InstantiateMsg {
-            native_denom: NATIVE_DENOM.to_string(),
+            fund_info: MarketplaceFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
         })
         .unwrap(),
     );
@@ -409,7 +413,11 @@ mod initialization {
 
         let instantiate_msg = Some(
             to_binary(&InstantiateMsg {
-                native_denom: NATIVE_DENOM.to_string(),
+                fund_info: MarketplaceFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                },
             })
             .unwrap(),
         );
@@ -450,7 +458,11 @@ mod initialization {
 
         let instantiate_msg = Some(
             to_binary(&InstantiateMsg {
-                native_denom: NATIVE_DENOM.to_string(),
+                fund_info: MarketplaceFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                },
             })
             .unwrap(),
         );
@@ -480,7 +492,11 @@ mod initialization {
             admin: ADMIN.to_string(),
             data: Some(
                 to_binary(&InstantiateMsg {
-                    native_denom: NATIVE_DENOM.to_string(),
+                    fund_info: MarketplaceFundInfo {
+                        is_native: true,
+                        denom: NATIVE_DENOM.to_string(),
+                        cw20_address: None,
+                    },
                 })
                 .unwrap(),
             ),
