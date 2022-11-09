@@ -11,6 +11,7 @@ use komple_token_module::{
 };
 use komple_types::shared::RegisterMsg;
 use komple_types::{metadata::Metadata as MetadataType, mint::Collections, query::ResponseWrapper};
+use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
@@ -107,7 +108,6 @@ fn setup_collection(
         description: "Test Description".to_string(),
         image: "ipfs://xyz".to_string(),
         external_link: None,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
@@ -264,8 +264,6 @@ mod actions {
         use super::*;
 
         mod creation {
-            use komple_utils::funds::FundsError;
-
             use super::*;
 
             #[test]
@@ -281,7 +279,6 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -377,7 +374,6 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -432,7 +428,6 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),

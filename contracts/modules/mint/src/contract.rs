@@ -302,7 +302,16 @@ pub fn execute_create_collection(
                         .as_ref()
                         .unwrap_or(&String::from("")),
                 )
-                .add_attribute("native_denom", collection_info.native_denom)
+                .add_attribute("is_native", fund_info.is_native.to_string())
+                .add_attribute("denom", fund_info.denom.to_string())
+                .check_add_attribute(
+                    &fund_info.cw20_address,
+                    "cw20_address",
+                    fund_info
+                        .cw20_address
+                        .as_ref()
+                        .unwrap_or(&Addr::unchecked("")),
+                )
                 .check_add_attribute(
                     &collection_config.start_time,
                     "start_time",
@@ -430,8 +439,8 @@ fn execute_mint(
         Err(_) => None,
     };
 
-    // Get collection info
-    let collection_info = COLLECTION_INFO.load(deps.storage, collection_id)?;
+    // Get collection fund info
+    let collection_fund_info = COLLECTION_FUND_INFO.load(deps.storage, collection_id)?;
 
     // Get sub modules from collection
     let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
@@ -480,7 +489,7 @@ fn execute_mint(
                             to_address: config.admin.to_string(),
                             amount: coins(
                                 whitelist_price.u128(),
-                                collection_info.native_denom.to_string(),
+                                collection_fund_info.denom.to_string(),
                             ),
                         };
                         msgs.push(msg.into());
@@ -509,7 +518,7 @@ fn execute_mint(
                     to_address: config.admin.to_string(),
                     amount: coins(
                         fixed_fee_response.value.u128(),
-                        collection_info.native_denom.to_string(),
+                        collection_fund_info.denom.to_string(),
                     ),
                 };
                 msgs.push(msg.into());
@@ -522,7 +531,7 @@ fn execute_mint(
         check_single_coin(
             &info,
             Coin {
-                denom: collection_info.native_denom,
+                denom: collection_fund_info.denom,
                 amount: total_price,
             },
         )?;

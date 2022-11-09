@@ -307,7 +307,6 @@ pub fn create_collection(
         description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
