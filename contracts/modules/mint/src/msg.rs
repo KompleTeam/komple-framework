@@ -1,6 +1,7 @@
 use crate::state::{CollectionInfo, Config};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
+use cw20::Cw20ReceiveMsg;
 use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
@@ -33,11 +34,16 @@ pub enum ExecuteMsg {
     ///
     /// Update the configuration for public collection creation.
     /// If set to true, users can create collections.
-    UpdatePublicCollectionCreation { public_collection_creation: bool },
+    UpdatePublicCollectionCreation {
+        public_collection_creation: bool,
+    },
     /// Admin message.
     ///
     /// Update the configuration for collection mint lock.
-    UpdateCollectionMintLock { collection_id: u32, lock: bool },
+    UpdateCollectionMintLock {
+        collection_id: u32,
+        lock: bool,
+    },
     /// Public message.
     ///
     /// Mint a new token on a collection.
@@ -64,7 +70,9 @@ pub enum ExecuteMsg {
     /// Admin message.
     ///
     /// Update the operators of this contract.
-    UpdateOperators { addrs: Vec<String> },
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
     /// Admin message.
     ///
     /// Update the linked collections of a collection.
@@ -87,7 +95,10 @@ pub enum ExecuteMsg {
     /// Admin message.
     ///
     /// Update addresses that can create collections.
-    UpdateCreators { addrs: Vec<String> },
+    UpdateCreators {
+        addrs: Vec<String>,
+    },
+    Receive(Cw20ReceiveMsg),
 }
 
 impl From<ExecuteMsg> for SharedExecuteMsg {
@@ -97,6 +108,14 @@ impl From<ExecuteMsg> for SharedExecuteMsg {
             _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
         }
     }
+}
+
+#[cw_serde]
+pub enum ReceiveMsg {
+    Mint {
+        collection_id: u32,
+        metadata_id: Option<u32>,
+    },
 }
 
 #[cw_serde]

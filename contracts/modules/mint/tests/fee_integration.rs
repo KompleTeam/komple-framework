@@ -1,4 +1,7 @@
 use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
+use cw20::Cw20Coin;
+use cw20::{BalanceResponse, Cw20ExecuteMsg, Cw20QueryMsg};
+use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::msg::ExecuteMsg as FeeExecuteMsg;
@@ -24,6 +27,7 @@ pub const USER: &str = "juno..user";
 pub const USER2: &str = "juno..user2";
 pub const ADMIN: &str = "juno..admin";
 pub const NATIVE_DENOM: &str = "native_denom";
+pub const CW20_DENOM: &str = "cwdenom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -78,6 +82,15 @@ pub fn whitelist_module() -> Box<dyn Contract<Empty>> {
         komple_whitelist_module::contract::execute,
         komple_whitelist_module::contract::instantiate,
         komple_whitelist_module::contract::query,
+    );
+    Box::new(contract)
+}
+
+pub fn cw20_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        cw20_base::contract::execute,
+        cw20_base::contract::instantiate,
+        cw20_base::contract::query,
     );
     Box::new(contract)
 }
@@ -240,207 +253,450 @@ pub fn create_whitelist(app: &mut App, collection_addr: &Addr) {
         .unwrap();
 }
 
+fn setup_cw20_token(app: &mut App) -> Addr {
+    let code_id = app.store_code(cw20_contract());
+    let msg = Cw20InstantiateMsg {
+        name: "Test token".to_string(),
+        symbol: CW20_DENOM.to_string(),
+        decimals: 6,
+        initial_balances: vec![Cw20Coin {
+            address: USER.to_string(),
+            amount: Uint128::new(1000),
+        }],
+        mint: None,
+        marketing: None,
+    };
+    app.instantiate_contract(code_id, Addr::unchecked(ADMIN), &msg, &[], "test", None)
+        .unwrap()
+}
+
 mod execute {
     use super::*;
 
     mod mint {
         use super::*;
 
-        #[test]
-        fn test_standard_price() {
-            let mut app = mock_app();
-            let hub_addr = setup_hub_module(&mut app);
+        mod native_token {
+            use super::*;
 
-            // Register Mint Module
-            let mint_code_id = app.store_code(mint_module());
-            register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
-            let mint_module_addr = StorageHelper::query_module_address(
-                &app.wrap(),
-                &hub_addr,
-                Modules::Mint.to_string(),
-            )
-            .unwrap();
+            #[test]
+            fn test_standard_price() {
+                let mut app = mock_app();
+                let hub_addr = setup_hub_module(&mut app);
 
-            // Register fee module
-            let fee_code_id = app.store_code(fee_module());
-            register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
-            let fee_module_addr = StorageHelper::query_module_address(
-                &app.wrap(),
-                &hub_addr,
-                Modules::Fee.to_string(),
-            )
-            .unwrap();
+                // Register Mint Module
+                let mint_code_id = app.store_code(mint_module());
+                register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
+                let mint_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Mint.to_string(),
+                )
+                .unwrap();
 
-            // Create collection
-            create_collection(
-                &mut app,
-                &mint_module_addr,
-                CollectionFundInfo {
-                    is_native: true,
-                    denom: NATIVE_DENOM.to_string(),
-                    cw20_address: None,
-                },
-            );
+                // Register fee module
+                let fee_code_id = app.store_code(fee_module());
+                register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
+                let fee_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Fee.to_string(),
+                )
+                .unwrap();
 
-            // Set normal price
-            set_minting_price(&mut app, &fee_module_addr, MintFees::Price.as_str(), 1, 10);
+                // Create collection
+                create_collection(
+                    &mut app,
+                    &mint_module_addr,
+                    CollectionFundInfo {
+                        is_native: true,
+                        denom: NATIVE_DENOM.to_string(),
+                        cw20_address: None,
+                    },
+                );
 
-            // Throw error if invalid fund
-            app.execute_contract(
-                Addr::unchecked(USER),
-                mint_module_addr.clone(),
-                &ExecuteMsg::Mint {
-                    collection_id: 1,
-                    metadata_id: None,
-                },
-                &[Coin {
-                    amount: Uint128::new(5),
-                    denom: NATIVE_DENOM.to_string(),
-                }],
-            )
-            .unwrap_err();
+                // Set normal price
+                set_minting_price(&mut app, &fee_module_addr, MintFees::Price.as_str(), 1, 10);
 
-            app.execute_contract(
-                Addr::unchecked(USER),
-                mint_module_addr.clone(),
-                &ExecuteMsg::Mint {
-                    collection_id: 1,
-                    metadata_id: None,
-                },
-                &[Coin {
-                    amount: Uint128::new(10),
-                    denom: NATIVE_DENOM.to_string(),
-                }],
-            )
-            .unwrap();
-
-            let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-            assert_eq!(res.amount, Uint128::new(10));
-        }
-
-        #[test]
-        fn test_whitelist_price() {
-            let mut app = mock_app();
-            let hub_addr = setup_hub_module(&mut app);
-
-            // Register Mint Module
-            let mint_code_id = app.store_code(mint_module());
-            register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
-            let mint_module_addr = StorageHelper::query_module_address(
-                &app.wrap(),
-                &hub_addr,
-                Modules::Mint.to_string(),
-            )
-            .unwrap();
-
-            // Register fee module
-            let fee_code_id = app.store_code(fee_module());
-            register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
-            let fee_module_addr = StorageHelper::query_module_address(
-                &app.wrap(),
-                &hub_addr,
-                Modules::Fee.to_string(),
-            )
-            .unwrap();
-
-            // Create collection
-            create_collection(
-                &mut app,
-                &mint_module_addr,
-                CollectionFundInfo {
-                    is_native: true,
-                    denom: NATIVE_DENOM.to_string(),
-                    cw20_address: None,
-                },
-            );
-            let collection_addr =
-                StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
-                    .unwrap();
-
-            // Create whitelist
-            create_whitelist(&mut app, &collection_addr);
-
-            // Set whitelist price
-            set_minting_price(
-                &mut app,
-                &fee_module_addr,
-                MintFees::Whitelist.as_str(),
-                1,
-                10,
-            );
-
-            app.update_block(|block| {
-                block.time = block.time.plus_seconds(2);
-            });
-
-            // Throw error if invalid fund
-            let err = app
-                .execute_contract(
-                    Addr::unchecked(USER2),
+                // Throw error if invalid fund
+                app.execute_contract(
+                    Addr::unchecked(USER),
                     mint_module_addr.clone(),
                     &ExecuteMsg::Mint {
                         collection_id: 1,
                         metadata_id: None,
                     },
+                    &[Coin {
+                        amount: Uint128::new(5),
+                        denom: NATIVE_DENOM.to_string(),
+                    }],
+                )
+                .unwrap_err();
+
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    mint_module_addr.clone(),
+                    &ExecuteMsg::Mint {
+                        collection_id: 1,
+                        metadata_id: None,
+                    },
+                    &[Coin {
+                        amount: Uint128::new(10),
+                        denom: NATIVE_DENOM.to_string(),
+                    }],
+                )
+                .unwrap();
+
+                let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+                assert_eq!(res.amount, Uint128::new(10));
+            }
+
+            #[test]
+            fn test_whitelist_price() {
+                let mut app = mock_app();
+                let hub_addr = setup_hub_module(&mut app);
+
+                // Register Mint Module
+                let mint_code_id = app.store_code(mint_module());
+                register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
+                let mint_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Mint.to_string(),
+                )
+                .unwrap();
+
+                // Register fee module
+                let fee_code_id = app.store_code(fee_module());
+                register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
+                let fee_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Fee.to_string(),
+                )
+                .unwrap();
+
+                // Create collection
+                create_collection(
+                    &mut app,
+                    &mint_module_addr,
+                    CollectionFundInfo {
+                        is_native: true,
+                        denom: NATIVE_DENOM.to_string(),
+                        cw20_address: None,
+                    },
+                );
+                let collection_addr =
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
+
+                // Create whitelist
+                create_whitelist(&mut app, &collection_addr);
+
+                // Set whitelist price
+                set_minting_price(
+                    &mut app,
+                    &fee_module_addr,
+                    MintFees::Whitelist.as_str(),
+                    1,
+                    10,
+                );
+
+                app.update_block(|block| {
+                    block.time = block.time.plus_seconds(2);
+                });
+
+                // Throw error if invalid fund
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(USER2),
+                        mint_module_addr.clone(),
+                        &ExecuteMsg::Mint {
+                            collection_id: 1,
+                            metadata_id: None,
+                        },
+                        &[],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    ContractError::AddressNotWhitelisted {}.to_string()
+                );
+
+                // Throw error if invalid fund
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    mint_module_addr.clone(),
+                    &ExecuteMsg::Mint {
+                        collection_id: 1,
+                        metadata_id: None,
+                    },
+                    &[Coin {
+                        amount: Uint128::new(5),
+                        denom: NATIVE_DENOM.to_string(),
+                    }],
+                )
+                .unwrap_err();
+
+                // Success
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    mint_module_addr.clone(),
+                    &ExecuteMsg::Mint {
+                        collection_id: 1,
+                        metadata_id: None,
+                    },
+                    &[Coin {
+                        amount: Uint128::new(10),
+                        denom: NATIVE_DENOM.to_string(),
+                    }],
+                )
+                .unwrap();
+
+                let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+                assert_eq!(res.amount, Uint128::new(10));
+
+                app.update_block(|block| block.time = block.time.plus_seconds(100));
+
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    mint_module_addr.clone(),
+                    &ExecuteMsg::Mint {
+                        collection_id: 1,
+                        metadata_id: None,
+                    },
+                    &[Coin {
+                        amount: Uint128::new(10),
+                        denom: NATIVE_DENOM.to_string(),
+                    }],
+                )
+                .unwrap();
+
+                let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
+                assert_eq!(res.amount, Uint128::new(10));
+            }
+        }
+
+        mod cw20_token {
+            use super::*;
+
+            #[test]
+            fn test_standard_price() {
+                let mut app = mock_app();
+                let hub_addr = setup_hub_module(&mut app);
+
+                // Register Mint Module
+                let mint_code_id = app.store_code(mint_module());
+                register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
+                let mint_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Mint.to_string(),
+                )
+                .unwrap();
+
+                // Register fee module
+                let fee_code_id = app.store_code(fee_module());
+                register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
+                let fee_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Fee.to_string(),
+                )
+                .unwrap();
+
+                let cw20_addr = setup_cw20_token(&mut app);
+
+                // Create collection
+                create_collection(
+                    &mut app,
+                    &mint_module_addr,
+                    CollectionFundInfo {
+                        is_native: false,
+                        denom: CW20_DENOM.to_string(),
+                        cw20_address: Some(cw20_addr.to_string()),
+                    },
+                );
+
+                // Set normal price
+                set_minting_price(&mut app, &fee_module_addr, MintFees::Price.as_str(), 1, 10);
+
+                // Throw error if invalid fund
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    cw20_addr.clone(),
+                    &Cw20ExecuteMsg::Send {
+                        contract: mint_module_addr.to_string(),
+                        amount: Uint128::new(5),
+                        msg: to_binary(&ExecuteMsg::Mint {
+                            collection_id: 1,
+                            metadata_id: None,
+                        })
+                        .unwrap(),
+                    },
                     &[],
                 )
                 .unwrap_err();
-            assert_eq!(
-                err.source().unwrap().to_string(),
-                ContractError::AddressNotWhitelisted {}.to_string()
-            );
 
-            // Throw error if invalid fund
-            app.execute_contract(
-                Addr::unchecked(USER),
-                mint_module_addr.clone(),
-                &ExecuteMsg::Mint {
-                    collection_id: 1,
-                    metadata_id: None,
-                },
-                &[Coin {
-                    amount: Uint128::new(5),
-                    denom: NATIVE_DENOM.to_string(),
-                }],
-            )
-            .unwrap_err();
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    cw20_addr.clone(),
+                    &Cw20ExecuteMsg::Send {
+                        contract: mint_module_addr.to_string(),
+                        amount: Uint128::new(10),
+                        msg: to_binary(&ExecuteMsg::Mint {
+                            collection_id: 1,
+                            metadata_id: None,
+                        })
+                        .unwrap(),
+                    },
+                    &[],
+                )
+                .unwrap();
 
-            // Success
-            app.execute_contract(
-                Addr::unchecked(USER),
-                mint_module_addr.clone(),
-                &ExecuteMsg::Mint {
-                    collection_id: 1,
-                    metadata_id: None,
-                },
-                &[Coin {
-                    amount: Uint128::new(10),
-                    denom: NATIVE_DENOM.to_string(),
-                }],
-            )
-            .unwrap();
+                let res: BalanceResponse = app
+                    .wrap()
+                    .query_wasm_smart(
+                        cw20_addr,
+                        &Cw20QueryMsg::Balance {
+                            address: ADMIN.to_string(),
+                        },
+                    )
+                    .unwrap();
+                assert_eq!(res.balance, Uint128::new(10));
+            }
 
-            let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-            assert_eq!(res.amount, Uint128::new(10));
+            #[test]
+            fn test_whitelist_price() {
+                let mut app = mock_app();
+                let hub_addr = setup_hub_module(&mut app);
 
-            app.update_block(|block| block.time = block.time.plus_seconds(100));
+                // Register Mint Module
+                let mint_code_id = app.store_code(mint_module());
+                register_module(&mut app, &hub_addr, Modules::Mint.to_string(), mint_code_id);
+                let mint_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Mint.to_string(),
+                )
+                .unwrap();
 
-            app.execute_contract(
-                Addr::unchecked(USER),
-                mint_module_addr.clone(),
-                &ExecuteMsg::Mint {
-                    collection_id: 1,
-                    metadata_id: None,
-                },
-                &[Coin {
-                    amount: Uint128::new(10),
-                    denom: NATIVE_DENOM.to_string(),
-                }],
-            )
-            .unwrap();
+                // Register fee module
+                let fee_code_id = app.store_code(fee_module());
+                register_module(&mut app, &hub_addr, Modules::Fee.to_string(), fee_code_id);
+                let fee_module_addr = StorageHelper::query_module_address(
+                    &app.wrap(),
+                    &hub_addr,
+                    Modules::Fee.to_string(),
+                )
+                .unwrap();
 
-            let res = app.wrap().query_balance(ADMIN, NATIVE_DENOM).unwrap();
-            assert_eq!(res.amount, Uint128::new(10));
+                let cw20_addr = setup_cw20_token(&mut app);
+
+                // Create collection
+                create_collection(
+                    &mut app,
+                    &mint_module_addr,
+                    CollectionFundInfo {
+                        is_native: false,
+                        denom: CW20_DENOM.to_string(),
+                        cw20_address: Some(cw20_addr.to_string()),
+                    },
+                );
+                let collection_addr =
+                    StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
+                        .unwrap();
+
+                // Create whitelist
+                create_whitelist(&mut app, &collection_addr);
+
+                // Set whitelist price
+                set_minting_price(
+                    &mut app,
+                    &fee_module_addr,
+                    MintFees::Whitelist.as_str(),
+                    1,
+                    10,
+                );
+
+                app.update_block(|block| {
+                    block.time = block.time.plus_seconds(2);
+                });
+
+                // Throw error if invalid fund
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    cw20_addr.clone(),
+                    &Cw20ExecuteMsg::Send {
+                        contract: mint_module_addr.to_string(),
+                        amount: Uint128::new(5),
+                        msg: to_binary(&ExecuteMsg::Mint {
+                            collection_id: 1,
+                            metadata_id: None,
+                        })
+                        .unwrap(),
+                    },
+                    &[],
+                )
+                .unwrap_err();
+
+                // Success
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    cw20_addr.clone(),
+                    &Cw20ExecuteMsg::Send {
+                        contract: mint_module_addr.to_string(),
+                        amount: Uint128::new(10),
+                        msg: to_binary(&ExecuteMsg::Mint {
+                            collection_id: 1,
+                            metadata_id: None,
+                        })
+                        .unwrap(),
+                    },
+                    &[],
+                )
+                .unwrap();
+
+                let res: BalanceResponse = app
+                    .wrap()
+                    .query_wasm_smart(
+                        cw20_addr.clone(),
+                        &Cw20QueryMsg::Balance {
+                            address: ADMIN.to_string(),
+                        },
+                    )
+                    .unwrap();
+                assert_eq!(res.balance, Uint128::new(10));
+
+                app.update_block(|block| block.time = block.time.plus_seconds(100));
+
+                app.execute_contract(
+                    Addr::unchecked(USER),
+                    cw20_addr.clone(),
+                    &Cw20ExecuteMsg::Send {
+                        contract: mint_module_addr.to_string(),
+                        amount: Uint128::new(10),
+                        msg: to_binary(&ExecuteMsg::Mint {
+                            collection_id: 1,
+                            metadata_id: None,
+                        })
+                        .unwrap(),
+                    },
+                    &[],
+                )
+                .unwrap();
+
+                let res: BalanceResponse = app
+                    .wrap()
+                    .query_wasm_smart(
+                        cw20_addr,
+                        &Cw20QueryMsg::Balance {
+                            address: ADMIN.to_string(),
+                        },
+                    )
+                    .unwrap();
+                assert_eq!(res.balance, Uint128::new(10));
+            }
         }
     }
 }
