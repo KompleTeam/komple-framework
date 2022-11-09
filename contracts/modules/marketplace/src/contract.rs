@@ -1,10 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, from_binary, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo,
-    Order, Response, StdError, StdResult, SubMsg, Uint128,
+    coin, from_binary, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
+    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw20::Cw20ExecuteMsg;
 use cw_storage_plus::Bound;
 use komple_fee_module::{
     helper::KompleFeeModule, msg::CustomPaymentAddress as FeeModuleCustomPaymentAddress,
@@ -498,12 +499,22 @@ fn _execute_buy_fixed_listing(
                 CONFIG_NAMESPACE,
             )?;
             if let Some(token_config) = res {
-                let royalty_payout = BankMsg::Send {
-                    to_address: token_config.creator.to_string(),
-                    amount: vec![Coin {
-                        denom: fund_info.denom.to_string(),
-                        amount: royalty_fee,
-                    }],
+                let royalty_payout = match fund_info.is_native {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: token_config.creator.to_string(),
+                        amount: vec![Coin {
+                            denom: fund_info.denom.to_string(),
+                            amount: royalty_fee,
+                        }],
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: fund_info.cw20_address.as_ref().unwrap().to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: token_config.creator.to_string(),
+                            amount: royalty_fee,
+                        })?,
+                        funds: vec![],
+                    }),
                 };
                 sub_msgs.push(SubMsg::new(royalty_payout))
             };
@@ -516,12 +527,22 @@ fn _execute_buy_fixed_listing(
         .checked_sub(marketplace_fee + royalty_fee)?;
 
     // Owner payout message
-    let owner_payout = BankMsg::Send {
-        to_address: fixed_listing.owner.to_string(),
-        amount: vec![Coin {
-            denom: fund_info.denom.to_string(),
-            amount: payout,
-        }],
+    let owner_payout = match fund_info.is_native {
+        true => CosmosMsg::Bank(BankMsg::Send {
+            to_address: fixed_listing.owner.to_string(),
+            amount: vec![Coin {
+                denom: fund_info.denom.to_string(),
+                amount: payout,
+            }],
+        }),
+        false => CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: fund_info.cw20_address.unwrap().to_string(),
+            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                recipient: fixed_listing.owner.to_string(),
+                amount: payout,
+            })?,
+            funds: vec![],
+        }),
     };
     sub_msgs.push(SubMsg::new(owner_payout));
 
