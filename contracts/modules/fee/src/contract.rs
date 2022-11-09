@@ -4,9 +4,10 @@ use std::ops::Mul;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     coin, from_binary, to_binary, Attribute, BankMsg, Binary, CosmosMsg, Decimal, Deps, DepsMut,
-    Env, MessageInfo, Order, Response, StdResult, Uint128,
+    Env, MessageInfo, Order, Response, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
 use komple_types::fee::{Fees, FixedPayment, PercentagePayment};
 use komple_types::query::ResponseWrapper;
@@ -18,7 +19,7 @@ use komple_utils::shared::execute_lock_execute;
 
 use crate::error::ContractError;
 use crate::msg::{
-    CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, PercentageFeeResponse, QueryMsg,
+    CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, PercentageFeeResponse, QueryMsg, ReceiveMsg,
 };
 use crate::state::{Config, CONFIG, EXECUTE_LOCK, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
 
@@ -87,6 +88,7 @@ pub fn execute(
             fee_type,
             module_name,
             custom_payment_addresses,
+            None,
         ),
         ExecuteMsg::LockExecute {} => {
             let res = execute_lock_execute(deps, info, "fee", &env.contract.address, EXECUTE_LOCK);
@@ -95,6 +97,7 @@ pub fn execute(
                 Err(e) => Err(e.into()),
             }
         }
+        ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
 
@@ -236,133 +239,24 @@ fn execute_distribute(
     fee_type: Fees,
     module_name: String,
     custom_payment_addresses: Option<Vec<CustomPaymentAddress>>,
+    cw20_token_amount: Option<Uint128>,
 ) -> Result<Response, ContractError> {
-    let mut msgs: Vec<CosmosMsg> = vec![];
-
-    if info.funds.len() != 1 {
-        return Err(FundsError::MissingFunds {}.into());
+    let msgs = match fee_type {
+        Fees::Fixed => _distribute_fixed_fee(
+            deps,
+            info,
+            &module_name,
+            custom_payment_addresses,
+            cw20_token_amount,
+        )?,
+        Fees::Percentage => _distribute_percentage_fee(
+            deps,
+            info,
+            &module_name,
+            custom_payment_addresses,
+            cw20_token_amount,
+        )?,
     };
-    let fund = &info.funds[0];
-
-    match fee_type {
-        Fees::Fixed => {
-            // All of the available amounts to distribute fee
-            let amounts = FIXED_FEES
-                .prefix(&module_name)
-                .range(deps.storage, None, None, Order::Ascending)
-                .map(|item| {
-                    let (fee_name, fixed_payment) = item.unwrap();
-                    FixedFeeResponse {
-                        module_name: module_name.clone(),
-                        fee_name,
-                        address: fixed_payment.address,
-                        value: fixed_payment.value,
-                    }
-                })
-                .collect::<Vec<FixedFeeResponse>>();
-
-            if amounts.is_empty() {
-                return Err(ContractError::NoPaymentsFound {});
-            }
-
-            // Total amount
-            let total_amount = amounts.iter().map(|item| item.value).sum::<Uint128>();
-            check_single_amount(&info, total_amount)?;
-
-            // Make bank send messages based on fee percentage
-            for amount in amounts {
-                let mut is_custom_address = false;
-
-                // If we have some custom addresses find and replace the address
-                if let Some(custom_payment_addresses) = custom_payment_addresses.clone() {
-                    // Find the correct custom address based on share name
-                    let custom_payment_address = custom_payment_addresses
-                        .iter()
-                        .find(|item| amount.fee_name == item.fee_name);
-                    if let Some(custom_payment_address) = custom_payment_address {
-                        is_custom_address = true;
-                        msgs.push(CosmosMsg::Bank(BankMsg::Send {
-                            to_address: custom_payment_address.address.to_string(),
-                            amount: vec![coin(amount.value.u128(), fund.denom.clone())],
-                        }))
-                    }
-                }
-
-                // Carry on without replacing the addresses
-                if !is_custom_address {
-                    if let Some(payment_address) = amount.address {
-                        msgs.push(CosmosMsg::Bank(BankMsg::Send {
-                            to_address: payment_address.to_string(),
-                            amount: vec![coin(amount.value.u128(), fund.denom.clone())],
-                        }))
-                    };
-                }
-            }
-        }
-        Fees::Percentage => {
-            // All of the available percentages to distribute fee
-            let percentages = PERCENTAGE_FEES
-                .prefix(&module_name)
-                .range(deps.storage, None, None, Order::Ascending)
-                .map(|item| {
-                    let (fee_name, percentage_payment) = item.unwrap();
-                    PercentageFeeResponse {
-                        module_name: module_name.clone(),
-                        fee_name,
-                        address: percentage_payment.address,
-                        value: percentage_payment.value,
-                    }
-                })
-                .collect::<Vec<PercentageFeeResponse>>();
-
-            if percentages.is_empty() {
-                return Err(ContractError::NoPaymentsFound {});
-            }
-
-            // Total amount of fee percentage
-            let total_fee = percentages
-                .iter()
-                .map(|item| item.value)
-                .sum::<Decimal>()
-                .mul(Uint128::new(100));
-
-            // Make bank send messages based on fee percentage
-            for percentage in percentages {
-                let mut is_custom_address = false;
-
-                // Payment amount is total_funds * percentage / total_fee
-                let payment_amount = fund
-                    .amount
-                    .mul(percentage.value.mul(Uint128::new(100)))
-                    .checked_div(total_fee)?;
-
-                // If we have some custom addresses find and replace the address
-                if let Some(custom_payment_addresses) = custom_payment_addresses.clone() {
-                    // Find the correct custom address based on share name
-                    let custom_payment_address = custom_payment_addresses
-                        .iter()
-                        .find(|item| percentage.fee_name == item.fee_name);
-                    if let Some(custom_payment_address) = custom_payment_address {
-                        is_custom_address = true;
-                        msgs.push(CosmosMsg::Bank(BankMsg::Send {
-                            to_address: custom_payment_address.address.to_string(),
-                            amount: vec![coin(payment_amount.u128(), fund.denom.clone())],
-                        }))
-                    }
-                }
-
-                // Carry on without replacing the addresses
-                if !is_custom_address {
-                    if let Some(payment_address) = percentage.address {
-                        msgs.push(CosmosMsg::Bank(BankMsg::Send {
-                            to_address: payment_address.to_string(),
-                            amount: vec![coin(payment_amount.u128(), fund.denom.clone())],
-                        }))
-                    };
-                }
-            }
-        }
-    }
 
     Ok(ResponseHelper::new_module("fee", "distribute")
         .add_messages(msgs)
@@ -372,6 +266,230 @@ fn execute_distribute(
                 .add_attribute("module_name", &module_name)
                 .get(),
         ))
+}
+
+fn _distribute_fixed_fee(
+    deps: DepsMut,
+    info: MessageInfo,
+    module_name: &str,
+    custom_payment_addresses: Option<Vec<CustomPaymentAddress>>,
+    cw20_token_amount: Option<Uint128>,
+) -> Result<Vec<CosmosMsg>, ContractError> {
+    let mut msgs: Vec<CosmosMsg> = vec![];
+
+    // All of the available amounts to distribute fee
+    let amounts = FIXED_FEES
+        .prefix(&module_name)
+        .range(deps.storage, None, None, Order::Ascending)
+        .map(|item| {
+            let (fee_name, fixed_payment) = item.unwrap();
+            FixedFeeResponse {
+                module_name: module_name.to_string(),
+                fee_name,
+                address: fixed_payment.address,
+                value: fixed_payment.value,
+            }
+        })
+        .collect::<Vec<FixedFeeResponse>>();
+
+    if amounts.is_empty() {
+        return Err(ContractError::NoPaymentsFound {});
+    }
+
+    // Total amount
+    let total_amount = amounts.iter().map(|item| item.value).sum::<Uint128>();
+    if cw20_token_amount.is_none() {
+        check_single_amount(&info, total_amount)?;
+    } else {
+        if cw20_token_amount.unwrap() != total_amount {
+            return Err(FundsError::InvalidFunds {
+                got: cw20_token_amount.unwrap().to_string(),
+                expected: total_amount.to_string(),
+            }
+            .into());
+        };
+    }
+
+    // Make bank send messages based on fee percentage
+    for amount in amounts {
+        let mut is_custom_address = false;
+
+        // If we have some custom addresses find and replace the address
+        if let Some(custom_payment_addresses) = custom_payment_addresses.clone() {
+            // Find the correct custom address based on share name
+            let custom_payment_address = custom_payment_addresses
+                .iter()
+                .find(|item| amount.fee_name == item.fee_name);
+            if let Some(custom_payment_address) = custom_payment_address {
+                is_custom_address = true;
+                let msg = match cw20_token_amount.is_none() {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: custom_payment_address.address.to_string(),
+                        amount: vec![coin(amount.value.u128(), info.funds[0].denom.clone())],
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: info.sender.to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: custom_payment_address.address.to_string(),
+                            amount: amount.value,
+                        })?,
+                        funds: vec![],
+                    }),
+                };
+                msgs.push(msg);
+            }
+        }
+
+        // Carry on without replacing the addresses
+        if !is_custom_address {
+            if let Some(payment_address) = amount.address {
+                let msg = match cw20_token_amount.is_none() {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: payment_address.to_string(),
+                        amount: vec![coin(amount.value.u128(), info.funds[0].denom.clone())],
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: info.sender.to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: payment_address.to_string(),
+                            amount: amount.value,
+                        })?,
+                        funds: vec![],
+                    }),
+                };
+                msgs.push(msg);
+            };
+        }
+    }
+
+    Ok(msgs)
+}
+
+fn _distribute_percentage_fee(
+    deps: DepsMut,
+    info: MessageInfo,
+    module_name: &str,
+    custom_payment_addresses: Option<Vec<CustomPaymentAddress>>,
+    cw20_token_amount: Option<Uint128>,
+) -> Result<Vec<CosmosMsg>, ContractError> {
+    let mut msgs: Vec<CosmosMsg> = vec![];
+
+    // All of the available percentages to distribute fee
+    let percentages = PERCENTAGE_FEES
+        .prefix(&module_name)
+        .range(deps.storage, None, None, Order::Ascending)
+        .map(|item| {
+            let (fee_name, percentage_payment) = item.unwrap();
+            PercentageFeeResponse {
+                module_name: module_name.to_string(),
+                fee_name,
+                address: percentage_payment.address,
+                value: percentage_payment.value,
+            }
+        })
+        .collect::<Vec<PercentageFeeResponse>>();
+
+    if percentages.is_empty() {
+        return Err(ContractError::NoPaymentsFound {});
+    }
+
+    // Total amount of fee percentage
+    let total_fee = percentages
+        .iter()
+        .map(|item| item.value)
+        .sum::<Decimal>()
+        .mul(Uint128::new(100));
+
+    // Make bank send messages based on fee percentage
+    for percentage in percentages {
+        let mut is_custom_address = false;
+
+        // Payment amount is total_funds * percentage / total_fee
+        let payment_amount = match cw20_token_amount {
+            Some(amount) => amount
+                .mul(percentage.value.mul(Uint128::new(100)))
+                .checked_div(total_fee)?,
+            None => info.funds[0]
+                .amount
+                .mul(percentage.value.mul(Uint128::new(100)))
+                .checked_div(total_fee)?,
+        };
+
+        // If we have some custom addresses find and replace the address
+        if let Some(custom_payment_addresses) = custom_payment_addresses.clone() {
+            // Find the correct custom address based on share name
+            let custom_payment_address = custom_payment_addresses
+                .iter()
+                .find(|item| percentage.fee_name == item.fee_name);
+            if let Some(custom_payment_address) = custom_payment_address {
+                is_custom_address = true;
+                let msg = match cw20_token_amount.is_none() {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: custom_payment_address.address.to_string(),
+                        amount: vec![coin(payment_amount.u128(), info.funds[0].denom.clone())],
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: info.sender.to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: custom_payment_address.address.to_string(),
+                            amount: payment_amount,
+                        })?,
+                        funds: vec![],
+                    }),
+                };
+                msgs.push(msg);
+            }
+        }
+
+        // Carry on without replacing the addresses
+        if !is_custom_address {
+            if let Some(payment_address) = percentage.address {
+                let msg = match cw20_token_amount.is_none() {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: payment_address.to_string(),
+                        amount: vec![coin(payment_amount.u128(), info.funds[0].denom.clone())],
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: info.sender.to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: payment_address.to_string(),
+                            amount: payment_amount,
+                        })?,
+                        funds: vec![],
+                    }),
+                };
+                msgs.push(msg);
+            };
+        }
+    }
+
+    Ok(msgs)
+}
+
+fn execute_receive(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    cw20_receive_msg: Cw20ReceiveMsg,
+) -> Result<Response, ContractError> {
+    let msg: ReceiveMsg = from_binary(&cw20_receive_msg.msg)?;
+    let amount = cw20_receive_msg.amount;
+
+    match msg {
+        ReceiveMsg::Distribute {
+            fee_type,
+            module_name,
+            custom_payment_addresses,
+        } => execute_distribute(
+            deps,
+            env,
+            info,
+            fee_type,
+            module_name,
+            custom_payment_addresses,
+            Some(amount),
+        ),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

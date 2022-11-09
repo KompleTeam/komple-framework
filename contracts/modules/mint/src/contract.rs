@@ -1,11 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coins, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
-    MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128,
-    WasmMsg,
+    coins, from_binary, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps,
+    DepsMut, Env, MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg,
+    Timestamp, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
+use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
@@ -23,7 +24,7 @@ use komple_types::{
 use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
 use komple_utils::{
     check_admin_privileges,
-    funds::check_cw20_fund_info,
+    funds::{check_cw20_fund_info, FundsError},
     response::ResponseHelper,
     shared::{execute_lock_execute, execute_update_operators},
     storage::StorageHelper,
@@ -32,7 +33,7 @@ use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
-use crate::{error::ContractError, state::EXECUTE_LOCK};
+use crate::{error::ContractError, msg::ReceiveMsg, state::EXECUTE_LOCK};
 use crate::{
     msg::CollectionFundInfo,
     state::{
@@ -173,6 +174,7 @@ pub fn execute(
                 Err(err) => Err(err.into()),
             }
         }
+        ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
 
@@ -413,129 +415,18 @@ fn execute_mint(
     collection_id: u32,
     metadata_id: Option<u32>,
 ) -> Result<Response, ContractError> {
-    let hub_addr = HUB_ADDR.load(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
     let mint_lock = MINT_LOCKS.may_load(deps.storage, collection_id)?;
     if let Some(_mint_lock) = mint_lock {
         return Err(ContractError::LockedMint {});
     }
 
-    let mut msgs: Vec<CosmosMsg> = vec![];
     let mint_msg = MintMsg {
         collection_id,
         recipient: info.sender.to_string(),
         metadata_id,
     };
-
-    let mut total_price = Uint128::zero();
-    let mut is_whitelist = false;
-
-    // Check for fee module address
-    let fee_module_addr_res =
-        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee.to_string());
-    let fee_module_addr = match fee_module_addr_res {
-        Ok(addr) => Some(addr),
-        Err(_) => None,
-    };
-
-    // Get collection fund info
-    let collection_fund_info = COLLECTION_FUND_INFO.load(deps.storage, collection_id)?;
-
-    // Get sub modules from collection
-    let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
-    let sub_modules = StorageHelper::query_token_sub_modules(&deps.querier, &collection_addr)?;
-
-    // Check for whitelist status
-    if let Some(whitelist_addr) = sub_modules.whitelist {
-        let res = KompleWhitelistHelper::new(whitelist_addr.clone()).query_is_active(&deps.querier);
-
-        // Continue if whitelist is active
-        if let Ok(is_active) = res {
-            if is_active {
-                // Query whitelist storage with owner address
-                let query_key = StorageHelper::get_map_storage_key(
-                    WHITELIST_NAMESPACE,
-                    &[info.sender.as_bytes()],
-                )?;
-                let res = StorageHelper::query_storage::<bool>(
-                    &deps.querier,
-                    &whitelist_addr,
-                    &query_key,
-                )?;
-                if res.is_none() {
-                    return Err(ContractError::AddressNotWhitelisted {});
-                }
-
-                // If fee module is registered, check for whitelist minting price
-                if fee_module_addr.is_some() {
-                    // Whitelist is active and user is member
-                    let res = StorageHelper::query_fixed_fee(
-                        &deps.querier,
-                        &fee_module_addr.as_ref().unwrap(),
-                        Modules::Mint.to_string(),
-                        MintFees::new_whitelist_price(collection_id),
-                    );
-
-                    let mut whitelist_price = Uint128::zero();
-
-                    // If whitelist price exists
-                    if let Ok(fixed_fee_response) = res {
-                        whitelist_price = fixed_fee_response.value;
-                    }
-                    // Create send message if not zero
-                    if !whitelist_price.is_zero() {
-                        let msg = BankMsg::Send {
-                            to_address: config.admin.to_string(),
-                            amount: coins(
-                                whitelist_price.u128(),
-                                collection_fund_info.denom.to_string(),
-                            ),
-                        };
-                        msgs.push(msg.into());
-                        total_price += whitelist_price;
-                    }
-                };
-
-                is_whitelist = true;
-            }
-        }
-    }
-
-    // Standard collection mint flow
-    if !is_whitelist {
-        // If fee module is registered, check for standard minting price
-        if fee_module_addr.is_some() {
-            // Token mint price
-            let res = StorageHelper::query_fixed_fee(
-                &deps.querier,
-                &fee_module_addr.unwrap(),
-                Modules::Mint.to_string(),
-                MintFees::new_price(collection_id),
-            );
-            if let Ok(fixed_fee_response) = res {
-                let msg = BankMsg::Send {
-                    to_address: config.admin.to_string(),
-                    amount: coins(
-                        fixed_fee_response.value.u128(),
-                        collection_fund_info.denom.to_string(),
-                    ),
-                };
-                msgs.push(msg.into());
-                total_price += fixed_fee_response.value;
-            }
-        }
-    }
-
-    if !total_price.is_zero() {
-        check_single_coin(
-            &info,
-            Coin {
-                denom: collection_fund_info.denom,
-                amount: total_price,
-            },
-        )?;
-    };
+    let msgs: Vec<CosmosMsg> =
+        process_minting_prices(&deps, &info, &info.sender.to_string(), collection_id, None)?;
 
     _execute_mint(deps, "mint", msgs, mint_msg)
 }
@@ -807,6 +698,192 @@ fn execute_update_creators(
                 .get(),
         ),
     )
+}
+
+fn execute_receive(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    cw20_receive_msg: Cw20ReceiveMsg,
+) -> Result<Response, ContractError> {
+    let msg: ReceiveMsg = from_binary(&cw20_receive_msg.msg)?;
+    let sender = cw20_receive_msg.sender;
+    let amount = cw20_receive_msg.amount;
+    match msg {
+        ReceiveMsg::Mint {
+            collection_id,
+            metadata_id,
+        } => {
+            let mint_lock = MINT_LOCKS.may_load(deps.storage, collection_id)?;
+            if let Some(_mint_lock) = mint_lock {
+                return Err(ContractError::LockedMint {});
+            }
+
+            let mint_msg = MintMsg {
+                collection_id,
+                recipient: info.sender.to_string(),
+                metadata_id,
+            };
+            let msgs: Vec<CosmosMsg> =
+                process_minting_prices(&deps, &info, &sender, collection_id, Some(amount))?;
+
+            _execute_mint(deps, "mint", msgs, mint_msg)
+        }
+    }
+}
+
+fn process_minting_prices(
+    deps: &DepsMut,
+    info: &MessageInfo,
+    recipient: &str,
+    collection_id: u32,
+    cw20_token_amount: Option<Uint128>,
+) -> Result<Vec<CosmosMsg>, ContractError> {
+    let hub_addr = HUB_ADDR.load(deps.storage)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    let mut msgs: Vec<CosmosMsg> = vec![];
+    let mut total_price = Uint128::zero();
+    let mut is_whitelist = false;
+
+    // Check for fee module address
+    let fee_module_addr_res =
+        StorageHelper::query_module_address(&deps.querier, &hub_addr, Modules::Fee.to_string());
+    let fee_module_addr = match fee_module_addr_res {
+        Ok(addr) => Some(addr),
+        Err(_) => None,
+    };
+
+    // Get collection fund info
+    let collection_fund_info = COLLECTION_FUND_INFO.load(deps.storage, collection_id)?;
+
+    // Get sub modules from collection
+    let collection_addr = COLLECTION_ADDRS.load(deps.storage, collection_id)?;
+    let sub_modules = StorageHelper::query_token_sub_modules(&deps.querier, &collection_addr)?;
+
+    // Check for whitelist status
+    if let Some(whitelist_addr) = sub_modules.whitelist {
+        let res = KompleWhitelistHelper::new(whitelist_addr.clone()).query_is_active(&deps.querier);
+
+        // Continue if whitelist is active
+        if let Ok(is_active) = res {
+            if is_active {
+                // Query whitelist storage with owner address
+                let query_key = StorageHelper::get_map_storage_key(
+                    WHITELIST_NAMESPACE,
+                    &[recipient.as_bytes()],
+                )?;
+                let res = StorageHelper::query_storage::<bool>(
+                    &deps.querier,
+                    &whitelist_addr,
+                    &query_key,
+                )?;
+                if res.is_none() {
+                    return Err(ContractError::AddressNotWhitelisted {});
+                }
+
+                // If fee module is registered, check for whitelist minting price
+                if fee_module_addr.is_some() {
+                    // Whitelist is active and user is member
+                    let res = StorageHelper::query_fixed_fee(
+                        &deps.querier,
+                        &fee_module_addr.as_ref().unwrap(),
+                        Modules::Mint.to_string(),
+                        MintFees::new_whitelist_price(collection_id),
+                    );
+
+                    // If whitelist price exists
+                    if let Ok(fixed_fee_response) = res {
+                        // Create send message if not zero
+                        if !fixed_fee_response.value.is_zero() {
+                            let msg = match collection_fund_info.is_native {
+                                true => CosmosMsg::Bank(BankMsg::Send {
+                                    to_address: config.admin.to_string(),
+                                    amount: coins(
+                                        fixed_fee_response.value.u128(),
+                                        collection_fund_info.denom.to_string(),
+                                    ),
+                                }),
+                                false => CosmosMsg::Wasm(WasmMsg::Execute {
+                                    contract_addr: collection_fund_info
+                                        .cw20_address
+                                        .as_ref()
+                                        .unwrap()
+                                        .to_string(),
+                                    msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                                        recipient: config.admin.to_string(),
+                                        amount: fixed_fee_response.value,
+                                    })?,
+                                    funds: vec![],
+                                }),
+                            };
+                            msgs.push(msg.into());
+                            total_price += fixed_fee_response.value;
+                        }
+                    }
+                };
+
+                is_whitelist = true;
+            }
+        }
+    }
+
+    // Standard collection mint flow
+    if !is_whitelist {
+        // If fee module is registered, check for standard minting price
+        if fee_module_addr.is_some() {
+            // Token mint price
+            let res = StorageHelper::query_fixed_fee(
+                &deps.querier,
+                &fee_module_addr.unwrap(),
+                Modules::Mint.to_string(),
+                MintFees::new_price(collection_id),
+            );
+            if let Ok(fixed_fee_response) = res {
+                let msg = match collection_fund_info.is_native {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: config.admin.to_string(),
+                        amount: coins(
+                            fixed_fee_response.value.u128(),
+                            collection_fund_info.denom.to_string(),
+                        ),
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: collection_fund_info
+                            .cw20_address
+                            .as_ref()
+                            .unwrap()
+                            .to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: config.admin.to_string(),
+                            amount: fixed_fee_response.value,
+                        })?,
+                        funds: vec![],
+                    }),
+                };
+                msgs.push(msg.into());
+                total_price += fixed_fee_response.value;
+            }
+        }
+    }
+
+    if !total_price.is_zero() {
+        if collection_fund_info.is_native {
+            check_single_coin(
+                &info,
+                Coin {
+                    denom: collection_fund_info.denom,
+                    amount: total_price,
+                },
+            )?;
+        } else {
+            if cw20_token_amount.is_none() && cw20_token_amount.unwrap() != total_price {
+                return Err(FundsError::InvalidCw20Token {}.into());
+            };
+        }
+    };
+
+    Ok(msgs)
 }
 
 fn check_collection_ids_exists(

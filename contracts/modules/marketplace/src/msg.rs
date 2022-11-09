@@ -1,6 +1,7 @@
 use crate::state::{Config, FixedListing};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
+use cw20::Cw20ReceiveMsg;
 use komple_types::{execute::SharedExecuteMsg, marketplace::Listing, query::ResponseWrapper};
 
 /// Message to be sent along the ```RegisterMsg``` for instantiation.
@@ -22,7 +23,9 @@ pub enum ExecuteMsg {
     ///
     /// Update the lock for buying.
     /// This applies for the normal buy operation.
-    UpdateBuyLock { lock: bool },
+    UpdateBuyLock {
+        lock: bool,
+    },
     /// Public message.
     ///
     /// List a new token for fixed amount sale.
@@ -36,7 +39,10 @@ pub enum ExecuteMsg {
     /// Public message.
     ///
     /// Remove a token from fixed amount sale.
-    DelistFixedToken { collection_id: u32, token_id: u32 },
+    DelistFixedToken {
+        collection_id: u32,
+        token_id: u32,
+    },
     /// Public message.
     ///
     /// Update the price of a listed token based on listing type.
@@ -66,12 +72,15 @@ pub enum ExecuteMsg {
     /// Admin message.
     ///
     /// Update the operators of this contract.
-    UpdateOperators { addrs: Vec<String> },
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
     /// Hub message.
     ///
     /// Lock the execute entry point.
     /// Can only be called by the hub module.
     LockExecute {},
+    Receive(Cw20ReceiveMsg),
 }
 
 impl From<ExecuteMsg> for SharedExecuteMsg {
@@ -81,6 +90,15 @@ impl From<ExecuteMsg> for SharedExecuteMsg {
             _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
         }
     }
+}
+
+#[cw_serde]
+pub enum ReceiveMsg {
+    Buy {
+        listing_type: Listing,
+        collection_id: u32,
+        token_id: u32,
+    },
 }
 
 #[cw_serde]

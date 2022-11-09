@@ -1,13 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, from_binary, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo,
-    Order, Response, StdError, StdResult, SubMsg, Uint128,
+    coin, from_binary, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
+    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
 use komple_fee_module::{
     helper::KompleFeeModule, msg::CustomPaymentAddress as FeeModuleCustomPaymentAddress,
+    msg::ExecuteMsg as FeeModuleExecuteMsg,
 };
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
@@ -23,7 +25,7 @@ use komple_types::{
     fee::{MarketplaceFees, MintFees},
     hub::MARBU_FEE_MODULE_NAMESPACE,
 };
-use komple_utils::funds::check_cw20_fund_info;
+use komple_utils::funds::{check_cw20_fund_info, FundsError};
 use komple_utils::response::ResponseHelper;
 use komple_utils::shared::{execute_lock_execute, execute_update_operators};
 use komple_utils::{
@@ -32,7 +34,7 @@ use komple_utils::{
 use semver::Version;
 use std::ops::Mul;
 
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, ReceiveMsg};
 use crate::state::{
     Config, FixedListing, CONFIG, EXECUTE_LOCK, FIXED_LISTING, FUND_INFO, HUB_ADDR,
 };
@@ -75,10 +77,13 @@ pub fn instantiate(
     let fund_info = FundInfo {
         is_native: data.fund_info.is_native,
         denom: data.fund_info.denom,
-        cw20_address,
+        cw20_address: cw20_address.clone(),
     };
 
     if !fund_info.is_native {
+        if cw20_address.is_none() {
+            return Err(FundsError::InvalidCw20Token {}.into());
+        };
         check_cw20_fund_info(&deps, &fund_info)?;
     };
     FUND_INFO.save(deps.storage, &fund_info)?;
@@ -188,6 +193,7 @@ pub fn execute(
                 Err(err) => Err(err.into()),
             }
         }
+        ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
 
@@ -385,6 +391,7 @@ fn execute_buy(
             collection_id,
             token_id,
             info.sender.to_string(),
+            None,
         ),
         Listing::Auction => unimplemented!(),
     }
@@ -411,7 +418,9 @@ fn execute_permission_buy(
     )?;
 
     match listing_type {
-        Listing::Fixed => _execute_buy_fixed_listing(deps, &info, collection_id, token_id, buyer),
+        Listing::Fixed => {
+            _execute_buy_fixed_listing(deps, &info, collection_id, token_id, buyer, None)
+        }
         Listing::Auction => unimplemented!(),
     }
 }
@@ -422,6 +431,7 @@ fn _execute_buy_fixed_listing(
     collection_id: u32,
     token_id: u32,
     buyer: String,
+    cw20_token_amount: Option<Uint128>,
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
@@ -433,11 +443,17 @@ fn _execute_buy_fixed_listing(
         return Err(ContractError::SelfPurchase {});
     }
 
-    // Check for the sent funds
-    check_single_coin(
-        info,
-        coin(fixed_listing.price.u128(), fund_info.denom.clone()),
-    )?;
+    match fund_info.is_native {
+        true => check_single_coin(
+            info,
+            coin(fixed_listing.price.u128(), fund_info.denom.clone()),
+        )?,
+        false => {
+            if cw20_token_amount.is_none() && cw20_token_amount.unwrap() != fixed_listing.price {
+                return Err(FundsError::InvalidCw20Token {}.into());
+            };
+        }
+    }
 
     // Get the collection address
     let collection_addr = get_collection_address(&deps, &collection_id)?;
@@ -498,12 +514,22 @@ fn _execute_buy_fixed_listing(
                 CONFIG_NAMESPACE,
             )?;
             if let Some(token_config) = res {
-                let royalty_payout = BankMsg::Send {
-                    to_address: token_config.creator.to_string(),
-                    amount: vec![Coin {
-                        denom: fund_info.denom.to_string(),
-                        amount: royalty_fee,
-                    }],
+                let royalty_payout = match fund_info.is_native {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: token_config.creator.to_string(),
+                        amount: vec![Coin {
+                            denom: fund_info.denom.to_string(),
+                            amount: royalty_fee,
+                        }],
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: fund_info.cw20_address.as_ref().unwrap().to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: token_config.creator.to_string(),
+                            amount: royalty_fee,
+                        })?,
+                        funds: vec![],
+                    }),
                 };
                 sub_msgs.push(SubMsg::new(royalty_payout))
             };
@@ -516,12 +542,22 @@ fn _execute_buy_fixed_listing(
         .checked_sub(marketplace_fee + royalty_fee)?;
 
     // Owner payout message
-    let owner_payout = BankMsg::Send {
-        to_address: fixed_listing.owner.to_string(),
-        amount: vec![Coin {
-            denom: fund_info.denom.to_string(),
-            amount: payout,
-        }],
+    let owner_payout = match fund_info.is_native {
+        true => CosmosMsg::Bank(BankMsg::Send {
+            to_address: fixed_listing.owner.to_string(),
+            amount: vec![Coin {
+                denom: fund_info.denom.to_string(),
+                amount: payout,
+            }],
+        }),
+        false => CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: fund_info.cw20_address.unwrap().to_string(),
+            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                recipient: fixed_listing.owner.to_string(),
+                amount: payout,
+            })?,
+            funds: vec![],
+        }),
     };
     sub_msgs.push(SubMsg::new(owner_payout));
 
@@ -560,6 +596,41 @@ fn _execute_buy_fixed_listing(
         ))
 }
 
+fn execute_receive(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    cw20_receive_msg: Cw20ReceiveMsg,
+) -> Result<Response, ContractError> {
+    let msg: ReceiveMsg = from_binary(&cw20_receive_msg.msg)?;
+    let sender = cw20_receive_msg.sender;
+    let amount = cw20_receive_msg.amount;
+    match msg {
+        ReceiveMsg::Buy {
+            listing_type,
+            collection_id,
+            token_id,
+        } => {
+            let config = CONFIG.load(deps.storage)?;
+            if config.buy_lock {
+                return Err(ContractError::BuyLocked {});
+            };
+
+            match listing_type {
+                Listing::Fixed => _execute_buy_fixed_listing(
+                    deps,
+                    &info,
+                    collection_id,
+                    token_id,
+                    sender,
+                    Some(amount),
+                ),
+                Listing::Auction => unimplemented!(),
+            }
+        }
+    }
+}
+
 // Gets the current total fee percentage from fee module
 // If exists updates the marketplace fee
 // Creates a distribute msg and adds to sub message
@@ -582,17 +653,33 @@ fn process_marketplace_fees(
             *marketplace_fee += fee_to_send;
 
             // Create distribution message and add it to sub_msgs
-            let marbu_fee_distribution = KompleFeeModule(fee_module_addr.to_owned())
-                .distribute_msg(
-                    Fees::Percentage,
-                    Modules::Marketplace.to_string(),
-                    custom_payment_addresses,
-                    vec![Coin {
-                        denom: fund_info.denom.to_string(),
+            if fund_info.is_native {
+                sub_msgs.push(SubMsg::new(
+                    KompleFeeModule(fee_module_addr.to_owned()).distribute_msg(
+                        Fees::Percentage,
+                        Modules::Marketplace.to_string(),
+                        custom_payment_addresses,
+                        vec![Coin {
+                            denom: fund_info.denom.to_string(),
+                            amount: fee_to_send,
+                        }],
+                    )?,
+                ));
+            } else {
+                sub_msgs.push(SubMsg::new(WasmMsg::Execute {
+                    contract_addr: fund_info.cw20_address.as_ref().unwrap().to_string(),
+                    msg: to_binary(&Cw20ExecuteMsg::Send {
+                        contract: fee_module_addr.to_string(),
                         amount: fee_to_send,
-                    }],
-                )?;
-            sub_msgs.push(SubMsg::new(marbu_fee_distribution));
+                        msg: to_binary(&FeeModuleExecuteMsg::Distribute {
+                            fee_type: Fees::Percentage,
+                            module_name: Modules::Marketplace.to_string(),
+                            custom_payment_addresses,
+                        })?,
+                    })?,
+                    funds: vec![],
+                }));
+            }
         }
     };
 

@@ -1,6 +1,7 @@
 use crate::state::Config;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Decimal, Uint128};
+use cw20::Cw20ReceiveMsg;
 use komple_types::{execute::SharedExecuteMsg, fee::Fees, query::ResponseWrapper};
 
 #[cw_serde]
@@ -38,6 +39,7 @@ pub enum ExecuteMsg {
     /// Lock the execute entry point.
     /// Can only be called by the hub module.
     LockExecute {},
+    Receive(Cw20ReceiveMsg),
 }
 
 impl From<ExecuteMsg> for SharedExecuteMsg {
@@ -47,6 +49,15 @@ impl From<ExecuteMsg> for SharedExecuteMsg {
             _ => unreachable!("Cannot convert {:?} to SharedExecuteMessage", msg),
         }
     }
+}
+
+#[cw_serde]
+pub enum ReceiveMsg {
+    Distribute {
+        fee_type: Fees,
+        module_name: String,
+        custom_payment_addresses: Option<Vec<CustomPaymentAddress>>,
+    },
 }
 
 #[cw_serde]

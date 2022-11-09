@@ -28,9 +28,6 @@ pub enum ContractError {
     #[error("Total fee cannot exceed 1")]
     InvalidTotalFee {},
 
-    #[error("Invalid funds")]
-    InvalidFunds {},
-
     #[error("No payments found for distribution")]
     NoPaymentsFound {},
 
