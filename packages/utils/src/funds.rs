@@ -37,6 +37,7 @@ pub fn check_single_coin(info: &MessageInfo, expected: Coin) -> Result<(), Funds
     Ok(())
 }
 
+/// Check c20 fund information in `FundInfo`.
 pub fn check_cw20_fund_info(deps: &DepsMut, fund_info: &FundInfo) -> Result<(), FundsError> {
     if fund_info.cw20_address.is_none() {
         return Err(FundsError::InvalidCw20Token {});
