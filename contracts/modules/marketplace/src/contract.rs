@@ -12,6 +12,7 @@ use komple_fee_module::{
 use komple_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
 };
+use komple_types::fee::FundInfo;
 use komple_types::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
@@ -22,6 +23,7 @@ use komple_types::{
     fee::{MarketplaceFees, MintFees},
     hub::MARBU_FEE_MODULE_NAMESPACE,
 };
+use komple_utils::funds::check_cw20_fund_info;
 use komple_utils::response::ResponseHelper;
 use komple_utils::shared::{execute_lock_execute, execute_update_operators};
 use komple_utils::{
@@ -31,7 +33,9 @@ use semver::Version;
 use std::ops::Mul;
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, FixedListing, CONFIG, EXECUTE_LOCK, FIXED_LISTING, HUB_ADDR};
+use crate::state::{
+    Config, FixedListing, CONFIG, EXECUTE_LOCK, FIXED_LISTING, FUND_INFO, HUB_ADDR,
+};
 use crate::{error::ContractError, state::OPERATORS};
 
 // version info for migration info
@@ -57,7 +61,6 @@ pub fn instantiate(
     let config = Config {
         admin,
         buy_lock: false,
-        native_denom: data.native_denom,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -65,11 +68,35 @@ pub fn instantiate(
 
     EXECUTE_LOCK.save(deps.storage, &false)?;
 
+    let cw20_address = match data.fund_info.cw20_address {
+        Some(addr) => Some(deps.api.addr_validate(&addr)?),
+        None => None,
+    };
+    let fund_info = FundInfo {
+        is_native: data.fund_info.is_native,
+        denom: data.fund_info.denom,
+        cw20_address,
+    };
+
+    if !fund_info.is_native {
+        check_cw20_fund_info(&deps, &fund_info)?;
+    };
+    FUND_INFO.save(deps.storage, &fund_info)?;
+
     Ok(
         ResponseHelper::new_module("marketplace", "instantiate").add_event(
             EventHelper::new("marketplace_instantiate")
                 .add_attribute("admin", config.admin)
-                .add_attribute("native_denom", config.native_denom)
+                .add_attribute("is_native", fund_info.is_native.to_string())
+                .add_attribute("denom", fund_info.denom.to_string())
+                .check_add_attribute(
+                    &fund_info.cw20_address,
+                    "cw20_address",
+                    fund_info
+                        .cw20_address
+                        .as_ref()
+                        .unwrap_or(&Addr::unchecked("")),
+                )
                 .add_attribute("hub_addr", info.sender)
                 .get(),
         ),
@@ -399,6 +426,7 @@ fn _execute_buy_fixed_listing(
     let hub_addr = HUB_ADDR.load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
     let fixed_listing = FIXED_LISTING.load(deps.storage, (collection_id, token_id))?;
+    let fund_info = FUND_INFO.load(deps.storage)?;
 
     // If owner and the buyer is the same return error
     if fixed_listing.owner == buyer {
@@ -408,7 +436,7 @@ fn _execute_buy_fixed_listing(
     // Check for the sent funds
     check_single_coin(
         info,
-        coin(fixed_listing.price.u128(), config.native_denom.clone()),
+        coin(fixed_listing.price.u128(), fund_info.denom.clone()),
     )?;
 
     // Get the collection address
@@ -427,7 +455,7 @@ fn _execute_buy_fixed_listing(
     if let Some(marbu_fee_module) = res {
         process_marketplace_fees(
             &deps,
-            &config,
+            &fund_info,
             &mut sub_msgs,
             &marbu_fee_module,
             fixed_listing.price,
@@ -473,7 +501,7 @@ fn _execute_buy_fixed_listing(
                 let royalty_payout = BankMsg::Send {
                     to_address: token_config.creator.to_string(),
                     amount: vec![Coin {
-                        denom: config.native_denom.to_string(),
+                        denom: fund_info.denom.to_string(),
                         amount: royalty_fee,
                     }],
                 };
@@ -491,7 +519,7 @@ fn _execute_buy_fixed_listing(
     let owner_payout = BankMsg::Send {
         to_address: fixed_listing.owner.to_string(),
         amount: vec![Coin {
-            denom: config.native_denom.to_string(),
+            denom: fund_info.denom.to_string(),
             amount: payout,
         }],
     };
@@ -537,7 +565,7 @@ fn _execute_buy_fixed_listing(
 // Creates a distribute msg and adds to sub message
 fn process_marketplace_fees(
     deps: &DepsMut,
-    config: &Config,
+    fund_info: &FundInfo,
     sub_msgs: &mut Vec<SubMsg>,
     fee_module_addr: &Addr,
     listing_price: Uint128,
@@ -560,7 +588,7 @@ fn process_marketplace_fees(
                     Modules::Marketplace.to_string(),
                     custom_payment_addresses,
                     vec![Coin {
-                        denom: config.native_denom.to_string(),
+                        denom: fund_info.denom.to_string(),
                         amount: fee_to_send,
                     }],
                 )?;

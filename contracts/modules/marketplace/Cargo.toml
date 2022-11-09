@@ -58,3 +58,4 @@ cw-multi-test = "0.15.1"
 komple-hub-module = { path = "../hub", features = ["library"] }
 komple-mint-module = { path = "../mint", features = ["library"] }
 komple-metadata-module = { path = "../metadata", features = ["library"] }
+cw20-base = "0.16.0"

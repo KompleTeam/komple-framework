@@ -1,8 +1,9 @@
 use crate::{
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo, QueryMsg},
     ContractError,
 };
 use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
+use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_types::shared::RegisterMsg;
 
@@ -15,9 +16,19 @@ pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
+pub fn cw20_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        cw20_base::contract::execute,
+        cw20_base::contract::instantiate,
+        cw20_base::contract::query,
+    );
+    Box::new(contract)
+}
+
 const USER: &str = "juno..user";
 const ADMIN: &str = "juno..admin";
 const NATIVE_DENOM: &str = "native_denom";
+const CW20_DENOM: &str = "cwdenom";
 
 fn mock_app() -> App {
     AppBuilder::new().build(|router, _, storage| {
@@ -42,7 +53,11 @@ fn proper_instantiate(app: &mut App) -> Addr {
         admin: ADMIN.to_string(),
         data: Some(
             to_binary(&InstantiateMsg {
-                native_denom: NATIVE_DENOM.to_string(),
+                fund_info: MarketplaceFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                },
             })
             .unwrap(),
         ),
@@ -58,7 +73,30 @@ fn proper_instantiate(app: &mut App) -> Addr {
     .unwrap()
 }
 
+fn setup_cw20_token(app: &mut App) -> Addr {
+    let cw20_code_id = app.store_code(cw20_contract());
+    let msg = Cw20InstantiateMsg {
+        name: "test".to_string(),
+        symbol: CW20_DENOM.to_string(),
+        decimals: 6,
+        initial_balances: vec![],
+        mint: None,
+        marketing: None,
+    };
+    app.instantiate_contract(
+        cw20_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[],
+        "test",
+        None,
+    )
+    .unwrap()
+}
+
 mod instantiate {
+    use komple_utils::funds::FundsError;
+
     use super::*;
 
     #[test]
@@ -70,12 +108,73 @@ mod instantiate {
             admin: ADMIN.to_string(),
             data: Some(
                 to_binary(&InstantiateMsg {
-                    native_denom: NATIVE_DENOM.to_string(),
+                    fund_info: MarketplaceFundInfo {
+                        is_native: true,
+                        denom: NATIVE_DENOM.to_string(),
+                        cw20_address: None,
+                    },
                 })
                 .unwrap(),
             ),
         };
-        let _ = app
+        app.instantiate_contract(
+            marketplace_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
+
+        // Cw20 support
+        let cw20_addr = setup_cw20_token(&mut app);
+        let msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(
+                to_binary(&InstantiateMsg {
+                    fund_info: MarketplaceFundInfo {
+                        is_native: false,
+                        denom: CW20_DENOM.to_string(),
+                        cw20_address: Some(cw20_addr.to_string()),
+                    },
+                })
+                .unwrap(),
+            ),
+        };
+        app.instantiate_contract(
+            marketplace_code_id,
+            Addr::unchecked(ADMIN),
+            &msg,
+            &[],
+            "test",
+            None,
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn test_invalid_cw20_token() {
+        let mut app = mock_app();
+        let marketplace_code_id = app.store_code(marketplace_module());
+
+        // Cw20 support
+        let cw20_addr = setup_cw20_token(&mut app);
+
+        let msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(
+                to_binary(&InstantiateMsg {
+                    fund_info: MarketplaceFundInfo {
+                        is_native: false,
+                        denom: "invalid".to_string(),
+                        cw20_address: Some(cw20_addr.to_string()),
+                    },
+                })
+                .unwrap(),
+            ),
+        };
+        let err = app
             .instantiate_contract(
                 marketplace_code_id,
                 Addr::unchecked(ADMIN),
@@ -84,7 +183,39 @@ mod instantiate {
                 "test",
                 None,
             )
-            .unwrap();
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            FundsError::InvalidCw20Token {}.to_string()
+        );
+
+        let msg = RegisterMsg {
+            admin: ADMIN.to_string(),
+            data: Some(
+                to_binary(&InstantiateMsg {
+                    fund_info: MarketplaceFundInfo {
+                        is_native: false,
+                        denom: CW20_DENOM.to_string(),
+                        cw20_address: None,
+                    },
+                })
+                .unwrap(),
+            ),
+        };
+        let err = app
+            .instantiate_contract(
+                marketplace_code_id,
+                Addr::unchecked(ADMIN),
+                &msg,
+                &[],
+                "test",
+                None,
+            )
+            .unwrap_err();
+        assert_eq!(
+            err.source().unwrap().to_string(),
+            FundsError::InvalidCw20Token {}.to_string()
+        );
     }
 
     #[test]

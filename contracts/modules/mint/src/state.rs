@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
+    fee::{FundInfo, FUND_INFO_NAMESPACE},
     mint::{
         Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
         COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, CREATORS_NAMESPACE,
@@ -29,7 +30,6 @@ pub struct CollectionInfo {
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
-    pub native_denom: String,
 }
 /// Map of collection ids to collection infos.
 pub const COLLECTION_INFO: Map<u32, CollectionInfo> = Map::new(COLLECTION_INFO_NAMESPACE);
@@ -67,3 +67,6 @@ pub const CREATORS: Item<Vec<Addr>> = Item::new(CREATORS_NAMESPACE);
 
 /// Map of collection ids to minting locks.
 pub const MINT_LOCKS: Map<u32, bool> = Map::new(MINT_LOCKS_NAMESPACE);
+
+/// Map of collection ids to fund infos.
+pub const COLLECTION_FUND_INFO: Map<u32, FundInfo> = Map::new(FUND_INFO_NAMESPACE);

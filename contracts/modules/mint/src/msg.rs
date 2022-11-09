@@ -8,6 +8,13 @@ use komple_token_module::{
 use komple_types::{execute::SharedExecuteMsg, query::ResponseWrapper};
 
 #[cw_serde]
+pub struct CollectionFundInfo {
+    pub is_native: bool,
+    pub denom: String,
+    pub cw20_address: Option<String>,
+}
+
+#[cw_serde]
 pub enum ExecuteMsg {
     /// Admin and public message.
     ///
@@ -19,6 +26,7 @@ pub enum ExecuteMsg {
         collection_config: CollectionConfig,
         token_info: TokenInfo,
         metadata_info: MetadataInfo,
+        fund_info: CollectionFundInfo,
         linked_collections: Option<Vec<u32>>,
     },
     /// Admin message.

@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::{CollectionsResponse, ExecuteMsg, QueryMsg};
+use komple_mint_module::msg::{CollectionFundInfo, CollectionsResponse, ExecuteMsg, QueryMsg};
 use komple_mint_module::state::CollectionInfo;
 use komple_mint_module::ContractError;
 use komple_token_module::{
@@ -11,6 +11,7 @@ use komple_token_module::{
 };
 use komple_types::shared::RegisterMsg;
 use komple_types::{metadata::Metadata as MetadataType, mint::Collections, query::ResponseWrapper};
+use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
@@ -42,10 +43,20 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
+pub fn cw20_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        cw20_base::contract::execute,
+        cw20_base::contract::instantiate,
+        cw20_base::contract::query,
+    );
+    Box::new(contract)
+}
+
 const USER: &str = "juno..user";
 const ADMIN: &str = "juno..admin";
 // const RANDOM: &str = "juno1et88c8yd6xr8azkmp02lxtctkqq36lt63tdt7e";
 const NATIVE_DENOM: &str = "denom";
+const CW20_DENOM: &str = "cwdenom";
 
 fn mock_app() -> App {
     AppBuilder::new().build(|router, _, storage| {
@@ -97,7 +108,6 @@ fn setup_collection(
         description: "Test Description".to_string(),
         image: "ipfs://xyz".to_string(),
         external_link: None,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
@@ -115,17 +125,44 @@ fn setup_collection(
         },
         code_id: metadata_code_id,
     };
+    let fund_info = CollectionFundInfo {
+        is_native: true,
+        denom: NATIVE_DENOM.to_string(),
+        cw20_address: None,
+    };
     let msg = ExecuteMsg::CreateCollection {
         code_id: token_code_id,
         collection_config,
         collection_info,
         metadata_info,
         token_info,
+        fund_info,
         linked_collections,
     };
     let _ = app
         .execute_contract(sender, minter_addr.clone(), &msg, &[])
         .unwrap();
+}
+
+fn setup_cw20_token(app: &mut App) -> Addr {
+    let cw20_code_id = app.store_code(cw20_contract());
+    let msg = cw20_base::msg::InstantiateMsg {
+        name: "Test Token".to_string(),
+        symbol: CW20_DENOM.to_string(),
+        decimals: 6,
+        initial_balances: vec![],
+        mint: None,
+        marketing: None,
+    };
+    app.instantiate_contract(
+        cw20_code_id,
+        Addr::unchecked(ADMIN),
+        &msg,
+        &[],
+        "test",
+        Some(ADMIN.to_string()),
+    )
+    .unwrap()
 }
 
 mod actions {
@@ -242,7 +279,6 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -260,16 +296,27 @@ mod actions {
                     },
                     code_id: metadata_code_id,
                 };
-                let msg = ExecuteMsg::CreateCollection {
+                let fund_info = CollectionFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                };
+                let create_collection_msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
-                    collection_config,
-                    collection_info,
-                    metadata_info,
-                    token_info,
+                    collection_config: collection_config.clone(),
+                    collection_info: collection_info.clone(),
+                    metadata_info: metadata_info.clone(),
+                    token_info: token_info.clone(),
+                    fund_info,
                     linked_collections: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), minter_addr.clone(), &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        minter_addr.clone(),
+                        &create_collection_msg,
+                        &[],
+                    )
                     .unwrap();
 
                 let msg = QueryMsg::CollectionAddress(1);
@@ -280,13 +327,38 @@ mod actions {
                 assert_eq!(res.data, "contract1");
 
                 let msg = QueryMsg::CollectionInfo { collection_id: 1 };
-                let res: ResponseWrapper<CollectionInfo> =
-                    app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
+                let res: ResponseWrapper<CollectionInfo> = app
+                    .wrap()
+                    .query_wasm_smart(minter_addr.clone(), &msg)
+                    .unwrap();
                 assert_eq!(res.data.name, "Test Collection");
                 assert_eq!(res.data.collection_type, Collections::Standard);
 
                 let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
                 assert_eq!(res.admin, Some(ADMIN.to_string()));
+
+                let cw20_addr = setup_cw20_token(&mut app);
+                let fund_info = CollectionFundInfo {
+                    is_native: false,
+                    denom: CW20_DENOM.to_string(),
+                    cw20_address: Some(cw20_addr.to_string()),
+                };
+                let create_collection_msg = ExecuteMsg::CreateCollection {
+                    code_id: token_code_id,
+                    collection_config,
+                    collection_info,
+                    metadata_info,
+                    token_info,
+                    fund_info,
+                    linked_collections: None,
+                };
+                app.execute_contract(
+                    Addr::unchecked(ADMIN),
+                    minter_addr.clone(),
+                    &create_collection_msg,
+                    &[],
+                )
+                .unwrap();
             }
 
             #[test]
@@ -302,7 +374,6 @@ mod actions {
                     description: "Test Description".to_string(),
                     image: "ipfs://xyz".to_string(),
                     external_link: None,
-                    native_denom: NATIVE_DENOM.to_string(),
                 };
                 let token_info = TokenInfo {
                     symbol: "TEST".to_string(),
@@ -320,12 +391,18 @@ mod actions {
                     },
                     code_id: metadata_code_id,
                 };
+                let fund_info = CollectionFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                };
                 let msg = ExecuteMsg::CreateCollection {
                     code_id: token_code_id,
                     collection_config,
                     collection_info,
                     metadata_info,
                     token_info,
+                    fund_info,
                     linked_collections: None,
                 };
                 let err = app
@@ -334,6 +411,93 @@ mod actions {
                 assert_eq!(
                     err.source().unwrap().to_string(),
                     ContractError::Unauthorized {}.to_string()
+                );
+            }
+
+            #[test]
+            fn test_invalid_cw20_token() {
+                let mut app = mock_app();
+                let minter_addr = proper_instantiate(&mut app);
+                let token_code_id = app.store_code(token_module());
+                let metadata_code_id = app.store_code(metadata_module());
+                let cw20_addr = setup_cw20_token(&mut app);
+
+                let collection_info = CollectionInfo {
+                    collection_type: Collections::Standard,
+                    name: "Test Collection".to_string(),
+                    description: "Test Description".to_string(),
+                    image: "ipfs://xyz".to_string(),
+                    external_link: None,
+                };
+                let token_info = TokenInfo {
+                    symbol: "TEST".to_string(),
+                    minter: minter_addr.to_string(),
+                };
+                let collection_config = CollectionConfig {
+                    per_address_limit: None,
+                    start_time: None,
+                    max_token_limit: None,
+                    ipfs_link: Some("some-link".to_string()),
+                };
+                let metadata_info = MetadataInfo {
+                    instantiate_msg: MetadataInstantiateMsg {
+                        metadata_type: MetadataType::Standard,
+                    },
+                    code_id: metadata_code_id,
+                };
+
+                let fund_info = CollectionFundInfo {
+                    is_native: false,
+                    denom: "invalid".to_string(),
+                    cw20_address: Some(cw20_addr.to_string()),
+                };
+                let create_collection_msg = ExecuteMsg::CreateCollection {
+                    code_id: token_code_id,
+                    collection_config: collection_config.clone(),
+                    collection_info: collection_info.clone(),
+                    metadata_info: metadata_info.clone(),
+                    token_info: token_info.clone(),
+                    fund_info,
+                    linked_collections: None,
+                };
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        minter_addr.clone(),
+                        &create_collection_msg,
+                        &[],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    FundsError::InvalidCw20Token {}.to_string()
+                );
+
+                let fund_info = CollectionFundInfo {
+                    is_native: false,
+                    denom: CW20_DENOM.to_string(),
+                    cw20_address: None,
+                };
+                let create_collection_msg = ExecuteMsg::CreateCollection {
+                    code_id: token_code_id,
+                    collection_config: collection_config.clone(),
+                    collection_info: collection_info.clone(),
+                    metadata_info: metadata_info.clone(),
+                    token_info: token_info.clone(),
+                    fund_info,
+                    linked_collections: None,
+                };
+                let err = app
+                    .execute_contract(
+                        Addr::unchecked(ADMIN),
+                        minter_addr.clone(),
+                        &create_collection_msg,
+                        &[],
+                    )
+                    .unwrap_err();
+                assert_eq!(
+                    err.source().unwrap().to_string(),
+                    FundsError::InvalidCw20Token {}.to_string()
                 );
             }
 

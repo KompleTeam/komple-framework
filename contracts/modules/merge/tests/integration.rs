@@ -9,7 +9,10 @@ use komple_hub_module::{
 use komple_merge_module::msg::{ExecuteMsg as MergeModuleExecuteMsg, MergeBurnMsg, MergeMsg};
 use komple_merge_module::ContractError as MergeContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
-use komple_mint_module::{msg::ExecuteMsg as MintModuleExecuteMsg, state::CollectionInfo};
+use komple_mint_module::{
+    msg::{CollectionFundInfo, ExecuteMsg as MintModuleExecuteMsg},
+    state::CollectionInfo,
+};
 use komple_permission_module::msg::ExecuteMsg as PermissionModuleExecuteMsg;
 use komple_token_module::msg::{
     ExecuteMsg as TokenModuleExecuteMsg, MetadataInfo, QueryMsg as TokenModuleQueryMsg, TokenInfo,
@@ -258,7 +261,6 @@ pub fn create_collection(
         description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
@@ -276,12 +278,18 @@ pub fn create_collection(
         },
         code_id: metadata_code_id,
     };
+    let fund_info = CollectionFundInfo {
+        is_native: true,
+        denom: NATIVE_DENOM.to_string(),
+        cw20_address: None,
+    };
     let msg = MintModuleExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         collection_config,
         collection_info,
         metadata_info,
         token_info,
+        fund_info,
         linked_collections,
     };
     let _ = app

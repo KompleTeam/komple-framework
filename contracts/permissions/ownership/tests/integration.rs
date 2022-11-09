@@ -7,7 +7,7 @@ use komple_hub_module::msg::{
 };
 use komple_hub_module::state::HubInfo;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_mint_module::msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg};
 use komple_mint_module::state::CollectionInfo;
 use komple_ownership_permission_module::msg::OwnershipMsg;
 use komple_permission_module::msg::{ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg};
@@ -195,7 +195,6 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
         description: "Test Collection".to_string(),
         image: "https://image.com".to_string(),
         external_link: None,
-        native_denom: NATIVE_DENOM.to_string(),
     };
     let token_info = TokenInfo {
         symbol: "TEST".to_string(),
@@ -213,12 +212,18 @@ pub fn create_collection(app: &mut App, mint_module_addr: Addr, token_module_cod
         },
         code_id: metadata_code_id,
     };
+    let fund_info = CollectionFundInfo {
+        is_native: true,
+        denom: NATIVE_DENOM.to_string(),
+        cw20_address: None,
+    };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         collection_config,
         collection_info,
         metadata_info,
         token_info,
+        fund_info,
         linked_collections: None,
     };
     let _ = app

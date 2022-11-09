@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
+    fee::{FundInfo, FUND_INFO_NAMESPACE},
     marketplace::FIXED_LISTING_NAMESPACE,
     shared::{
         CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
@@ -13,7 +14,6 @@ use cw_storage_plus::{Item, Map};
 pub struct Config {
     pub admin: Addr,
     pub buy_lock: bool,
-    pub native_denom: String,
 }
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
@@ -38,3 +38,8 @@ pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);
 
 /// Lock for the execute entry point.
 pub const EXECUTE_LOCK: Item<bool> = Item::new(EXECUTE_LOCK_NAMESPACE);
+
+/// Fund info for the marketplace.
+///
+/// This is used to lock the marketplace with a specific fund info.
+pub const FUND_INFO: Item<FundInfo> = Item::new(FUND_INFO_NAMESPACE);
