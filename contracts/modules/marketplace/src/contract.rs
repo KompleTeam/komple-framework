@@ -5,7 +5,6 @@ use cosmwasm_std::{
     Order, Response, StdError, StdResult, SubMsg, Uint128,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use cw20::{Cw20QueryMsg, TokenInfoResponse};
 use cw_storage_plus::Bound;
 use komple_fee_module::{
     helper::KompleFeeModule, msg::CustomPaymentAddress as FeeModuleCustomPaymentAddress,
@@ -24,6 +23,7 @@ use komple_types::{
     fee::{MarketplaceFees, MintFees},
     hub::MARBU_FEE_MODULE_NAMESPACE,
 };
+use komple_utils::funds::check_cw20_fund_info;
 use komple_utils::response::ResponseHelper;
 use komple_utils::shared::{execute_lock_execute, execute_update_operators};
 use komple_utils::{
@@ -79,16 +79,7 @@ pub fn instantiate(
     };
 
     if !fund_info.is_native {
-        if fund_info.cw20_address.is_none() {
-            return Err(ContractError::InvalidCw20Token {});
-        };
-        let res: TokenInfoResponse = deps.querier.query_wasm_smart(
-            fund_info.cw20_address.as_ref().unwrap(),
-            &Cw20QueryMsg::TokenInfo {},
-        )?;
-        if fund_info.denom != res.symbol {
-            return Err(ContractError::InvalidCw20Token {});
-        };
+        check_cw20_fund_info(&deps, &fund_info)?;
     };
     FUND_INFO.save(deps.storage, &fund_info)?;
 

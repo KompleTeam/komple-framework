@@ -41,9 +41,6 @@ pub enum ContractError {
     #[error("Token already listed")]
     AlreadyListed {},
 
-    #[error("Invalid cw20 token")]
-    InvalidCw20Token {},
-
     #[error("{0}")]
     Overflow(#[from] OverflowError),
 

@@ -304,6 +304,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw20-base"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61d826fa1084d026d0abdb54faa5956972efa3a9053473bfcefb5388960aab69"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus 0.16.0",
+ "cw-utils 0.16.0",
+ "cw2 0.16.0",
+ "cw20",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cw721"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -628,7 +646,7 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
- "cw20",
+ "cw20-base",
  "cw721-base",
  "komple-fee-module",
  "komple-hub-module",
@@ -783,6 +801,7 @@ version = "0.0.1"
 dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 0.15.1",
+ "cw20",
  "cw721-base",
  "komple-types",
  "schemars",
