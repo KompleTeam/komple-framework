@@ -1,4 +1,6 @@
-use cosmwasm_std::{Coin, MessageInfo, StdError, Uint128};
+use cosmwasm_std::{Coin, DepsMut, MessageInfo, StdError, Uint128};
+use cw20::{Cw20QueryMsg, TokenInfoResponse};
+use komple_types::fee::FundInfo;
 use thiserror::Error;
 
 pub fn check_single_amount(info: &MessageInfo, amount: Uint128) -> Result<(), FundsError> {
@@ -35,6 +37,20 @@ pub fn check_single_coin(info: &MessageInfo, expected: Coin) -> Result<(), Funds
     Ok(())
 }
 
+pub fn check_cw20_fund_info(deps: &DepsMut, fund_info: &FundInfo) -> Result<(), FundsError> {
+    if fund_info.cw20_address.is_none() {
+        return Err(FundsError::InvalidCw20Token {});
+    };
+    let res: TokenInfoResponse = deps.querier.query_wasm_smart(
+        fund_info.cw20_address.as_ref().unwrap(),
+        &Cw20QueryMsg::TokenInfo {},
+    )?;
+    if fund_info.denom != res.symbol {
+        return Err(FundsError::InvalidCw20Token {});
+    };
+    Ok(())
+}
+
 #[derive(Error, Debug, PartialEq)]
 pub enum FundsError {
     #[error("{0}")]
@@ -48,4 +64,7 @@ pub enum FundsError {
 
     #[error("No funds found!")]
     MissingFunds {},
+
+    #[error("Invalid cw20 token")]
+    InvalidCw20Token {},
 }
