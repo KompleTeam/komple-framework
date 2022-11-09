@@ -15,22 +15,22 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{fee::MintFees, module::Modules, shared::RegisterMsg};
+use komple_types::{fee::{MintFees, FundInfo}, module::Modules, shared::RegisterMsg};
 use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
 use komple_utils::{
     check_admin_privileges,
     response::ResponseHelper,
     shared::{execute_lock_execute, execute_update_operators},
-    storage::StorageHelper,
+    storage::StorageHelper, funds::check_cw20_fund_info,
 };
 use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
-use crate::state::{
+use crate::{state::{
     CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID,
-    COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, MINT_LOCKS, OPERATORS,
-};
+    COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, MINT_LOCKS, OPERATORS, COLLECTION_FUND_INFO,
+}, msg::CollectionFundInfo};
 use crate::{error::ContractError, state::EXECUTE_LOCK};
 use crate::{
     msg::{CollectionsResponse, ExecuteMsg, MigrateMsg, MintMsg, QueryMsg},
@@ -98,6 +98,7 @@ pub fn execute(
             collection_info,
             metadata_info,
             token_info,
+            fund_info,
             linked_collections,
         } => execute_create_collection(
             deps,
@@ -108,6 +109,7 @@ pub fn execute(
             collection_info,
             metadata_info,
             token_info,
+            fund_info,
             linked_collections,
         ),
         ExecuteMsg::UpdatePublicCollectionCreation {
@@ -174,6 +176,7 @@ pub fn execute_create_collection(
     collection_info: CollectionInfo,
     metadata_info: MetadataInfo,
     mut token_info: TokenInfo,
+    fund_info: CollectionFundInfo,
     linked_collections: Option<Vec<u32>>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
@@ -252,6 +255,21 @@ pub fn execute_create_collection(
     COLLECTION_ID.save(deps.storage, &collection_id)?;
 
     COLLECTION_INFO.save(deps.storage, collection_id, &collection_info)?;
+
+    let cw20_address = match fund_info.cw20_address {
+        Some(addr) => Some(deps.api.addr_validate(&addr)?),
+        None => None,
+    };
+    let fund_info = FundInfo {
+        is_native: fund_info.is_native,
+        denom: fund_info.denom,
+        cw20_address,
+    };
+
+    if !fund_info.is_native {
+        check_cw20_fund_info(&deps, &fund_info)?;
+    };
+    COLLECTION_FUND_INFO.save(deps.storage, collection_id, &fund_info)?;
 
     Ok(ResponseHelper::new_module("mint", "create_collection")
         .add_submessage(sub_msg)
