@@ -54,6 +54,7 @@ komple-types = { path = "../../../packages/types" }
 komple-utils = { path = "../../../packages/utils" }
 komple-fee-module = { path = "../fee", features = ["library"] }
 komple-whitelist-module = { path = "../whitelist", features = ["library"] }
+cw20 = "0.16.0"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"

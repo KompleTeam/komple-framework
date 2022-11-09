@@ -6,6 +6,7 @@ use cosmwasm_std::{
     WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
+use cw20::Cw20ExecuteMsg;
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
@@ -485,12 +486,26 @@ fn execute_mint(
                     }
                     // Create send message if not zero
                     if !whitelist_price.is_zero() {
-                        let msg = BankMsg::Send {
-                            to_address: config.admin.to_string(),
-                            amount: coins(
-                                whitelist_price.u128(),
-                                collection_fund_info.denom.to_string(),
-                            ),
+                        let msg = match collection_fund_info.is_native {
+                            true => CosmosMsg::Bank(BankMsg::Send {
+                                to_address: config.admin.to_string(),
+                                amount: coins(
+                                    whitelist_price.u128(),
+                                    collection_fund_info.denom.to_string(),
+                                ),
+                            }),
+                            false => CosmosMsg::Wasm(WasmMsg::Execute {
+                                contract_addr: collection_fund_info
+                                    .cw20_address
+                                    .as_ref()
+                                    .unwrap()
+                                    .to_string(),
+                                msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                                    recipient: config.admin.to_string(),
+                                    amount: whitelist_price,
+                                })?,
+                                funds: vec![],
+                            }),
                         };
                         msgs.push(msg.into());
                         total_price += whitelist_price;
@@ -514,12 +529,26 @@ fn execute_mint(
                 MintFees::new_price(collection_id),
             );
             if let Ok(fixed_fee_response) = res {
-                let msg = BankMsg::Send {
-                    to_address: config.admin.to_string(),
-                    amount: coins(
-                        fixed_fee_response.value.u128(),
-                        collection_fund_info.denom.to_string(),
-                    ),
+                let msg = match collection_fund_info.is_native {
+                    true => CosmosMsg::Bank(BankMsg::Send {
+                        to_address: config.admin.to_string(),
+                        amount: coins(
+                            fixed_fee_response.value.u128(),
+                            collection_fund_info.denom.to_string(),
+                        ),
+                    }),
+                    false => CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: collection_fund_info
+                            .cw20_address
+                            .as_ref()
+                            .unwrap()
+                            .to_string(),
+                        msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: config.admin.to_string(),
+                            amount: fixed_fee_response.value,
+                        })?,
+                        funds: vec![],
+                    }),
                 };
                 msgs.push(msg.into());
                 total_price += fixed_fee_response.value;
