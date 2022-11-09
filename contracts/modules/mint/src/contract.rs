@@ -15,23 +15,32 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{fee::{MintFees, FundInfo}, module::Modules, shared::RegisterMsg};
+use komple_types::{
+    fee::{FundInfo, MintFees},
+    module::Modules,
+    shared::RegisterMsg,
+};
 use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
 use komple_utils::{
     check_admin_privileges,
+    funds::check_cw20_fund_info,
     response::ResponseHelper,
     shared::{execute_lock_execute, execute_update_operators},
-    storage::StorageHelper, funds::check_cw20_fund_info,
+    storage::StorageHelper,
 };
 use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
-use crate::{state::{
-    CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_ID,
-    COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, MINT_LOCKS, OPERATORS, COLLECTION_FUND_INFO,
-}, msg::CollectionFundInfo};
 use crate::{error::ContractError, state::EXECUTE_LOCK};
+use crate::{
+    msg::CollectionFundInfo,
+    state::{
+        CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_FUND_INFO,
+        COLLECTION_ID, COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, MINT_LOCKS,
+        OPERATORS,
+    },
+};
 use crate::{
     msg::{CollectionsResponse, ExecuteMsg, MigrateMsg, MintMsg, QueryMsg},
     state::CREATORS,

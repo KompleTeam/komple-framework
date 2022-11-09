@@ -11,7 +11,10 @@ use komple_hub_module::{
 use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo};
 use komple_marketplace_module::ContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::{msg::ExecuteMsg as MintExecuteMsg, state::CollectionInfo};
+use komple_mint_module::{
+    msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg},
+    state::CollectionInfo,
+};
 use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::metadata::Metadata as MetadataType;
@@ -322,12 +325,18 @@ pub fn create_collection(
         },
         code_id: metadata_code_id,
     };
+    let fund_info = CollectionFundInfo {
+        is_native: true,
+        denom: NATIVE_DENOM.to_string(),
+        cw20_address: None,
+    };
     let msg = MintExecuteMsg::CreateCollection {
         code_id: token_module_code_id,
         collection_config,
         collection_info,
         metadata_info,
         token_info,
+        fund_info,
         linked_collections: None,
     };
     let _ = app

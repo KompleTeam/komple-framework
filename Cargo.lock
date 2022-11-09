@@ -711,6 +711,7 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "cw-utils 0.15.1",
  "cw2 0.15.1",
+ "cw20-base",
  "cw721",
  "cw721-base",
  "komple-fee-module",

@@ -5,7 +5,7 @@ use komple_fee_module::msg::ExecuteMsg as FeeExecuteMsg;
 use komple_hub_module::msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg};
 use komple_hub_module::state::HubInfo;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::ExecuteMsg;
+use komple_mint_module::msg::{CollectionFundInfo, ExecuteMsg};
 use komple_mint_module::state::CollectionInfo;
 use komple_mint_module::ContractError;
 use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
@@ -146,7 +146,7 @@ pub fn register_module(app: &mut App, hub_addr: &Addr, module: String, code_id: 
     .unwrap();
 }
 
-pub fn create_collection(app: &mut App, mint_module_addr: &Addr) {
+pub fn create_collection(app: &mut App, mint_module_addr: &Addr, fund_info: CollectionFundInfo) {
     let token_code_id = app.store_code(token_module());
     let metadata_code_id = app.store_code(metadata_module());
     let collection_info = CollectionInfo {
@@ -182,6 +182,7 @@ pub fn create_collection(app: &mut App, mint_module_addr: &Addr) {
             collection_info,
             metadata_info,
             token_info,
+            fund_info,
             linked_collections: None,
         },
         &[],
@@ -272,7 +273,15 @@ mod execute {
             .unwrap();
 
             // Create collection
-            create_collection(&mut app, &mint_module_addr);
+            create_collection(
+                &mut app,
+                &mint_module_addr,
+                CollectionFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                },
+            );
 
             // Set normal price
             set_minting_price(&mut app, &fee_module_addr, MintFees::Price.as_str(), 1, 10);
@@ -336,7 +345,15 @@ mod execute {
             .unwrap();
 
             // Create collection
-            create_collection(&mut app, &mint_module_addr);
+            create_collection(
+                &mut app,
+                &mint_module_addr,
+                CollectionFundInfo {
+                    is_native: true,
+                    denom: NATIVE_DENOM.to_string(),
+                    cw20_address: None,
+                },
+            );
             let collection_addr =
                 StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1)
                     .unwrap();
