@@ -97,7 +97,7 @@ pub fn execute(
                 Err(e) => Err(e.into()),
             }
         }
-        ExecuteMsg::Recieve(msg) => execute_receive(deps, env, info, msg),
+        ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
     }
 }
 
@@ -405,10 +405,15 @@ fn _distribute_percentage_fee(
         let mut is_custom_address = false;
 
         // Payment amount is total_funds * percentage / total_fee
-        let payment_amount = info.funds[0]
-            .amount
-            .mul(percentage.value.mul(Uint128::new(100)))
-            .checked_div(total_fee)?;
+        let payment_amount = match cw20_token_amount {
+            Some(amount) => amount
+                .mul(percentage.value.mul(Uint128::new(100)))
+                .checked_div(total_fee)?,
+            None => info.funds[0]
+                .amount
+                .mul(percentage.value.mul(Uint128::new(100)))
+                .checked_div(total_fee)?,
+        };
 
         // If we have some custom addresses find and replace the address
         if let Some(custom_payment_addresses) = custom_payment_addresses.clone() {

@@ -58,3 +58,4 @@ cw20 = "0.16.0"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
+cw20-base = "0.16.0"

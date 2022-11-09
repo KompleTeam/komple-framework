@@ -39,7 +39,7 @@ pub enum ExecuteMsg {
     /// Lock the execute entry point.
     /// Can only be called by the hub module.
     LockExecute {},
-    Recieve(Cw20ReceiveMsg),
+    Receive(Cw20ReceiveMsg),
 }
 
 impl From<ExecuteMsg> for SharedExecuteMsg {
