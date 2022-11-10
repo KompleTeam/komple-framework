@@ -1,15 +1,15 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
-    hub::{
-        HUB_INFO_NAMESPACE, MARBU_FEE_MODULE_NAMESPACE, MODULE_ID_NAMESPACE,
-        MODULE_TO_REGISTER_NAMESPACE,
-    },
     module::MODULES_NAMESPACE,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
+use komple_types::modules::hub::{
+    HUB_INFO_NAMESPACE, MARBU_FEE_MODULE_NAMESPACE, MODULE_ID_NAMESPACE,
+    MODULE_TO_REGISTER_NAMESPACE,
+};
 
 /// General information about the hub module.
 /// This information is equal to project information.

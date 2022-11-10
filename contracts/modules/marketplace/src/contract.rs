@@ -21,7 +21,7 @@ use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::token::Locks;
 use komple_types::shared::CONFIG_NAMESPACE;
-use komple_types::hub::MARBU_FEE_MODULE_NAMESPACE;
+use komple_types::modules::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_utils::funds::{check_cw20_fund_info, FundsError};
 use komple_utils::response::ResponseHelper;
 use komple_utils::shared::{execute_lock_execute, execute_update_operators};
