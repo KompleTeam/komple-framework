@@ -13,7 +13,7 @@ use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
-use komple_types::module::Modules;
+use komple_types::modules::Modules;
 use komple_types::modules::permission::Permissions;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
@@ -303,7 +303,7 @@ fn register_permission(app: &mut App, permission_module_addr: &Addr) {
 mod initialization {
     use super::*;
 
-    use komple_types::module::Modules;
+    use komple_types::modules::Modules;
 
     use komple_hub_module::ContractError;
     use komple_utils::storage::StorageHelper;
@@ -369,7 +369,7 @@ mod permission_mint {
     use komple_ownership_permission_module::msg::OwnershipMsg;
     use komple_permission_module::msg::PermissionCheckMsg;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::module::Modules;
+    use komple_types::modules::Modules;
     use komple_types::modules::permission::Permissions;
 
     #[test]

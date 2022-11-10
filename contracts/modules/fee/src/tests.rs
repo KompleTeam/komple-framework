@@ -9,7 +9,7 @@ use cosmwasm_std::{Binary, to_binary};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
-use komple_types::module::Modules;
+use komple_types::modules::Modules;
 use std::str::FromStr;
 use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
 

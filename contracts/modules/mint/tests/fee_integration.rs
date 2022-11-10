@@ -17,7 +17,7 @@ use komple_types::modules::fee::MintFees;
 use komple_types::modules::fee::{Fees, FixedPayment};
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
-use komple_types::module::Modules;
+use komple_types::modules::Modules;
 use komple_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;

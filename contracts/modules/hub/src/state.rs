@@ -1,6 +1,5 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
-    module::MODULES_NAMESPACE,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
 };
 
@@ -10,6 +9,7 @@ use komple_types::modules::hub::{
     HUB_INFO_NAMESPACE, MARBU_FEE_MODULE_NAMESPACE, MODULE_ID_NAMESPACE,
     MODULE_TO_REGISTER_NAMESPACE,
 };
+use komple_types::modules::MODULES_NAMESPACE;
 
 /// General information about the hub module.
 /// This information is equal to project information.

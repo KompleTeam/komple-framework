@@ -8,7 +8,7 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::msg::CustomPaymentAddress;
 use komple_fee_module::msg::ExecuteMsg;
 use komple_types::shared::RegisterMsg;
-use komple_types::module::Modules;
+use komple_types::modules::Modules;
 use komple_utils::funds::FundsError;
 use std::str::FromStr;
 use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};

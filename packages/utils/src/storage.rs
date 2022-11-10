@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, Empty, from_slice, QuerierWrapper, StdError, StdResult};
 use cw721_base::state::TokenInfo;
 use cw_storage_plus::Path;
-use komple_types::module::MODULES_NAMESPACE;
+use komple_types::modules::MODULES_NAMESPACE;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{ops::Deref, str::from_utf8};

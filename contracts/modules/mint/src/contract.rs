@@ -16,10 +16,7 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{
-    module::Modules,
-    shared::RegisterMsg,
-};
+use komple_types::shared::RegisterMsg;
 use komple_types::query::ResponseWrapper;
 use komple_utils::{
     check_admin_privileges,
@@ -32,6 +29,7 @@ use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 use komple_types::modules::fee::{FundInfo, MintFees};
+use komple_types::modules::Modules;
 use komple_types::modules::whitelist::WHITELIST_NAMESPACE;
 
 use crate::{error::ContractError, msg::ReceiveMsg, state::EXECUTE_LOCK};

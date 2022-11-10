@@ -16,7 +16,7 @@ use komple_token_module::{
 };
 use komple_types::modules::fee::{Fees, FundInfo};
 use komple_types::modules::marketplace::Listing;
-use komple_types::module::Modules;
+use komple_types::modules::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::modules::token::Locks;

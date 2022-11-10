@@ -5,7 +5,7 @@ use komple_hub_module::msg::ExecuteMsg as HubExecuteMsg;
 use komple_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
 use komple_marketplace_module::ContractError;
 use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use komple_types::module::Modules;
+use komple_types::modules::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::funds::FundsError;

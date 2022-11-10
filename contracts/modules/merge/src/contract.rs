@@ -9,7 +9,7 @@ use komple_mint_module::helper::KompleMintModule;
 use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::helper::KompleTokenModule;
 use komple_types::events::MergeEventAttributes;
-use komple_types::module::Modules;
+use komple_types::modules::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::response::{EventHelper, ResponseHelper};
