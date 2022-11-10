@@ -1,3 +1,5 @@
+pub mod events;
+
 /// Message used for instantiating a contract.
 ///
 /// Admin is a mandatory field for every contract.
