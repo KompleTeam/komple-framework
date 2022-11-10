@@ -20,7 +20,7 @@ use komple_types::{
     module::Modules,
     shared::RegisterMsg,
 };
-use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
+use komple_types::query::ResponseWrapper;
 use komple_utils::{
     check_admin_privileges,
     funds::{check_cw20_fund_info, FundsError},
@@ -32,6 +32,7 @@ use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 use komple_types::modules::fee::{FundInfo, MintFees};
+use komple_types::modules::whitelist::WHITELIST_NAMESPACE;
 
 use crate::{error::ContractError, msg::ReceiveMsg, state::EXECUTE_LOCK};
 use crate::{

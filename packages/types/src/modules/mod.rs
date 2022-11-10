@@ -5,3 +5,4 @@ pub mod metadata;
 pub mod mint;
 pub mod permission;
 pub mod token;
+pub mod whitelist;
