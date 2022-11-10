@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
+use cosmwasm_std::{Addr, Coin, Empty, to_binary, Uint128};
 use cw721::OwnerOfResponse;
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -19,9 +19,10 @@ use komple_token_module::msg::{
 };
 use komple_token_module::state::CollectionConfig;
 use komple_types::{
-    metadata::Metadata as MetadataType, mint::Collections, module::Modules,
+    mint::Collections, module::Modules,
     permission::Permissions, shared::RegisterMsg,
 };
+use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
@@ -825,7 +826,7 @@ mod permission_merge {
 
     mod link_permission {
         use komple_link_permission_module::{
-            msg::LinkPermissionMsg, ContractError as LinkPermissionError,
+            ContractError as LinkPermissionError, msg::LinkPermissionMsg,
         };
         use komple_permission_module::msg::PermissionCheckMsg;
 

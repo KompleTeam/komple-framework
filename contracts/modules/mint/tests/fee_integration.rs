@@ -15,7 +15,7 @@ use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, Toke
 use komple_token_module::state::CollectionConfig;
 use komple_types::modules::fee::MintFees;
 use komple_types::modules::fee::{Fees, FixedPayment};
-use komple_types::metadata::Metadata as MetadataType;
+use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::mint::Collections;
 use komple_types::module::Modules;
 use komple_types::shared::RegisterMsg;

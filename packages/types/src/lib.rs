@@ -1,6 +1,5 @@
 pub mod events;
 pub mod execute;
-pub mod metadata;
 pub mod mint;
 pub mod module;
 pub mod permission;
