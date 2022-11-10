@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Uint128};
+use cosmwasm_std::{Addr, Coin, Decimal, Empty, to_binary, Uint128};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::msg::ExecuteMsg as FeeModuleExecuteMsg;
@@ -19,16 +19,12 @@ use komple_token_module::state::CollectionConfig;
 use komple_types::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
-use komple_types::{
-    fee::{Fees, PercentagePayment as FeeModulePercentagePayment},
-    shared::RegisterMsg,
-};
-use komple_types::{
-    fee::{MarketplaceFees, MintFees},
-    mint::Collections,
-};
+use komple_types::shared::RegisterMsg;
+use komple_types::mint::Collections;
 use komple_utils::storage::StorageHelper;
 use std::str::FromStr;
+use komple_types::modules::fee::{MarketplaceFees, MintFees};
+use komple_types::modules::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
 
 pub const CREATOR: &str = "juno..creator";
 pub const USER: &str = "juno..user";

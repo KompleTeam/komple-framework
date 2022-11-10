@@ -1,9 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
-    fee::{FundInfo, FUND_INFO_NAMESPACE},
     mint::{
-        Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
-        COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, CREATORS_NAMESPACE,
+        BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE, COLLECTION_ID_NAMESPACE,
+        COLLECTION_INFO_NAMESPACE, Collections, CREATORS_NAMESPACE,
         LINKED_COLLECTIONS_NAMESPACE, MINT_LOCKS_NAMESPACE,
     },
     shared::{
@@ -13,6 +12,7 @@ use komple_types::{
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
+use komple_types::modules::fee::{FUND_INFO_NAMESPACE, FundInfo};
 
 #[cw_serde]
 pub struct Config {
