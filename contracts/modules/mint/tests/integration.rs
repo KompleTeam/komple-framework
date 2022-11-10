@@ -10,7 +10,7 @@ use komple_token_module::{
     state::CollectionConfig,
 };
 use komple_types::shared::RegisterMsg;
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_utils::funds::FundsError;
@@ -174,7 +174,7 @@ mod actions {
         use super::*;
         use cw721::OwnerOfResponse;
         use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-        use komple_types::query::ResponseWrapper;
+        use komple_types::shared::query::ResponseWrapper;
 
         #[test]
         fn test_happy_path() {

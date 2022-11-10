@@ -5,7 +5,7 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use komple_types::modules::Modules;
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
 use komple_utils::response::{EventHelper, ResponseHelper};
 use komple_utils::storage::StorageHelper;

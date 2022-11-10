@@ -25,7 +25,7 @@ use komple_permission_module::{
     ContractError as PermissionModuleContractError, msg::ExecuteMsg as PermissionModuleExecuteMsg,
 };
 use komple_types::shared::RegisterMsg;
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::modules::Modules;
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {

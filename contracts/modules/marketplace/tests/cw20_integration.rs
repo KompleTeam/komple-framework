@@ -10,7 +10,7 @@ use komple_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
 use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use komple_types::modules::marketplace::Listing;
 use komple_types::shared::RegisterMsg;
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 

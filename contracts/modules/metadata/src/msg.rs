@@ -1,6 +1,6 @@
 use crate::state::{Config, Metadata, MetaInfo, Trait};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::modules::metadata::Metadata as MetadataType;
 
 /// Message to be sent along the `RegisterMsg` for instantiation.

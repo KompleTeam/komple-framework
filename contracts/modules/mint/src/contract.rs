@@ -17,7 +17,7 @@ use komple_token_module::{
     state::CollectionConfig,
 };
 use komple_types::shared::RegisterMsg;
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_utils::{
     check_admin_privileges,
     funds::{check_cw20_fund_info, FundsError},

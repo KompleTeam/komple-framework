@@ -6,7 +6,7 @@ use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::execute::SharedExecuteMsg;
 
 #[cw_serde]

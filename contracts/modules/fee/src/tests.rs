@@ -7,7 +7,7 @@ use cosmwasm_std::StdError;
 use cosmwasm_std::{Addr, coin, Empty, Uint128};
 use cosmwasm_std::{Binary, to_binary};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::modules::Modules;
 use std::str::FromStr;

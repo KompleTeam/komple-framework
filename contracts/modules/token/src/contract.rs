@@ -8,7 +8,7 @@ use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_types::modules::token::{Locks, SubModules};
 use komple_utils::check_admin_privileges;

@@ -67,7 +67,7 @@ mod actions {
     use super::*;
 
     mod register_permission {
-        use komple_types::query::ResponseWrapper;
+        use komple_types::shared::query::ResponseWrapper;
 
         use super::*;
 

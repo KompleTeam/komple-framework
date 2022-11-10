@@ -248,7 +248,7 @@ mod actions {
     use super::*;
 
     mod update_operators {
-        use komple_types::query::ResponseWrapper;
+        use komple_types::shared::query::ResponseWrapper;
 
         use super::*;
 
@@ -353,7 +353,7 @@ mod actions {
     }
 
     mod update_buy_lock {
-        use komple_types::query::ResponseWrapper;
+        use komple_types::shared::query::ResponseWrapper;
         use komple_types::modules::marketplace::Listing;
 
         use crate::state::Config;
