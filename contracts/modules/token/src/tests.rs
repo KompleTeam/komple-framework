@@ -9,12 +9,10 @@ use komple_metadata_module::{
     state::{Metadata as MetadataMetadata, MetaInfo},
 };
 use komple_types::shared::RegisterMsg;
-use komple_types::{
-    query::ResponseWrapper,
-    token::{Locks, SubModules},
-};
+use komple_types::query::ResponseWrapper;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
+use komple_types::modules::token::{Locks, SubModules};
 use komple_utils::storage::StorageHelper;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {

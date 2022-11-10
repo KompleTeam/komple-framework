@@ -19,7 +19,7 @@ use komple_types::modules::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
-use komple_types::token::Locks;
+use komple_types::modules::token::Locks;
 use komple_types::shared::CONFIG_NAMESPACE;
 use komple_types::modules::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_utils::funds::{check_cw20_fund_info, FundsError};

@@ -147,7 +147,8 @@ mod actions {
             use super::*;
 
             use komple_marketplace_module::state::FixedListing;
-            use komple_types::{query::ResponseWrapper, token::Locks};
+            use komple_types::query::ResponseWrapper;
+            use komple_types::modules::token::Locks;
             use komple_utils::storage::StorageHelper;
 
             #[test]
