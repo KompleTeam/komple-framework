@@ -15,7 +15,7 @@ use komple_token_module::{
     ContractError as TokenContractError, helper::KompleTokenModule, state::Config as TokenConfig,
 };
 use komple_types::modules::fee::{Fees, FundInfo};
-use komple_types::marketplace::Listing;
+use komple_types::modules::marketplace::Listing;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;

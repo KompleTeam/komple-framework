@@ -1,8 +1,8 @@
 use crate::{
-    msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo, QueryMsg},
     ContractError,
+    msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo, QueryMsg},
 };
-use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
+use cosmwasm_std::{Addr, Coin, Empty, to_binary, Uint128};
 use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_types::shared::RegisterMsg;
@@ -353,7 +353,8 @@ mod actions {
     }
 
     mod update_buy_lock {
-        use komple_types::{marketplace::Listing, query::ResponseWrapper};
+        use komple_types::query::ResponseWrapper;
+        use komple_types::modules::marketplace::Listing;
 
         use crate::state::Config;
 

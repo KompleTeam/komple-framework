@@ -1,6 +1,5 @@
 pub mod events;
 pub mod execute;
-pub mod marketplace;
 pub mod metadata;
 pub mod mint;
 pub mod module;
