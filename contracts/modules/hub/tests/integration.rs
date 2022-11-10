@@ -2,30 +2,31 @@ use cosmwasm_std::{coin, to_binary};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::{
-    msg::ExecuteMsg as FeeModuleExecuteMsg, ContractError as FeeModuleContractError,
+    ContractError as FeeModuleContractError, msg::ExecuteMsg as FeeModuleExecuteMsg,
 };
 use komple_hub_module::{
+    ContractError,
     msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg},
     state::HubInfo,
-    ContractError,
 };
 use komple_marketplace_module::msg::{
     InstantiateMsg as MarketplaceModuleInstantiateMsg, MarketplaceFundInfo,
 };
 use komple_marketplace_module::{
-    msg::ExecuteMsg as MarketplaceModuleExecuteMsg, ContractError as MarketplaceModuleContractError,
+    ContractError as MarketplaceModuleContractError, msg::ExecuteMsg as MarketplaceModuleExecuteMsg,
 };
 use komple_merge_module::{
-    msg::ExecuteMsg as MergeModuleExecuteMsg, ContractError as MergeModuleContractError,
+    ContractError as MergeModuleContractError, msg::ExecuteMsg as MergeModuleExecuteMsg,
 };
 use komple_mint_module::{
-    msg::ExecuteMsg as MintModuleExecuteMsg, ContractError as MintModuleContractError,
+    ContractError as MintModuleContractError, msg::ExecuteMsg as MintModuleExecuteMsg,
 };
 use komple_permission_module::{
-    msg::ExecuteMsg as PermissionModuleExecuteMsg, ContractError as PermissionModuleContractError,
+    ContractError as PermissionModuleContractError, msg::ExecuteMsg as PermissionModuleExecuteMsg,
 };
 use komple_types::shared::RegisterMsg;
-use komple_types::{module::Modules, query::ResponseWrapper};
+use komple_types::shared::query::ResponseWrapper;
+use komple_types::modules::Modules;
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

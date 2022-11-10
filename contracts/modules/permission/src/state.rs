@@ -4,13 +4,13 @@ use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
 
 use komple_types::{
-    permission::{
-        MODULE_PERMISSIONS_NAMESPACE, PERMISSIONS_NAMESPACE, PERMISSION_ID_NAMESPACE,
-        PERMISSION_TO_REGISTER_NAMESPACE,
-    },
     shared::{
         CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
     },
+};
+use komple_types::modules::permission::{
+    MODULE_PERMISSIONS_NAMESPACE, PERMISSION_ID_NAMESPACE, PERMISSION_TO_REGISTER_NAMESPACE,
+    PERMISSIONS_NAMESPACE,
 };
 
 #[cw_serde]

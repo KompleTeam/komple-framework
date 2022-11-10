@@ -15,11 +15,11 @@ use komple_mint_module::state::CollectionInfo;
 use komple_permission_module::msg::{ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg};
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
-use komple_types::metadata::Metadata as MetadataType;
-use komple_types::mint::Collections;
-use komple_types::module::Modules;
-use komple_types::permission::{AttributeConditions, Permissions};
-use komple_types::query::ResponseWrapper;
+use komple_types::modules::metadata::Metadata as MetadataType;
+use komple_types::modules::mint::Collections;
+use komple_types::modules::Modules;
+use komple_types::modules::permission::{AttributeConditions, Permissions};
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
 

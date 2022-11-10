@@ -1,5 +1,6 @@
-use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Binary;
+pub mod events;
+pub mod execute;
+pub mod query;
 
 /// Message used for instantiating a contract.
 ///

@@ -1,7 +1,8 @@
 use crate::state::Config;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::{execute::SharedExecuteMsg, query::ResponseWrapper};
+use komple_types::shared::query::ResponseWrapper;
+use komple_types::shared::execute::SharedExecuteMsg;
 
 #[cw_serde]
 pub enum ExecuteMsg {

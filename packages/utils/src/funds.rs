@@ -1,6 +1,6 @@
 use cosmwasm_std::{Coin, DepsMut, MessageInfo, StdError, Uint128};
 use cw20::{Cw20QueryMsg, TokenInfoResponse};
-use komple_types::fee::FundInfo;
+use komple_types::modules::fee::FundInfo;
 use thiserror::Error;
 
 pub fn check_single_amount(info: &MessageInfo, amount: Uint128) -> Result<(), FundsError> {

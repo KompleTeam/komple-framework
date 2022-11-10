@@ -1,5 +1,14 @@
-use cosmwasm_schema::cw_serde;
 use std::fmt;
+use cosmwasm_schema::cw_serde;
+
+pub mod fee;
+pub mod hub;
+pub mod marketplace;
+pub mod metadata;
+pub mod mint;
+pub mod permission;
+pub mod token;
+pub mod whitelist;
 
 #[cw_serde]
 pub enum Modules {

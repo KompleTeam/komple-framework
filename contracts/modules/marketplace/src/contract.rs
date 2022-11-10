@@ -1,10 +1,10 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, from_binary, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
-    MessageInfo, Order, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
+    Addr, BankMsg, Binary, coin, Coin, CosmosMsg, Deps, DepsMut, Env, from_binary, MessageInfo,
+    Order, Response, StdError, StdResult, SubMsg, to_binary, Uint128, WasmMsg,
 };
-use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw2::{ContractVersion, get_contract_version, set_contract_version};
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
 use komple_fee_module::{
@@ -12,19 +12,16 @@ use komple_fee_module::{
     msg::ExecuteMsg as FeeModuleExecuteMsg,
 };
 use komple_token_module::{
-    helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
+    ContractError as TokenContractError, helper::KompleTokenModule, state::Config as TokenConfig,
 };
-use komple_types::fee::FundInfo;
-use komple_types::marketplace::Listing;
-use komple_types::module::Modules;
-use komple_types::query::ResponseWrapper;
+use komple_types::modules::fee::{Fees, FundInfo};
+use komple_types::modules::marketplace::Listing;
+use komple_types::modules::Modules;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
-use komple_types::token::Locks;
-use komple_types::{fee::Fees, shared::CONFIG_NAMESPACE};
-use komple_types::{
-    fee::{MarketplaceFees, MintFees},
-    hub::MARBU_FEE_MODULE_NAMESPACE,
-};
+use komple_types::modules::token::Locks;
+use komple_types::shared::CONFIG_NAMESPACE;
+use komple_types::modules::hub::MARBU_FEE_MODULE_NAMESPACE;
 use komple_utils::funds::{check_cw20_fund_info, FundsError};
 use komple_utils::response::ResponseHelper;
 use komple_utils::shared::{execute_lock_execute, execute_update_operators};
@@ -33,10 +30,11 @@ use komple_utils::{
 };
 use semver::Version;
 use std::ops::Mul;
+use komple_types::modules::fee::{MarketplaceFees, MintFees};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, ReceiveMsg};
 use crate::state::{
-    Config, FixedListing, CONFIG, EXECUTE_LOCK, FIXED_LISTING, FUND_INFO, HUB_ADDR,
+    Config, CONFIG, EXECUTE_LOCK, FIXED_LISTING, FixedListing, FUND_INFO, HUB_ADDR,
 };
 use crate::{error::ContractError, state::OPERATORS};
 

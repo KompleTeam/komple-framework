@@ -3,11 +3,9 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::CustomMsg;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_types::{
-    mint::Collections,
-    query::ResponseWrapper,
-    token::{Locks, SubModules},
-};
+use komple_types::shared::query::ResponseWrapper;
+use komple_types::modules::mint::Collections;
+use komple_types::modules::token::{Locks, SubModules};
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 #[cw_serde]

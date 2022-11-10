@@ -1,9 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coins, from_binary, to_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps,
-    DepsMut, Env, MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg,
-    Timestamp, Uint128, WasmMsg,
+    Addr, Attribute, BankMsg, Binary, Coin, coins, CosmosMsg, Deps, DepsMut, Env,
+    from_binary, MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp,
+    to_binary, Uint128, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
@@ -16,12 +16,8 @@ use komple_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::{
-    fee::{FundInfo, MintFees},
-    module::Modules,
-    shared::RegisterMsg,
-};
-use komple_types::{query::ResponseWrapper, whitelist::WHITELIST_NAMESPACE};
+use komple_types::shared::RegisterMsg;
+use komple_types::shared::query::ResponseWrapper;
 use komple_utils::{
     check_admin_privileges,
     funds::{check_cw20_fund_info, FundsError},
@@ -32,13 +28,16 @@ use komple_utils::{
 use komple_utils::{funds::check_single_coin, response::EventHelper};
 use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
+use komple_types::modules::fee::{FundInfo, MintFees};
+use komple_types::modules::Modules;
+use komple_types::modules::whitelist::WHITELIST_NAMESPACE;
 
 use crate::{error::ContractError, msg::ReceiveMsg, state::EXECUTE_LOCK};
 use crate::{
     msg::CollectionFundInfo,
     state::{
-        CollectionInfo, Config, BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_FUND_INFO,
-        COLLECTION_ID, COLLECTION_INFO, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, MINT_LOCKS,
+        BLACKLIST_COLLECTION_ADDRS, COLLECTION_ADDRS, COLLECTION_FUND_INFO, COLLECTION_ID, COLLECTION_INFO,
+        CollectionInfo, Config, CONFIG, HUB_ADDR, LINKED_COLLECTIONS, MINT_LOCKS,
         OPERATORS,
     },
 };

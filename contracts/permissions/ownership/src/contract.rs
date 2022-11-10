@@ -4,8 +4,8 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use komple_types::module::Modules;
-use komple_types::query::ResponseWrapper;
+use komple_types::modules::Modules;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
 use komple_utils::response::{EventHelper, ResponseHelper};
 use komple_utils::storage::StorageHelper;

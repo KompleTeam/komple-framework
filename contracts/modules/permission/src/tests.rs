@@ -2,7 +2,7 @@ use crate::msg::{ExecuteMsg, QueryMsg};
 use crate::ContractError;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::query::ResponseWrapper;
+use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {

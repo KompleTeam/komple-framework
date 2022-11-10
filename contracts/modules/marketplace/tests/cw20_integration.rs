@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Empty, Uint128};
+use cosmwasm_std::{Addr, Empty, to_binary, Uint128};
 use cw20::Cw20Coin;
 use cw20::{BalanceResponse, Cw20ExecuteMsg, Cw20QueryMsg};
 use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
@@ -8,14 +8,15 @@ use komple_hub_module::msg::QueryMsg as HubQueryMsg;
 use komple_marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use komple_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
 use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use komple_types::marketplace::Listing;
+use komple_types::modules::marketplace::Listing;
 use komple_types::shared::RegisterMsg;
-use komple_types::{module::Modules, query::ResponseWrapper};
+use komple_types::shared::query::ResponseWrapper;
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 
 pub mod helpers;
 use helpers::*;
+use komple_types::modules::Modules;
 
 pub fn cw20_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

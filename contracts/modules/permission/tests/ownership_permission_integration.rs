@@ -2,7 +2,7 @@ use cosmwasm_std::to_binary;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_permission_module::msg::{ExecuteMsg, QueryMsg};
-use komple_types::permission::Permissions;
+use komple_types::modules::permission::Permissions;
 use komple_types::shared::RegisterMsg;
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
@@ -67,7 +67,7 @@ mod actions {
     use super::*;
 
     mod register_permission {
-        use komple_types::query::ResponseWrapper;
+        use komple_types::shared::query::ResponseWrapper;
 
         use super::*;
 
