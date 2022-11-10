@@ -2,8 +2,9 @@ use crate::state::Config;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Decimal, Uint128};
 use cw20::Cw20ReceiveMsg;
-use komple_types::{execute::SharedExecuteMsg, query::ResponseWrapper};
+use komple_types::query::ResponseWrapper;
 use komple_types::modules::fee::Fees;
+use komple_types::shared::execute::SharedExecuteMsg;
 
 #[cw_serde]
 pub enum ExecuteMsg {

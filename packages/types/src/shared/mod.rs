@@ -1,4 +1,5 @@
 pub mod events;
+pub mod execute;
 
 /// Message used for instantiating a contract.
 ///
