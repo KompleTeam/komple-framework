@@ -1,16 +1,16 @@
 use cosmwasm_schema::cw_serde;
 use komple_types::{
-    mint::Collections,
     shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE},
     token::{
-        Locks, SubModules, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE,
-        MINTED_TOKENS_PER_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE, TOKEN_IDS_NAMESPACE,
+        COLLECTION_TYPE_NAMESPACE, Locks, LOCKS_NAMESPACE, MINTED_TOKENS_PER_ADDR_NAMESPACE,
+        SUB_MODULES_NAMESPACE, SubModules, TOKEN_IDS_NAMESPACE,
         TOKEN_LOCKS_NAMESPACE,
     },
 };
 
 use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
+use komple_types::modules::mint::Collections;
 
 #[cw_serde]
 pub struct Config {

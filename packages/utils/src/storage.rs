@@ -2,7 +2,6 @@ use cosmwasm_std::{Addr, Empty, from_slice, QuerierWrapper, StdError, StdResult}
 use cw721_base::state::TokenInfo;
 use cw_storage_plus::Path;
 use komple_types::{
-    mint::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE},
     module::MODULES_NAMESPACE,
     token::{
         Locks, LOCKS_NAMESPACE, SUB_MODULES_NAMESPACE, SubModules, TOKEN_LOCKS_NAMESPACE,
@@ -13,6 +12,7 @@ use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{ops::Deref, str::from_utf8};
 use komple_types::modules::fee::{FIXED_FEES_NAMESPACE, FixedPayment, PERCENTAGE_FEES_NAMESPACE, PercentagePayment};
+use komple_types::modules::mint::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct StorageHelper();

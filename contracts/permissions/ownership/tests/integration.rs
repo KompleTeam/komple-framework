@@ -15,7 +15,7 @@ use komple_permission_module::ContractError;
 use komple_token_module::msg::{MetadataInfo, QueryMsg as TokenQueryMsg, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::mint::Collections;
+use komple_types::modules::mint::Collections;
 use komple_types::module::Modules;
 use komple_types::permission::Permissions;
 use komple_types::query::ResponseWrapper;

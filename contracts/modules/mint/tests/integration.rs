@@ -10,8 +10,9 @@ use komple_token_module::{
     state::CollectionConfig,
 };
 use komple_types::shared::RegisterMsg;
-use komple_types::{mint::Collections, query::ResponseWrapper};
+use komple_types::query::ResponseWrapper;
 use komple_types::modules::metadata::Metadata as MetadataType;
+use komple_types::modules::mint::Collections;
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 

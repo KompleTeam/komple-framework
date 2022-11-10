@@ -20,7 +20,7 @@ use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::module::Modules;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
-use komple_types::mint::Collections;
+use komple_types::modules::mint::Collections;
 use komple_utils::storage::StorageHelper;
 use std::str::FromStr;
 use komple_types::modules::fee::{MarketplaceFees, MintFees};

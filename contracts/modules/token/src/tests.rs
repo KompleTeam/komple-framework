@@ -10,11 +10,11 @@ use komple_metadata_module::{
 };
 use komple_types::shared::RegisterMsg;
 use komple_types::{
-    mint::Collections,
     query::ResponseWrapper,
     token::{Locks, SubModules},
 };
 use komple_types::modules::metadata::Metadata as MetadataType;
+use komple_types::modules::mint::Collections;
 use komple_utils::storage::StorageHelper;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
