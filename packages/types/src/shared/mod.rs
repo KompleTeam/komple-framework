@@ -1,6 +1,3 @@
-use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Binary;
-
 /// Message used for instantiating a contract.
 ///
 /// Admin is a mandatory field for every contract.
