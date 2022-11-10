@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
+use cosmwasm_std::{Addr, coin, Coin, Empty, to_binary, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_hub_module::msg::{
@@ -14,7 +14,7 @@ use komple_token_module::state::CollectionConfig;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::module::Modules;
-use komple_types::permission::Permissions;
+use komple_types::modules::permission::Permissions;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 
@@ -369,7 +369,8 @@ mod permission_mint {
     use komple_ownership_permission_module::msg::OwnershipMsg;
     use komple_permission_module::msg::PermissionCheckMsg;
     use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::{module::Modules, permission::Permissions};
+    use komple_types::module::Modules;
+    use komple_types::modules::permission::Permissions;
 
     #[test]
     fn test_happy_path() {

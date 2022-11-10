@@ -6,7 +6,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use komple_metadata_module::helper::KompleMetadataModule;
 use komple_types::module::Modules;
-use komple_types::permission::AttributeConditions;
+use komple_types::modules::permission::AttributeConditions;
 use komple_types::query::ResponseWrapper;
 use komple_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
 use komple_utils::response::EventHelper;
