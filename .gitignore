@@ -27,3 +27,5 @@ tarpaulin-report.*
 packages/*/schema
 contracts/modules/*/schema
 contracts/permissions/*/schema
+
+js-types
