@@ -2,9 +2,9 @@ use crate::state::{Config, FixedListing};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
 use cw20::Cw20ReceiveMsg;
-use komple_types::shared::query::ResponseWrapper;
 use komple_types::modules::marketplace::Listing;
 use komple_types::shared::execute::SharedExecuteMsg;
+use komple_types::shared::query::ResponseWrapper;
 
 /// Message to be sent along the ```RegisterMsg``` for instantiation.
 #[cw_serde]

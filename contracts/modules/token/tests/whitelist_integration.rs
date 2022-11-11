@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, Timestamp, to_binary};
+use cosmwasm_std::{coin, to_binary, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
@@ -6,11 +6,11 @@ use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::ContractError;
-use komple_types::shared::RegisterMsg;
-use komple_types::shared::query::ResponseWrapper;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::token::SubModules as TokenSubModules;
+use komple_types::shared::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 use komple_whitelist_module::state::WhitelistConfig;
 

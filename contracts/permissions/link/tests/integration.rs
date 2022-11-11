@@ -15,8 +15,8 @@ use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
-use komple_types::modules::Modules;
 use komple_types::modules::permission::Permissions;
+use komple_types::modules::Modules;
 use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
 

@@ -1,5 +1,5 @@
-use std::fmt;
 use cosmwasm_schema::cw_serde;
+use std::fmt;
 
 pub mod fee;
 pub mod hub;

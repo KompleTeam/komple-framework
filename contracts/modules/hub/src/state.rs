@@ -1,7 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use komple_types::{
-    shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE},
-};
+use komple_types::shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};

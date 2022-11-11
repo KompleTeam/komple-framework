@@ -4,14 +4,14 @@ use crate::state::Config;
 use crate::ContractError;
 use cosmwasm_std::Decimal;
 use cosmwasm_std::StdError;
-use cosmwasm_std::{Addr, coin, Empty, Uint128};
-use cosmwasm_std::{Binary, to_binary};
+use cosmwasm_std::{coin, Addr, Empty, Uint128};
+use cosmwasm_std::{to_binary, Binary};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_types::modules::Modules;
 use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
-use komple_types::modules::Modules;
 use std::str::FromStr;
-use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
 
 const ADMIN: &str = "juno..admin";
 const KOMPLE: &str = "juno..komple";

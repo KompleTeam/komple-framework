@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Empty, to_binary, Uint128};
+use cosmwasm_std::{to_binary, Addr, Empty, Uint128};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::Executor;
 use komple_hub_module::msg::ExecuteMsg as HubExecuteMsg;
@@ -134,8 +134,8 @@ mod actions {
 
     use cosmwasm_std::Uint128;
     use komple_marketplace_module::{
-        ContractError as MarketplaceContractError,
         msg::{ExecuteMsg as MarketplaceExecuteMsg, QueryMsg as MarketplaceQueryMsg},
+        ContractError as MarketplaceContractError,
     };
     use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
     use komple_token_module::ContractError as TokenContractError;
@@ -147,8 +147,8 @@ mod actions {
             use super::*;
 
             use komple_marketplace_module::state::FixedListing;
-            use komple_types::shared::query::ResponseWrapper;
             use komple_types::modules::token::Locks;
+            use komple_types::shared::query::ResponseWrapper;
             use komple_utils::storage::StorageHelper;
 
             #[test]
@@ -626,8 +626,8 @@ mod actions {
 
     mod pricing {
         use komple_marketplace_module::state::FixedListing;
-        use komple_types::shared::query::ResponseWrapper;
         use komple_types::modules::marketplace::Listing;
+        use komple_types::shared::query::ResponseWrapper;
 
         use super::*;
 

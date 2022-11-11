@@ -1,2 +1,2 @@
-pub mod shared;
 pub mod modules;
+pub mod shared;

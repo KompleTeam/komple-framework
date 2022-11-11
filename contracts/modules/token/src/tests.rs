@@ -1,18 +1,18 @@
 use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use crate::state::{CollectionConfig, Config as TokenConfig};
 use crate::ContractError;
-use cosmwasm_std::{Addr, coin, Coin, Empty, Timestamp, to_binary, Uint128};
+use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_metadata_module::{
     msg::{InstantiateMsg as MetadataInstantiateMsg, QueryMsg as MetadataQueryMsg},
-    state::{Metadata as MetadataMetadata, MetaInfo},
+    state::{MetaInfo, Metadata as MetadataMetadata},
 };
-use komple_types::shared::RegisterMsg;
-use komple_types::shared::query::ResponseWrapper;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::token::{Locks, SubModules};
+use komple_types::shared::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {

@@ -1,5 +1,5 @@
 use cosmwasm_std::Decimal;
-use cosmwasm_std::{Binary, to_binary};
+use cosmwasm_std::{to_binary, Binary};
 use cosmwasm_std::{Addr, Empty, Uint128};
 use cw20::Cw20Coin;
 use cw20::{BalanceResponse, Cw20ExecuteMsg, Cw20QueryMsg};
@@ -7,11 +7,11 @@ use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_fee_module::msg::CustomPaymentAddress;
 use komple_fee_module::msg::ExecuteMsg;
-use komple_types::shared::RegisterMsg;
+use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
 use komple_types::modules::Modules;
+use komple_types::shared::RegisterMsg;
 use komple_utils::funds::FundsError;
 use std::str::FromStr;
-use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
 
 const ADMIN: &str = "juno..admin";
 const KOMPLE: &str = "juno..komple";

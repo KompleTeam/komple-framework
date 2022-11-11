@@ -1,13 +1,13 @@
 use crate::msg::{MergeBurnMsg, MergeMsg};
 use crate::{
-    ContractError,
     msg::{ExecuteMsg, QueryMsg},
     state::Config,
+    ContractError,
 };
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::shared::RegisterMsg;
 use komple_types::shared::query::ResponseWrapper;
+use komple_types::shared::RegisterMsg;
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
