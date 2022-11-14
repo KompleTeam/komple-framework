@@ -1,8 +1,11 @@
 [package]
-name = "komple-ownership-permission-module"
+name = "komple-framework-ownership-permission"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
+authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
+description = "Contract used to check the ownership of an user for a token in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/permissions/ownership"
+homepage = "https://komple.io"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -46,15 +49,15 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-types = { path = "../../../packages/types" }
-komple-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
+komple-framework-types = { path = "../../../packages/types" }
+komple-framework-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-permission-module = { path = "../../modules/permission", features = ["library"] }
-komple-metadata-module = { path = "../../modules/metadata", features = ["library"] }
-komple-token-module = { path = "../../modules/token", features = ["library"] }
-komple-mint-module = { path = "../../modules/mint", features = ["library"] }
-komple-hub-module = { path = "../../modules/hub", features = ["library"] }
+komple-framework-permission-module = { path = "../../modules/permission", features = ["library"] }
+komple-framework-metadata-module = { path = "../../modules/metadata", features = ["library"] }
+komple-framework-token-module = { path = "../../modules/token", features = ["library"] }
+komple-framework-mint-module = { path = "../../modules/mint", features = ["library"] }
+komple-framework-hub-module = { path = "../../modules/hub", features = ["library"] }
 cw721-base = { version = "0.15.0", features = ["library"] }
 cw721 = "0.15.0"

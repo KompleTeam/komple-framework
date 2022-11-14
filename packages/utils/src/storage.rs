@@ -1,15 +1,17 @@
 use cosmwasm_std::{from_slice, Addr, Empty, QuerierWrapper, StdError, StdResult};
 use cw721_base::state::TokenInfo;
 use cw_storage_plus::Path;
-use komple_types::modules::fee::{
+use komple_framework_types::modules::fee::{
     FixedPayment, PercentagePayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE,
 };
-use komple_types::modules::mint::{COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE};
-use komple_types::modules::token::{
+use komple_framework_types::modules::mint::{
+    COLLECTION_ADDRS_NAMESPACE, LINKED_COLLECTIONS_NAMESPACE,
+};
+use komple_framework_types::modules::token::{
     Locks, SubModules, LOCKS_NAMESPACE, SUB_MODULES_NAMESPACE, TOKENS_NAMESPACE,
     TOKEN_LOCKS_NAMESPACE,
 };
-use komple_types::modules::MODULES_NAMESPACE;
+use komple_framework_types::modules::MODULES_NAMESPACE;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{ops::Deref, str::from_utf8};

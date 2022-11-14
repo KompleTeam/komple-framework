@@ -3,20 +3,20 @@ use cw20::Cw20Coin;
 use cw20::{BalanceResponse, Cw20ExecuteMsg, Cw20QueryMsg};
 use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
-use komple_hub_module::msg::ExecuteMsg as HubExecuteMsg;
-use komple_hub_module::msg::QueryMsg as HubQueryMsg;
-use komple_marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
-use komple_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
-use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use komple_types::modules::marketplace::Listing;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::funds::FundsError;
-use komple_utils::storage::StorageHelper;
+use komple_framework_hub_module::msg::ExecuteMsg as HubExecuteMsg;
+use komple_framework_hub_module::msg::QueryMsg as HubQueryMsg;
+use komple_framework_marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
+use komple_framework_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
+use komple_framework_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_framework_types::modules::marketplace::Listing;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::funds::FundsError;
+use komple_framework_utils::storage::StorageHelper;
 
 pub mod helpers;
 use helpers::*;
-use komple_types::modules::Modules;
+use komple_framework_types::modules::Modules;
 
 pub fn cw20_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

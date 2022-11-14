@@ -1,8 +1,11 @@
 [package]
-name = "komple-marketplace-module"
+name = "komple-framework-marketplace-module"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
+authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
+description = "Contract used for the second hand sale of tokens in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/modules/marketplace"
+homepage = "https://komple.io"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -47,16 +50,16 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-types = { path = "../../../packages/types" }
-komple-utils = { path = "../../../packages/utils" }
-komple-token-module = { path = "../token", features = ["library"] }
-komple-fee-module = { path = "../fee", features = ["library"] }
+komple-framework-types = { path = "../../../packages/types" }
+komple-framework-utils = { path = "../../../packages/utils" }
+komple-framework-token-module = { path = "../token", features = ["library"] }
+komple-framework-fee-module = { path = "../fee", features = ["library"] }
 cw721-base = { version = "0.15.0", features = ["library"] }
 cw20 = "0.16.0"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-hub-module = { path = "../hub", features = ["library"] }
-komple-mint-module = { path = "../mint", features = ["library"] }
-komple-metadata-module = { path = "../metadata", features = ["library"] }
+komple-framework-hub-module = { path = "../hub", features = ["library"] }
+komple-framework-mint-module = { path = "../mint", features = ["library"] }
+komple-framework-metadata-module = { path = "../metadata", features = ["library"] }
 cw20-base = "0.16.0"

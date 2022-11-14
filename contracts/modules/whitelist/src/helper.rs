@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, QuerierWrapper, StdResult};
-use komple_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::query::ResponseWrapper;
 
 use crate::msg::{ConfigResponse, QueryMsg};
 

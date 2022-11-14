@@ -1,85 +1,85 @@
 use cosmwasm_std::{coin, to_binary};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::{
+use komple_framework_fee_module::{
     msg::ExecuteMsg as FeeModuleExecuteMsg, ContractError as FeeModuleContractError,
 };
-use komple_hub_module::{
+use komple_framework_hub_module::{
     msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg},
     state::HubInfo,
     ContractError,
 };
-use komple_marketplace_module::msg::{
+use komple_framework_marketplace_module::msg::{
     InstantiateMsg as MarketplaceModuleInstantiateMsg, MarketplaceFundInfo,
 };
-use komple_marketplace_module::{
+use komple_framework_marketplace_module::{
     msg::ExecuteMsg as MarketplaceModuleExecuteMsg, ContractError as MarketplaceModuleContractError,
 };
-use komple_merge_module::{
+use komple_framework_merge_module::{
     msg::ExecuteMsg as MergeModuleExecuteMsg, ContractError as MergeModuleContractError,
 };
-use komple_mint_module::{
+use komple_framework_mint_module::{
     msg::ExecuteMsg as MintModuleExecuteMsg, ContractError as MintModuleContractError,
 };
-use komple_permission_module::{
+use komple_framework_permission_module::{
     msg::ExecuteMsg as PermissionModuleExecuteMsg, ContractError as PermissionModuleContractError,
 };
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_permission_module::contract::execute,
-        komple_permission_module::contract::instantiate,
-        komple_permission_module::contract::query,
+        komple_framework_permission_module::contract::execute,
+        komple_framework_permission_module::contract::instantiate,
+        komple_framework_permission_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_merge_module::contract::execute,
-        komple_merge_module::contract::instantiate,
-        komple_merge_module::contract::query,
+        komple_framework_merge_module::contract::execute,
+        komple_framework_merge_module::contract::instantiate,
+        komple_framework_merge_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_marketplace_module::contract::execute,
-        komple_marketplace_module::contract::instantiate,
-        komple_marketplace_module::contract::query,
+        komple_framework_marketplace_module::contract::execute,
+        komple_framework_marketplace_module::contract::instantiate,
+        komple_framework_marketplace_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn fee_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_module::contract::execute,
-        komple_fee_module::contract::instantiate,
-        komple_fee_module::contract::query,
+        komple_framework_fee_module::contract::execute,
+        komple_framework_fee_module::contract::instantiate,
+        komple_framework_fee_module::contract::query,
     );
     Box::new(contract)
 }

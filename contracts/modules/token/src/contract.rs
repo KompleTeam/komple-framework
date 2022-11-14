@@ -6,15 +6,15 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::token::{Locks, SubModules};
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::check_admin_privileges;
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::shared::execute_update_operators;
-use komple_whitelist_module::helper::KompleWhitelistHelper;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::token::{Locks, SubModules};
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::check_admin_privileges;
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::shared::execute_update_operators;
+use komple_framework_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -29,8 +29,10 @@ use crate::state::{
 use cw721::ContractInfoResponse;
 use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 
-use komple_metadata_module::{helper::KompleMetadataModule, state::MetaInfo as MetadataMetaInfo};
-use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_framework_metadata_module::{
+    helper::KompleMetadataModule, state::MetaInfo as MetadataMetaInfo,
+};
+use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 pub type Cw721Contract<'a> =
     cw721_base::Cw721Contract<'a, Empty, Empty, TokenExecuteMsg, TokenQueryMsg>;
@@ -38,7 +40,7 @@ pub type ExecuteMsg = cw721_base::ExecuteMsg<Empty, TokenExecuteMsg>;
 pub type QueryMsg = cw721_base::QueryMsg<TokenQueryMsg>;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-token-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-token-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const METADATA_MODULE_INSTANTIATE_REPLY_ID: u64 = 1;

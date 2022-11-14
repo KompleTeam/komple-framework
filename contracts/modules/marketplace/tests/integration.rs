@@ -1,15 +1,15 @@
 use cosmwasm_std::{to_binary, Addr, Empty, Uint128};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::Executor;
-use komple_hub_module::msg::ExecuteMsg as HubExecuteMsg;
-use komple_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
-use komple_marketplace_module::ContractError;
-use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::funds::FundsError;
-use komple_utils::storage::StorageHelper;
+use komple_framework_hub_module::msg::ExecuteMsg as HubExecuteMsg;
+use komple_framework_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
+use komple_framework_marketplace_module::ContractError;
+use komple_framework_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::funds::FundsError;
+use komple_framework_utils::storage::StorageHelper;
 
 pub mod helpers;
 use helpers::*;
@@ -133,12 +133,12 @@ mod actions {
     use super::*;
 
     use cosmwasm_std::Uint128;
-    use komple_marketplace_module::{
+    use komple_framework_marketplace_module::{
         msg::{ExecuteMsg as MarketplaceExecuteMsg, QueryMsg as MarketplaceQueryMsg},
         ContractError as MarketplaceContractError,
     };
-    use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
-    use komple_token_module::ContractError as TokenContractError;
+    use komple_framework_token_module::msg::ExecuteMsg as TokenExecuteMsg;
+    use komple_framework_token_module::ContractError as TokenContractError;
 
     mod listing {
         use super::*;
@@ -146,10 +146,10 @@ mod actions {
         mod fixed_tokens {
             use super::*;
 
-            use komple_marketplace_module::state::FixedListing;
-            use komple_types::modules::token::Locks;
-            use komple_types::shared::query::ResponseWrapper;
-            use komple_utils::storage::StorageHelper;
+            use komple_framework_marketplace_module::state::FixedListing;
+            use komple_framework_types::modules::token::Locks;
+            use komple_framework_types::shared::query::ResponseWrapper;
+            use komple_framework_utils::storage::StorageHelper;
 
             #[test]
             fn test_happy_path() {
@@ -625,9 +625,9 @@ mod actions {
     }
 
     mod pricing {
-        use komple_marketplace_module::state::FixedListing;
-        use komple_types::modules::marketplace::Listing;
-        use komple_types::shared::query::ResponseWrapper;
+        use komple_framework_marketplace_module::state::FixedListing;
+        use komple_framework_types::modules::marketplace::Listing;
+        use komple_framework_types::shared::query::ResponseWrapper;
 
         use super::*;
 
@@ -739,7 +739,7 @@ mod actions {
         use super::*;
 
         use cosmwasm_std::coin;
-        use komple_types::modules::marketplace::Listing;
+        use komple_framework_types::modules::marketplace::Listing;
 
         mod fixed_tokens {
             use cosmwasm_std::StdError;
@@ -1348,7 +1348,7 @@ mod actions {
 }
 
 mod queries {
-    use komple_marketplace_module::{msg::QueryMsg, state::FixedListing};
+    use komple_framework_marketplace_module::{msg::QueryMsg, state::FixedListing};
 
     use super::*;
 

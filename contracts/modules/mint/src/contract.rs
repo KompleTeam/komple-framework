@@ -10,26 +10,26 @@ use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use komple_token_module::{
+use komple_framework_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_framework_token_module::{
     helper::KompleTokenModule,
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::modules::fee::{FundInfo, MintFees};
-use komple_types::modules::whitelist::WHITELIST_NAMESPACE;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::{
+use komple_framework_types::modules::fee::{FundInfo, MintFees};
+use komple_framework_types::modules::whitelist::WHITELIST_NAMESPACE;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::{
     check_admin_privileges,
     funds::{check_cw20_fund_info, FundsError},
     response::ResponseHelper,
     shared::{execute_lock_execute, execute_update_operators},
     storage::StorageHelper,
 };
-use komple_utils::{funds::check_single_coin, response::EventHelper};
-use komple_whitelist_module::helper::KompleWhitelistHelper;
+use komple_framework_utils::{funds::check_single_coin, response::EventHelper};
+use komple_framework_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
 use crate::{error::ContractError, msg::ReceiveMsg, state::EXECUTE_LOCK};
@@ -47,7 +47,7 @@ use crate::{
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-mint-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-mint-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TOKEN_INSTANTIATE_REPLY_ID: u64 = 1;

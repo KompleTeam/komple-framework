@@ -9,13 +9,13 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
-use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::check_admin_privileges;
-use komple_utils::funds::{check_single_amount, FundsError};
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::shared::execute_lock_execute;
+use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::check_admin_privileges;
+use komple_framework_utils::funds::{check_single_amount, FundsError};
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::shared::execute_lock_execute;
 
 use crate::error::ContractError;
 use crate::msg::{
@@ -24,7 +24,7 @@ use crate::msg::{
 use crate::state::{Config, CONFIG, EXECUTE_LOCK, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-fee-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-fee-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

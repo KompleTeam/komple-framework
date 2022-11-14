@@ -1,8 +1,8 @@
 use crate::msg::{CustomPaymentAddress, ExecuteMsg, QueryMsg};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Addr, Coin, Decimal, QuerierWrapper, StdResult, Uint128, WasmMsg};
-use komple_types::modules::fee::Fees;
-use komple_types::shared::query::ResponseWrapper;
+use komple_framework_types::modules::fee::Fees;
+use komple_framework_types::shared::query::ResponseWrapper;
 
 /// Helper methods for the fee module.
 ///

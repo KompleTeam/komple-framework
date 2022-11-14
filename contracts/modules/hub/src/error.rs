@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use komple_utils::{funds::FundsError, shared::SharedError, UtilError};
+use komple_framework_utils::{funds::FundsError, shared::SharedError, UtilError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

@@ -7,9 +7,9 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -17,7 +17,7 @@ use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMs
 use crate::state::{Config, WhitelistConfig, CONFIG, WHITELIST};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-whitelist-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-whitelist-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

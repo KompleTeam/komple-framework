@@ -6,9 +6,9 @@ use crate::{
 };
 use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -1096,7 +1096,7 @@ mod actions {
     }
 
     mod update_operators {
-        use komple_types::shared::query::ResponseWrapper;
+        use komple_framework_types::shared::query::ResponseWrapper;
 
         use super::*;
 

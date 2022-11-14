@@ -1,46 +1,48 @@
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::{CollectionFundInfo, CollectionsResponse, ExecuteMsg, QueryMsg};
-use komple_mint_module::state::CollectionInfo;
-use komple_mint_module::ContractError;
-use komple_token_module::{
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_framework_mint_module::msg::{
+    CollectionFundInfo, CollectionsResponse, ExecuteMsg, QueryMsg,
+};
+use komple_framework_mint_module::state::CollectionInfo;
+use komple_framework_mint_module::ContractError;
+use komple_framework_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::funds::FundsError;
-use komple_utils::storage::StorageHelper;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::funds::FundsError;
+use komple_framework_utils::storage::StorageHelper;
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_token_module::contract::execute,
-        komple_token_module::contract::instantiate,
-        komple_token_module::contract::query,
+        komple_framework_token_module::contract::execute,
+        komple_framework_token_module::contract::instantiate,
+        komple_framework_token_module::contract::query,
     )
-    .with_reply(komple_token_module::contract::reply);
+    .with_reply(komple_framework_token_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_metadata_module::contract::execute,
-        komple_metadata_module::contract::instantiate,
-        komple_metadata_module::contract::query,
+        komple_framework_metadata_module::contract::execute,
+        komple_framework_metadata_module::contract::instantiate,
+        komple_framework_metadata_module::contract::query,
     );
     Box::new(contract)
 }
@@ -173,8 +175,8 @@ mod actions {
     mod mint {
         use super::*;
         use cw721::OwnerOfResponse;
-        use komple_token_module::msg::QueryMsg as TokenQueryMsg;
-        use komple_types::shared::query::ResponseWrapper;
+        use komple_framework_token_module::msg::QueryMsg as TokenQueryMsg;
+        use komple_framework_types::shared::query::ResponseWrapper;
 
         #[test]
         fn test_happy_path() {

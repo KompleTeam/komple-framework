@@ -1,8 +1,11 @@
 [package]
-name = "komple-permission-module"
+name = "komple-framework-permission-module"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
+authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
+description = "Contract used for permission registry and execute/query message execution in front of module operations in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/modules/permission"
+homepage = "https://komple.io"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -47,10 +50,10 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-types = { path = "../../../packages/types" }
-komple-utils = { path = "../../../packages/utils", features = ["storage"] }
+komple-framework-types = { path = "../../../packages/types" }
+komple-framework-utils = { path = "../../../packages/utils", features = ["storage"] }
 cw-utils = "0.15.1"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-ownership-permission-module = { path = "../../permissions/ownership", features = ["library"] }
+komple-framework-ownership-permission = { path = "../../permissions/ownership", features = ["library"] }

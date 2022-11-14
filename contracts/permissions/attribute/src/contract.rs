@@ -4,21 +4,21 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use komple_metadata_module::helper::KompleMetadataModule;
-use komple_types::modules::permission::AttributeConditions;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
-use komple_utils::response::EventHelper;
-use komple_utils::response::ResponseHelper;
-use komple_utils::storage::StorageHelper;
+use komple_framework_metadata_module::helper::KompleMetadataModule;
+use komple_framework_types::modules::permission::AttributeConditions;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
+use komple_framework_utils::response::EventHelper;
+use komple_framework_utils::response::ResponseHelper;
+use komple_framework_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
 use crate::msg::{AttributeMsg, AttributeTypes, ExecuteMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-attribute-permission-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-attribute-permission";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

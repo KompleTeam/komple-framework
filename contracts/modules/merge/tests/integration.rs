@@ -2,28 +2,30 @@ use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
 use cw721::OwnerOfResponse;
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_hub_module::{
+use komple_framework_hub_module::{
     msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg},
     state::HubInfo,
 };
-use komple_merge_module::msg::{ExecuteMsg as MergeModuleExecuteMsg, MergeBurnMsg, MergeMsg};
-use komple_merge_module::ContractError as MergeContractError;
-use komple_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
-use komple_mint_module::{
+use komple_framework_merge_module::msg::{
+    ExecuteMsg as MergeModuleExecuteMsg, MergeBurnMsg, MergeMsg,
+};
+use komple_framework_merge_module::ContractError as MergeContractError;
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
+use komple_framework_mint_module::{
     msg::{CollectionFundInfo, ExecuteMsg as MintModuleExecuteMsg},
     state::CollectionInfo,
 };
-use komple_permission_module::msg::ExecuteMsg as PermissionModuleExecuteMsg;
-use komple_token_module::msg::{
+use komple_framework_permission_module::msg::ExecuteMsg as PermissionModuleExecuteMsg;
+use komple_framework_token_module::msg::{
     ExecuteMsg as TokenModuleExecuteMsg, MetadataInfo, QueryMsg as TokenModuleQueryMsg, TokenInfo,
 };
-use komple_token_module::state::CollectionConfig;
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::permission::Permissions;
-use komple_types::modules::Modules;
-use komple_types::shared::RegisterMsg;
-use komple_utils::storage::StorageHelper;
+use komple_framework_token_module::state::CollectionConfig;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::permission::Permissions;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -34,76 +36,76 @@ pub const TEST_DENOM: &str = "test_denom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_permission_module::contract::execute,
-        komple_permission_module::contract::instantiate,
-        komple_permission_module::contract::query,
+        komple_framework_permission_module::contract::execute,
+        komple_framework_permission_module::contract::instantiate,
+        komple_framework_permission_module::contract::query,
     )
-    .with_reply(komple_permission_module::contract::reply);
+    .with_reply(komple_framework_permission_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_token_module::contract::execute,
-        komple_token_module::contract::instantiate,
-        komple_token_module::contract::query,
+        komple_framework_token_module::contract::execute,
+        komple_framework_token_module::contract::instantiate,
+        komple_framework_token_module::contract::query,
     )
-    .with_reply(komple_token_module::contract::reply);
+    .with_reply(komple_framework_token_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_merge_module::contract::execute,
-        komple_merge_module::contract::instantiate,
-        komple_merge_module::contract::query,
+        komple_framework_merge_module::contract::execute,
+        komple_framework_merge_module::contract::instantiate,
+        komple_framework_merge_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_metadata_module::contract::execute,
-        komple_metadata_module::contract::instantiate,
-        komple_metadata_module::contract::query,
+        komple_framework_metadata_module::contract::execute,
+        komple_framework_metadata_module::contract::instantiate,
+        komple_framework_metadata_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn ownership_permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_ownership_permission_module::contract::execute,
-        komple_ownership_permission_module::contract::instantiate,
-        komple_ownership_permission_module::contract::query,
+        komple_framework_ownership_permission::contract::execute,
+        komple_framework_ownership_permission::contract::instantiate,
+        komple_framework_ownership_permission::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn link_permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_link_permission_module::contract::execute,
-        komple_link_permission_module::contract::instantiate,
-        komple_link_permission_module::contract::query,
+        komple_framework_link_permission::contract::execute,
+        komple_framework_link_permission::contract::instantiate,
+        komple_framework_link_permission::contract::query,
     );
     Box::new(contract)
 }
@@ -369,9 +371,9 @@ mod initialization {
     use super::*;
 
     use cosmwasm_std::to_binary;
-    use komple_types::modules::Modules;
+    use komple_framework_types::modules::Modules;
 
-    use komple_hub_module::ContractError;
+    use komple_framework_hub_module::ContractError;
 
     #[test]
     fn test_happy_path() {
@@ -642,8 +644,8 @@ mod permission_merge {
     use super::*;
 
     mod ownership_permission {
-        use komple_ownership_permission_module::msg::OwnershipMsg;
-        use komple_permission_module::msg::PermissionCheckMsg;
+        use komple_framework_ownership_permission::msg::OwnershipMsg;
+        use komple_framework_permission_module::msg::PermissionCheckMsg;
 
         use super::*;
 
@@ -825,10 +827,10 @@ mod permission_merge {
     }
 
     mod link_permission {
-        use komple_link_permission_module::{
+        use komple_framework_link_permission::{
             msg::LinkPermissionMsg, ContractError as LinkPermissionError,
         };
-        use komple_permission_module::msg::PermissionCheckMsg;
+        use komple_framework_permission_module::msg::PermissionCheckMsg;
 
         use super::*;
 

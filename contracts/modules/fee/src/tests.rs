@@ -7,10 +7,10 @@ use cosmwasm_std::StdError;
 use cosmwasm_std::{coin, Addr, Empty, Uint128};
 use cosmwasm_std::{to_binary, Binary};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use std::str::FromStr;
 
 const ADMIN: &str = "juno..admin";
@@ -665,7 +665,7 @@ mod actions {
         }
 
         mod fixed {
-            use komple_utils::funds::FundsError;
+            use komple_framework_utils::funds::FundsError;
 
             use super::*;
 

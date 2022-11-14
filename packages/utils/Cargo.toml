@@ -1,8 +1,11 @@
 [package]
-name = "komple-utils"
+name = "komple-framework-utils"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
+authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
+description = "Package used for utility methods in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/packages/utils"
+homepage = "https://komple.io"
 
 [features]
 default = [
@@ -13,7 +16,7 @@ default = [
 response = []
 funds = []
 storage = [
-    "dep:komple-types",
+    "dep:komple-framework-types",
     "dep:cw721-base",
     "dep:schemars",
     "dep:serde",
@@ -22,7 +25,7 @@ storage = [
 
 [dependencies]
 cosmwasm-std = { version = "1.1.0" }
-komple-types = { path = "../types", optional = true }
+komple-framework-types = { path = "../types", optional = true }
 thiserror = "1.0.30"
 cw721-base = { version = "0.15.0", features = ["library"], optional = true }
 schemars = { version = "0.8.8", optional = true }

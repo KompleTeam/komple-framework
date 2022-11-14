@@ -553,7 +553,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "komple-attribute-permission-module"
+name = "komple-framework-attribute-permission"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -562,18 +562,18 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
- "komple-hub-module",
- "komple-metadata-module",
- "komple-mint-module",
- "komple-permission-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
+ "komple-framework-hub-module",
+ "komple-framework-metadata-module",
+ "komple-framework-mint-module",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-fee-module"
+name = "komple-framework-fee-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -584,13 +584,13 @@ dependencies = [
  "cw2 0.15.1",
  "cw20",
  "cw20-base",
- "komple-types",
- "komple-utils",
+ "komple-framework-types",
+ "komple-framework-utils",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-hub-module"
+name = "komple-framework-hub-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -602,22 +602,22 @@ dependencies = [
  "cw2 0.15.1",
  "cw721",
  "cw721-base",
- "komple-fee-module",
- "komple-marketplace-module",
- "komple-merge-module",
- "komple-metadata-module",
- "komple-mint-module",
- "komple-ownership-permission-module",
- "komple-permission-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
+ "komple-framework-fee-module",
+ "komple-framework-marketplace-module",
+ "komple-framework-merge-module",
+ "komple-framework-metadata-module",
+ "komple-framework-mint-module",
+ "komple-framework-ownership-permission",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-link-permission-module"
+name = "komple-framework-link-permission"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -626,20 +626,20 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
- "komple-hub-module",
- "komple-metadata-module",
- "komple-mint-module",
- "komple-permission-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
+ "komple-framework-hub-module",
+ "komple-framework-metadata-module",
+ "komple-framework-mint-module",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
  "schemars",
  "serde",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-marketplace-module"
+name = "komple-framework-marketplace-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -651,19 +651,19 @@ dependencies = [
  "cw20",
  "cw20-base",
  "cw721-base",
- "komple-fee-module",
- "komple-hub-module",
- "komple-metadata-module",
- "komple-mint-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
+ "komple-framework-fee-module",
+ "komple-framework-hub-module",
+ "komple-framework-metadata-module",
+ "komple-framework-mint-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-merge-module"
+name = "komple-framework-merge-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -674,21 +674,21 @@ dependencies = [
  "cw2 0.15.1",
  "cw721",
  "cw721-base",
- "komple-hub-module",
- "komple-link-permission-module",
- "komple-metadata-module",
- "komple-mint-module",
- "komple-ownership-permission-module",
- "komple-permission-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
+ "komple-framework-hub-module",
+ "komple-framework-link-permission",
+ "komple-framework-metadata-module",
+ "komple-framework-mint-module",
+ "komple-framework-ownership-permission",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-metadata-module"
+name = "komple-framework-metadata-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -697,14 +697,14 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
- "komple-types",
- "komple-utils",
+ "komple-framework-types",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-mint-module"
+name = "komple-framework-mint-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -718,21 +718,21 @@ dependencies = [
  "cw20-base",
  "cw721",
  "cw721-base",
- "komple-fee-module",
- "komple-hub-module",
- "komple-metadata-module",
- "komple-ownership-permission-module",
- "komple-permission-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
- "komple-whitelist-module",
+ "komple-framework-fee-module",
+ "komple-framework-hub-module",
+ "komple-framework-metadata-module",
+ "komple-framework-ownership-permission",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
+ "komple-framework-whitelist-module",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-ownership-permission-module"
+name = "komple-framework-ownership-permission"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -743,18 +743,18 @@ dependencies = [
  "cw2 0.15.1",
  "cw721",
  "cw721-base",
- "komple-hub-module",
- "komple-metadata-module",
- "komple-mint-module",
- "komple-permission-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
+ "komple-framework-hub-module",
+ "komple-framework-metadata-module",
+ "komple-framework-mint-module",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-framework-types",
+ "komple-framework-utils",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-permission-module"
+name = "komple-framework-permission-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -764,15 +764,15 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "cw-utils 0.15.1",
  "cw2 0.15.1",
- "komple-ownership-permission-module",
- "komple-types",
- "komple-utils",
+ "komple-framework-ownership-permission",
+ "komple-framework-types",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-token-module"
+name = "komple-framework-token-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -784,16 +784,16 @@ dependencies = [
  "cw2 0.15.1",
  "cw721",
  "cw721-base",
- "komple-metadata-module",
- "komple-types",
- "komple-utils",
- "komple-whitelist-module",
+ "komple-framework-metadata-module",
+ "komple-framework-types",
+ "komple-framework-utils",
+ "komple-framework-whitelist-module",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-types"
+name = "komple-framework-types"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -801,21 +801,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "komple-utils"
+name = "komple-framework-utils"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 0.15.1",
  "cw20",
  "cw721-base",
- "komple-types",
+ "komple-framework-types",
  "schemars",
  "serde",
  "thiserror",
 ]
 
 [[package]]
-name = "komple-whitelist-module"
+name = "komple-framework-whitelist-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -825,8 +825,8 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "cw-utils 0.15.1",
  "cw2 0.15.1",
- "komple-types",
- "komple-utils",
+ "komple-framework-types",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]

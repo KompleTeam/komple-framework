@@ -5,12 +5,12 @@ use cw20::Cw20Coin;
 use cw20::{BalanceResponse, Cw20ExecuteMsg, Cw20QueryMsg};
 use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::msg::CustomPaymentAddress;
-use komple_fee_module::msg::ExecuteMsg;
-use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
-use komple_types::modules::Modules;
-use komple_types::shared::RegisterMsg;
-use komple_utils::funds::FundsError;
+use komple_framework_fee_module::msg::CustomPaymentAddress;
+use komple_framework_fee_module::msg::ExecuteMsg;
+use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::funds::FundsError;
 use std::str::FromStr;
 
 const ADMIN: &str = "juno..admin";
@@ -21,9 +21,9 @@ const CW20_DENOM: &str = "cwdenom";
 
 pub fn fee_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_module::contract::execute,
-        komple_fee_module::contract::instantiate,
-        komple_fee_module::contract::query,
+        komple_framework_fee_module::contract::execute,
+        komple_framework_fee_module::contract::instantiate,
+        komple_framework_fee_module::contract::query,
     );
     Box::new(contract)
 }

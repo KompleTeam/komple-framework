@@ -2,12 +2,12 @@ use crate::state::{CollectionInfo, Config};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw20::Cw20ReceiveMsg;
-use komple_token_module::{
+use komple_framework_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::shared::execute::SharedExecuteMsg;
-use komple_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::execute::SharedExecuteMsg;
+use komple_framework_types::shared::query::ResponseWrapper;
 
 #[cw_serde]
 pub struct CollectionFundInfo {

@@ -1,25 +1,25 @@
 use cosmwasm_std::to_binary;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_permission_module::msg::{ExecuteMsg, QueryMsg};
-use komple_types::modules::permission::Permissions;
-use komple_types::shared::RegisterMsg;
+use komple_framework_permission_module::msg::{ExecuteMsg, QueryMsg};
+use komple_framework_types::modules::permission::Permissions;
+use komple_framework_types::shared::RegisterMsg;
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_permission_module::contract::execute,
-        komple_permission_module::contract::instantiate,
-        komple_permission_module::contract::query,
+        komple_framework_permission_module::contract::execute,
+        komple_framework_permission_module::contract::instantiate,
+        komple_framework_permission_module::contract::query,
     )
-    .with_reply(komple_permission_module::contract::reply);
+    .with_reply(komple_framework_permission_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn ownership_permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_ownership_permission_module::contract::execute,
-        komple_ownership_permission_module::contract::instantiate,
-        komple_ownership_permission_module::contract::query,
+        komple_framework_ownership_permission::contract::execute,
+        komple_framework_ownership_permission::contract::instantiate,
+        komple_framework_ownership_permission::contract::query,
     );
     Box::new(contract)
 }
@@ -67,7 +67,7 @@ mod actions {
     use super::*;
 
     mod register_permission {
-        use komple_types::shared::query::ResponseWrapper;
+        use komple_framework_types::shared::query::ResponseWrapper;
 
         use super::*;
 

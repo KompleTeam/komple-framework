@@ -4,24 +4,26 @@ use cw20::{BalanceResponse, Cw20ExecuteMsg, Cw20QueryMsg};
 use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::msg::ExecuteMsg as FeeExecuteMsg;
-use komple_hub_module::msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg};
-use komple_hub_module::state::HubInfo;
-use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::{CollectionFundInfo, ExecuteMsg};
-use komple_mint_module::state::CollectionInfo;
-use komple_mint_module::ContractError;
-use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
-use komple_token_module::state::CollectionConfig;
-use komple_types::modules::fee::MintFees;
-use komple_types::modules::fee::{Fees, FixedPayment};
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::Modules;
-use komple_types::shared::RegisterMsg;
-use komple_utils::storage::StorageHelper;
-use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
-use komple_whitelist_module::state::WhitelistConfig;
+use komple_framework_fee_module::msg::ExecuteMsg as FeeExecuteMsg;
+use komple_framework_hub_module::msg::{
+    ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg,
+};
+use komple_framework_hub_module::state::HubInfo;
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_framework_mint_module::msg::{CollectionFundInfo, ExecuteMsg};
+use komple_framework_mint_module::state::CollectionInfo;
+use komple_framework_mint_module::ContractError;
+use komple_framework_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
+use komple_framework_token_module::state::CollectionConfig;
+use komple_framework_types::modules::fee::MintFees;
+use komple_framework_types::modules::fee::{Fees, FixedPayment};
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::storage::StorageHelper;
+use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_framework_whitelist_module::state::WhitelistConfig;
 
 pub const USER: &str = "juno..user";
 pub const USER2: &str = "juno..user2";
@@ -31,57 +33,57 @@ pub const CW20_DENOM: &str = "cwdenom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_token_module::contract::execute,
-        komple_token_module::contract::instantiate,
-        komple_token_module::contract::query,
+        komple_framework_token_module::contract::execute,
+        komple_framework_token_module::contract::instantiate,
+        komple_framework_token_module::contract::query,
     )
-    .with_reply(komple_token_module::contract::reply);
+    .with_reply(komple_framework_token_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_metadata_module::contract::execute,
-        komple_metadata_module::contract::instantiate,
-        komple_metadata_module::contract::query,
+        komple_framework_metadata_module::contract::execute,
+        komple_framework_metadata_module::contract::instantiate,
+        komple_framework_metadata_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn fee_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_module::contract::execute,
-        komple_fee_module::contract::instantiate,
-        komple_fee_module::contract::query,
+        komple_framework_fee_module::contract::execute,
+        komple_framework_fee_module::contract::instantiate,
+        komple_framework_fee_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn whitelist_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_whitelist_module::contract::execute,
-        komple_whitelist_module::contract::instantiate,
-        komple_whitelist_module::contract::query,
+        komple_framework_whitelist_module::contract::execute,
+        komple_framework_whitelist_module::contract::instantiate,
+        komple_framework_whitelist_module::contract::query,
     );
     Box::new(contract)
 }

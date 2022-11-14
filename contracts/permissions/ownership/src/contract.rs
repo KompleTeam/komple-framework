@@ -4,11 +4,11 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::storage::StorageHelper;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::storage::StorageHelper;
 use std::collections::HashMap;
 
 use crate::error::ContractError;
@@ -16,7 +16,7 @@ use crate::msg::{ExecuteMsg, OwnershipMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-ownership-permission-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-ownership-permission";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

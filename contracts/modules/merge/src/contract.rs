@@ -5,16 +5,16 @@ use cosmwasm_std::{
     StdResult, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
-use komple_mint_module::helper::KompleMintModule;
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use komple_token_module::helper::KompleTokenModule;
-use komple_types::modules::Modules;
-use komple_types::shared::events::MergeEventAttributes;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::shared::{execute_lock_execute, execute_update_operators};
-use komple_utils::{check_admin_privileges, storage::StorageHelper};
+use komple_framework_mint_module::helper::KompleMintModule;
+use komple_framework_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_framework_token_module::helper::KompleTokenModule;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::events::MergeEventAttributes;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::shared::{execute_lock_execute, execute_update_operators};
+use komple_framework_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 
 use crate::error::ContractError;
@@ -22,7 +22,7 @@ use crate::msg::{ExecuteMsg, MergeMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, EXECUTE_LOCK, HUB_ADDR, OPERATORS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-merge-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -1,8 +1,11 @@
 [package]
-name = "komple-link-permission-module"
+name = "komple-framework-link-permission"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
-edition = "2021"
+authors = ["findolor <findolor@komple.io>"]
+edition = "2018"
+description = "Contract used for checking the linked collections of a collection in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/permissions/link"
+homepage = "https://komple.io"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -48,13 +51,13 @@ cw2 = "0.15.1"
 schemars = "0.8.10"
 serde = { version = "1.0.145", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-komple-types = { path = "../../../packages/types" }
-komple-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
+komple-framework-types = { path = "../../../packages/types" }
+komple-framework-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-permission-module = { path = "../../modules/permission", features = ["library"] }
-komple-metadata-module = { path = "../../modules/metadata", features = ["library"] }
-komple-token-module = { path = "../../modules/token", features = ["library"] }
-komple-mint-module = { path = "../../modules/mint", features = ["library"] }
-komple-hub-module = { path = "../../modules/hub", features = ["library"] }
+komple-framework-permission-module = { path = "../../modules/permission", features = ["library"] }
+komple-framework-metadata-module = { path = "../../modules/metadata", features = ["library"] }
+komple-framework-token-module = { path = "../../modules/token", features = ["library"] }
+komple-framework-mint-module = { path = "../../modules/mint", features = ["library"] }
+komple-framework-hub-module = { path = "../../modules/hub", features = ["library"] }

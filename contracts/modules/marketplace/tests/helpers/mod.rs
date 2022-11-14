@@ -1,29 +1,29 @@
 use cosmwasm_std::{to_binary, Addr, Coin, Decimal, Empty, Uint128};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::msg::ExecuteMsg as FeeModuleExecuteMsg;
-use komple_hub_module::{
+use komple_framework_fee_module::msg::ExecuteMsg as FeeModuleExecuteMsg;
+use komple_framework_hub_module::{
     msg::{
         ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
     },
     state::HubInfo,
 };
-use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo};
-use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::{
+use komple_framework_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo};
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_framework_mint_module::{
     msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg},
     state::CollectionInfo,
 };
-use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
-use komple_token_module::state::CollectionConfig;
-use komple_types::modules::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
-use komple_types::modules::fee::{MarketplaceFees, MintFees};
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_utils::storage::StorageHelper;
+use komple_framework_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
+use komple_framework_token_module::state::CollectionConfig;
+use komple_framework_types::modules::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
+use komple_framework_types::modules::fee::{MarketplaceFees, MintFees};
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::storage::StorageHelper;
 use std::str::FromStr;
 
 pub const CREATOR: &str = "juno..creator";
@@ -36,57 +36,57 @@ pub const TEST_DENOM: &str = "test_denom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_token_module::contract::execute,
-        komple_token_module::contract::instantiate,
-        komple_token_module::contract::query,
+        komple_framework_token_module::contract::execute,
+        komple_framework_token_module::contract::instantiate,
+        komple_framework_token_module::contract::query,
     )
-    .with_reply(komple_token_module::contract::reply);
+    .with_reply(komple_framework_token_module::contract::reply);
     Box::new(contract)
 }
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_marketplace_module::contract::execute,
-        komple_marketplace_module::contract::instantiate,
-        komple_marketplace_module::contract::query,
+        komple_framework_marketplace_module::contract::execute,
+        komple_framework_marketplace_module::contract::instantiate,
+        komple_framework_marketplace_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_metadata_module::contract::execute,
-        komple_metadata_module::contract::instantiate,
-        komple_metadata_module::contract::query,
+        komple_framework_metadata_module::contract::execute,
+        komple_framework_metadata_module::contract::instantiate,
+        komple_framework_metadata_module::contract::query,
     );
     Box::new(contract)
 }
 
 pub fn fee_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_module::contract::execute,
-        komple_fee_module::contract::instantiate,
-        komple_fee_module::contract::query,
+        komple_framework_fee_module::contract::execute,
+        komple_framework_fee_module::contract::instantiate,
+        komple_framework_fee_module::contract::query,
     );
     Box::new(contract)
 }

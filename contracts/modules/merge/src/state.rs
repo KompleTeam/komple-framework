@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use komple_types::shared::{
+use komple_framework_types::shared::{
     CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
 };
 

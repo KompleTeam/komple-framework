@@ -1,10 +1,12 @@
 use cosmwasm_schema::cw_serde;
-use komple_types::shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE};
+use komple_framework_types::shared::{
+    CONFIG_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
+};
 
 use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
-use komple_types::modules::mint::Collections;
-use komple_types::modules::token::{
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::token::{
     Locks, SubModules, COLLECTION_TYPE_NAMESPACE, LOCKS_NAMESPACE,
     MINTED_TOKENS_PER_ADDR_NAMESPACE, SUB_MODULES_NAMESPACE, TOKEN_IDS_NAMESPACE,
     TOKEN_LOCKS_NAMESPACE,

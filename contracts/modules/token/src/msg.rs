@@ -2,11 +2,11 @@ use crate::state::{CollectionConfig, Config};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::CustomMsg;
-use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::token::{Locks, SubModules};
-use komple_types::shared::query::ResponseWrapper;
-use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::token::{Locks, SubModules};
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 #[cw_serde]
 pub struct TokenInfo {
