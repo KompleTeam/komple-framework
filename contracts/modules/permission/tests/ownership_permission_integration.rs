@@ -1,17 +1,17 @@
 use cosmwasm_std::to_binary;
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_permission_module::msg::{ExecuteMsg, QueryMsg};
+use komple_framework_permission_module::msg::{ExecuteMsg, QueryMsg};
 use komple_types::modules::permission::Permissions;
 use komple_types::shared::RegisterMsg;
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_permission_module::contract::execute,
-        komple_permission_module::contract::instantiate,
-        komple_permission_module::contract::query,
+        komple_framework_permission_module::contract::execute,
+        komple_framework_permission_module::contract::instantiate,
+        komple_framework_permission_module::contract::query,
     )
-    .with_reply(komple_permission_module::contract::reply);
+    .with_reply(komple_framework_permission_module::contract::reply);
     Box::new(contract)
 }
 

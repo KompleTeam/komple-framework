@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use komple_framework_mint_module::helper::KompleMintModule;
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_framework_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::helper::KompleTokenModule;
 use komple_types::modules::Modules;
 use komple_types::shared::events::MergeEventAttributes;

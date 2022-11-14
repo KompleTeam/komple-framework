@@ -15,7 +15,7 @@ use komple_framework_mint_module::{
     msg::{CollectionFundInfo, ExecuteMsg as MintModuleExecuteMsg},
     state::CollectionInfo,
 };
-use komple_permission_module::msg::ExecuteMsg as PermissionModuleExecuteMsg;
+use komple_framework_permission_module::msg::ExecuteMsg as PermissionModuleExecuteMsg;
 use komple_token_module::msg::{
     ExecuteMsg as TokenModuleExecuteMsg, MetadataInfo, QueryMsg as TokenModuleQueryMsg, TokenInfo,
 };
@@ -56,11 +56,11 @@ pub fn mint_module() -> Box<dyn Contract<Empty>> {
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_permission_module::contract::execute,
-        komple_permission_module::contract::instantiate,
-        komple_permission_module::contract::query,
+        komple_framework_permission_module::contract::execute,
+        komple_framework_permission_module::contract::instantiate,
+        komple_framework_permission_module::contract::query,
     )
-    .with_reply(komple_permission_module::contract::reply);
+    .with_reply(komple_framework_permission_module::contract::reply);
     Box::new(contract)
 }
 
@@ -644,8 +644,8 @@ mod permission_merge {
     use super::*;
 
     mod ownership_permission {
+        use komple_framework_permission_module::msg::PermissionCheckMsg;
         use komple_ownership_permission_module::msg::OwnershipMsg;
-        use komple_permission_module::msg::PermissionCheckMsg;
 
         use super::*;
 
@@ -827,10 +827,10 @@ mod permission_merge {
     }
 
     mod link_permission {
+        use komple_framework_permission_module::msg::PermissionCheckMsg;
         use komple_link_permission_module::{
             msg::LinkPermissionMsg, ContractError as LinkPermissionError,
         };
-        use komple_permission_module::msg::PermissionCheckMsg;
 
         use super::*;
 

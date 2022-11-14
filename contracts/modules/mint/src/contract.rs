@@ -10,7 +10,7 @@ use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
-use komple_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
+use komple_framework_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_token_module::{
     helper::KompleTokenModule,
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},

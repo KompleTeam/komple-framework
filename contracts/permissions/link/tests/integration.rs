@@ -7,10 +7,12 @@ use komple_framework_hub_module::state::HubInfo;
 use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_framework_mint_module::msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg};
 use komple_framework_mint_module::state::CollectionInfo;
+use komple_framework_permission_module::msg::{
+    ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg,
+};
+use komple_framework_permission_module::ContractError as PermissionError;
 use komple_link_permission_module::msg::LinkPermissionMsg;
 use komple_link_permission_module::ContractError;
-use komple_permission_module::msg::{ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg};
-use komple_permission_module::ContractError as PermissionError;
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_types::modules::metadata::Metadata as MetadataType;
@@ -48,11 +50,11 @@ pub fn mint_module() -> Box<dyn Contract<Empty>> {
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_permission_module::contract::execute,
-        komple_permission_module::contract::instantiate,
-        komple_permission_module::contract::query,
+        komple_framework_permission_module::contract::execute,
+        komple_framework_permission_module::contract::instantiate,
+        komple_framework_permission_module::contract::query,
     )
-    .with_reply(komple_permission_module::contract::reply);
+    .with_reply(komple_framework_permission_module::contract::reply);
     Box::new(contract)
 }
 

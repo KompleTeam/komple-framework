@@ -21,7 +21,7 @@ use komple_framework_merge_module::{
 use komple_framework_mint_module::{
     msg::ExecuteMsg as MintModuleExecuteMsg, ContractError as MintModuleContractError,
 };
-use komple_permission_module::{
+use komple_framework_permission_module::{
     msg::ExecuteMsg as PermissionModuleExecuteMsg, ContractError as PermissionModuleContractError,
 };
 use komple_types::modules::Modules;
@@ -50,9 +50,9 @@ pub fn mint_module() -> Box<dyn Contract<Empty>> {
 
 pub fn permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_permission_module::contract::execute,
-        komple_permission_module::contract::instantiate,
-        komple_permission_module::contract::query,
+        komple_framework_permission_module::contract::execute,
+        komple_framework_permission_module::contract::instantiate,
+        komple_framework_permission_module::contract::query,
     );
     Box::new(contract)
 }

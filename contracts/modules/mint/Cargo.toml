@@ -51,7 +51,7 @@ cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 komple-token-module = { path = "../token", features = ["library"] }
-komple-permission-module = { path = "../permission", features = ["library"] }
+komple-framework-permission-module = { path = "../permission", features = ["library"] }
 cw-utils = "0.15.1"
 komple-types = { path = "../../../packages/types" }
 komple-utils = { path = "../../../packages/utils" }
