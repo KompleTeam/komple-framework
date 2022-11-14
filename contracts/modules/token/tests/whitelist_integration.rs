@@ -8,13 +8,13 @@ use komple_framework_token_module::msg::{
 };
 use komple_framework_token_module::state::CollectionConfig;
 use komple_framework_token_module::ContractError;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::token::SubModules as TokenSubModules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 use komple_framework_whitelist_module::state::WhitelistConfig;
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::token::SubModules as TokenSubModules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

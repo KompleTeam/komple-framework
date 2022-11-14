@@ -6,9 +6,9 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
-use komple_types::modules::permission::SubPermissionExecuteMsg;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::permission::SubPermissionExecuteMsg;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
 use komple_utils::response::{EventHelper, ResponseHelper};
 use komple_utils::shared::{execute_lock_execute, execute_update_operators};

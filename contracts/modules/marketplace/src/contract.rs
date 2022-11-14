@@ -14,15 +14,15 @@ use komple_framework_fee_module::{
 use komple_framework_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
 };
-use komple_types::modules::fee::{Fees, FundInfo};
-use komple_types::modules::fee::{MarketplaceFees, MintFees};
-use komple_types::modules::hub::MARBU_FEE_MODULE_NAMESPACE;
-use komple_types::modules::marketplace::Listing;
-use komple_types::modules::token::Locks;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
-use komple_types::shared::CONFIG_NAMESPACE;
+use komple_framework_types::modules::fee::{Fees, FundInfo};
+use komple_framework_types::modules::fee::{MarketplaceFees, MintFees};
+use komple_framework_types::modules::hub::MARBU_FEE_MODULE_NAMESPACE;
+use komple_framework_types::modules::marketplace::Listing;
+use komple_framework_types::modules::token::Locks;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
+use komple_framework_types::shared::CONFIG_NAMESPACE;
 use komple_utils::funds::{check_cw20_fund_info, FundsError};
 use komple_utils::response::ResponseHelper;
 use komple_utils::shared::{execute_lock_execute, execute_update_operators};

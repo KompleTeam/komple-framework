@@ -8,11 +8,11 @@ use komple_framework_metadata_module::{
     msg::{InstantiateMsg as MetadataInstantiateMsg, QueryMsg as MetadataQueryMsg},
     state::{MetaInfo, Metadata as MetadataMetadata},
 };
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::token::{Locks, SubModules};
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::token::{Locks, SubModules};
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {

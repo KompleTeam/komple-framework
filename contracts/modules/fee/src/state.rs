@@ -1,9 +1,11 @@
 use cosmwasm_schema::cw_serde;
-use komple_types::shared::{CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, PARENT_ADDR_NAMESPACE};
+use komple_framework_types::shared::{
+    CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, PARENT_ADDR_NAMESPACE,
+};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
-use komple_types::modules::fee::{
+use komple_framework_types::modules::fee::{
     FixedPayment, PercentagePayment, FIXED_FEES_NAMESPACE, PERCENTAGE_FEES_NAMESPACE,
 };
 

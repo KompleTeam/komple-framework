@@ -1,11 +1,13 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
-use komple_types::modules::metadata::{
+use komple_framework_types::modules::metadata::{
     Metadata as MetadataType, DYNAMIC_LINKED_METADATA_NAMESPACE, LINKED_METADATA_NAMESPACE,
     METADATA_ID_NAMESPACE, METADATA_NAMESPACE,
 };
-use komple_types::shared::{CONFIG_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE};
+use komple_framework_types::shared::{
+    CONFIG_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
+};
 
 #[cw_serde]
 pub struct Config {

@@ -11,10 +11,10 @@ use komple_framework_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 
@@ -176,7 +176,7 @@ mod actions {
         use super::*;
         use cw721::OwnerOfResponse;
         use komple_framework_token_module::msg::QueryMsg as TokenQueryMsg;
-        use komple_types::shared::query::ResponseWrapper;
+        use komple_framework_types::shared::query::ResponseWrapper;
 
         #[test]
         fn test_happy_path() {

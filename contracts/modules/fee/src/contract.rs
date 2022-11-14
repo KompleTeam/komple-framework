@@ -9,9 +9,9 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
-use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
 use komple_utils::funds::{check_single_amount, FundsError};
 use komple_utils::response::{EventHelper, ResponseHelper};

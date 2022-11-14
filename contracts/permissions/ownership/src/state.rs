@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use komple_types::shared::{CONFIG_NAMESPACE, PARENT_ADDR_NAMESPACE};
+use komple_framework_types::shared::{CONFIG_NAMESPACE, PARENT_ADDR_NAMESPACE};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::Item;

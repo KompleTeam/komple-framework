@@ -5,10 +5,10 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use komple_framework_metadata_module::helper::KompleMetadataModule;
-use komple_types::modules::permission::AttributeConditions;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
+use komple_framework_types::modules::permission::AttributeConditions;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
 use komple_utils::response::EventHelper;
 use komple_utils::response::ResponseHelper;
 use komple_utils::storage::StorageHelper;

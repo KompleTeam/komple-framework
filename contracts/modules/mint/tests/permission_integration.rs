@@ -11,12 +11,12 @@ use komple_framework_mint_module::state::CollectionInfo;
 use komple_framework_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
 use komple_framework_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_framework_token_module::state::CollectionConfig;
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::permission::Permissions;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::permission::Permissions;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";
@@ -303,7 +303,7 @@ fn register_permission(app: &mut App, permission_module_addr: &Addr) {
 mod initialization {
     use super::*;
 
-    use komple_types::modules::Modules;
+    use komple_framework_types::modules::Modules;
 
     use komple_framework_hub_module::ContractError;
     use komple_utils::storage::StorageHelper;
@@ -369,8 +369,8 @@ mod permission_mint {
     use komple_framework_ownership_permission::msg::OwnershipMsg;
     use komple_framework_permission_module::msg::PermissionCheckMsg;
     use komple_framework_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_types::modules::permission::Permissions;
-    use komple_types::modules::Modules;
+    use komple_framework_types::modules::permission::Permissions;
+    use komple_framework_types::modules::Modules;
 
     #[test]
     fn test_happy_path() {

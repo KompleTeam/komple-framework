@@ -16,12 +16,12 @@ use komple_framework_token_module::{
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };
+use komple_framework_types::modules::fee::{FundInfo, MintFees};
+use komple_framework_types::modules::whitelist::WHITELIST_NAMESPACE;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_framework_whitelist_module::helper::KompleWhitelistHelper;
-use komple_types::modules::fee::{FundInfo, MintFees};
-use komple_types::modules::whitelist::WHITELIST_NAMESPACE;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
 use komple_utils::{
     check_admin_privileges,
     funds::{check_cw20_fund_info, FundsError},

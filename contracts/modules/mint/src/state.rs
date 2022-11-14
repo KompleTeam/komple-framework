@@ -1,12 +1,12 @@
 use cosmwasm_schema::cw_serde;
-use komple_types::shared::{
+use komple_framework_types::shared::{
     CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
 };
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
-use komple_types::modules::fee::{FundInfo, FUND_INFO_NAMESPACE};
-use komple_types::modules::mint::{
+use komple_framework_types::modules::fee::{FundInfo, FUND_INFO_NAMESPACE};
+use komple_framework_types::modules::mint::{
     Collections, BLACKLIST_COLLECTION_ADDRS_NAMESPACE, COLLECTION_ADDRS_NAMESPACE,
     COLLECTION_ID_NAMESPACE, COLLECTION_INFO_NAMESPACE, CREATORS_NAMESPACE,
     LINKED_COLLECTIONS_NAMESPACE, MINT_LOCKS_NAMESPACE,

@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Attribute, DepsMut, MessageInfo, Response, StdError, StdResult};
 use cw_storage_plus::Item;
-use komple_types::shared::PARENT_ADDR_NAMESPACE;
+use komple_framework_types::shared::PARENT_ADDR_NAMESPACE;
 use thiserror::Error;
 
 use crate::{

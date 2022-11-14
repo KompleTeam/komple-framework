@@ -51,7 +51,7 @@ cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 cw-utils = "0.15.1"
-komple-types = { path = "../../../packages/types" }
+komple-framework-types = { path = "../../../packages/types" }
 komple-utils = { path = "../../../packages/utils", features = ["response"] }
 
 [dev-dependencies]

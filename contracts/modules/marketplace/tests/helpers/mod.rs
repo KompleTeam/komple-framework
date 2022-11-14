@@ -16,13 +16,13 @@ use komple_framework_mint_module::{
 };
 use komple_framework_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
 use komple_framework_token_module::state::CollectionConfig;
-use komple_types::modules::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
-use komple_types::modules::fee::{MarketplaceFees, MintFees};
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::fee::{Fees, PercentagePayment as FeeModulePercentagePayment};
+use komple_framework_types::modules::fee::{MarketplaceFees, MintFees};
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
 use std::str::FromStr;
 

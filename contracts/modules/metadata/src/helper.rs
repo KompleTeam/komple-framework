@@ -4,7 +4,7 @@ use crate::{
 };
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Addr, QuerierWrapper, StdResult, WasmMsg};
-use komple_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::query::ResponseWrapper;
 
 /// Helper methods for the metadata module.
 ///

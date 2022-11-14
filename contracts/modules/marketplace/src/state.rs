@@ -1,12 +1,12 @@
 use cosmwasm_schema::cw_serde;
-use komple_types::shared::{
+use komple_framework_types::shared::{
     CONFIG_NAMESPACE, EXECUTE_LOCK_NAMESPACE, OPERATORS_NAMESPACE, PARENT_ADDR_NAMESPACE,
 };
 
 use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Item, Map};
-use komple_types::modules::fee::{FundInfo, FUND_INFO_NAMESPACE};
-use komple_types::modules::marketplace::FIXED_LISTING_NAMESPACE;
+use komple_framework_types::modules::fee::{FundInfo, FUND_INFO_NAMESPACE};
+use komple_framework_types::modules::marketplace::FIXED_LISTING_NAMESPACE;
 
 #[cw_serde]
 pub struct Config {

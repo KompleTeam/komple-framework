@@ -6,8 +6,8 @@ use crate::{
 use cosmwasm_std::{coin, to_binary};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

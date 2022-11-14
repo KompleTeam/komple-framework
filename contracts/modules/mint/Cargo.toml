@@ -53,7 +53,7 @@ thiserror = { version = "1.0.31" }
 komple-framework-token-module = { path = "../token", features = ["library"] }
 komple-framework-permission-module = { path = "../permission", features = ["library"] }
 cw-utils = "0.15.1"
-komple-types = { path = "../../../packages/types" }
+komple-framework-types = { path = "../../../packages/types" }
 komple-utils = { path = "../../../packages/utils" }
 komple-framework-fee-module = { path = "../fee", features = ["library"] }
 komple-framework-whitelist-module = { path = "../whitelist", features = ["library"] }

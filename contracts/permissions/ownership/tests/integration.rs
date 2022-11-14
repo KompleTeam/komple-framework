@@ -16,12 +16,12 @@ use komple_framework_permission_module::msg::{
 use komple_framework_permission_module::ContractError;
 use komple_framework_token_module::msg::{MetadataInfo, QueryMsg as TokenQueryMsg, TokenInfo};
 use komple_framework_token_module::state::CollectionConfig;
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::permission::Permissions;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::permission::Permissions;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";

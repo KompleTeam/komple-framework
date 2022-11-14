@@ -7,9 +7,9 @@ use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_framework_fee_module::msg::CustomPaymentAddress;
 use komple_framework_fee_module::msg::ExecuteMsg;
-use komple_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
-use komple_types::modules::Modules;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::funds::FundsError;
 use std::str::FromStr;
 

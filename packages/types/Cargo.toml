@@ -1,8 +1,11 @@
 [package]
-name = "komple-types"
+name = "komple-framework-types"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
+authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
+description = "Package used for type definitions in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/permissions/link"
+homepage = "https://komple.io"
 
 [dependencies]
 cosmwasm-std = "1.1.0"

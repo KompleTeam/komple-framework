@@ -5,9 +5,9 @@ use komple_framework_hub_module::msg::ExecuteMsg as HubExecuteMsg;
 use komple_framework_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
 use komple_framework_marketplace_module::ContractError;
 use komple_framework_mint_module::msg::ExecuteMsg as MintExecuteMsg;
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::funds::FundsError;
 use komple_utils::storage::StorageHelper;
 
@@ -147,8 +147,8 @@ mod actions {
             use super::*;
 
             use komple_framework_marketplace_module::state::FixedListing;
-            use komple_types::modules::token::Locks;
-            use komple_types::shared::query::ResponseWrapper;
+            use komple_framework_types::modules::token::Locks;
+            use komple_framework_types::shared::query::ResponseWrapper;
             use komple_utils::storage::StorageHelper;
 
             #[test]
@@ -626,8 +626,8 @@ mod actions {
 
     mod pricing {
         use komple_framework_marketplace_module::state::FixedListing;
-        use komple_types::modules::marketplace::Listing;
-        use komple_types::shared::query::ResponseWrapper;
+        use komple_framework_types::modules::marketplace::Listing;
+        use komple_framework_types::shared::query::ResponseWrapper;
 
         use super::*;
 
@@ -739,7 +739,7 @@ mod actions {
         use super::*;
 
         use cosmwasm_std::coin;
-        use komple_types::modules::marketplace::Listing;
+        use komple_framework_types::modules::marketplace::Listing;
 
         mod fixed_tokens {
             use cosmwasm_std::StdError;

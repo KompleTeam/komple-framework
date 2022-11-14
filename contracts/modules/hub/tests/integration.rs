@@ -24,9 +24,9 @@ use komple_framework_mint_module::{
 use komple_framework_permission_module::{
     msg::ExecuteMsg as PermissionModuleExecuteMsg, ContractError as PermissionModuleContractError,
 };
-use komple_types::modules::Modules;
-use komple_types::shared::query::ResponseWrapper;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::RegisterMsg;
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

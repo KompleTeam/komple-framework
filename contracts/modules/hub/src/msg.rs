@@ -1,7 +1,7 @@
 use crate::state::HubInfo;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
-use komple_types::shared::query::ResponseWrapper;
+use komple_framework_types::shared::query::ResponseWrapper;
 
 /// Message to be sent along the ```RegisterMsg``` for instantiation.
 #[cw_serde]

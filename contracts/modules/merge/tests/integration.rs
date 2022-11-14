@@ -20,11 +20,11 @@ use komple_framework_token_module::msg::{
     ExecuteMsg as TokenModuleExecuteMsg, MetadataInfo, QueryMsg as TokenModuleQueryMsg, TokenInfo,
 };
 use komple_framework_token_module::state::CollectionConfig;
-use komple_types::modules::metadata::Metadata as MetadataType;
-use komple_types::modules::mint::Collections;
-use komple_types::modules::permission::Permissions;
-use komple_types::modules::Modules;
-use komple_types::shared::RegisterMsg;
+use komple_framework_types::modules::metadata::Metadata as MetadataType;
+use komple_framework_types::modules::mint::Collections;
+use komple_framework_types::modules::permission::Permissions;
+use komple_framework_types::modules::Modules;
+use komple_framework_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
@@ -371,7 +371,7 @@ mod initialization {
     use super::*;
 
     use cosmwasm_std::to_binary;
-    use komple_types::modules::Modules;
+    use komple_framework_types::modules::Modules;
 
     use komple_framework_hub_module::ContractError;
 
