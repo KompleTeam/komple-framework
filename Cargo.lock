@@ -603,12 +603,36 @@ dependencies = [
  "cw721",
  "cw721-base",
  "komple-framework-fee-module",
- "komple-marketplace-module",
+ "komple-framework-marketplace-module",
  "komple-merge-module",
  "komple-metadata-module",
  "komple-mint-module",
  "komple-ownership-permission-module",
  "komple-permission-module",
+ "komple-token-module",
+ "komple-types",
+ "komple-utils",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-framework-marketplace-module"
+version = "0.0.1"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 0.15.1",
+ "cw2 0.15.1",
+ "cw20",
+ "cw20-base",
+ "cw721-base",
+ "komple-framework-fee-module",
+ "komple-framework-hub-module",
+ "komple-metadata-module",
+ "komple-mint-module",
  "komple-token-module",
  "komple-types",
  "komple-utils",
@@ -635,30 +659,6 @@ dependencies = [
  "komple-utils",
  "schemars",
  "serde",
- "thiserror",
-]
-
-[[package]]
-name = "komple-marketplace-module"
-version = "0.0.1"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 0.15.1",
- "cw2 0.15.1",
- "cw20",
- "cw20-base",
- "cw721-base",
- "komple-framework-fee-module",
- "komple-framework-hub-module",
- "komple-metadata-module",
- "komple-mint-module",
- "komple-token-module",
- "komple-types",
- "komple-utils",
- "semver",
  "thiserror",
 ]
 

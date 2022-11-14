@@ -56,7 +56,7 @@ komple-utils = { path = "../../../packages/utils", features = ["funds"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-marketplace-module = { path = "../marketplace", features = ["library"]  }
+komple-framework-marketplace-module = { path = "../marketplace", features = ["library"]  }
 komple-merge-module = { path = "../merge", features = ["library"]  }
 komple-permission-module = { path = "../permission", features = ["library"]  }
 komple-mint-module = { path = "../mint", features = ["library"] }

@@ -8,7 +8,7 @@ use komple_framework_hub_module::{
     },
     state::HubInfo,
 };
-use komple_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo};
+use komple_framework_marketplace_module::msg::{ExecuteMsg, InstantiateMsg, MarketplaceFundInfo};
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::{
     msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg},
@@ -66,9 +66,9 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_marketplace_module::contract::execute,
-        komple_marketplace_module::contract::instantiate,
-        komple_marketplace_module::contract::query,
+        komple_framework_marketplace_module::contract::execute,
+        komple_framework_marketplace_module::contract::instantiate,
+        komple_framework_marketplace_module::contract::query,
     );
     Box::new(contract)
 }

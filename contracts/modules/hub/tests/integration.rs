@@ -9,10 +9,10 @@ use komple_framework_hub_module::{
     state::HubInfo,
     ContractError,
 };
-use komple_marketplace_module::msg::{
+use komple_framework_marketplace_module::msg::{
     InstantiateMsg as MarketplaceModuleInstantiateMsg, MarketplaceFundInfo,
 };
-use komple_marketplace_module::{
+use komple_framework_marketplace_module::{
     msg::ExecuteMsg as MarketplaceModuleExecuteMsg, ContractError as MarketplaceModuleContractError,
 };
 use komple_merge_module::{
@@ -68,9 +68,9 @@ pub fn merge_module() -> Box<dyn Contract<Empty>> {
 
 pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_marketplace_module::contract::execute,
-        komple_marketplace_module::contract::instantiate,
-        komple_marketplace_module::contract::query,
+        komple_framework_marketplace_module::contract::execute,
+        komple_framework_marketplace_module::contract::instantiate,
+        komple_framework_marketplace_module::contract::query,
     );
     Box::new(contract)
 }
