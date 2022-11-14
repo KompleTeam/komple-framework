@@ -8,48 +8,48 @@ codegen({
       dir: '../../contracts/modules/fee'
     },
     {
-      name: 'HubModule',
+      name: 'Hub Module',
       dir: '../../contracts/modules/hub'
     },
     {
-      name: 'MarketplaceModule',
+      name: 'Marketplace Module',
       dir: '../../contracts/modules/marketplace'
     },
     {
-      name: 'MergeModule',
+      name: 'Merge Module',
       dir: '../../contracts/modules/merge'
     },
     {
-      name: 'MetadataModule',
+      name: 'Metadata Module',
       dir: '../../contracts/modules/metadata'
     },
     {
-      name: 'MintModule',
+      name: 'Mint Module',
       dir: '../../contracts/modules/mint'
     },
     {
-      name: 'PermissionModule',
+      name: 'Permission Module',
       dir: '../../contracts/modules/permission'
     },
     {
-      name: 'TokenModule',
+      name: 'Token Module',
       dir: '../../contracts/modules/token'
     },
     {
-      name: 'WhitelistModule',
+      name: 'Whitelist Module',
       dir: '../../contracts/modules/whitelist'
     },
     // PERMISSION
     {
-      name: 'AttributePermission',
+      name: 'Attribute Permission',
       dir: '../../contracts/permissions/attribute'
     },
     {
-      name: 'LinkPermission',
+      name: 'Link Permission',
       dir: '../../contracts/permissions/link'
     },
     {
-      name: 'OwnershipPermission',
+      name: 'Ownership Permission',
       dir: '../../contracts/permissions/ownership'
     },
   ],
