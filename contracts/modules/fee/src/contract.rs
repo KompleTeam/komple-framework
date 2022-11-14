@@ -24,7 +24,7 @@ use crate::msg::{
 use crate::state::{Config, CONFIG, EXECUTE_LOCK, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-fee-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-fee-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

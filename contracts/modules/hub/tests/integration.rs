@@ -1,7 +1,7 @@
 use cosmwasm_std::{coin, to_binary};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_fee_module::{
+use komple_framework_fee_module::{
     msg::ExecuteMsg as FeeModuleExecuteMsg, ContractError as FeeModuleContractError,
 };
 use komple_hub_module::{
@@ -77,9 +77,9 @@ pub fn marketplace_module() -> Box<dyn Contract<Empty>> {
 
 pub fn fee_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_fee_module::contract::execute,
-        komple_fee_module::contract::instantiate,
-        komple_fee_module::contract::query,
+        komple_framework_fee_module::contract::execute,
+        komple_framework_fee_module::contract::instantiate,
+        komple_framework_fee_module::contract::query,
     );
     Box::new(contract)
 }

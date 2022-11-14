@@ -52,7 +52,7 @@ komple-permission-module = { path = "../permission", features = ["library"] }
 cw-utils = "0.15.1"
 komple-types = { path = "../../../packages/types" }
 komple-utils = { path = "../../../packages/utils" }
-komple-fee-module = { path = "../fee", features = ["library"] }
+komple-framework-fee-module = { path = "../fee", features = ["library"] }
 komple-whitelist-module = { path = "../whitelist", features = ["library"] }
 cw20 = "0.16.0"
 

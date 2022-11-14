@@ -7,7 +7,7 @@ use cosmwasm_std::{
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
-use komple_fee_module::{
+use komple_framework_fee_module::{
     helper::KompleFeeModule, msg::CustomPaymentAddress as FeeModuleCustomPaymentAddress,
     msg::ExecuteMsg as FeeModuleExecuteMsg,
 };

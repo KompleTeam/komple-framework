@@ -1,10 +1,10 @@
 [package]
-name = "komple-fee-module"
+name = "komple-framework-fee-module"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
+authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
-description = "Komple fee module for general fee configuration and distribution"
-repository = "https://github.com/KompleTeam/komple-framework"
+description = "Contract used for general fee configuration and distribution in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/modules/fee"
 homepage = "https://komple.io"
 
 exclude = [
