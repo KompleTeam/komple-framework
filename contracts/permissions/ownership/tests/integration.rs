@@ -6,7 +6,7 @@ use komple_framework_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
 use komple_framework_hub_module::state::HubInfo;
-use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg};
 use komple_mint_module::state::CollectionInfo;
 use komple_ownership_permission_module::msg::OwnershipMsg;
@@ -70,9 +70,9 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_metadata_module::contract::execute,
-        komple_metadata_module::contract::instantiate,
-        komple_metadata_module::contract::query,
+        komple_framework_metadata_module::contract::execute,
+        komple_framework_metadata_module::contract::instantiate,
+        komple_framework_metadata_module::contract::query,
     );
     Box::new(contract)
 }

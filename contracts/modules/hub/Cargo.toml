@@ -61,7 +61,7 @@ komple-framework-merge-module = { path = "../merge", features = ["library"]  }
 komple-permission-module = { path = "../permission", features = ["library"]  }
 komple-mint-module = { path = "../mint", features = ["library"] }
 komple-token-module = { path = "../token", features = ["library"] }
-komple-metadata-module = { path = "../metadata", features = ["library"]  }
+komple-framework-metadata-module = { path = "../metadata", features = ["library"]  }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
 komple-ownership-permission-module = { path = "../../permissions/ownership", features = ["library"]  }

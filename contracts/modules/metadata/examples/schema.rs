@@ -1,5 +1,5 @@
 use cosmwasm_schema::write_api;
-use komple_metadata_module::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use komple_framework_metadata_module::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 fn main() {
     write_api! {

@@ -4,7 +4,7 @@ use crate::ContractError;
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Timestamp, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_metadata_module::{
+use komple_framework_metadata_module::{
     msg::{InstantiateMsg as MetadataInstantiateMsg, QueryMsg as MetadataQueryMsg},
     state::{MetaInfo, Metadata as MetadataMetadata},
 };
@@ -27,9 +27,9 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_metadata_module::contract::execute,
-        komple_metadata_module::contract::instantiate,
-        komple_metadata_module::contract::query,
+        komple_framework_metadata_module::contract::execute,
+        komple_framework_metadata_module::contract::instantiate,
+        komple_framework_metadata_module::contract::query,
     );
     Box::new(contract)
 }
@@ -1394,7 +1394,7 @@ mod actions {
         }
 
         mod mint_operation {
-            use komple_metadata_module::msg::MetadataResponse;
+            use komple_framework_metadata_module::msg::MetadataResponse;
 
             use super::*;
 

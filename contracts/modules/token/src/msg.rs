@@ -2,7 +2,7 @@ use crate::state::{CollectionConfig, Config};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::CustomMsg;
-use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::token::{Locks, SubModules};
 use komple_types::shared::query::ResponseWrapper;

@@ -2,7 +2,7 @@ use cosmwasm_std::{coin, to_binary, Timestamp};
 use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
+use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
 use komple_token_module::state::CollectionConfig;
 use komple_token_module::ContractError;
@@ -26,9 +26,9 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
 
 pub fn metadata_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_metadata_module::contract::execute,
-        komple_metadata_module::contract::instantiate,
-        komple_metadata_module::contract::query,
+        komple_framework_metadata_module::contract::execute,
+        komple_framework_metadata_module::contract::instantiate,
+        komple_framework_metadata_module::contract::query,
     );
     Box::new(contract)
 }

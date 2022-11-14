@@ -61,6 +61,6 @@ cw721-base = { version = "0.15.0", features = ["library"] }
 cw-multi-test = "0.15.1"
 cw721 = "0.15.0"
 komple-framework-hub-module = { path = "../hub", features = ["library"] }
-komple-metadata-module = { path = "../metadata", features = ["library"] }
+komple-framework-metadata-module = { path = "../metadata", features = ["library"] }
 komple-ownership-permission-module = { path = "../../permissions/ownership", features = ["library"] }
 komple-link-permission-module = { path = "../../permissions/link", features = ["library"] }

@@ -29,7 +29,9 @@ use crate::state::{
 use cw721::ContractInfoResponse;
 use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 
-use komple_metadata_module::{helper::KompleMetadataModule, state::MetaInfo as MetadataMetaInfo};
+use komple_framework_metadata_module::{
+    helper::KompleMetadataModule, state::MetaInfo as MetadataMetaInfo,
+};
 use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 pub type Cw721Contract<'a> =

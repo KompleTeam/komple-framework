@@ -4,7 +4,7 @@ use cosmwasm_std::{
     from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
-use komple_metadata_module::helper::KompleMetadataModule;
+use komple_framework_metadata_module::helper::KompleMetadataModule;
 use komple_types::modules::permission::AttributeConditions;
 use komple_types::modules::Modules;
 use komple_types::shared::query::ResponseWrapper;
