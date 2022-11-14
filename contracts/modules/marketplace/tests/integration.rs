@@ -4,7 +4,7 @@ use cw_multi_test::Executor;
 use komple_framework_hub_module::msg::ExecuteMsg as HubExecuteMsg;
 use komple_framework_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
 use komple_framework_marketplace_module::ContractError;
-use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_framework_mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use komple_types::modules::Modules;
 use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;

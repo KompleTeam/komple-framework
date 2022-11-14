@@ -18,7 +18,7 @@ use komple_framework_marketplace_module::{
 use komple_framework_merge_module::{
     msg::ExecuteMsg as MergeModuleExecuteMsg, ContractError as MergeModuleContractError,
 };
-use komple_mint_module::{
+use komple_framework_mint_module::{
     msg::ExecuteMsg as MintModuleExecuteMsg, ContractError as MintModuleContractError,
 };
 use komple_permission_module::{
@@ -40,11 +40,11 @@ pub fn hub_module() -> Box<dyn Contract<Empty>> {
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 

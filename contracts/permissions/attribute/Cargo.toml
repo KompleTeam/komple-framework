@@ -54,5 +54,5 @@ komple-framework-metadata-module = { path = "../../modules/metadata", features =
 cw-multi-test = "0.15.1"
 komple-permission-module = { path = "../../modules/permission", features = ["library"] }
 komple-token-module = { path = "../../modules/token", features = ["library"] }
-komple-mint-module = { path = "../../modules/mint", features = ["library"] }
+komple-framework-mint-module = { path = "../../modules/mint", features = ["library"] }
 komple-framework-hub-module = { path = "../../modules/hub", features = ["library"] }

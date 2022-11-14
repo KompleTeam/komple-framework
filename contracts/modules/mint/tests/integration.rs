@@ -2,9 +2,11 @@ use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_mint_module::msg::{CollectionFundInfo, CollectionsResponse, ExecuteMsg, QueryMsg};
-use komple_mint_module::state::CollectionInfo;
-use komple_mint_module::ContractError;
+use komple_framework_mint_module::msg::{
+    CollectionFundInfo, CollectionsResponse, ExecuteMsg, QueryMsg,
+};
+use komple_framework_mint_module::state::CollectionInfo;
+use komple_framework_mint_module::ContractError;
 use komple_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
@@ -18,11 +20,11 @@ use komple_utils::storage::StorageHelper;
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 

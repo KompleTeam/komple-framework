@@ -47,7 +47,7 @@ use crate::{
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-mint-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-mint-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TOKEN_INSTANTIATE_REPLY_ID: u64 = 1;

@@ -7,7 +7,7 @@ use komple_framework_hub_module::msg::ExecuteMsg as HubExecuteMsg;
 use komple_framework_hub_module::msg::QueryMsg as HubQueryMsg;
 use komple_framework_marketplace_module::msg::ExecuteMsg as MarketplaceExecuteMsg;
 use komple_framework_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
-use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_framework_mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use komple_types::modules::marketplace::Listing;
 use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;

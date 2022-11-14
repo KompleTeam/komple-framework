@@ -10,8 +10,8 @@ use komple_framework_metadata_module::msg::{
     ExecuteMsg as MetadataExecuteMsg, InstantiateMsg as MetadataInstantiateMsg,
 };
 use komple_framework_metadata_module::state::{MetaInfo, Trait};
-use komple_mint_module::msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg};
-use komple_mint_module::state::CollectionInfo;
+use komple_framework_mint_module::msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg};
+use komple_framework_mint_module::state::CollectionInfo;
 use komple_permission_module::msg::{ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg};
 use komple_token_module::msg::{MetadataInfo, TokenInfo};
 use komple_token_module::state::CollectionConfig;
@@ -41,11 +41,11 @@ pub fn hub_module() -> Box<dyn Contract<Empty>> {
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 

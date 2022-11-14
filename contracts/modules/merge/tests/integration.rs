@@ -11,7 +11,7 @@ use komple_framework_merge_module::msg::{
 };
 use komple_framework_merge_module::ContractError as MergeContractError;
 use komple_framework_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
-use komple_mint_module::{
+use komple_framework_mint_module::{
     msg::{CollectionFundInfo, ExecuteMsg as MintModuleExecuteMsg},
     state::CollectionInfo,
 };
@@ -46,11 +46,11 @@ pub fn hub_module() -> Box<dyn Contract<Empty>> {
 
 pub fn mint_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_mint_module::contract::execute,
-        komple_mint_module::contract::instantiate,
-        komple_mint_module::contract::query,
+        komple_framework_mint_module::contract::execute,
+        komple_framework_mint_module::contract::instantiate,
+        komple_framework_mint_module::contract::query,
     )
-    .with_reply(komple_mint_module::contract::reply);
+    .with_reply(komple_framework_mint_module::contract::reply);
     Box::new(contract)
 }
 
