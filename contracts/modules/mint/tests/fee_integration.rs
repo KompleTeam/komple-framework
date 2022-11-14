@@ -15,6 +15,8 @@ use komple_framework_mint_module::state::CollectionInfo;
 use komple_framework_mint_module::ContractError;
 use komple_framework_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
 use komple_framework_token_module::state::CollectionConfig;
+use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_framework_whitelist_module::state::WhitelistConfig;
 use komple_types::modules::fee::MintFees;
 use komple_types::modules::fee::{Fees, FixedPayment};
 use komple_types::modules::metadata::Metadata as MetadataType;
@@ -22,8 +24,6 @@ use komple_types::modules::mint::Collections;
 use komple_types::modules::Modules;
 use komple_types::shared::RegisterMsg;
 use komple_utils::storage::StorageHelper;
-use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
-use komple_whitelist_module::state::WhitelistConfig;
 
 pub const USER: &str = "juno..user";
 pub const USER2: &str = "juno..user2";
@@ -81,9 +81,9 @@ pub fn fee_module() -> Box<dyn Contract<Empty>> {
 
 pub fn whitelist_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_whitelist_module::contract::execute,
-        komple_whitelist_module::contract::instantiate,
-        komple_whitelist_module::contract::query,
+        komple_framework_whitelist_module::contract::execute,
+        komple_framework_whitelist_module::contract::instantiate,
+        komple_framework_whitelist_module::contract::query,
     );
     Box::new(contract)
 }

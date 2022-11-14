@@ -55,7 +55,7 @@ cw721-base = { version = "0.15.0", features = ["library"] }
 komple-types = { path = "../../../packages/types" }
 komple-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
 komple-framework-metadata-module = { path = "../metadata", features = ["library"] }
-komple-whitelist-module = { path = "../whitelist", features = ["library"]  }
+komple-framework-whitelist-module = { path = "../whitelist", features = ["library"]  }
 cw-utils = "0.15.1"
 
 [dev-dependencies]

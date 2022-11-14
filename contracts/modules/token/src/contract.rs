@@ -6,6 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_utils::parse_reply_instantiate_data;
+use komple_framework_whitelist_module::helper::KompleWhitelistHelper;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::token::{Locks, SubModules};
@@ -14,7 +15,6 @@ use komple_types::shared::RegisterMsg;
 use komple_utils::check_admin_privileges;
 use komple_utils::response::{EventHelper, ResponseHelper};
 use komple_utils::shared::execute_update_operators;
-use komple_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
 use crate::error::ContractError;
@@ -32,7 +32,7 @@ use cw721_base::{msg::ExecuteMsg as Cw721ExecuteMsg, MintMsg};
 use komple_framework_metadata_module::{
     helper::KompleMetadataModule, state::MetaInfo as MetadataMetaInfo,
 };
-use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 
 pub type Cw721Contract<'a> =
     cw721_base::Cw721Contract<'a, Empty, Empty, TokenExecuteMsg, TokenQueryMsg>;

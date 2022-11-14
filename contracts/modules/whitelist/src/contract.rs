@@ -17,7 +17,7 @@ use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMs
 use crate::state::{Config, WhitelistConfig, CONFIG, WHITELIST};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-whitelist-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-whitelist-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

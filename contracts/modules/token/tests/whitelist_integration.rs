@@ -8,13 +8,13 @@ use komple_framework_token_module::msg::{
 };
 use komple_framework_token_module::state::CollectionConfig;
 use komple_framework_token_module::ContractError;
+use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
+use komple_framework_whitelist_module::state::WhitelistConfig;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::token::SubModules as TokenSubModules;
 use komple_types::shared::query::ResponseWrapper;
 use komple_types::shared::RegisterMsg;
-use komple_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
-use komple_whitelist_module::state::WhitelistConfig;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -37,9 +37,9 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
 
 pub fn whitelist_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_whitelist_module::contract::execute,
-        komple_whitelist_module::contract::instantiate,
-        komple_whitelist_module::contract::query,
+        komple_framework_whitelist_module::contract::execute,
+        komple_framework_whitelist_module::contract::instantiate,
+        komple_framework_whitelist_module::contract::query,
     );
     Box::new(contract)
 }
