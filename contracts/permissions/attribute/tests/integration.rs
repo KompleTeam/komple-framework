@@ -1,7 +1,7 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_attribute_permission_module::msg::AttributeMsg;
-use komple_attribute_permission_module::ContractError;
+use komple_framework_attribute_permission::msg::AttributeMsg;
+use komple_framework_attribute_permission::ContractError;
 use komple_framework_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
@@ -82,9 +82,9 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
 
 pub fn attribute_permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_attribute_permission_module::contract::execute,
-        komple_attribute_permission_module::contract::instantiate,
-        komple_attribute_permission_module::contract::query,
+        komple_framework_attribute_permission::contract::execute,
+        komple_framework_attribute_permission::contract::instantiate,
+        komple_framework_attribute_permission::contract::query,
     );
     Box::new(contract)
 }

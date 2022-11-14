@@ -553,7 +553,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "komple-attribute-permission-module"
+name = "komple-framework-attribute-permission"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
