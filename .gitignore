@@ -29,3 +29,5 @@ contracts/modules/*/schema
 contracts/permissions/*/schema
 
 js-types
+
+node_modules
