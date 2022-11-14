@@ -562,7 +562,7 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
- "komple-hub-module",
+ "komple-framework-hub-module",
  "komple-metadata-module",
  "komple-mint-module",
  "komple-permission-module",
@@ -590,7 +590,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "komple-hub-module"
+name = "komple-framework-hub-module"
 version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
@@ -626,7 +626,7 @@ dependencies = [
  "cw-multi-test",
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
- "komple-hub-module",
+ "komple-framework-hub-module",
  "komple-metadata-module",
  "komple-mint-module",
  "komple-permission-module",
@@ -652,7 +652,7 @@ dependencies = [
  "cw20-base",
  "cw721-base",
  "komple-framework-fee-module",
- "komple-hub-module",
+ "komple-framework-hub-module",
  "komple-metadata-module",
  "komple-mint-module",
  "komple-token-module",
@@ -674,7 +674,7 @@ dependencies = [
  "cw2 0.15.1",
  "cw721",
  "cw721-base",
- "komple-hub-module",
+ "komple-framework-hub-module",
  "komple-link-permission-module",
  "komple-metadata-module",
  "komple-mint-module",
@@ -719,7 +719,7 @@ dependencies = [
  "cw721",
  "cw721-base",
  "komple-framework-fee-module",
- "komple-hub-module",
+ "komple-framework-hub-module",
  "komple-metadata-module",
  "komple-ownership-permission-module",
  "komple-permission-module",
@@ -743,7 +743,7 @@ dependencies = [
  "cw2 0.15.1",
  "cw721",
  "cw721-base",
- "komple-hub-module",
+ "komple-framework-hub-module",
  "komple-metadata-module",
  "komple-mint-module",
  "komple-permission-module",

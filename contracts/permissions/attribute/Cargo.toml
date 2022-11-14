@@ -55,4 +55,4 @@ cw-multi-test = "0.15.1"
 komple-permission-module = { path = "../../modules/permission", features = ["library"] }
 komple-token-module = { path = "../../modules/token", features = ["library"] }
 komple-mint-module = { path = "../../modules/mint", features = ["library"] }
-komple-hub-module = { path = "../../modules/hub", features = ["library"] }
+komple-framework-hub-module = { path = "../../modules/hub", features = ["library"] }

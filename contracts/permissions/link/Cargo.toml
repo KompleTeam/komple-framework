@@ -57,4 +57,4 @@ komple-permission-module = { path = "../../modules/permission", features = ["lib
 komple-metadata-module = { path = "../../modules/metadata", features = ["library"] }
 komple-token-module = { path = "../../modules/token", features = ["library"] }
 komple-mint-module = { path = "../../modules/mint", features = ["library"] }
-komple-hub-module = { path = "../../modules/hub", features = ["library"] }
+komple-framework-hub-module = { path = "../../modules/hub", features = ["library"] }

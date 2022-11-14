@@ -59,7 +59,7 @@ cw20 = "0.16.0"
 [dev-dependencies]
 cw-multi-test = "0.15.1"
 komple-metadata-module = { path = "../metadata", features = ["library"] }
-komple-hub-module = { path = "../hub", features = ["library"] }
+komple-framework-hub-module = { path = "../hub", features = ["library"] }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
 komple-ownership-permission-module = { path = "../../permissions/ownership", features = ["library"] }

@@ -4,7 +4,7 @@ use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_framework_fee_module::{
     msg::ExecuteMsg as FeeModuleExecuteMsg, ContractError as FeeModuleContractError,
 };
-use komple_hub_module::{
+use komple_framework_hub_module::{
     msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg},
     state::HubInfo,
     ContractError,
@@ -30,11 +30,11 @@ use komple_types::shared::RegisterMsg;
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 

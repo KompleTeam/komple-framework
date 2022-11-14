@@ -1,5 +1,5 @@
 use cosmwasm_schema::write_api;
-use komple_hub_module::msg::{ExecuteMsg, MigrateMsg, QueryMsg};
+use komple_framework_hub_module::msg::{ExecuteMsg, MigrateMsg, QueryMsg};
 use komple_types::shared::RegisterMsg;
 
 fn main() {

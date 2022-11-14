@@ -5,8 +5,10 @@ use cw20_base::msg::InstantiateMsg as Cw20InstantiateMsg;
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_framework_fee_module::msg::ExecuteMsg as FeeExecuteMsg;
-use komple_hub_module::msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg};
-use komple_hub_module::state::HubInfo;
+use komple_framework_hub_module::msg::{
+    ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg,
+};
+use komple_framework_hub_module::state::HubInfo;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{CollectionFundInfo, ExecuteMsg};
 use komple_mint_module::state::CollectionInfo;
@@ -31,11 +33,11 @@ pub const CW20_DENOM: &str = "cwdenom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 

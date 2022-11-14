@@ -1,7 +1,7 @@
 use cosmwasm_std::{to_binary, Addr, Empty, Uint128};
 use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::Executor;
-use komple_hub_module::msg::ExecuteMsg as HubExecuteMsg;
+use komple_framework_hub_module::msg::ExecuteMsg as HubExecuteMsg;
 use komple_marketplace_module::msg::{InstantiateMsg, MarketplaceFundInfo};
 use komple_marketplace_module::ContractError;
 use komple_mint_module::msg::ExecuteMsg as MintExecuteMsg;

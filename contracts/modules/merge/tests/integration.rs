@@ -2,7 +2,7 @@ use cosmwasm_std::{to_binary, Addr, Coin, Empty, Uint128};
 use cw721::OwnerOfResponse;
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_hub_module::{
+use komple_framework_hub_module::{
     msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg},
     state::HubInfo,
 };
@@ -34,11 +34,11 @@ pub const TEST_DENOM: &str = "test_denom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 
@@ -371,7 +371,7 @@ mod initialization {
     use cosmwasm_std::to_binary;
     use komple_types::modules::Modules;
 
-    use komple_hub_module::ContractError;
+    use komple_framework_hub_module::ContractError;
 
     #[test]
     fn test_happy_path() {

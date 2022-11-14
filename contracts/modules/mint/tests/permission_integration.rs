@@ -1,10 +1,10 @@
 use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Uint128};
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_hub_module::msg::{
+use komple_framework_hub_module::msg::{
     ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg, QueryMsg as HubQueryMsg,
 };
-use komple_hub_module::state::HubInfo;
+use komple_framework_hub_module::state::HubInfo;
 use komple_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_mint_module::msg::{CollectionFundInfo, ExecuteMsg};
 use komple_mint_module::state::CollectionInfo;
@@ -26,11 +26,11 @@ pub const TEST_DENOM: &str = "test_denom";
 
 pub fn hub_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_hub_module::contract::execute,
-        komple_hub_module::contract::instantiate,
-        komple_hub_module::contract::query,
+        komple_framework_hub_module::contract::execute,
+        komple_framework_hub_module::contract::instantiate,
+        komple_framework_hub_module::contract::query,
     )
-    .with_reply(komple_hub_module::contract::reply);
+    .with_reply(komple_framework_hub_module::contract::reply);
     Box::new(contract)
 }
 
@@ -305,7 +305,7 @@ mod initialization {
 
     use komple_types::modules::Modules;
 
-    use komple_hub_module::ContractError;
+    use komple_framework_hub_module::ContractError;
     use komple_utils::storage::StorageHelper;
 
     #[test]

@@ -23,7 +23,7 @@ use crate::state::{
 };
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-hub-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-hub-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAX_DESCRIPTION_LENGTH: u32 = 512;
