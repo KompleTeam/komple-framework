@@ -6,7 +6,6 @@ edition = "2018"
 description = "Komple fee module for general fee configuration and distribution"
 repository = "https://github.com/KompleTeam/komple-framework"
 homepage = "https://komple.io"
-license = "Apache-2.0"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
