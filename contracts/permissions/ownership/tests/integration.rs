@@ -9,13 +9,13 @@ use komple_framework_hub_module::state::HubInfo;
 use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
 use komple_framework_mint_module::msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg};
 use komple_framework_mint_module::state::CollectionInfo;
+use komple_framework_ownership_permission::msg::OwnershipMsg;
 use komple_framework_permission_module::msg::{
     ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg,
 };
 use komple_framework_permission_module::ContractError;
 use komple_framework_token_module::msg::{MetadataInfo, QueryMsg as TokenQueryMsg, TokenInfo};
 use komple_framework_token_module::state::CollectionConfig;
-use komple_ownership_permission_module::msg::OwnershipMsg;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::permission::Permissions;
@@ -81,9 +81,9 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
 
 pub fn ownership_permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_ownership_permission_module::contract::execute,
-        komple_ownership_permission_module::contract::instantiate,
-        komple_ownership_permission_module::contract::query,
+        komple_framework_ownership_permission::contract::execute,
+        komple_framework_ownership_permission::contract::instantiate,
+        komple_framework_ownership_permission::contract::query,
     );
     Box::new(contract)
 }

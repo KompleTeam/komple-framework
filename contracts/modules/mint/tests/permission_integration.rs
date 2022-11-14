@@ -75,9 +75,9 @@ pub fn metadata_module() -> Box<dyn Contract<Empty>> {
 
 pub fn ownership_permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_ownership_permission_module::contract::execute,
-        komple_ownership_permission_module::contract::instantiate,
-        komple_ownership_permission_module::contract::query,
+        komple_framework_ownership_permission::contract::execute,
+        komple_framework_ownership_permission::contract::instantiate,
+        komple_framework_ownership_permission::contract::query,
     );
     Box::new(contract)
 }
@@ -366,9 +366,9 @@ mod permission_mint {
     use cosmwasm_std::to_binary;
     use cw721::OwnerOfResponse;
     use komple_framework_mint_module::msg::{ExecuteMsg as MintExecuteMsg, MintMsg};
+    use komple_framework_ownership_permission::msg::OwnershipMsg;
     use komple_framework_permission_module::msg::PermissionCheckMsg;
     use komple_framework_token_module::msg::QueryMsg as TokenQueryMsg;
-    use komple_ownership_permission_module::msg::OwnershipMsg;
     use komple_types::modules::permission::Permissions;
     use komple_types::modules::Modules;
 

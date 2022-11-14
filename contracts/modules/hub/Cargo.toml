@@ -64,5 +64,5 @@ komple-framework-token-module = { path = "../token", features = ["library"] }
 komple-framework-metadata-module = { path = "../metadata", features = ["library"]  }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
-komple-ownership-permission-module = { path = "../../permissions/ownership", features = ["library"]  }
+komple-framework-ownership-permission = { path = "../../permissions/ownership", features = ["library"]  }
 komple-framework-fee-module = { path = "../fee", features = ["library"]  }

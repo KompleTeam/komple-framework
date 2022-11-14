@@ -16,7 +16,7 @@ use crate::msg::{ExecuteMsg, OwnershipMsg, QueryMsg};
 use crate::state::{Config, CONFIG, PERMISSION_MODULE_ADDR};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-ownership-permission-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-ownership-permission";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

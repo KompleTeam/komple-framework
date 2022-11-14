@@ -607,9 +607,9 @@ dependencies = [
  "komple-framework-merge-module",
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
+ "komple-framework-ownership-permission",
  "komple-framework-permission-module",
  "komple-framework-token-module",
- "komple-ownership-permission-module",
  "komple-types",
  "komple-utils",
  "semver",
@@ -678,9 +678,9 @@ dependencies = [
  "komple-framework-link-permission",
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
+ "komple-framework-ownership-permission",
  "komple-framework-permission-module",
  "komple-framework-token-module",
- "komple-ownership-permission-module",
  "komple-types",
  "komple-utils",
  "semver",
@@ -721,13 +721,35 @@ dependencies = [
  "komple-framework-fee-module",
  "komple-framework-hub-module",
  "komple-framework-metadata-module",
+ "komple-framework-ownership-permission",
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-whitelist-module",
- "komple-ownership-permission-module",
  "komple-types",
  "komple-utils",
  "semver",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-framework-ownership-permission"
+version = "0.0.1"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 0.15.1",
+ "cw2 0.15.1",
+ "cw721",
+ "cw721-base",
+ "komple-framework-hub-module",
+ "komple-framework-metadata-module",
+ "komple-framework-mint-module",
+ "komple-framework-permission-module",
+ "komple-framework-token-module",
+ "komple-types",
+ "komple-utils",
  "thiserror",
 ]
 
@@ -742,7 +764,7 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "cw-utils 0.15.1",
  "cw2 0.15.1",
- "komple-ownership-permission-module",
+ "komple-framework-ownership-permission",
  "komple-types",
  "komple-utils",
  "semver",
@@ -784,28 +806,6 @@ dependencies = [
  "komple-types",
  "komple-utils",
  "semver",
- "thiserror",
-]
-
-[[package]]
-name = "komple-ownership-permission-module"
-version = "0.0.1"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 0.15.1",
- "cw2 0.15.1",
- "cw721",
- "cw721-base",
- "komple-framework-hub-module",
- "komple-framework-metadata-module",
- "komple-framework-mint-module",
- "komple-framework-permission-module",
- "komple-framework-token-module",
- "komple-types",
- "komple-utils",
  "thiserror",
 ]
 
