@@ -24,7 +24,7 @@ Build using Arm optimizer:
 
 Keep in mind that Arm optimizer should not be used for production builds. 
 
-**Always** use intel optimizer for production builds.
+**ALWAYS** use Intel optimizer for production builds.
 
 ### Contract Schemas
 
@@ -36,7 +36,7 @@ Generate contract schemas using:
 
 ### TS Codegen
 
-First install the dependencies in scripts folder:
+First install the dependencies in `scripts` folder:
 
 ```bash
 yarn install
