@@ -137,8 +137,8 @@ mod actions {
         msg::{ExecuteMsg as MarketplaceExecuteMsg, QueryMsg as MarketplaceQueryMsg},
         ContractError as MarketplaceContractError,
     };
-    use komple_token_module::msg::ExecuteMsg as TokenExecuteMsg;
-    use komple_token_module::ContractError as TokenContractError;
+    use komple_framework_token_module::msg::ExecuteMsg as TokenExecuteMsg;
+    use komple_framework_token_module::ContractError as TokenContractError;
 
     mod listing {
         use super::*;

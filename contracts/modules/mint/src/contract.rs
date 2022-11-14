@@ -11,7 +11,7 @@ use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_framework_permission_module::msg::ExecuteMsg as PermissionExecuteMsg;
-use komple_token_module::{
+use komple_framework_token_module::{
     helper::KompleTokenModule,
     msg::{InstantiateMsg as TokenInstantiateMsg, MetadataInfo, TokenInfo},
     state::CollectionConfig,

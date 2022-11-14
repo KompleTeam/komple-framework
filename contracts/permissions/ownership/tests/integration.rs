@@ -13,9 +13,9 @@ use komple_framework_permission_module::msg::{
     ExecuteMsg as PermissionExecuteMsg, PermissionCheckMsg,
 };
 use komple_framework_permission_module::ContractError;
+use komple_framework_token_module::msg::{MetadataInfo, QueryMsg as TokenQueryMsg, TokenInfo};
+use komple_framework_token_module::state::CollectionConfig;
 use komple_ownership_permission_module::msg::OwnershipMsg;
-use komple_token_module::msg::{MetadataInfo, QueryMsg as TokenQueryMsg, TokenInfo};
-use komple_token_module::state::CollectionConfig;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::permission::Permissions;
@@ -62,11 +62,11 @@ pub fn permission_module() -> Box<dyn Contract<Empty>> {
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_token_module::contract::execute,
-        komple_token_module::contract::instantiate,
-        komple_token_module::contract::query,
+        komple_framework_token_module::contract::execute,
+        komple_framework_token_module::contract::instantiate,
+        komple_framework_token_module::contract::query,
     )
-    .with_reply(komple_token_module::contract::reply);
+    .with_reply(komple_framework_token_module::contract::reply);
     Box::new(contract)
 }
 

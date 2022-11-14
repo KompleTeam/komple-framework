@@ -3,9 +3,11 @@ use cosmwasm_std::{Addr, Coin, Empty, Uint128};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_token_module::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
-use komple_token_module::state::CollectionConfig;
-use komple_token_module::ContractError;
+use komple_framework_token_module::msg::{
+    ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo,
+};
+use komple_framework_token_module::state::CollectionConfig;
+use komple_framework_token_module::ContractError;
 use komple_types::modules::metadata::Metadata as MetadataType;
 use komple_types::modules::mint::Collections;
 use komple_types::modules::token::SubModules as TokenSubModules;
@@ -16,11 +18,11 @@ use komple_whitelist_module::state::WhitelistConfig;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_token_module::contract::execute,
-        komple_token_module::contract::instantiate,
-        komple_token_module::contract::query,
+        komple_framework_token_module::contract::execute,
+        komple_framework_token_module::contract::instantiate,
+        komple_framework_token_module::contract::query,
     )
-    .with_reply(komple_token_module::contract::reply);
+    .with_reply(komple_framework_token_module::contract::reply);
     Box::new(contract)
 }
 

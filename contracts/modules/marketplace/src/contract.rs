@@ -11,7 +11,7 @@ use komple_framework_fee_module::{
     helper::KompleFeeModule, msg::CustomPaymentAddress as FeeModuleCustomPaymentAddress,
     msg::ExecuteMsg as FeeModuleExecuteMsg,
 };
-use komple_token_module::{
+use komple_framework_token_module::{
     helper::KompleTokenModule, state::Config as TokenConfig, ContractError as TokenContractError,
 };
 use komple_types::modules::fee::{Fees, FundInfo};

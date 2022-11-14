@@ -1,5 +1,5 @@
 use cosmwasm_std::{OverflowError, StdError};
-use komple_token_module::ContractError as TokenContractError;
+use komple_framework_token_module::ContractError as TokenContractError;
 use komple_utils::{funds::FundsError, shared::SharedError, UtilError};
 use thiserror::Error;
 

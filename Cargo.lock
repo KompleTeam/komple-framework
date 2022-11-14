@@ -566,7 +566,7 @@ dependencies = [
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
  "komple-framework-permission-module",
- "komple-token-module",
+ "komple-framework-token-module",
  "komple-types",
  "komple-utils",
  "thiserror",
@@ -608,8 +608,8 @@ dependencies = [
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
  "komple-framework-permission-module",
+ "komple-framework-token-module",
  "komple-ownership-permission-module",
- "komple-token-module",
  "komple-types",
  "komple-utils",
  "semver",
@@ -633,7 +633,7 @@ dependencies = [
  "komple-framework-hub-module",
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
- "komple-token-module",
+ "komple-framework-token-module",
  "komple-types",
  "komple-utils",
  "semver",
@@ -656,9 +656,9 @@ dependencies = [
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
  "komple-framework-permission-module",
+ "komple-framework-token-module",
  "komple-link-permission-module",
  "komple-ownership-permission-module",
- "komple-token-module",
  "komple-types",
  "komple-utils",
  "semver",
@@ -700,8 +700,8 @@ dependencies = [
  "komple-framework-hub-module",
  "komple-framework-metadata-module",
  "komple-framework-permission-module",
+ "komple-framework-token-module",
  "komple-ownership-permission-module",
- "komple-token-module",
  "komple-types",
  "komple-utils",
  "komple-whitelist-module",
@@ -728,6 +728,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "komple-framework-token-module"
+version = "0.0.1"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.1",
+ "cw2 0.15.1",
+ "cw721",
+ "cw721-base",
+ "komple-framework-metadata-module",
+ "komple-types",
+ "komple-utils",
+ "komple-whitelist-module",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
 name = "komple-link-permission-module"
 version = "0.0.1"
 dependencies = [
@@ -741,7 +762,7 @@ dependencies = [
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
  "komple-framework-permission-module",
- "komple-token-module",
+ "komple-framework-token-module",
  "komple-types",
  "komple-utils",
  "schemars",
@@ -765,30 +786,9 @@ dependencies = [
  "komple-framework-metadata-module",
  "komple-framework-mint-module",
  "komple-framework-permission-module",
- "komple-token-module",
+ "komple-framework-token-module",
  "komple-types",
  "komple-utils",
- "thiserror",
-]
-
-[[package]]
-name = "komple-token-module"
-version = "0.0.1"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 0.15.1",
- "cw-utils 0.15.1",
- "cw2 0.15.1",
- "cw721",
- "cw721-base",
- "komple-framework-metadata-module",
- "komple-types",
- "komple-utils",
- "komple-whitelist-module",
- "semver",
  "thiserror",
 ]
 

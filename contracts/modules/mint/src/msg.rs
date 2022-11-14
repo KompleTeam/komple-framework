@@ -2,7 +2,7 @@ use crate::state::{CollectionInfo, Config};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw20::Cw20ReceiveMsg;
-use komple_token_module::{
+use komple_framework_token_module::{
     msg::{MetadataInfo, TokenInfo},
     state::CollectionConfig,
 };

@@ -13,8 +13,8 @@ use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiate
 use komple_framework_mint_module::msg::{CollectionFundInfo, ExecuteMsg};
 use komple_framework_mint_module::state::CollectionInfo;
 use komple_framework_mint_module::ContractError;
-use komple_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
-use komple_token_module::state::CollectionConfig;
+use komple_framework_token_module::msg::{ExecuteMsg as TokenExecuteMsg, MetadataInfo, TokenInfo};
+use komple_framework_token_module::state::CollectionConfig;
 use komple_types::modules::fee::MintFees;
 use komple_types::modules::fee::{Fees, FixedPayment};
 use komple_types::modules::metadata::Metadata as MetadataType;
@@ -53,11 +53,11 @@ pub fn mint_module() -> Box<dyn Contract<Empty>> {
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_token_module::contract::execute,
-        komple_token_module::contract::instantiate,
-        komple_token_module::contract::query,
+        komple_framework_token_module::contract::execute,
+        komple_framework_token_module::contract::instantiate,
+        komple_framework_token_module::contract::query,
     )
-    .with_reply(komple_token_module::contract::reply);
+    .with_reply(komple_framework_token_module::contract::reply);
     Box::new(contract)
 }
 

@@ -40,7 +40,7 @@ pub type ExecuteMsg = cw721_base::ExecuteMsg<Empty, TokenExecuteMsg>;
 pub type QueryMsg = cw721_base::QueryMsg<TokenQueryMsg>;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-token-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-token-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const METADATA_MODULE_INSTANTIATE_REPLY_ID: u64 = 1;

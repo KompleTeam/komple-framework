@@ -60,7 +60,7 @@ komple-framework-marketplace-module = { path = "../marketplace", features = ["li
 komple-framework-merge-module = { path = "../merge", features = ["library"]  }
 komple-framework-permission-module = { path = "../permission", features = ["library"]  }
 komple-framework-mint-module = { path = "../mint", features = ["library"] }
-komple-token-module = { path = "../token", features = ["library"] }
+komple-framework-token-module = { path = "../token", features = ["library"] }
 komple-framework-metadata-module = { path = "../metadata", features = ["library"]  }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
