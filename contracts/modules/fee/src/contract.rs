@@ -12,10 +12,10 @@ use cw_storage_plus::Bound;
 use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::check_admin_privileges;
-use komple_utils::funds::{check_single_amount, FundsError};
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::shared::execute_lock_execute;
+use komple_framework_utils::check_admin_privileges;
+use komple_framework_utils::funds::{check_single_amount, FundsError};
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::shared::execute_lock_execute;
 
 use crate::error::ContractError;
 use crate::msg::{

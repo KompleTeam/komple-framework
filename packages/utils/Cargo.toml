@@ -1,8 +1,11 @@
 [package]
-name = "komple-utils"
+name = "komple-framework-utils"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
+authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
+description = "Package used for utility methods in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/packages/utils"
+homepage = "https://komple.io"
 
 [features]
 default = [

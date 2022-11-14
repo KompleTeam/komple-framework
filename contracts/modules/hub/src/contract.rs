@@ -10,9 +10,9 @@ use cw_utils::parse_reply_instantiate_data;
 use komple_framework_types::shared::execute::SharedExecuteMsg;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::check_admin_privileges;
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::shared::execute_update_operators;
+use komple_framework_utils::check_admin_privileges;
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::shared::execute_update_operators;
 use semver::Version;
 
 use crate::error::ContractError;

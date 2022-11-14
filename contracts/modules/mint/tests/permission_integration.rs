@@ -306,7 +306,7 @@ mod initialization {
     use komple_framework_types::modules::Modules;
 
     use komple_framework_hub_module::ContractError;
-    use komple_utils::storage::StorageHelper;
+    use komple_framework_utils::storage::StorageHelper;
 
     #[test]
     fn test_happy_path() {
@@ -359,7 +359,7 @@ mod initialization {
 }
 
 mod permission_mint {
-    use komple_utils::storage::StorageHelper;
+    use komple_framework_utils::storage::StorageHelper;
 
     use super::*;
 

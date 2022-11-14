@@ -9,7 +9,7 @@ use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
 use semver::Version;
 
 use crate::error::ContractError;

@@ -13,7 +13,7 @@ use komple_framework_types::modules::mint::Collections;
 use komple_framework_types::modules::token::{Locks, SubModules};
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::storage::StorageHelper;
 
 pub fn token_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

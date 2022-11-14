@@ -21,9 +21,9 @@ use komple_framework_types::modules::metadata::Metadata as MetadataType;
 use komple_framework_types::modules::mint::Collections;
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::RegisterMsg;
+use komple_framework_utils::storage::StorageHelper;
 use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 use komple_framework_whitelist_module::state::WhitelistConfig;
-use komple_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
 pub const USER2: &str = "juno..user2";

@@ -12,9 +12,9 @@ use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::events::MergeEventAttributes;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::shared::{execute_lock_execute, execute_update_operators};
-use komple_utils::{check_admin_privileges, storage::StorageHelper};
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::shared::{execute_lock_execute, execute_update_operators};
+use komple_framework_utils::{check_admin_privileges, storage::StorageHelper};
 use semver::Version;
 
 use crate::error::ContractError;

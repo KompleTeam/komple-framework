@@ -23,7 +23,7 @@ use komple_framework_types::modules::permission::{AttributeConditions, Permissio
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";

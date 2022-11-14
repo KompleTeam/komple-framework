@@ -51,7 +51,7 @@ cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 komple-framework-types = { path = "../../../packages/types" }
-komple-utils = { path = "../../../packages/utils" }
+komple-framework-utils = { path = "../../../packages/utils" }
 komple-framework-token-module = { path = "../token", features = ["library"] }
 komple-framework-fee-module = { path = "../fee", features = ["library"] }
 cw721-base = { version = "0.15.0", features = ["library"] }

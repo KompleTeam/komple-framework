@@ -568,7 +568,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "thiserror",
 ]
 
@@ -585,7 +585,7 @@ dependencies = [
  "cw20",
  "cw20-base",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "thiserror",
 ]
 
@@ -611,7 +611,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
@@ -632,7 +632,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "schemars",
  "serde",
  "thiserror",
@@ -657,7 +657,7 @@ dependencies = [
  "komple-framework-mint-module",
  "komple-framework-token-module",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
@@ -682,7 +682,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
@@ -698,7 +698,7 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
@@ -725,8 +725,8 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types",
+ "komple-framework-utils",
  "komple-framework-whitelist-module",
- "komple-utils",
  "semver",
  "thiserror",
 ]
@@ -749,7 +749,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "thiserror",
 ]
 
@@ -766,7 +766,7 @@ dependencies = [
  "cw2 0.15.1",
  "komple-framework-ownership-permission",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "semver",
  "thiserror",
 ]
@@ -786,8 +786,8 @@ dependencies = [
  "cw721-base",
  "komple-framework-metadata-module",
  "komple-framework-types",
+ "komple-framework-utils",
  "komple-framework-whitelist-module",
- "komple-utils",
  "semver",
  "thiserror",
 ]
@@ -798,6 +798,20 @@ version = "0.0.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
+]
+
+[[package]]
+name = "komple-framework-utils"
+version = "0.0.1"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus 0.15.1",
+ "cw20",
+ "cw721-base",
+ "komple-framework-types",
+ "schemars",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -812,22 +826,8 @@ dependencies = [
  "cw-utils 0.15.1",
  "cw2 0.15.1",
  "komple-framework-types",
- "komple-utils",
+ "komple-framework-utils",
  "semver",
- "thiserror",
-]
-
-[[package]]
-name = "komple-utils"
-version = "0.0.1"
-dependencies = [
- "cosmwasm-std",
- "cw-storage-plus 0.15.1",
- "cw20",
- "cw721-base",
- "komple-framework-types",
- "schemars",
- "serde",
  "thiserror",
 ]
 

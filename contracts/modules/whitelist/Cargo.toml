@@ -52,7 +52,7 @@ cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 cw-utils = "0.15.1"
 komple-framework-types = { path = "../../../packages/types" }
-komple-utils = { path = "../../../packages/utils", features = ["response"] }
+komple-framework-utils = { path = "../../../packages/utils", features = ["response"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"

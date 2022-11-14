@@ -21,15 +21,15 @@ use komple_framework_types::modules::whitelist::WHITELIST_NAMESPACE;
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_framework_whitelist_module::helper::KompleWhitelistHelper;
-use komple_utils::{
+use komple_framework_utils::{
     check_admin_privileges,
     funds::{check_cw20_fund_info, FundsError},
     response::ResponseHelper,
     shared::{execute_lock_execute, execute_update_operators},
     storage::StorageHelper,
 };
-use komple_utils::{funds::check_single_coin, response::EventHelper};
+use komple_framework_utils::{funds::check_single_coin, response::EventHelper};
+use komple_framework_whitelist_module::helper::KompleWhitelistHelper;
 use semver::Version;
 
 use crate::{error::ContractError, msg::ReceiveMsg, state::EXECUTE_LOCK};

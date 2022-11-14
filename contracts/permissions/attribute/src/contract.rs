@@ -9,9 +9,9 @@ use komple_framework_types::modules::permission::AttributeConditions;
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
-use komple_utils::response::EventHelper;
-use komple_utils::response::ResponseHelper;
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::response::EventHelper;
+use komple_framework_utils::response::ResponseHelper;
+use komple_framework_utils::storage::StorageHelper;
 
 use crate::error::ContractError;
 use crate::msg::{AttributeMsg, AttributeTypes, ExecuteMsg, QueryMsg};

@@ -53,7 +53,7 @@ thiserror = { version = "1.0.31" }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
 komple-framework-types = { path = "../../../packages/types" }
-komple-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
+komple-framework-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
 komple-framework-metadata-module = { path = "../metadata", features = ["library"] }
 komple-framework-whitelist-module = { path = "../whitelist", features = ["library"]  }
 cw-utils = "0.15.1"

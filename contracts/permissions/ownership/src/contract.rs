@@ -7,8 +7,8 @@ use cw2::set_contract_version;
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::{RegisterMsg, PARENT_ADDR_NAMESPACE};
-use komple_utils::response::{EventHelper, ResponseHelper};
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::response::{EventHelper, ResponseHelper};
+use komple_framework_utils::storage::StorageHelper;
 use std::collections::HashMap;
 
 use crate::error::ContractError;

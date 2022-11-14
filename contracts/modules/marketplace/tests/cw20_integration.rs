@@ -11,8 +11,8 @@ use komple_framework_mint_module::msg::ExecuteMsg as MintExecuteMsg;
 use komple_framework_types::modules::marketplace::Listing;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::funds::FundsError;
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::funds::FundsError;
+use komple_framework_utils::storage::StorageHelper;
 
 pub mod helpers;
 use helpers::*;

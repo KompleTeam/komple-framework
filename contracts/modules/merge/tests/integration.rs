@@ -25,7 +25,7 @@ use komple_framework_types::modules::mint::Collections;
 use komple_framework_types::modules::permission::Permissions;
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::storage::StorageHelper;
 
 pub const USER: &str = "juno..user";
 pub const RANDOM: &str = "juno..random";

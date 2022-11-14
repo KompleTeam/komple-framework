@@ -95,7 +95,7 @@ fn setup_cw20_token(app: &mut App) -> Addr {
 }
 
 mod instantiate {
-    use komple_utils::funds::FundsError;
+    use komple_framework_utils::funds::FundsError;
 
     use super::*;
 

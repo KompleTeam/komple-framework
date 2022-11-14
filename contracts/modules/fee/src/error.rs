@@ -1,5 +1,5 @@
 use cosmwasm_std::{DivideByZeroError, StdError};
-use komple_utils::{funds::FundsError, shared::SharedError, UtilError};
+use komple_framework_utils::{funds::FundsError, shared::SharedError, UtilError};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]

@@ -23,7 +23,7 @@ use komple_framework_types::modules::mint::Collections;
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::storage::StorageHelper;
 use std::str::FromStr;
 
 pub const CREATOR: &str = "juno..creator";

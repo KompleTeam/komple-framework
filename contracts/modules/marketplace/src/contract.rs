@@ -23,10 +23,10 @@ use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
 use komple_framework_types::shared::CONFIG_NAMESPACE;
-use komple_utils::funds::{check_cw20_fund_info, FundsError};
-use komple_utils::response::ResponseHelper;
-use komple_utils::shared::{execute_lock_execute, execute_update_operators};
-use komple_utils::{
+use komple_framework_utils::funds::{check_cw20_fund_info, FundsError};
+use komple_framework_utils::response::ResponseHelper;
+use komple_framework_utils::shared::{execute_lock_execute, execute_update_operators};
+use komple_framework_utils::{
     check_admin_privileges, funds::check_single_coin, response::EventHelper, storage::StorageHelper,
 };
 use semver::Version;

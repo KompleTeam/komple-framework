@@ -15,8 +15,8 @@ use komple_framework_types::modules::metadata::Metadata as MetadataType;
 use komple_framework_types::modules::mint::Collections;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::funds::FundsError;
-use komple_utils::storage::StorageHelper;
+use komple_framework_utils::funds::FundsError;
+use komple_framework_utils::storage::StorageHelper;
 
 pub fn minter_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

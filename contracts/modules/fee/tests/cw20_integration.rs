@@ -10,7 +10,7 @@ use komple_framework_fee_module::msg::ExecuteMsg;
 use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
 use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::RegisterMsg;
-use komple_utils::funds::FundsError;
+use komple_framework_utils::funds::FundsError;
 use std::str::FromStr;
 
 const ADMIN: &str = "juno..admin";

@@ -665,7 +665,7 @@ mod actions {
         }
 
         mod fixed {
-            use komple_utils::funds::FundsError;
+            use komple_framework_utils::funds::FundsError;
 
             use super::*;
 
