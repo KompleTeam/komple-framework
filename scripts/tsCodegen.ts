@@ -5,55 +5,55 @@ codegen({
     // MODULES
     {
       name: 'Fee Module',
-      dir: '../../contracts/modules/fee'
+      dir: '../contracts/modules/fee'
     },
     {
       name: 'Hub Module',
-      dir: '../../contracts/modules/hub'
+      dir: '../contracts/modules/hub'
     },
     {
       name: 'Marketplace Module',
-      dir: '../../contracts/modules/marketplace'
+      dir: '../contracts/modules/marketplace'
     },
     {
       name: 'Merge Module',
-      dir: '../../contracts/modules/merge'
+      dir: '../contracts/modules/merge'
     },
     {
       name: 'Metadata Module',
-      dir: '../../contracts/modules/metadata'
+      dir: '../contracts/modules/metadata'
     },
     {
       name: 'Mint Module',
-      dir: '../../contracts/modules/mint'
+      dir: '../contracts/modules/mint'
     },
     {
       name: 'Permission Module',
-      dir: '../../contracts/modules/permission'
+      dir: '../contracts/modules/permission'
     },
     {
       name: 'Token Module',
-      dir: '../../contracts/modules/token'
+      dir: '../contracts/modules/token'
     },
     {
       name: 'Whitelist Module',
-      dir: '../../contracts/modules/whitelist'
+      dir: '../contracts/modules/whitelist'
     },
     // PERMISSION
     {
       name: 'Attribute Permission',
-      dir: '../../contracts/permissions/attribute'
+      dir: '../contracts/permissions/attribute'
     },
     {
       name: 'Link Permission',
-      dir: '../../contracts/permissions/link'
+      dir: '../contracts/permissions/link'
     },
     {
       name: 'Ownership Permission',
-      dir: '../../contracts/permissions/ownership'
+      dir: '../contracts/permissions/ownership'
     },
   ],
-  outPath: '../../js-types',
+  outPath: '../js-types',
 
   // options are completely optional ;)
   options: {
