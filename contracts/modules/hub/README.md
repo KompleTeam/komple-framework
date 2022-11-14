@@ -1,7 +1,5 @@
 # Komple Framework Hub Module
 
-More info about this module can be found in [our documentation](https://docs.komple.io/).
+More info about this module can be found in [our documentation](https://docs.komple.io/komple-framework/modules/Hub-Module).
 
-Hub module is the centre piece of the Komple Framework. 
-
-Other modules are registered to the Hub module and can be accessed through the Hub module.
+This contract is used for module registry and address resolution.
