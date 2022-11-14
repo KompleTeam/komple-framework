@@ -22,7 +22,7 @@ use crate::msg::{ExecuteMsg, MergeMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, EXECUTE_LOCK, HUB_ADDR, OPERATORS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:komple-merge-module";
+const CONTRACT_NAME: &str = "crates.io:komple-framework-merge-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

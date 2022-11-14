@@ -15,7 +15,7 @@ use komple_framework_marketplace_module::msg::{
 use komple_framework_marketplace_module::{
     msg::ExecuteMsg as MarketplaceModuleExecuteMsg, ContractError as MarketplaceModuleContractError,
 };
-use komple_merge_module::{
+use komple_framework_merge_module::{
     msg::ExecuteMsg as MergeModuleExecuteMsg, ContractError as MergeModuleContractError,
 };
 use komple_mint_module::{
@@ -59,9 +59,9 @@ pub fn permission_module() -> Box<dyn Contract<Empty>> {
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_merge_module::contract::execute,
-        komple_merge_module::contract::instantiate,
-        komple_merge_module::contract::query,
+        komple_framework_merge_module::contract::execute,
+        komple_framework_merge_module::contract::instantiate,
+        komple_framework_merge_module::contract::query,
     );
     Box::new(contract)
 }

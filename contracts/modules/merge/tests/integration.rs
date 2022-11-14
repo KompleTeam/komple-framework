@@ -6,8 +6,10 @@ use komple_framework_hub_module::{
     msg::{ExecuteMsg as HubExecuteMsg, InstantiateMsg as HubInstantiateMsg},
     state::HubInfo,
 };
-use komple_merge_module::msg::{ExecuteMsg as MergeModuleExecuteMsg, MergeBurnMsg, MergeMsg};
-use komple_merge_module::ContractError as MergeContractError;
+use komple_framework_merge_module::msg::{
+    ExecuteMsg as MergeModuleExecuteMsg, MergeBurnMsg, MergeMsg,
+};
+use komple_framework_merge_module::ContractError as MergeContractError;
 use komple_metadata_module::msg::InstantiateMsg as MetadataModuleInstantiateMsg;
 use komple_mint_module::{
     msg::{CollectionFundInfo, ExecuteMsg as MintModuleExecuteMsg},
@@ -74,9 +76,9 @@ pub fn token_module() -> Box<dyn Contract<Empty>> {
 
 pub fn merge_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_merge_module::contract::execute,
-        komple_merge_module::contract::instantiate,
-        komple_merge_module::contract::query,
+        komple_framework_merge_module::contract::execute,
+        komple_framework_merge_module::contract::instantiate,
+        komple_framework_merge_module::contract::query,
     );
     Box::new(contract)
 }
