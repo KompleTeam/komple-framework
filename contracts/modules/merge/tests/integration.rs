@@ -103,9 +103,9 @@ pub fn ownership_permission_module() -> Box<dyn Contract<Empty>> {
 
 pub fn link_permission_module() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
-        komple_link_permission_module::contract::execute,
-        komple_link_permission_module::contract::instantiate,
-        komple_link_permission_module::contract::query,
+        komple_framework_link_permission::contract::execute,
+        komple_framework_link_permission::contract::instantiate,
+        komple_framework_link_permission::contract::query,
     );
     Box::new(contract)
 }
@@ -827,10 +827,10 @@ mod permission_merge {
     }
 
     mod link_permission {
-        use komple_framework_permission_module::msg::PermissionCheckMsg;
-        use komple_link_permission_module::{
+        use komple_framework_link_permission::{
             msg::LinkPermissionMsg, ContractError as LinkPermissionError,
         };
+        use komple_framework_permission_module::msg::PermissionCheckMsg;
 
         use super::*;
 

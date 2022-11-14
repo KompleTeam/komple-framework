@@ -1,8 +1,11 @@
 [package]
-name = "komple-link-permission-module"
+name = "komple-framework-link-permission"
 version = "0.0.1"
-authors = ["findolor <16416963+findolor@users.noreply.github.com>"]
-edition = "2021"
+authors = ["findolor <findolor@komple.io>"]
+edition = "2018"
+description = "Contract used for checking the linked collections of a collection in Komple Framework."
+repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/permissions/link"
+homepage = "https://komple.io"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
