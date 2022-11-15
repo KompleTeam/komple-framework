@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-link-permission"
-version = "0.1.0"
+version = "0.1.0-alpha"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for checking the linked collections of a collection in Komple Framework."
