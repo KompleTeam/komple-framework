@@ -554,7 +554,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-attribute-permission"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -618,7 +618,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-link-permission"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -733,7 +733,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-ownership-permission"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -755,7 +755,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-permission-module"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -816,7 +816,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-whitelist-module"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
