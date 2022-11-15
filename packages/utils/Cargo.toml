@@ -6,6 +6,7 @@ edition = "2018"
 description = "Package used for utility methods in Komple Framework."
 repository = "https://github.com/KompleTeam/komple-framework/tree/main/packages/utils"
 homepage = "https://komple.io"
+license = "Apache-2.0"
 
 [features]
 default = [
