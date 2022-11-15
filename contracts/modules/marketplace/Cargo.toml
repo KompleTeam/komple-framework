@@ -1,11 +1,13 @@
 [package]
 name = "komple-framework-marketplace-module"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for the second hand sale of tokens in Komple Framework."
 repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/modules/marketplace"
 homepage = "https://komple.io"
+license = "Apache-2.0"
+documentation = "https://docs.komple.io/komple-framework/modules/Marketplace-Module"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
