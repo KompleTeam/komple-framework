@@ -6,6 +6,8 @@ edition = "2018"
 description = "Contract used for making attribute level comparisons and checks in Komple Framework."
 repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/permissions/attribute"
 homepage = "https://komple.io"
+license = "Apache-2.0"
+documentation = "https://docs.komple.io/komple-framework/permissions/Attribute"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
