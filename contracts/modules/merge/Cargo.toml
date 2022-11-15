@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-merge-module"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for merging multiple tokens and minting a new one in Komple Framework."
