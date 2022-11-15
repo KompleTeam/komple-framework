@@ -54,4 +54,4 @@ All the generated typescript files will be inside `ts-types` folder under projec
 
 ## License
 
-Contents of this repository are open source under [Apache License v2](https://www.apache.org/licenses/LICENSE-2.0) or later.
+Contents of this repository are open source under [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) or later.
