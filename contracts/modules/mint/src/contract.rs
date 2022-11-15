@@ -1003,7 +1003,10 @@ fn query_creators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
 
 fn query_mint_lock(deps: Deps, collection_id: u32) -> StdResult<ResponseWrapper<bool>> {
     let mint_lock = MINT_LOCKS.may_load(deps.storage, collection_id)?;
-    Ok(ResponseWrapper::new("mint_lock", mint_lock.unwrap_or(false)))
+    Ok(ResponseWrapper::new(
+        "mint_lock",
+        mint_lock.unwrap_or(false),
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

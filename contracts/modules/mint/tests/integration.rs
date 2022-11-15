@@ -251,16 +251,16 @@ mod actions {
                 .unwrap();
 
             let msg = QueryMsg::MintLock { collection_id: 1 };
-            let response: ResponseWrapper<Option<bool>> = app
+            let response: ResponseWrapper<bool> = app
                 .wrap()
                 .query_wasm_smart(minter_addr.clone(), &msg)
                 .unwrap();
-            assert_eq!(response.data, Some(true));
+            assert_eq!(response.data, true);
 
             let msg = QueryMsg::MintLock { collection_id: 2 };
-            let response: ResponseWrapper<Option<bool>> =
+            let response: ResponseWrapper<bool> =
                 app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-            assert_eq!(response.data, None);
+            assert_eq!(response.data, false);
         }
     }
 
