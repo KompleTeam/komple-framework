@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-permission-module"
-version = "0.1.0"
+version = "0.1.0-alpha"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for permission registry and execute/query message execution in front of module operations in Komple Framework."

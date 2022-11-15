@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-utils"
-version = "0.0.1"
+version = "0.1.0-alpha"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Package used for utility methods in Komple Framework."
