@@ -148,7 +148,7 @@ pub enum QueryMsg {
     #[returns(ResponseWrapper<Vec<String>>)]
     Creators {},
     /// Get the mint lock for collection
-    #[returns(ResponseWrapper<Option<bool>>)]
+    #[returns(ResponseWrapper<bool>)]
     MintLock { collection_id: u32 },
 }
 
