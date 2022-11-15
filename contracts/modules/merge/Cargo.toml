@@ -6,6 +6,8 @@ edition = "2018"
 description = "Contract used for merging multiple tokens and minting a new one in Komple Framework."
 repository = "https://github.com/KompleTeam/komple-framework/tree/main/contracts/modules/merge"
 homepage = "https://komple.io"
+license = "Apache-2.0"
+documentation = "https://docs.komple.io/komple-framework/modules/Merge-Module"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
