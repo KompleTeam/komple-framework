@@ -50,6 +50,8 @@ After generating the contract schemas, you can generate the TS code for the cont
 ./scripts/ts-codegen
 ```
 
+All the generated typescript files will be inside `ts-types` folder under project root.
+
 ## License
 
 Contents of this repository are open source under [Apache License v2](https://www.apache.org/licenses/LICENSE-2.0) or later.

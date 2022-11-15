@@ -53,7 +53,7 @@ codegen({
       dir: '../contracts/permissions/ownership'
     },
   ],
-  outPath: '../js-types',
+  outPath: '../ts-types',
 
   // options are completely optional ;)
   options: {
