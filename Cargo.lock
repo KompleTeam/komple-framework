@@ -726,7 +726,7 @@ dependencies = [
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-whitelist-module",
+ "komple-framework-whitelist-module 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
@@ -787,7 +787,7 @@ dependencies = [
  "komple-framework-metadata-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-whitelist-module",
+ "komple-framework-whitelist-module 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
@@ -848,6 +848,24 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-multi-test",
+ "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.1",
+ "cw2 0.15.1",
+ "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-framework-whitelist-module"
+version = "1.0.0-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a74f6d9d19f052095628f32af013fc04c0272186f0e8f24d7ac4d3024312ba6"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
  "cw-storage-plus 0.15.1",
  "cw-utils 0.15.1",
  "cw2 0.15.1",
