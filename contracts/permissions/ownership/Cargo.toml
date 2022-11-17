@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-ownership-permission"
-version = "0.1.0"
+version = "1.0.0-beta"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used to check the ownership of an user for a token in Komple Framework."
