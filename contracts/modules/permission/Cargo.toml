@@ -52,7 +52,7 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-framework-types = { path = "../../../packages/types" }
+komple-framework-types = "1.0.0-beta"
 komple-framework-utils = { path = "../../../packages/utils", features = ["storage"] }
 cw-utils = "0.15.1"
 

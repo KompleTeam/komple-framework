@@ -56,7 +56,7 @@ komple-framework-token-module = { path = "../token", features = ["library"] }
 komple-framework-permission-module = { path = "../permission", features = ["library"] }
 komple-framework-mint-module = { path = "../mint", features = ["library"] }
 komple-framework-utils = { path = "../../../packages/utils", features = ["storage"] }
-komple-framework-types = { path = "../../../packages/types" }
+komple-framework-types = "1.0.0-beta"
 cw721-base = { version = "0.15.0", features = ["library"] }
 
 [dev-dependencies]

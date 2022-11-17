@@ -53,7 +53,7 @@ cw2 = "0.15.1"
 schemars = "0.8.10"
 serde = { version = "1.0.145", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-komple-framework-types = { path = "../../../packages/types" }
+komple-framework-types = "1.0.0-beta"
 komple-framework-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
 
 [dev-dependencies]
