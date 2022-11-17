@@ -127,7 +127,7 @@ pub enum QueryMsg {
     Config {},
     /// Resolve the collection address for a collection id.
     #[returns(ResponseWrapper<String>)]
-    CollectionAddress(u32),
+    CollectionAddress { collection_id: u32 },
     /// Get the collection info for a collection id.
     #[returns(ResponseWrapper<CollectionInfo>)]
     CollectionInfo { collection_id: u32 },

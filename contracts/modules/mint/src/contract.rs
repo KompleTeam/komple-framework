@@ -901,7 +901,7 @@ fn check_collection_ids_exists(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::CollectionAddress(collection_id) => {
+        QueryMsg::CollectionAddress { collection_id } => {
             to_binary(&query_collection_address(deps, collection_id)?)
         }
         QueryMsg::CollectionInfo { collection_id } => {
