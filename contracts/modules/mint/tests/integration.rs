@@ -192,7 +192,7 @@ mod actions {
                 .execute_contract(Addr::unchecked(USER), minter_addr.clone(), &msg, &[])
                 .unwrap();
 
-            let msg = QueryMsg::CollectionAddress(1);
+            let msg = QueryMsg::CollectionAddress { collection_id: 1 };
             let response: ResponseWrapper<String> =
                 app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
             let token_address = response.data;
@@ -323,7 +323,7 @@ mod actions {
                     )
                     .unwrap();
 
-                let msg = QueryMsg::CollectionAddress(1);
+                let msg = QueryMsg::CollectionAddress { collection_id: 1 };
                 let res: ResponseWrapper<String> = app
                     .wrap()
                     .query_wasm_smart(minter_addr.clone(), &msg)
@@ -519,7 +519,7 @@ mod actions {
 
                 setup_collection(&mut app, &minter_addr, Addr::unchecked(USER), None);
 
-                let msg = QueryMsg::CollectionAddress(1);
+                let msg = QueryMsg::CollectionAddress { collection_id: 1 };
                 let res: ResponseWrapper<String> =
                     app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
                 assert_eq!(res.data, "contract1");
