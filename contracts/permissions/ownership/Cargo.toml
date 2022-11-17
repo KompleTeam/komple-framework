@@ -52,7 +52,7 @@ cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 komple-framework-types = "1.0.0-beta"
-komple-framework-utils = { path = "../../../packages/utils", features = ["response", "storage"] }
+komple-framework-utils = { version = "1.0.0-beta", features = ["response", "storage"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"

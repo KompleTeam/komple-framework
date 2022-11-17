@@ -56,7 +56,7 @@ komple-framework-token-module = { path = "../token", features = ["library"] }
 komple-framework-permission-module = { path = "../permission", features = ["library"] }
 cw-utils = "0.15.1"
 komple-framework-types = "1.0.0-beta"
-komple-framework-utils = { path = "../../../packages/utils" }
+komple-framework-utils = "1.0.0-beta"
 komple-framework-fee-module = { path = "../fee", features = ["library"] }
 komple-framework-whitelist-module = { path = "../whitelist", features = ["library"] }
 cw20 = "0.16.0"

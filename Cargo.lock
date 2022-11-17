@@ -568,7 +568,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
@@ -585,7 +585,7 @@ dependencies = [
  "cw20",
  "cw20-base",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
@@ -611,7 +611,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
@@ -632,7 +632,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde",
  "thiserror",
@@ -657,7 +657,7 @@ dependencies = [
  "komple-framework-mint-module",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
@@ -682,7 +682,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
@@ -698,7 +698,7 @@ dependencies = [
  "cw-storage-plus 0.15.1",
  "cw2 0.15.1",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
@@ -725,7 +725,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-whitelist-module",
  "semver",
  "thiserror",
@@ -749,7 +749,7 @@ dependencies = [
  "komple-framework-permission-module",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
@@ -766,7 +766,7 @@ dependencies = [
  "cw2 0.15.1",
  "komple-framework-ownership-permission",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
@@ -786,7 +786,7 @@ dependencies = [
  "cw721-base",
  "komple-framework-metadata-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-whitelist-module",
  "semver",
  "thiserror",
@@ -825,6 +825,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "komple-framework-utils"
+version = "1.0.0-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00d8ef101ce771c3b53973acc56b8e4ca85da24144e02c24ea4ed90b56a14908"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus 0.15.1",
+ "cw20",
+ "cw721-base",
+ "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "komple-framework-whitelist-module"
 version = "1.0.0-beta"
 dependencies = [
@@ -836,7 +852,7 @@ dependencies = [
  "cw-utils 0.15.1",
  "cw2 0.15.1",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
- "komple-framework-utils",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
  "thiserror",
 ]
