@@ -53,7 +53,7 @@ cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 komple-framework-types = "1.0.0-beta"
 komple-framework-utils = { version = "1.0.0-beta", features = ["response", "storage"] }
-komple-framework-metadata-module = { path = "../../modules/metadata", features = ["library"] }
+komple-framework-metadata-module = { version = "1.0.0-beta", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
