@@ -52,7 +52,7 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-framework-token-module = { path = "../token", features = ["library"] }
+komple-framework-token-module = { version = "1.0.0-beta", features = ["library"] }
 komple-framework-permission-module = { version = "1.0.0-beta", features = ["library"] }
 cw-utils = "0.15.1"
 komple-framework-types = "1.0.0-beta"
