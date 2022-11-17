@@ -57,7 +57,7 @@ komple-framework-metadata-module = { version = "1.0.0-beta", features = ["librar
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-framework-permission-module = { path = "../../modules/permission", features = ["library"] }
-komple-framework-token-module = { path = "../../modules/token", features = ["library"] }
-komple-framework-mint-module = { path = "../../modules/mint", features = ["library"] }
-komple-framework-hub-module = { path = "../../modules/hub", features = ["library"] }
+komple-framework-permission-module = { version = "1.0.0-beta", features = ["library"] }
+komple-framework-token-module = { version = "1.0.0-beta", features = ["library"] }
+komple-framework-mint-module = { version = "1.0.0-beta", features = ["library"] }
+komple-framework-hub-module = { version = "1.0.0-beta", features = ["library"] }

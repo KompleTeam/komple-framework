@@ -58,4 +58,4 @@ cw-utils = "0.15.1"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-framework-ownership-permission = { path = "../../permissions/ownership", features = ["library"] }
+komple-framework-ownership-permission = { version = "1.0.0-beta", features = ["library"] }
