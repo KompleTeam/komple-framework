@@ -565,7 +565,7 @@ dependencies = [
  "komple-framework-hub-module",
  "komple-framework-metadata-module 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-mint-module",
- "komple-framework-permission-module",
+ "komple-framework-permission-module 1.0.0-beta",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
@@ -625,7 +625,7 @@ dependencies = [
  "komple-framework-metadata-module 1.0.0-beta",
  "komple-framework-mint-module",
  "komple-framework-ownership-permission",
- "komple-framework-permission-module",
+ "komple-framework-permission-module 1.0.0-beta",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
@@ -646,7 +646,7 @@ dependencies = [
  "komple-framework-hub-module",
  "komple-framework-metadata-module 1.0.0-beta",
  "komple-framework-mint-module",
- "komple-framework-permission-module",
+ "komple-framework-permission-module 1.0.0-beta",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
@@ -696,7 +696,7 @@ dependencies = [
  "komple-framework-metadata-module 1.0.0-beta",
  "komple-framework-mint-module",
  "komple-framework-ownership-permission",
- "komple-framework-permission-module",
+ "komple-framework-permission-module 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
@@ -756,7 +756,7 @@ dependencies = [
  "komple-framework-hub-module",
  "komple-framework-metadata-module 1.0.0-beta",
  "komple-framework-ownership-permission",
- "komple-framework-permission-module",
+ "komple-framework-permission-module 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
@@ -780,7 +780,7 @@ dependencies = [
  "komple-framework-hub-module",
  "komple-framework-metadata-module 1.0.0-beta",
  "komple-framework-mint-module",
- "komple-framework-permission-module",
+ "komple-framework-permission-module 1.0.0-beta",
  "komple-framework-token-module",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
@@ -799,6 +799,24 @@ dependencies = [
  "cw-utils 0.15.1",
  "cw2 0.15.1",
  "komple-framework-ownership-permission",
+ "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
+ "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
+name = "komple-framework-permission-module"
+version = "1.0.0-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52eee6a5ae94ca5b96376fc0b056290d2e5b7217986356e7408ffc8147e4a058"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.15.1",
+ "cw-utils 0.15.1",
+ "cw2 0.15.1",
  "komple-framework-types 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "komple-framework-utils 1.0.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "semver",
