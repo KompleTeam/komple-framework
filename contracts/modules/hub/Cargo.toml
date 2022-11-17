@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-hub-module"
-version = "0.1.0-alpha"
+version = "1.0.0-beta"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for module registry and address resolution in Komple Framework."
