@@ -54,7 +54,7 @@ cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 komple-framework-token-module = { version = "1.0.0-beta", features = ["library"] }
 komple-framework-permission-module = { version = "1.0.0-beta", features = ["library"] }
-komple-framework-mint-module = { path = "../mint", features = ["library"] }
+komple-framework-mint-module = { version = "1.0.0-beta", features = ["library"] }
 komple-framework-utils = { version = "1.0.0-beta", features = ["storage"] }
 komple-framework-types = "1.0.0-beta"
 cw721-base = { version = "0.15.0", features = ["library"] }
