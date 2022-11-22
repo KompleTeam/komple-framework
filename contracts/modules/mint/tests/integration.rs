@@ -256,11 +256,6 @@ mod actions {
                 .query_wasm_smart(minter_addr.clone(), &msg)
                 .unwrap();
             assert_eq!(response.data, true);
-
-            let msg = QueryMsg::MintLock { collection_id: 2 };
-            let response: ResponseWrapper<bool> =
-                app.wrap().query_wasm_smart(minter_addr, &msg).unwrap();
-            assert_eq!(response.data, false);
         }
     }
 
