@@ -1,70 +1,17 @@
-use cosmwasm_std::{coin, to_binary, Timestamp};
-use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+use cosmwasm_std::{coin, Timestamp};
+use cosmwasm_std::{Addr, Empty};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use komple_framework_metadata_module::msg::InstantiateMsg as MetadataInstantiateMsg;
-use komple_framework_token_module::msg::{
-    ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo,
-};
-use komple_framework_token_module::state::CollectionConfig;
+use cw_multi_test::{App, Executor};
+use komple_framework_mint_module::msg::ExecuteMsg as MintExecuteMsg;
+use komple_framework_token_module::msg::{ExecuteMsg, QueryMsg};
 use komple_framework_token_module::ContractError;
-use komple_framework_types::modules::metadata::Metadata as MetadataType;
-use komple_framework_types::modules::mint::Collections;
 use komple_framework_types::modules::token::SubModules as TokenSubModules;
 use komple_framework_types::shared::query::ResponseWrapper;
-use komple_framework_types::shared::RegisterMsg;
 use komple_framework_whitelist_module::msg::InstantiateMsg as WhitelistInstantiateMsg;
 use komple_framework_whitelist_module::state::WhitelistConfig;
 
-pub fn token_module() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        komple_framework_token_module::contract::execute,
-        komple_framework_token_module::contract::instantiate,
-        komple_framework_token_module::contract::query,
-    )
-    .with_reply(komple_framework_token_module::contract::reply);
-    Box::new(contract)
-}
-
-pub fn metadata_module() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        komple_framework_metadata_module::contract::execute,
-        komple_framework_metadata_module::contract::instantiate,
-        komple_framework_metadata_module::contract::query,
-    );
-    Box::new(contract)
-}
-
-pub fn whitelist_module() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        komple_framework_whitelist_module::contract::execute,
-        komple_framework_whitelist_module::contract::instantiate,
-        komple_framework_whitelist_module::contract::query,
-    );
-    Box::new(contract)
-}
-
-const USER: &str = "juno..user";
-const ADMIN: &str = "juno..admin";
-const RANDOM: &str = "juno..random";
-const RANDOM_2: &str = "juno..random2";
-const NATIVE_DENOM: &str = "denom";
-
-fn mock_app() -> App {
-    AppBuilder::new().build(|router, _, storage| {
-        router
-            .bank
-            .init_balance(
-                storage,
-                &Addr::unchecked(ADMIN),
-                vec![Coin {
-                    denom: NATIVE_DENOM.to_string(),
-                    amount: Uint128::new(1_000_000),
-                }],
-            )
-            .unwrap();
-    })
-}
+pub mod helpers;
+use helpers::*;
 
 fn setup_whitelist(
     app: &mut App,
@@ -106,57 +53,14 @@ fn setup_whitelist(
     res.data.whitelist.unwrap()
 }
 
-fn token_module_instantiation(app: &mut App) -> Addr {
-    let token_code_id = app.store_code(token_module());
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let token_info = TokenInfo {
-        symbol: "TEST".to_string(),
-        minter: ADMIN.to_string(),
-    };
-    let collection_config = CollectionConfig {
-        per_address_limit: None,
-        start_time: None,
-        max_token_limit: None,
-        ipfs_link: Some("some-link".to_string()),
-    };
-    let metadata_info = MetadataInfo {
-        instantiate_msg: MetadataInstantiateMsg {
-            metadata_type: MetadataType::Standard,
-        },
-        code_id: metadata_code_id,
-    };
-    let msg = InstantiateMsg {
-        creator: ADMIN.to_string(),
-        token_info,
-        collection_type: Collections::Standard,
-        collection_name: "Test Collection".to_string(),
-        collection_config,
-        metadata_info,
-    };
-    let register_msg = RegisterMsg {
-        admin: ADMIN.to_string(),
-        data: Some(to_binary(&msg).unwrap()),
-    };
-
-    app.instantiate_contract(
-        token_code_id,
-        Addr::unchecked(ADMIN),
-        &register_msg,
-        &[],
-        "test",
-        Some(ADMIN.to_string()),
-    )
-    .unwrap()
-}
-
 mod initialization {
     use super::*;
 
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
-        let token_module_addr = token_module_instantiation(&mut app);
+        let (_, token_module_addr) =
+            proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
         let whitelist_code_id = app.store_code(whitelist_module());
 
         let start_time = app.block_info().time.plus_seconds(1);
@@ -188,9 +92,9 @@ mod initialization {
             .wrap()
             .query_wasm_smart(token_module_addr, &msg)
             .unwrap();
-        assert_eq!(res.data.whitelist.unwrap(), "contract2");
+        assert_eq!(res.data.whitelist.unwrap(), "contract3");
 
-        let res = app.wrap().query_wasm_contract_info("contract2").unwrap();
+        let res = app.wrap().query_wasm_contract_info("contract3").unwrap();
         assert_eq!(res.admin, Some(ADMIN.to_string()));
     }
 }
@@ -204,7 +108,8 @@ mod actions {
         #[test]
         fn test_token_limit_reached() {
             let mut app = mock_app();
-            let token_module_addr = token_module_instantiation(&mut app);
+            let (mint_module_addr, token_module_addr) =
+                proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
             let start_time = app.block_info().time.plus_seconds(1);
             let end_time = app.block_info().time.plus_seconds(10);
@@ -220,25 +125,23 @@ mod actions {
 
             app.update_block(|block| block.time = block.time.plus_seconds(5));
 
-            let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                msg: ExecuteMsg::Mint {
-                    owner: USER.to_string(),
-                    metadata_id: None,
-                },
+            let msg = MintExecuteMsg::Mint {
+                collection_id: 1,
+                metadata_id: None,
             };
 
             let _ = app
                 .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
+                    Addr::unchecked(USER),
+                    mint_module_addr.clone(),
                     &msg,
                     &[coin(100, NATIVE_DENOM)],
                 )
                 .unwrap();
             let _ = app
                 .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr.clone(),
+                    Addr::unchecked(USER),
+                    mint_module_addr.clone(),
                     &msg,
                     &[coin(100, NATIVE_DENOM)],
                 )
@@ -246,14 +149,14 @@ mod actions {
 
             let err = app
                 .execute_contract(
-                    Addr::unchecked(ADMIN),
-                    token_module_addr,
+                    Addr::unchecked(USER),
+                    mint_module_addr,
                     &msg,
                     &[coin(100, NATIVE_DENOM)],
                 )
                 .unwrap_err();
             assert_eq!(
-                err.source().unwrap().to_string(),
+                err.source().unwrap().source().unwrap().to_string(),
                 ContractError::TokenLimitReached {}.to_string()
             )
         }

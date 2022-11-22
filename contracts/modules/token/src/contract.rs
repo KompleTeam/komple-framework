@@ -132,9 +132,7 @@ pub fn instantiate(
         .minter
         .save(deps.storage, &minter)?;
 
-    let contract_info = deps
-        .querier
-        .query_wasm_contract_info(env.contract.address)?;
+    let contract_info = deps.querier.query_wasm_contract_info(info.sender.clone())?;
     let metadata_register_msg = RegisterMsg {
         admin: config.admin.to_string(),
         data: Some(to_binary(&data.metadata_info.instantiate_msg)?),
