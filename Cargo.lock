@@ -785,6 +785,7 @@ dependencies = [
  "cw721",
  "cw721-base",
  "komple-framework-metadata-module",
+ "komple-framework-mint-module",
  "komple-framework-types",
  "komple-framework-utils",
  "komple-framework-whitelist-module",

@@ -1,13 +1,17 @@
-use crate::msg::{ExecuteMsg, InstantiateMsg, MetadataInfo, QueryMsg, TokenInfo};
-use crate::state::{CollectionConfig, Config as TokenConfig};
-use crate::ContractError;
-use cosmwasm_std::{coin, to_binary, Addr, Coin, Empty, Timestamp, Uint128};
+use cosmwasm_std::{Addr, Empty};
 use cw721_base::msg::{ExecuteMsg as Cw721ExecuteMsg, QueryMsg as Cw721QueryMsg};
-use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use cw_multi_test::Executor;
 use komple_framework_metadata_module::{
     msg::{InstantiateMsg as MetadataInstantiateMsg, QueryMsg as MetadataQueryMsg},
     state::{MetaInfo, Metadata as MetadataMetadata},
 };
+use komple_framework_mint_module::{
+    msg::{CollectionFundInfo, ExecuteMsg as MintExecuteMsg},
+    state::CollectionInfo,
+};
+use komple_framework_token_module::msg::{ExecuteMsg, MetadataInfo, QueryMsg, TokenInfo};
+use komple_framework_token_module::state::{CollectionConfig, Config as TokenConfig};
+use komple_framework_token_module::ContractError;
 use komple_framework_types::modules::metadata::Metadata as MetadataType;
 use komple_framework_types::modules::mint::Collections;
 use komple_framework_types::modules::token::{Locks, SubModules};
@@ -15,115 +19,8 @@ use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
 use komple_framework_utils::storage::StorageHelper;
 
-pub fn token_module() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        crate::contract::execute,
-        crate::contract::instantiate,
-        crate::contract::query,
-    )
-    .with_reply(crate::contract::reply);
-    Box::new(contract)
-}
-
-pub fn metadata_module() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        komple_framework_metadata_module::contract::execute,
-        komple_framework_metadata_module::contract::instantiate,
-        komple_framework_metadata_module::contract::query,
-    );
-    Box::new(contract)
-}
-
-const USER: &str = "juno.user";
-const ADMIN: &str = "juno.admin";
-const RANDOM: &str = "juno.random";
-const RANDOM_2: &str = "juno.random2";
-const NATIVE_DENOM: &str = "denom";
-const TEST_DENOM: &str = "test_denom";
-
-fn mock_app() -> App {
-    AppBuilder::new().build(|router, _, storage| {
-        router
-            .bank
-            .init_balance(
-                storage,
-                &Addr::unchecked(ADMIN),
-                vec![Coin {
-                    denom: NATIVE_DENOM.to_string(),
-                    amount: Uint128::new(1_000_000),
-                }],
-            )
-            .unwrap();
-        router
-            .bank
-            .init_balance(
-                storage,
-                &Addr::unchecked(RANDOM),
-                vec![Coin {
-                    denom: TEST_DENOM.to_string(),
-                    amount: Uint128::new(1_000_000),
-                }],
-            )
-            .unwrap();
-    })
-}
-
-fn proper_instantiate(
-    app: &mut App,
-    minter: String,
-    per_address_limit: Option<u32>,
-    start_time: Option<Timestamp>,
-    max_token_limit: Option<u32>,
-    ipfs_link: Option<String>,
-) -> Addr {
-    let token_code_id = app.store_code(token_module());
-    let metadata_code_id = app.store_code(metadata_module());
-
-    let token_info = TokenInfo {
-        symbol: "TTT".to_string(),
-        minter,
-    };
-    let collection_config = CollectionConfig {
-        per_address_limit,
-        start_time,
-        max_token_limit,
-        ipfs_link,
-    };
-    let metadata_info = MetadataInfo {
-        instantiate_msg: MetadataInstantiateMsg {
-            metadata_type: MetadataType::Standard,
-        },
-        code_id: metadata_code_id,
-    };
-    let msg = InstantiateMsg {
-        creator: ADMIN.to_string(),
-        token_info,
-        collection_type: Collections::Standard,
-        collection_name: "Test Collection".to_string(),
-        collection_config,
-        metadata_info,
-    };
-    let register_msg = RegisterMsg {
-        admin: ADMIN.to_string(),
-        data: Some(to_binary(&msg).unwrap()),
-    };
-
-    let token_addr = app
-        .instantiate_contract(
-            token_code_id,
-            Addr::unchecked(ADMIN),
-            &register_msg,
-            &[],
-            "test",
-            Some(ADMIN.to_string()),
-        )
-        .unwrap();
-
-    let res = app.wrap().query_wasm_contract_info("contract1").unwrap();
-    assert_eq!(res.admin, Some(ADMIN.to_string()));
-
-    token_addr
-}
+pub mod helpers;
+use helpers::*;
 
 mod initialization {
     use super::*;
@@ -131,8 +28,23 @@ mod initialization {
     #[test]
     fn test_happy_path() {
         let mut app = mock_app();
+        let mint_code_id = app.store_code(mint_module());
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
+
+        let mint_module_addr = app
+            .instantiate_contract(
+                mint_code_id,
+                Addr::unchecked(ADMIN),
+                &RegisterMsg {
+                    admin: ADMIN.to_string(),
+                    data: None,
+                },
+                &vec![],
+                "test",
+                Some(ADMIN.to_string()),
+            )
+            .unwrap();
 
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
@@ -150,36 +62,60 @@ mod initialization {
             },
             code_id: metadata_code_id,
         };
-        let msg = InstantiateMsg {
-            creator: ADMIN.to_string(),
-            token_info,
-            collection_type: Collections::Standard,
-            collection_name: "Test Collection".to_string(),
+
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Standard,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
             collection_config,
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info,
             metadata_info,
+            linked_collections: None,
         };
-        let register_msg = RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: Some(to_binary(&msg).unwrap()),
-        };
-        let token_module_addr = app
-            .instantiate_contract(
-                token_code_id,
-                Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
-            )
-            .unwrap();
-        assert_eq!(token_module_addr, "contract0");
+        app.execute_contract(
+            Addr::unchecked(ADMIN),
+            mint_module_addr.clone(),
+            &create_collection_msg,
+            &vec![],
+        )
+        .unwrap();
+
+        let token_module_addr =
+            StorageHelper::query_collection_address(&app.wrap(), &mint_module_addr, &1).unwrap();
+
+        assert_eq!(token_module_addr, "contract1");
     }
 
     #[test]
     fn test_invalid_time() {
         let mut app = mock_app();
+        let mint_code_id = app.store_code(mint_module());
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
+
+        let mint_module_addr = app
+            .instantiate_contract(
+                mint_code_id,
+                Addr::unchecked(ADMIN),
+                &RegisterMsg {
+                    admin: ADMIN.to_string(),
+                    data: None,
+                },
+                &vec![],
+                "test",
+                Some(ADMIN.to_string()),
+            )
+            .unwrap();
 
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
@@ -197,58 +133,68 @@ mod initialization {
             },
             code_id: metadata_code_id,
         };
-        let msg = InstantiateMsg {
-            creator: ADMIN.to_string(),
-            token_info: token_info.clone(),
-            collection_type: Collections::Standard,
-            collection_name: "Test Collection".to_string(),
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Standard,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
             collection_config: collection_config.clone(),
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info: token_info.clone(),
             metadata_info: metadata_info.clone(),
-        };
-        let register_msg = RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: Some(to_binary(&msg).unwrap()),
+            linked_collections: None,
         };
         let err = app
-            .instantiate_contract(
-                token_code_id,
+            .execute_contract(
                 Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
+                mint_module_addr.clone(),
+                &create_collection_msg,
+                &vec![],
             )
             .unwrap_err();
         assert_eq!(
-            err.source().unwrap().to_string(),
+            err.source().unwrap().source().unwrap().to_string(),
             ContractError::InvalidStartTime {}.to_string()
         );
 
         collection_config.start_time = Some(app.block_info().time.minus_seconds(10));
-        let msg = InstantiateMsg {
-            creator: ADMIN.to_string(),
-            token_info,
-            collection_type: Collections::Standard,
-            collection_name: "Test Collection".to_string(),
-            collection_config,
-            metadata_info,
-        };
-        let register_msg = RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: Some(to_binary(&msg).unwrap()),
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Standard,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
+            collection_config: collection_config,
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info: token_info.clone(),
+            metadata_info: metadata_info.clone(),
+            linked_collections: None,
         };
         let err = app
-            .instantiate_contract(
-                token_code_id,
+            .execute_contract(
                 Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
+                mint_module_addr.clone(),
+                &create_collection_msg,
+                &vec![],
             )
             .unwrap_err();
         assert_eq!(
-            err.source().unwrap().to_string(),
+            err.source().unwrap().source().unwrap().to_string(),
             ContractError::InvalidStartTime {}.to_string()
         );
     }
@@ -256,8 +202,23 @@ mod initialization {
     #[test]
     fn test_invalid_max_token_limit() {
         let mut app = mock_app();
+        let mint_code_id = app.store_code(mint_module());
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
+
+        let mint_module_addr = app
+            .instantiate_contract(
+                mint_code_id,
+                Addr::unchecked(ADMIN),
+                &RegisterMsg {
+                    admin: ADMIN.to_string(),
+                    data: None,
+                },
+                &vec![],
+                "test",
+                Some(ADMIN.to_string()),
+            )
+            .unwrap();
 
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
@@ -275,30 +236,35 @@ mod initialization {
             },
             code_id: metadata_code_id,
         };
-        let msg = InstantiateMsg {
-            creator: ADMIN.to_string(),
-            token_info,
-            collection_type: Collections::Standard,
-            collection_name: "Test Collection".to_string(),
-            collection_config,
-            metadata_info,
-        };
-        let register_msg = RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: Some(to_binary(&msg).unwrap()),
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Standard,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
+            collection_config: collection_config.clone(),
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info: token_info.clone(),
+            metadata_info: metadata_info.clone(),
+            linked_collections: None,
         };
         let err = app
-            .instantiate_contract(
-                token_code_id,
+            .execute_contract(
                 Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
+                mint_module_addr,
+                &create_collection_msg,
+                &vec![],
             )
             .unwrap_err();
         assert_eq!(
-            err.source().unwrap().to_string(),
+            err.source().unwrap().source().unwrap().to_string(),
             ContractError::InvalidMaxTokenLimit {}.to_string()
         );
     }
@@ -306,8 +272,23 @@ mod initialization {
     #[test]
     fn test_invalid_per_address_limit() {
         let mut app = mock_app();
+        let mint_code_id = app.store_code(mint_module());
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
+
+        let mint_module_addr = app
+            .instantiate_contract(
+                mint_code_id,
+                Addr::unchecked(ADMIN),
+                &RegisterMsg {
+                    admin: ADMIN.to_string(),
+                    data: None,
+                },
+                &vec![],
+                "test",
+                Some(ADMIN.to_string()),
+            )
+            .unwrap();
 
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
@@ -325,30 +306,35 @@ mod initialization {
             },
             code_id: metadata_code_id,
         };
-        let msg = InstantiateMsg {
-            creator: ADMIN.to_string(),
-            token_info,
-            collection_type: Collections::Standard,
-            collection_name: "Test Collection".to_string(),
-            collection_config,
-            metadata_info,
-        };
-        let register_msg = RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: Some(to_binary(&msg).unwrap()),
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Standard,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
+            collection_config: collection_config.clone(),
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info: token_info.clone(),
+            metadata_info: metadata_info.clone(),
+            linked_collections: None,
         };
         let err = app
-            .instantiate_contract(
-                token_code_id,
+            .execute_contract(
                 Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
+                mint_module_addr,
+                &create_collection_msg,
+                &vec![],
             )
             .unwrap_err();
         assert_eq!(
-            err.source().unwrap().to_string(),
+            err.source().unwrap().source().unwrap().to_string(),
             ContractError::InvalidPerAddressLimit {}.to_string()
         );
     }
@@ -356,8 +342,23 @@ mod initialization {
     #[test]
     fn test_missing_ipfs_link() {
         let mut app = mock_app();
+        let mint_code_id = app.store_code(mint_module());
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
+
+        let mint_module_addr = app
+            .instantiate_contract(
+                mint_code_id,
+                Addr::unchecked(ADMIN),
+                &RegisterMsg {
+                    admin: ADMIN.to_string(),
+                    data: None,
+                },
+                &vec![],
+                "test",
+                Some(ADMIN.to_string()),
+            )
+            .unwrap();
 
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
@@ -375,30 +376,35 @@ mod initialization {
             },
             code_id: metadata_code_id,
         };
-        let msg = InstantiateMsg {
-            creator: ADMIN.to_string(),
-            token_info,
-            collection_type: Collections::Standard,
-            collection_name: "Test Collection".to_string(),
-            collection_config,
-            metadata_info,
-        };
-        let register_msg = RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: Some(to_binary(&msg).unwrap()),
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Standard,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
+            collection_config: collection_config.clone(),
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info: token_info.clone(),
+            metadata_info: metadata_info.clone(),
+            linked_collections: None,
         };
         let err = app
-            .instantiate_contract(
-                token_code_id,
+            .execute_contract(
                 Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
+                mint_module_addr,
+                &create_collection_msg,
+                &vec![],
             )
             .unwrap_err();
         assert_eq!(
-            err.source().unwrap().to_string(),
+            err.source().unwrap().source().unwrap().to_string(),
             ContractError::IpfsNotFound {}.to_string()
         );
     }
@@ -406,8 +412,23 @@ mod initialization {
     #[test]
     fn test_invalid_collection_metadata_type() {
         let mut app = mock_app();
+        let mint_code_id = app.store_code(mint_module());
         let token_code_id = app.store_code(token_module());
         let metadata_code_id = app.store_code(metadata_module());
+
+        let mint_module_addr = app
+            .instantiate_contract(
+                mint_code_id,
+                Addr::unchecked(ADMIN),
+                &RegisterMsg {
+                    admin: ADMIN.to_string(),
+                    data: None,
+                },
+                &vec![],
+                "test",
+                Some(ADMIN.to_string()),
+            )
+            .unwrap();
 
         let token_info = TokenInfo {
             symbol: "TTT".to_string(),
@@ -419,54 +440,74 @@ mod initialization {
             max_token_limit: Some(100),
             ipfs_link: Some("some-link".to_string()),
         };
-        let metadata_info = MetadataInfo {
+        let mut metadata_info = MetadataInfo {
             instantiate_msg: MetadataInstantiateMsg {
                 metadata_type: MetadataType::Dynamic,
             },
             code_id: metadata_code_id,
         };
-        let mut msg = InstantiateMsg {
-            creator: ADMIN.to_string(),
-            token_info,
-            collection_type: Collections::Standard,
-            collection_name: "Test Collection".to_string(),
-            collection_config,
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Standard,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
+            collection_config: collection_config.clone(),
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info: token_info.clone(),
             metadata_info: metadata_info.clone(),
+            linked_collections: None,
         };
-        let register_msg = RegisterMsg {
-            admin: ADMIN.to_string(),
-            data: Some(to_binary(&msg).unwrap()),
-        };
-
         let err = app
-            .instantiate_contract(
-                token_code_id,
+            .execute_contract(
                 Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
+                mint_module_addr.clone(),
+                &create_collection_msg,
+                &vec![],
             )
             .unwrap_err();
         assert_eq!(
-            err.source().unwrap().to_string(),
+            err.source().unwrap().source().unwrap().to_string(),
             ContractError::InvalidCollectionMetadataType {}.to_string()
         );
 
-        msg.metadata_info.instantiate_msg.metadata_type = MetadataType::Standard;
-        msg.collection_type = Collections::Komple;
+        metadata_info.instantiate_msg.metadata_type = MetadataType::Standard;
+        let create_collection_msg = MintExecuteMsg::CreateCollection {
+            code_id: token_code_id,
+            collection_info: CollectionInfo {
+                collection_type: Collections::Komple,
+                name: "Test Collection".to_string(),
+                description: "Test Description".to_string(),
+                image: "ipfs://xyz".to_string(),
+                external_link: None,
+            },
+            collection_config: collection_config.clone(),
+            fund_info: CollectionFundInfo {
+                is_native: true,
+                denom: NATIVE_DENOM.to_string(),
+                cw20_address: None,
+            },
+            token_info: token_info.clone(),
+            metadata_info,
+            linked_collections: None,
+        };
         let err = app
-            .instantiate_contract(
-                token_code_id,
+            .execute_contract(
                 Addr::unchecked(ADMIN),
-                &register_msg,
-                &[],
-                "test",
-                None,
+                mint_module_addr,
+                &create_collection_msg,
+                &vec![],
             )
             .unwrap_err();
         assert_eq!(
-            err.source().unwrap().to_string(),
+            err.source().unwrap().source().unwrap().to_string(),
             ContractError::InvalidCollectionMetadataType {}.to_string()
         );
     }
@@ -481,14 +522,8 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let token_module_addr = proper_instantiate(
-                &mut app,
-                ADMIN.to_string(),
-                None,
-                None,
-                None,
-                Some("some-link".to_string()),
-            );
+            let (_, token_module_addr) =
+                proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::UpdateModuleOperators {
@@ -512,14 +547,8 @@ mod actions {
         #[test]
         fn test_invalid_admin() {
             let mut app = mock_app();
-            let token_module_addr = proper_instantiate(
-                &mut app,
-                ADMIN.to_string(),
-                None,
-                None,
-                None,
-                Some("some-link".to_string()),
-            );
+            let (_, token_module_addr) =
+                proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
             let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                 msg: ExecuteMsg::UpdateModuleOperators {
@@ -545,14 +574,8 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (_, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
                 let locks = Locks {
                     mint_lock: false,
@@ -582,14 +605,8 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (_, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
                 let locks = Locks {
                     mint_lock: false,
@@ -616,23 +633,15 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let locks = Locks {
@@ -666,14 +675,8 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (_, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
                 let locks = Locks {
                     mint_lock: false,
@@ -684,7 +687,7 @@ mod actions {
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdateTokenLocks {
                         token_id: "1".to_string(),
-                        locks: locks,
+                        locks,
                     },
                 };
                 let err = app
@@ -699,14 +702,8 @@ mod actions {
             #[test]
             fn test_invalid_token_id() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (_, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
                 let locks = Locks {
                     mint_lock: false,
@@ -717,7 +714,7 @@ mod actions {
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdateTokenLocks {
                         token_id: "1".to_string(),
-                        locks: locks,
+                        locks,
                     },
                 };
                 let err = app
@@ -739,9 +736,8 @@ mod actions {
                 #[test]
                 fn test_happy_path() {
                     let mut app = mock_app();
-                    let token_module_addr = proper_instantiate(
+                    let (_, token_module_addr) = proper_instantiate(
                         &mut app,
-                        ADMIN.to_string(),
                         None,
                         None,
                         None,
@@ -780,9 +776,8 @@ mod actions {
                 #[test]
                 fn test_invalid_per_address_limit() {
                     let mut app = mock_app();
-                    let token_module_addr = proper_instantiate(
+                    let (_, token_module_addr) = proper_instantiate(
                         &mut app,
-                        ADMIN.to_string(),
                         None,
                         None,
                         None,
@@ -815,9 +810,8 @@ mod actions {
                 #[test]
                 fn test_happy_path() {
                     let mut app = mock_app();
-                    let token_module_addr = proper_instantiate(
+                    let (_, token_module_addr) = proper_instantiate(
                         &mut app,
-                        ADMIN.to_string(),
                         None,
                         None,
                         None,
@@ -860,9 +854,8 @@ mod actions {
                 fn test_invalid_time() {
                     let mut app = mock_app();
                     let start_time = app.block_info().time.plus_seconds(5);
-                    let token_module_addr = proper_instantiate(
+                    let (_, token_module_addr) = proper_instantiate(
                         &mut app,
-                        ADMIN.to_string(),
                         None,
                         Some(start_time),
                         None,
@@ -924,9 +917,8 @@ mod actions {
                 #[test]
                 fn test_happy_path() {
                     let mut app = mock_app();
-                    let token_module_addr = proper_instantiate(
+                    let (_, token_module_addr) = proper_instantiate(
                         &mut app,
-                        ADMIN.to_string(),
                         None,
                         None,
                         None,
@@ -965,9 +957,8 @@ mod actions {
                 #[test]
                 fn test_invalid_max_token_limit() {
                     let mut app = mock_app();
-                    let token_module_addr = proper_instantiate(
+                    let (_, token_module_addr) = proper_instantiate(
                         &mut app,
-                        ADMIN.to_string(),
                         None,
                         None,
                         None,
@@ -1000,9 +991,8 @@ mod actions {
                 #[test]
                 fn test_happy_path() {
                     let mut app = mock_app();
-                    let token_module_addr = proper_instantiate(
+                    let (_, token_module_addr) = proper_instantiate(
                         &mut app,
-                        ADMIN.to_string(),
                         None,
                         None,
                         None,
@@ -1042,14 +1032,8 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (_, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
                     msg: ExecuteMsg::UpdateCollectionConfig {
@@ -1081,23 +1065,15 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1118,23 +1094,15 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let locks = Locks {
@@ -1197,23 +1165,15 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::ApproveAll {
@@ -1242,23 +1202,25 @@ mod actions {
             #[test]
             fn test_invalid_admin() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
+
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
+                };
+                let _ = app
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr, &msg, &[])
+                    .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
+                    msg: ExecuteMsg::AdminTransferNft {
+                        recipient: RANDOM.to_string(),
+                        token_id: "1".to_string(),
                     },
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(USER), token_module_addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), token_module_addr.clone(), &msg, &[])
                     .unwrap_err();
                 assert_eq!(
                     err.source().unwrap().to_string(),
@@ -1273,23 +1235,15 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
@@ -1322,23 +1276,15 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let locks = Locks {
@@ -1401,28 +1347,15 @@ mod actions {
             #[test]
             fn test_happy_path() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(
-                        Addr::unchecked(ADMIN),
-                        token_module_addr.clone(),
-                        &msg,
-                        &[coin(1_000_000, NATIVE_DENOM)],
-                    )
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
                 let res =
@@ -1461,14 +1394,8 @@ mod actions {
             #[test]
             fn test_invalid_locks() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
-                    &mut app,
-                    ADMIN.to_string(),
-                    None,
-                    None,
-                    None,
-                    Some("some-link".to_string()),
-                );
+                let (mint_module_addr, token_module_addr) =
+                    proper_instantiate(&mut app, None, None, None, Some("some-link".to_string()));
 
                 let locks = Locks {
                     mint_lock: true,
@@ -1484,17 +1411,15 @@ mod actions {
                     .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
                     .unwrap();
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap_err();
                 assert_eq!(
-                    err.source().unwrap().to_string(),
+                    err.source().unwrap().source().unwrap().to_string(),
                     ContractError::MintLocked {}.to_string()
                 );
             }
@@ -1502,46 +1427,44 @@ mod actions {
             #[test]
             fn test_max_token_limit() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
+                let (mint_module_addr, _) = proper_instantiate(
                     &mut app,
-                    ADMIN.to_string(),
                     None,
                     None,
                     Some(2),
                     Some("some-link".to_string()),
                 );
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: RANDOM.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(RANDOM), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: RANDOM_2.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(
+                        Addr::unchecked(RANDOM_2),
+                        mint_module_addr.clone(),
+                        &msg,
+                        &[],
+                    )
                     .unwrap_err();
                 assert_eq!(
-                    err.source().unwrap().to_string(),
+                    err.source().unwrap().source().unwrap().to_string(),
                     ContractError::TokenLimitReached {}.to_string()
                 );
             }
@@ -1549,46 +1472,39 @@ mod actions {
             #[test]
             fn test_per_address_limit() {
                 let mut app = mock_app();
-                let token_module_addr = proper_instantiate(
+                let (mint_module_addr, _) = proper_instantiate(
                     &mut app,
-                    ADMIN.to_string(),
                     Some(2),
                     None,
                     None,
                     Some("some-link".to_string()),
                 );
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let _ = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr.clone(), &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap();
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap_err();
                 assert_eq!(
-                    err.source().unwrap().to_string(),
+                    err.source().unwrap().source().unwrap().to_string(),
                     ContractError::TokenLimitReached {}.to_string()
                 );
             }
@@ -1597,26 +1513,23 @@ mod actions {
             fn test_invalid_time() {
                 let mut app = mock_app();
                 let start_time = app.block_info().time.plus_seconds(5);
-                let token_module_addr = proper_instantiate(
+                let (mint_module_addr, _) = proper_instantiate(
                     &mut app,
-                    ADMIN.to_string(),
                     None,
                     Some(start_time),
                     None,
                     Some("some-link".to_string()),
                 );
 
-                let msg: Cw721ExecuteMsg<Empty, ExecuteMsg> = Cw721ExecuteMsg::Extension {
-                    msg: ExecuteMsg::Mint {
-                        owner: USER.to_string(),
-                        metadata_id: None,
-                    },
+                let msg = MintExecuteMsg::Mint {
+                    collection_id: 1,
+                    metadata_id: None,
                 };
                 let err = app
-                    .execute_contract(Addr::unchecked(ADMIN), token_module_addr, &msg, &[])
+                    .execute_contract(Addr::unchecked(USER), mint_module_addr.clone(), &msg, &[])
                     .unwrap_err();
                 assert_eq!(
-                    err.source().unwrap().to_string(),
+                    err.source().unwrap().source().unwrap().to_string(),
                     ContractError::MintingNotStarted {}.to_string()
                 );
             }
