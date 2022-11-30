@@ -28,6 +28,6 @@ packages/*/schema
 contracts/modules/*/schema
 contracts/permissions/*/schema
 
-js-types
+ts-types
 
 node_modules
