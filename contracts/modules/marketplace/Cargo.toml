@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-marketplace-module"
-version = "1.0.0-beta"
+version = "1.0.1-beta"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for the second hand sale of tokens in Komple Framework."
