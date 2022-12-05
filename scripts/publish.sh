@@ -13,7 +13,7 @@ then
     exit 1
 fi
 
-PUBLISH_COMMAND="cargo publish --dry-run"
+PUBLISH_COMMAND="cargo publish"
 
 STANDALONE_PACKAGES="types"
 PACKAGES="utils"
