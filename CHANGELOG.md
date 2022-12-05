@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1-beta] - 2022-12-05
+
 ### Changed
 
 - Collection minting lock is now saved as `false` by default in `create_collection` message in Mint Module ([#56](https://github.com/KompleTeam/komple-framework/pull/56))
