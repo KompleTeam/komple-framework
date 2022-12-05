@@ -52,17 +52,17 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-framework-token-module = { path = "../token", features = ["library"] }
-komple-framework-permission-module = { path = "../permission", features = ["library"] }
-komple-framework-mint-module = { path = "../mint", features = ["library"] }
-komple-framework-utils = { path = "../../../packages/utils", features = ["storage"] }
-komple-framework-types = { path = "../../../packages/types" }
+komple-framework-token-module = { path = "../token", version = "1.0.1-beta", features = ["library"] }
+komple-framework-permission-module = { path = "../permission", version = "1.0.1-beta", features = ["library"] }
+komple-framework-mint-module = { path = "../mint", version = "1.0.1-beta", features = ["library"] }
+komple-framework-utils = { path = "../../../packages/utils", version = "1.0.1-beta", features = ["storage"] }
+komple-framework-types = { path = "../../../packages/types", version = "1.0.1-beta" }
 cw721-base = { version = "0.15.0", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
 cw721 = "0.15.0"
-komple-framework-hub-module = { path = "../hub", features = ["library"] }
-komple-framework-metadata-module = { path = "../metadata", features = ["library"] }
-komple-framework-ownership-permission = { path = "../../permissions/ownership", features = ["library"] }
-komple-framework-link-permission = { path = "../../permissions/link", features = ["library"] }
+komple-framework-hub-module = { path = "../hub", version = "1.0.1-beta", features = ["library"] }
+komple-framework-metadata-module = { path = "../metadata", version = "1.0.1-beta", features = ["library"] }
+komple-framework-ownership-permission = { path = "../../permissions/ownership", version = "1.0.1-beta", features = ["library"] }
+komple-framework-link-permission = { path = "../../permissions/link", version = "1.0.1-beta", features = ["library"] }
