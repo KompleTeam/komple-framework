@@ -15,77 +15,42 @@ fi
 
 PUBLISH_COMMAND="cargo publish"
 
-STANDALONE_PACKAGES="types"
-PACKAGES="utils"
-
-STANDALONE_MODULES="fee hub metadata permission whitelist"
-MODULES="token mint marketplace merge"
-
-STANDALONE_PERMISSIONS="link ownership"
-PERMISSIONS="attribute"
+PACKAGES="types utils"
+MODULES="fee hub metadata permission whitelist token mint marketplace merge"
+PERMISSIONS="link ownership attribute"
 
 SLEEP_TIME=30
 
-for pack in $STANDALONE_PACKAGES; do
-  (
-    cd "packages/$pack"
-    echo "Publishing $pack"
-    eval "$PUBLISH_COMMAND"
-  )
-done
-
-echo "Waiting for publishing standalone packages"
-sleep $SLEEP_TIME
+echo "Starting packages publishing..."
 
 for pack in $PACKAGES; do
   (
     cd "packages/$pack"
     echo "Publishing $pack"
     eval "$PUBLISH_COMMAND"
+    sleep $SLEEP_TIME
   )
 done
 
-echo "Waiting for publishing packages"
-sleep $SLEEP_TIME
-
-for cont in $STANDALONE_MODULES; do
-  (
-    cd "contracts/modules/$cont"
-    echo "Publishing $cont"
-    eval "$PUBLISH_COMMAND"
-  )
-done
-
-echo "Waiting for publishing standalone modules"
-sleep $SLEEP_TIME
+echo "Starting modules publishing..."
 
 for cont in $MODULES; do
   (
     cd "contracts/modules/$cont"
     echo "Publishing $cont"
     eval "$PUBLISH_COMMAND"
+    sleep $SLEEP_TIME
   )
 done
 
-echo "Waiting for publishing modules"
-sleep $SLEEP_TIME
+echo "Starting modules publishing..."
 
-for cont in $STANDALONE_PERMISSIONS; do
+for cont in $PERMISSIONS; do
   (
     cd "contracts/permissions/$cont"
     echo "Publishing $cont"
     eval "$PUBLISH_COMMAND"
-  )
-done
-
-echo "Waiting for publishing standalone permissions"
-sleep $SLEEP_TIME
-
-for cont in $STANDALONE_PERMISSIONS; do
-  (
-    cd "contracts/permissions/$cont"
-    echo "Publishing $cont"
-    eval "$PUBLISH_COMMAND"
+    sleep $SLEEP_TIME
   )
 done
 
