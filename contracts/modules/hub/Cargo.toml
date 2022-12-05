@@ -53,18 +53,18 @@ cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 cw-utils = "0.15.1"
-komple-framework-types = { path = "../../../packages/types" }
-komple-framework-utils = { path = "../../../packages/utils", features = ["funds"] }
+komple-framework-types = { path = "../../../packages/types", version = "1.0.1-beta" }
+komple-framework-utils = { path = "../../../packages/utils", version = "1.0.1-beta", features = ["funds"] }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-framework-marketplace-module = { path = "../marketplace", features = ["library"]  }
-komple-framework-merge-module = { path = "../merge", features = ["library"]  }
-komple-framework-permission-module = { path = "../permission", features = ["library"]  }
-komple-framework-mint-module = { path = "../mint", features = ["library"] }
-komple-framework-token-module = { path = "../token", features = ["library"] }
-komple-framework-metadata-module = { path = "../metadata", features = ["library"]  }
+komple-framework-marketplace-module = { path = "../marketplace", version = "1.0.1-beta", features = ["library"]  }
+komple-framework-merge-module = { path = "../merge", version = "1.0.1-beta", features = ["library"]  }
+komple-framework-permission-module = { path = "../permission", version = "1.0.1-beta", features = ["library"]  }
+komple-framework-mint-module = { path = "../mint", version = "1.0.1-beta", features = ["library"] }
+komple-framework-token-module = { path = "../token", version = "1.0.1-beta", features = ["library"] }
+komple-framework-metadata-module = { path = "../metadata", version = "1.0.1-beta", features = ["library"]  }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
-komple-framework-ownership-permission = { path = "../../permissions/ownership", features = ["library"]  }
-komple-framework-fee-module = { path = "../fee", features = ["library"]  }
+komple-framework-ownership-permission = { path = "../../permissions/ownership", version = "1.0.1-beta", features = ["library"]  }
+komple-framework-fee-module = { path = "../fee", version = "1.0.1-beta", features = ["library"]  }
