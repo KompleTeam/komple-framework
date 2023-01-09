@@ -361,9 +361,10 @@ fn execute_update_price(
         ResponseHelper::new_module("marketplace", "update_price").add_event(
             EventHelper::new("marketplace_update_price")
                 .add_attribute("listing_type", listing_type.to_string())
+                .add_attribute("collection_address", collection_addr)
                 .add_attribute("collection_id", collection_id.to_string())
                 .add_attribute("token_id", token_id.to_string())
-                .add_attribute("price", price.to_string())
+                .add_attribute("price", price)
                 .get(),
         ),
     )
