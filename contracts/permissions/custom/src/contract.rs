@@ -1,8 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -67,7 +65,7 @@ pub fn execute_check(
     data: Binary,
 ) -> Result<Response, ContractError> {
     let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
-    
+
     /* TODO: Add your logic here */
     /* ... */
 
@@ -75,8 +73,7 @@ pub fn execute_check(
         /* TODO: Change permission name here */
         ResponseHelper::new_permission("custom_name", "check").add_event(
             /* TODO: Change permission name here */
-            EventHelper::new("custom_permission_check")
-                .get(),
+            EventHelper::new("custom_permission_check").get(),
         ),
     )
 }

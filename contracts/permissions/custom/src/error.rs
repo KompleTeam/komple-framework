@@ -5,7 +5,6 @@ use thiserror::Error;
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
-
     /* TODO: Add more errors here */
     /* ... */
 }

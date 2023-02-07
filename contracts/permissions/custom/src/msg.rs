@@ -3,7 +3,9 @@ use cosmwasm_std::Binary;
 
 use crate::state::Config;
 
-use komple_framework_types::{shared::query::ResponseWrapper, modules::permission::SubPermissionExecuteMsg};
+use komple_framework_types::{
+    modules::permission::SubPermissionExecuteMsg, shared::query::ResponseWrapper,
+};
 
 #[cw_serde]
 pub enum ExecuteMsg {
