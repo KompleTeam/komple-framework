@@ -69,7 +69,7 @@ fn proper_instantiate(app: &mut App) -> Addr {
     .unwrap()
 }
 
-/* Add extra helpers and methods here */
+/* TODO: Add extra helpers and methods here */
 /* ... */
 
 mod initialization {
@@ -103,7 +103,7 @@ mod actions {
     mod execute_message_1 {
         use super::*;
 
-        /* Add your tests here */
+        /* TODO: Add your tests here */
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
@@ -114,7 +114,7 @@ mod actions {
     mod execute_message_2 {
         use super::*;
 
-        /* Add your tests here */
+        /* TODO: Add your tests here */
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
@@ -132,7 +132,7 @@ mod queries {
     mod query_message_1 {
         use super::*;
 
-        /* Add your tests here */
+        /* TODO: Add your tests here */
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
@@ -143,7 +143,7 @@ mod queries {
     mod query_message_2 {
         use super::*;
 
-        /* Add your tests here */
+        /* TODO: Add your tests here */
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
@@ -151,6 +151,6 @@ mod queries {
         }
     }
 
-    /* Add more query messages here */
+    /* TODO: Add more query messages here */
     /* ... */
 }

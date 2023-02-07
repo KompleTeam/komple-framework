@@ -37,8 +37,9 @@ pub fn instantiate(
 
     Ok(
         /* TODO: Enter module name here */
-        ResponseHelper::new_module("custom", "instantiate").add_event(
-            EventHelper::new("custom_instantiate")
+        ResponseHelper::new_module("custom_name", "instantiate").add_event(
+            /* TODO: Enter module name here */
+            EventHelper::new("custom_name_instantiate")
                 .add_attribute("admin", config.admin)
                 .add_attribute("hub_addr", info.sender)
                 .get(),
@@ -65,7 +66,7 @@ pub fn execute(
                 deps,
                 info,
                 /* TODO: Add module name here */
-                "custom",
+                "custom_name",
                 &env.contract.address,
                 &config.admin,
                 OPERATORS,
@@ -79,7 +80,7 @@ pub fn execute(
         ExecuteMsg::LockExecute {} => {
             let res =
                 /* TODO: Add module name here */
-                execute_lock_execute(deps, info, "custom", &env.contract.address, EXECUTE_LOCK);
+                execute_lock_execute(deps, info, "custom_name", &env.contract.address, EXECUTE_LOCK);
             match res {
                 Ok(res) => Ok(res),
                 Err(err) => Err(err.into()),
