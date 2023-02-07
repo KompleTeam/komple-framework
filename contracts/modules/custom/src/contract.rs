@@ -1,16 +1,21 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, StdError, to_binary};
-use cw2::{set_contract_version, ContractVersion, get_contract_version};
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+};
+use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use komple_framework_types::shared::query::ResponseWrapper;
 use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, MigrateMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, EXECUTE_LOCK, OPERATORS};
 
 use komple_framework_types::shared::RegisterMsg;
-use komple_framework_utils::{response::{EventHelper, ResponseHelper}, shared::{ execute_lock_execute, execute_update_operators }};
+use komple_framework_utils::{
+    response::{EventHelper, ResponseHelper},
+    shared::{execute_lock_execute, execute_update_operators},
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:custom";

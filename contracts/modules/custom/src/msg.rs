@@ -14,7 +14,6 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     /* TODO: Add execute messages here */
     /* ... */
-    
     /// Admin message.
     ///
     /// Update the operators of this contract.
@@ -40,7 +39,6 @@ impl From<ExecuteMsg> for SharedExecuteMsg {
 pub enum QueryMsg {
     /* TODO: Add query messages here */
     /* ... */
-
     /// Get the contract's config.
     #[returns(ResponseWrapper<Config>)]
     Config {},
