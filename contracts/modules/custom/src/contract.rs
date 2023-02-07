@@ -18,6 +18,7 @@ use komple_framework_utils::{
 };
 
 // version info for migration info
+/* TODO: Change module name here */
 const CONTRACT_NAME: &str = "crates.io:komple-framework-custom-module";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -36,9 +37,9 @@ pub fn instantiate(
     CONFIG.save(deps.storage, &config)?;
 
     Ok(
-        /* TODO: Enter module name here */
+        /* TODO: Change module name here */
         ResponseHelper::new_module("custom_name", "instantiate").add_event(
-            /* TODO: Enter module name here */
+            /* TODO: Change module name here */
             EventHelper::new("custom_name_instantiate")
                 .add_attribute("admin", config.admin)
                 .add_attribute("hub_addr", info.sender)
@@ -60,12 +61,14 @@ pub fn execute(
     };
 
     match msg {
+        /* TODO: Add execute messages here */
+        /* ... */
         ExecuteMsg::UpdateOperators { addrs } => {
             let config = CONFIG.load(deps.storage)?;
             let res = execute_update_operators(
                 deps,
                 info,
-                /* TODO: Add module name here */
+                /* TODO: Change module name here */
                 "custom_name",
                 &env.contract.address,
                 &config.admin,
@@ -79,7 +82,7 @@ pub fn execute(
         }
         ExecuteMsg::LockExecute {} => {
             let res =
-                /* TODO: Add module name here */
+                /* TODO: Change module name here */
                 execute_lock_execute(deps, info, "custom_name", &env.contract.address, EXECUTE_LOCK);
             match res {
                 Ok(res) => Ok(res),
@@ -92,6 +95,8 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        /* TODO: Add query messages here */
+        /* ... */
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
