@@ -9,7 +9,7 @@ use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, EXECUTE_LOCK, OPERATORS};
+use crate::state::{Config, CONFIG, EXECUTE_LOCK, OPERATORS, HUB_ADDR};
 
 use komple_framework_types::shared::RegisterMsg;
 use komple_framework_utils::{
@@ -35,6 +35,10 @@ pub fn instantiate(
 
     let config = Config { admin };
     CONFIG.save(deps.storage, &config)?;
+
+    HUB_ADDR.save(deps.storage, &info.sender)?;
+
+    EXECUTE_LOCK.save(deps.storage, &false)?;
 
     Ok(
         /* TODO: Change module name here */
