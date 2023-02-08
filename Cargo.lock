@@ -632,6 +632,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "komple-framework-custom-module"
+version = "1.0.1-beta"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test 0.16.2",
+ "cw-storage-plus 0.15.1",
+ "cw2 1.0.1",
+ "komple-framework-types",
+ "komple-framework-utils",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "komple-framework-custom-permission"
 version = "1.0.1-beta"
 dependencies = [
