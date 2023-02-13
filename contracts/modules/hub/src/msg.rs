@@ -59,6 +59,12 @@ pub enum QueryMsg {
     /// Resolves the module address for the given module.
     #[returns(ResponseWrapper<String>)]
     ModuleAddress { module: String },
+    /// Lists the module names and addresses registered in the hub.
+    #[returns(ResponseWrapper<Vec<ModulesResponse>>)]
+    Modules {
+        start_after: Option<String>,
+        limit: Option<u8>,
+    },
     /// Gets the operators of this contract.
     #[returns(ResponseWrapper<Vec<String>>)]
     Operators {},
@@ -68,6 +74,12 @@ pub enum QueryMsg {
 pub struct ConfigResponse {
     pub admin: String,
     pub hub_info: HubInfo,
+}
+
+#[cw_serde]
+pub struct ModulesResponse {
+    pub name: String,
+    pub address: String,
 }
 
 #[cw_serde]
