@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw_storage_plus::Bound;
-use cw_utils::{parse_reply_instantiate_data};
+use cw_utils::parse_reply_instantiate_data;
 
 use komple_framework_types::shared::execute::SharedExecuteMsg;
 use komple_framework_types::shared::query::ResponseWrapper;
