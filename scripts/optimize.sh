@@ -1,5 +1,5 @@
 ARM_VERSION="0.12.8"
-INTEL_VERSION="0.12.9"
+INTEL_VERSION="0.12.11"
 
 function optimize_arm() {
   docker run --rm -v "$(pwd)":/code \

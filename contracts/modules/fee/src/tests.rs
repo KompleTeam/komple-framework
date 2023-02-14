@@ -933,6 +933,85 @@ mod actions {
         }
     }
 
+    mod update_operators {
+        use super::*;
+
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let addr = setup_fee_contract(&mut app);
+
+            let msg = ExecuteMsg::UpdateOperators {
+                addrs: vec![
+                    "juno..first".to_string(),
+                    "juno..second".to_string(),
+                    "juno..first".to_string(),
+                ],
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = QueryMsg::Operators {};
+            let res: ResponseWrapper<Vec<String>> =
+                app.wrap().query_wasm_smart(addr.clone(), &msg).unwrap();
+            assert_eq!(res.data.len(), 2);
+            assert_eq!(res.data[0], "juno..first");
+            assert_eq!(res.data[1], "juno..second");
+
+            let msg = ExecuteMsg::UpdateOperators {
+                addrs: vec!["juno..third".to_string()],
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked("juno..first"), addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = QueryMsg::Operators {};
+            let res: ResponseWrapper<Vec<String>> =
+                app.wrap().query_wasm_smart(addr, &msg).unwrap();
+            assert_eq!(res.data.len(), 1);
+            assert_eq!(res.data[0], "juno..third");
+        }
+
+        #[test]
+        fn test_invalid_admin() {
+            let mut app = mock_app();
+            let addr = setup_fee_contract(&mut app);
+
+            let msg = ExecuteMsg::UpdateOperators {
+                addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
+            };
+            let err = app
+                .execute_contract(Addr::unchecked(COMMUNITY), addr, &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+        }
+
+        #[test]
+        fn test_invalid_operator() {
+            let mut app = mock_app();
+            let addr = setup_fee_contract(&mut app);
+
+            let msg = ExecuteMsg::UpdateOperators {
+                addrs: vec!["juno..first".to_string(), "juno..second".to_string()],
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), addr.clone(), &msg, &[])
+                .unwrap();
+
+            let err = app
+                .execute_contract(Addr::unchecked("juno..third"), addr, &msg, &[])
+                .unwrap_err();
+            assert_eq!(
+                err.source().unwrap().to_string(),
+                ContractError::Unauthorized {}.to_string()
+            );
+        }
+    }
+
     mod lock_execute {
         use super::*;
 
