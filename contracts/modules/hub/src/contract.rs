@@ -1,10 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn,
+    from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Reply, ReplyOn,
     Response, StdError, StdResult, SubMsg, WasmMsg,
 };
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw_storage_plus::Bound;
 use cw_utils::parse_reply_instantiate_data;
 
 use komple_framework_types::shared::execute::SharedExecuteMsg;
@@ -16,7 +17,9 @@ use komple_framework_utils::shared::execute_update_operators;
 use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::msg::{
+    ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, ModulesResponse, QueryMsg,
+};
 use crate::state::{
     Config, HubInfo, CONFIG, HUB_INFO, MARBU_FEE_MODULE, MODULES, MODULE_ID, MODULE_TO_REGISTER,
     OPERATORS,
@@ -232,7 +235,7 @@ fn execute_deregister_module(
         operators,
     )?;
 
-    let module_addr = MODULES.load(deps.storage, &module);
+    let module_addr = MODULES.load(deps.storage, module.clone());
     if module_addr.is_err() {
         return Err(ContractError::InvalidModule {});
     }
@@ -251,7 +254,7 @@ fn execute_deregister_module(
         contract_addr: module_addr.unwrap().to_string(),
     });
 
-    MODULES.remove(deps.storage, &module);
+    MODULES.remove(deps.storage, module.clone());
 
     Ok(ResponseHelper::new_module("hub", "deregister_module")
         .add_messages(msgs)
@@ -304,6 +307,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&query_config(deps)?),
         QueryMsg::ModuleAddress { module } => to_binary(&query_module_address(deps, module)?),
+        QueryMsg::Modules { start_after, limit } => {
+            to_binary(&query_modules(deps, start_after, limit)?)
+        }
         QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
@@ -321,8 +327,31 @@ fn query_config(deps: Deps) -> StdResult<ResponseWrapper<ConfigResponse>> {
 }
 
 fn query_module_address(deps: Deps, module: String) -> StdResult<ResponseWrapper<String>> {
-    let addr = MODULES.load(deps.storage, module.as_str())?;
+    let addr = MODULES.load(deps.storage, module.to_string())?;
     Ok(ResponseWrapper::new("module_address", addr.to_string()))
+}
+
+fn query_modules(
+    deps: Deps,
+    start_after: Option<String>,
+    limit: Option<u8>,
+) -> StdResult<ResponseWrapper<Vec<ModulesResponse>>> {
+    let limit = limit.unwrap_or(10) as usize;
+    let start = start_after.map(Bound::exclusive);
+
+    let modules = MODULES
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| {
+            let (name, address) = item.unwrap();
+            ModulesResponse {
+                name,
+                address: address.to_string(),
+            }
+        })
+        .collect::<Vec<ModulesResponse>>();
+
+    Ok(ResponseWrapper::new("modules", modules))
 }
 
 fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
@@ -359,7 +388,7 @@ fn handle_module_instantiate_reply(deps: DepsMut, msg: Reply) -> Result<Response
         Ok(res) => {
             MODULES.save(
                 deps.storage,
-                &module_to_register,
+                module_to_register.clone(),
                 &Addr::unchecked(res.contract_address),
             )?;
             Ok(Response::default().add_attribute(
