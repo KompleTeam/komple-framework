@@ -27,7 +27,7 @@ pub struct Config {
 pub const CONFIG: Item<Config> = Item::new(CONFIG_NAMESPACE);
 
 /// Addresses of the registered modules.
-pub const MODULES: Map<&str, Addr> = Map::new(MODULES_NAMESPACE);
+pub const MODULES: Map<String, Addr> = Map::new(MODULES_NAMESPACE);
 
 /// Operators of this contract.
 pub const OPERATORS: Item<Vec<Addr>> = Item::new(OPERATORS_NAMESPACE);

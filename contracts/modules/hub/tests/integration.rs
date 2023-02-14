@@ -794,3 +794,135 @@ mod actions {
         }
     }
 }
+
+mod queries {
+    use super::*;
+
+    mod modules {
+        use komple_framework_hub_module::msg::ModulesResponse;
+
+        use super::*;
+
+        #[test]
+        fn test_happy_path() {
+            let mut app = mock_app();
+            let hub_module_addr = proper_instantiate(&mut app);
+
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Mint.to_string(),
+                msg: Some(
+                    to_binary(&RegisterMsg {
+                        admin: ADMIN.to_string(),
+                        data: None,
+                    })
+                    .unwrap(),
+                ),
+                code_id: app.store_code(mint_module()),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Permission.to_string(),
+                msg: Some(
+                    to_binary(&RegisterMsg {
+                        admin: ADMIN.to_string(),
+                        data: None,
+                    })
+                    .unwrap(),
+                ),
+                code_id: app.store_code(permission_module()),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Merge.to_string(),
+                msg: Some(
+                    to_binary(&RegisterMsg {
+                        admin: ADMIN.to_string(),
+                        data: None,
+                    })
+                    .unwrap(),
+                ),
+                code_id: app.store_code(merge_module()),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Marketplace.to_string(),
+                msg: Some(
+                    to_binary(&MarketplaceModuleInstantiateMsg {
+                        fund_info: MarketplaceFundInfo {
+                            is_native: true,
+                            denom: NATIVE_DENOM.to_string(),
+                            cw20_address: None,
+                        },
+                    })
+                    .unwrap(),
+                ),
+                code_id: app.store_code(marketplace_module()),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let msg = ExecuteMsg::RegisterModule {
+                module: Modules::Fee.to_string(),
+                msg: Some(
+                    to_binary(&RegisterMsg {
+                        admin: ADMIN.to_string(),
+                        data: None,
+                    })
+                    .unwrap(),
+                ),
+                code_id: app.store_code(fee_module()),
+            };
+            let _ = app
+                .execute_contract(Addr::unchecked(ADMIN), hub_module_addr.clone(), &msg, &[])
+                .unwrap();
+
+            let res: ResponseWrapper<Vec<ModulesResponse>> = app
+                .wrap()
+                .query_wasm_smart(
+                    hub_module_addr.clone(),
+                    &QueryMsg::Modules {
+                        start_after: None,
+                        limit: None,
+                    },
+                )
+                .unwrap();
+            assert_eq!(res.data.len(), 5);
+
+            let res: ResponseWrapper<Vec<ModulesResponse>> = app
+                .wrap()
+                .query_wasm_smart(
+                    hub_module_addr.clone(),
+                    &QueryMsg::Modules {
+                        start_after: None,
+                        limit: Some(3),
+                    },
+                )
+                .unwrap();
+            assert_eq!(res.data.len(), 3);
+
+            let res: ResponseWrapper<Vec<ModulesResponse>> = app
+                .wrap()
+                .query_wasm_smart(
+                    hub_module_addr,
+                    &QueryMsg::Modules {
+                        start_after: Some("merge".to_string()),
+                        limit: None,
+                    },
+                )
+                .unwrap();
+            assert_eq!(res.data.len(), 2);
+            assert_eq!(res.data[0].name, "mint".to_string());
+            assert_eq!(res.data[1].name, "permission".to_string());
+        }
+    }
+}
