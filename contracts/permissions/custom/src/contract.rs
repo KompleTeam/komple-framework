@@ -62,9 +62,9 @@ pub fn execute_check(
     deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    data: Binary,
+    _data: Binary,
 ) -> Result<Response, ContractError> {
-    let permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
+    let _permission_addr = PERMISSION_MODULE_ADDR.load(deps.storage)?;
 
     /* TODO: Add your logic here */
     /* ... */
