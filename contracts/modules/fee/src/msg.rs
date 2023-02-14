@@ -36,6 +36,12 @@ pub enum ExecuteMsg {
         module_name: String,
         custom_payment_addresses: Option<Vec<CustomPaymentAddress>>,
     },
+    /// Admin message.
+    ///
+    /// Update the operators of this contract.
+    UpdateOperators {
+        addrs: Vec<String>,
+    },
     /// Hub message.
     ///
     /// Lock the execute entry point.
@@ -115,6 +121,9 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    /// Get the operators of this contract.
+    #[returns(ResponseWrapper<Vec<String>>)]
+    Operators {},
 }
 
 #[cw_serde]

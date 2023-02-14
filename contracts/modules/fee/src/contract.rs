@@ -10,18 +10,21 @@ use cw2::set_contract_version;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use cw_storage_plus::Bound;
 use komple_framework_types::modules::fee::{Fees, FixedPayment, PercentagePayment};
+use komple_framework_types::modules::Modules;
 use komple_framework_types::shared::query::ResponseWrapper;
 use komple_framework_types::shared::RegisterMsg;
 use komple_framework_utils::check_admin_privileges;
 use komple_framework_utils::funds::{check_single_amount, FundsError};
 use komple_framework_utils::response::{EventHelper, ResponseHelper};
-use komple_framework_utils::shared::execute_lock_execute;
+use komple_framework_utils::shared::{execute_lock_execute, execute_update_operators};
 
 use crate::error::ContractError;
 use crate::msg::{
     CustomPaymentAddress, ExecuteMsg, FixedFeeResponse, PercentageFeeResponse, QueryMsg, ReceiveMsg,
 };
-use crate::state::{Config, CONFIG, EXECUTE_LOCK, FIXED_FEES, HUB_ADDR, PERCENTAGE_FEES};
+use crate::state::{
+    Config, CONFIG, EXECUTE_LOCK, FIXED_FEES, HUB_ADDR, OPERATORS, PERCENTAGE_FEES,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:komple-framework-fee-module";
@@ -90,8 +93,30 @@ pub fn execute(
             custom_payment_addresses,
             None,
         ),
+        ExecuteMsg::UpdateOperators { addrs } => {
+            let config = CONFIG.load(deps.storage)?;
+            let res = execute_update_operators(
+                deps,
+                info,
+                Modules::Fee.as_str(),
+                &env.contract.address,
+                &config.admin,
+                OPERATORS,
+                addrs,
+            );
+            match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err.into()),
+            }
+        }
         ExecuteMsg::LockExecute {} => {
-            let res = execute_lock_execute(deps, info, "fee", &env.contract.address, EXECUTE_LOCK);
+            let res = execute_lock_execute(
+                deps,
+                info,
+                Modules::Fee.as_str(),
+                &env.contract.address,
+                EXECUTE_LOCK,
+            );
             match res {
                 Ok(res) => Ok(res),
                 Err(e) => Err(e.into()),
@@ -112,12 +137,13 @@ fn execute_set_fee(
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
         hub_addr,
-        None,
+        operators,
     )?;
 
     let mut event_attributes: Vec<Attribute> = vec![];
@@ -210,12 +236,13 @@ fn execute_remove_fee(
 ) -> Result<Response, ContractError> {
     let hub_addr = HUB_ADDR.may_load(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
+    let operators = OPERATORS.may_load(deps.storage)?;
     check_admin_privileges(
         &info.sender,
         &env.contract.address,
         &config.admin,
         hub_addr,
-        None,
+        operators,
     )?;
 
     match fee_type {
@@ -544,6 +571,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             start_after,
             limit,
         } => to_binary(&query_keys(deps, fee_type, start_after, limit)?),
+        QueryMsg::Operators {} => to_binary(&query_operators(deps)?),
     }
 }
 
@@ -733,4 +761,13 @@ fn query_keys(
         query: "modules".to_string(),
         data: modules,
     })
+}
+
+fn query_operators(deps: Deps) -> StdResult<ResponseWrapper<Vec<String>>> {
+    let addrs = OPERATORS.may_load(deps.storage)?;
+    let addrs = match addrs {
+        Some(addrs) => addrs.iter().map(|a| a.to_string()).collect(),
+        None => vec![],
+    };
+    Ok(ResponseWrapper::new("operators", addrs))
 }
