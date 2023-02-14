@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-custom-permission"
-version = "1.0.1-beta"
+version = "1.1.0-beta"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used as a template for kickstarting permission development in Komple Framework."
@@ -53,8 +53,8 @@ cw2 = "1.0.1"
 schemars = "0.8.10"
 serde = { version = "1.0.145", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-komple-framework-types = { path = "../../../packages/types", version = "1.0.1-beta" }
-komple-framework-utils = { path = "../../../packages/utils", version = "1.0.1-beta" }
+komple-framework-types = { path = "../../../packages/types", version = "1.1.0-beta" }
+komple-framework-utils = { path = "../../../packages/utils", version = "1.1.0-beta" }
 
 [dev-dependencies]
 cw-multi-test = "0.16.2"
