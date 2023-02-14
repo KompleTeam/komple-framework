@@ -8,7 +8,7 @@ use komple_framework_types::shared::query::ResponseWrapper;
 use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, MigrateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, EXECUTE_LOCK, OPERATORS, HUB_ADDR};
 
 use komple_framework_types::shared::RegisterMsg;

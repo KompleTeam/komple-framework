@@ -107,7 +107,7 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let custom_addr = proper_instantiate(&mut app);
+            let _custom_addr = proper_instantiate(&mut app);
         }
     }
 
@@ -118,7 +118,7 @@ mod actions {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let custom_addr = proper_instantiate(&mut app);
+            let _custom_addr = proper_instantiate(&mut app);
         }
     }
 
@@ -136,7 +136,7 @@ mod queries {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let custom_addr = proper_instantiate(&mut app);
+            let _custom_addr = proper_instantiate(&mut app);
         }
     }
 
@@ -147,7 +147,7 @@ mod queries {
         #[test]
         fn test_happy_path() {
             let mut app = mock_app();
-            let custom_addr = proper_instantiate(&mut app);
+            let _custom_addr = proper_instantiate(&mut app);
         }
     }
 
