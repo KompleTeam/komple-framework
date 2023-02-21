@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0-beta] - 2023-02-14
+
 ### Added
 
 - **Custom Module Template** for kickstarting development of custom modules. This contract includes the common functions and messages found in the framework modules. ([#65](https://github.com/KompleTeam/komple-framework/pull/65))
