@@ -62,4 +62,3 @@ cw-utils = "0.15.1"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
-komple-framework-mint-module = { path = "../mint", features = ["library"] }
