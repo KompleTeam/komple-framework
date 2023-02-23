@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-token-module"
-version = "1.1.1-beta"
+version = "1.1.0-beta"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for collection configuration and token management in Komple Framework."
@@ -54,11 +54,12 @@ cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
 cw721 = "0.15.0"
 cw721-base = { version = "0.15.0", features = ["library"] }
-komple-framework-types = { path = "../../../packages/types", version = "1.1.1-beta" }
-komple-framework-utils = { path = "../../../packages/utils", version = "1.1.1-beta", features = ["response", "storage"] }
-komple-framework-metadata-module = { path = "../metadata", version = "1.1.1-beta", features = ["library"] }
-komple-framework-whitelist-module = { path = "../whitelist", version = "1.1.1-beta", features = ["library"]  }
+komple-framework-types = { path = "../../../packages/types", version = "1.1.0-beta" }
+komple-framework-utils = { path = "../../../packages/utils", version = "1.1.0-beta", features = ["response", "storage"] }
+komple-framework-metadata-module = { path = "../metadata", version = "1.1.0-beta", features = ["library"] }
+komple-framework-whitelist-module = { path = "../whitelist", version = "1.1.0-beta", features = ["library"]  }
 cw-utils = "0.15.1"
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
+komple-framework-mint-module = { path = "../mint", features = ["library"] }

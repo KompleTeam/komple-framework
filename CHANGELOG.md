@@ -5,12 +5,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.1-beta] - 2023-02-32
-
-### Changed
-
-- On Hub Module instantiation, `info.sender` is now saved as an operator for the contract. ([#73](https://github.com/KompleTeam/komple-framework/pull/73))
-
 ## [1.1.0-beta] - 2023-02-14
 
 ### Added

@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-permission-module"
-version = "1.1.1-beta"
+version = "1.1.0-beta"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for permission registry and execute/query message execution in front of module operations in Komple Framework."
@@ -52,8 +52,8 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-framework-types = { path = "../../../packages/types", version = "1.1.1-beta" }
-komple-framework-utils = { path = "../../../packages/utils", version = "1.1.1-beta", features = ["storage"] }
+komple-framework-types = { path = "../../../packages/types", version = "1.1.0-beta" }
+komple-framework-utils = { path = "../../../packages/utils", version = "1.1.0-beta", features = ["storage"] }
 cw-utils = "0.15.1"
 
 [dev-dependencies]
