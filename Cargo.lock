@@ -613,7 +613,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-attribute-permission"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -633,7 +633,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-custom-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -651,7 +651,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-custom-permission"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -668,7 +668,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-fee-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -685,7 +685,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-hub-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -712,7 +712,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-link-permission"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -734,7 +734,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-marketplace-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -758,7 +758,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-merge-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -783,7 +783,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-metadata-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -799,7 +799,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-mint-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -827,7 +827,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-ownership-permission"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -849,7 +849,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-permission-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -867,7 +867,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-token-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -888,7 +888,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-types"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -896,7 +896,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-utils"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 0.15.1",
@@ -910,7 +910,7 @@ dependencies = [
 
 [[package]]
 name = "komple-framework-whitelist-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
