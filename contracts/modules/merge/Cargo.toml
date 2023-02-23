@@ -1,6 +1,6 @@
 [package]
 name = "komple-framework-merge-module"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 authors = ["findolor <findolor@komple.io>"]
 edition = "2018"
 description = "Contract used for merging multiple tokens and minting a new one in Komple Framework."
@@ -52,11 +52,11 @@ cosmwasm-schema = "1.1.0"
 cw-storage-plus = "0.15.1"
 cw2 = "0.15.1"
 thiserror = { version = "1.0.31" }
-komple-framework-token-module = { path = "../token", version = "1.1.0-beta", features = ["library"] }
-komple-framework-permission-module = { path = "../permission", version = "1.1.0-beta", features = ["library"] }
-komple-framework-mint-module = { path = "../mint", version = "1.1.0-beta", features = ["library"] }
-komple-framework-utils = { path = "../../../packages/utils", version = "1.1.0-beta", features = ["storage"] }
-komple-framework-types = { path = "../../../packages/types", version = "1.1.0-beta" }
+komple-framework-token-module = { path = "../token", version = "1.1.1-beta", features = ["library"] }
+komple-framework-permission-module = { path = "../permission", version = "1.1.1-beta", features = ["library"] }
+komple-framework-mint-module = { path = "../mint", version = "1.1.1-beta", features = ["library"] }
+komple-framework-utils = { path = "../../../packages/utils", version = "1.1.1-beta", features = ["storage"] }
+komple-framework-types = { path = "../../../packages/types", version = "1.1.1-beta" }
 cw721-base = { version = "0.15.0", features = ["library"] }
 
 [dev-dependencies]
