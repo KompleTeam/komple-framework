@@ -35,7 +35,7 @@ const MAX_DESCRIPTION_LENGTH: u32 = 512;
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: RegisterMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -47,8 +47,10 @@ pub fn instantiate(
     let data: InstantiateMsg = from_binary(&msg.data.unwrap())?;
 
     let admin = deps.api.addr_validate(&msg.admin)?;
-    let config = Config { admin };
+    let config = Config { admin: admin.clone() };
     CONFIG.save(deps.storage, &config)?;
+
+    OPERATORS.save(deps.storage, &vec![info.sender])?;
 
     if data.hub_info.description.len() > MAX_DESCRIPTION_LENGTH as usize {
         return Err(ContractError::DescriptionTooLong {});
