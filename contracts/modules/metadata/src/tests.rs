@@ -74,6 +74,7 @@ fn setup_metadata(app: &mut App, metadata_module_addr: Addr) -> (Vec<Trait>, Met
         },
     ];
     let meta_info = MetaInfo {
+        name: Some("name".to_string()),
         image: Some("https://example.com/image.png".to_string()),
         external_url: None,
         description: None,
@@ -146,6 +147,7 @@ mod actions {
                 },
             ];
             let meta_info = MetaInfo {
+                name: Some("name".to_string()),
                 image: Some("https://example.com/image.png".to_string()),
                 external_url: None,
                 description: None,
@@ -194,6 +196,7 @@ mod actions {
                 },
             ];
             let meta_info = MetaInfo {
+                name: Some("name".to_string()),
                 image: Some("https://example.com/image.png".to_string()),
                 external_url: None,
                 description: None,
@@ -408,6 +411,7 @@ mod actions {
                 setup_metadata(&mut app, metadata_module_addr_2.clone());
 
                 let new_meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://test".to_string()),
                     description: Some("test".to_string()),
                     external_url: Some("https://test".to_string()),
@@ -478,6 +482,7 @@ mod actions {
                 let metadata_module_addr_2 = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let new_meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://test".to_string()),
                     description: Some("test".to_string()),
                     external_url: Some("https://test".to_string()),
@@ -518,6 +523,7 @@ mod actions {
                 setup_metadata(&mut app, metadata_module_addr.clone());
 
                 let new_meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://test".to_string()),
                     description: Some("test".to_string()),
                     external_url: Some("https://test".to_string()),
@@ -566,6 +572,7 @@ mod actions {
                 let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let new_meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://test".to_string()),
                     description: Some("test".to_string()),
                     external_url: Some("https://test".to_string()),
@@ -594,6 +601,7 @@ mod actions {
             let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Standard);
 
             let new_meta_info = MetaInfo {
+                name: Some("name".to_string()),
                 image: Some("https://test".to_string()),
                 description: Some("test".to_string()),
                 external_url: Some("https://test".to_string()),
@@ -1212,6 +1220,7 @@ mod queries {
             let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let meta_info = MetaInfo {
+                name: Some("name".to_string()),
                 image: Some("https://example.com/image.png".to_string()),
                 external_url: None,
                 description: None,
@@ -1268,6 +1277,7 @@ mod queries {
             let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
             let meta_info = MetaInfo {
+                name: Some("name".to_string()),
                 image: Some("https://example.com/image.png".to_string()),
                 external_url: None,
                 description: None,
@@ -1354,6 +1364,7 @@ mod queries {
                 let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://example.com/image.png".to_string()),
                     external_url: None,
                     description: None,
@@ -1472,6 +1483,7 @@ mod queries {
                 let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Shared);
 
                 let meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://example.com/image.png".to_string()),
                     external_url: None,
                     description: None,
@@ -1560,6 +1572,7 @@ mod queries {
                 let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://example.com/image.png".to_string()),
                     external_url: None,
                     description: None,
@@ -1678,6 +1691,7 @@ mod queries {
                 let metadata_module_addr = proper_instantiate(&mut app, MetadataType::Dynamic);
 
                 let meta_info = MetaInfo {
+                    name: Some("name".to_string()),
                     image: Some("https://example.com/image.png".to_string()),
                     external_url: None,
                     description: None,

@@ -1380,6 +1380,7 @@ mod actions {
                     res.data.metadata,
                     MetadataMetadata {
                         meta_info: MetaInfo {
+                            name: None,
                             image: Some("some-link/1".to_string()),
                             external_url: None,
                             description: None,

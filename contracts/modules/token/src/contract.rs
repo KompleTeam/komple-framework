@@ -392,6 +392,7 @@ pub fn execute_mint(
 
         let msg = KompleMetadataModule(sub_modules.metadata.clone().unwrap()).add_metadata_msg(
             MetadataMetaInfo {
+                name: None,
                 image: Some(ifps_link),
                 external_url: None,
                 description: None,

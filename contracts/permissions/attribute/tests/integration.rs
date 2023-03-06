@@ -242,6 +242,7 @@ pub fn mint_token(
 pub fn add_metadata(app: &mut App, metadata_module_addr: Addr, attributes: Vec<Trait>) {
     let msg = MetadataExecuteMsg::AddMetadata {
         meta_info: MetaInfo {
+            name: None,
             image: None,
             external_url: None,
             description: None,

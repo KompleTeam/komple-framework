@@ -29,6 +29,7 @@ pub struct Trait {
 }
 #[cw_serde]
 pub struct MetaInfo {
+    pub name: Option<String>,
     pub image: Option<String>,
     pub external_url: Option<String>,
     pub description: Option<String>,
