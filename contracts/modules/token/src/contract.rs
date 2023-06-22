@@ -583,7 +583,7 @@ pub fn execute_send(
         info,
         ExecuteMsg::SendNft {
             contract: contract.clone(),
-            token_id: contract.clone(),
+            token_id: token_id.clone(),
             msg,
         },
     );
